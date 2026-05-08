@@ -2,7 +2,7 @@
 
 Skill Hub is a curated workspace for collecting and adapting famous agent skills into Codex-friendly versions.
 
-The current target is a small, high-signal set rather than "install everything": OpenSpec workflows, Everything Claude Code, selected Anthropic built-in skills, and selected Vercel web skills.
+The current target is a small, high-signal set rather than "install everything": OpenSpec workflows, Everything Claude Code, selected Anthropic built-in skills, selected Vercel web skills, and a Codex-adapted Ralph loop.
 
 ## Current Status
 
@@ -15,6 +15,8 @@ The current target is a small, high-signal set rather than "install everything":
 - Vercel's `find-skills` skill is installed under `.agents/skills/find-skills/`.
 - Vercel Labs `agent-skills` is downloaded locally under `vendor/vercel-labs-agent-skills/`.
 - Selected Vercel web skills are installed under `.agents/skills/`.
+- Ralph is downloaded locally under `vendor/snarktank-ralph/`.
+- Ralph PRD and loop skills are installed under `.agents/skills/`, with a Codex-native runner under `scripts/ralph/`.
 - ECC's Codex config and multi-agent roles are configured under `.codex/`.
 - Claude Code built-in skills copied into `.codex/skills/` have been adapted for Codex; the duplicate local `skill-creator` copy was removed in favor of Codex's system skill.
 - Initial Codex feature inventory is documented in `docs/`.
@@ -41,6 +43,7 @@ README.md             Project overview
 | [Anthropic Skills](https://github.com/anthropics/skills) / Claude built-ins | 20 adapted built-in skills in `.codex/skills/` | Per-skill license files preserved |
 | [Vercel Skills](https://github.com/vercel-labs/skills) | `find-skills` discovery skill | MIT, vendored source ignored |
 | [Vercel Agent Skills](https://github.com/vercel-labs/agent-skills) | 4 selected Web/React skills | MIT per upstream README, vendored source ignored |
+| [Ralph](https://github.com/snarktank/ralph) | PRD-to-story workflow and autonomous iteration loop adapted for Codex | MIT, vendored source ignored |
 
 Superpowers is tracked as an optional upstream source but is not installed by default because its core workflow overlaps heavily with ECC and the adapted built-in skills.
 
@@ -67,6 +70,7 @@ This hub will track Codex-ready adaptations for:
 - [Claude built-in skills Codex adaptation](docs/codex-builtins-adaptation.md)
 - [Everything Claude Code local setup](docs/ecc-local-setup.md)
 - [Vercel Skills local setup](docs/vercel-skills-local-setup.md)
+- [Ralph Loop Codex setup](docs/ralph-loop.md)
 - [Skill routing and de-duplication](docs/skill-routing.md)
 - [MCP validation notes](docs/mcp-validation.md)
 - [Source projects and candidates](docs/source-projects.md)
@@ -88,6 +92,6 @@ powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExtern
 ## Next Milestones
 
 1. Verify MCP startup from a non-sandboxed Codex shell with credentials available.
-2. Add small local skills only for repeated gaps such as branch finishing or systematic debugging.
-3. Keep source/license notes current whenever a third-party skill is added or refreshed.
-4. Commit the initialized baseline after final review.
+2. Test the Ralph runner on a small disposable repo before using it on high-value branches.
+3. Add small local skills only for repeated gaps such as branch finishing or systematic debugging.
+4. Keep source/license notes current whenever a third-party skill is added or refreshed.

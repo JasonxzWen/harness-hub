@@ -24,3 +24,10 @@ __pycache__/
 vendor/everything-claude-code/
 vendor/vercel-labs-skills/
 vendor/vercel-labs-agent-skills/
+vendor/snarktank-ralph/
+
+# Ralph loop runtime state
+scripts/ralph/prd.json
+scripts/ralph/progress.txt
+scripts/ralph/.last-branch
+scripts/ralph/archive/

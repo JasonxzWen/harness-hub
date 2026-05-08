@@ -1,6 +1,6 @@
 # Skill Routing And De-Duplication
 
-Date: 2026-05-07
+Date: 2026-05-08
 
 This project intentionally avoids installing every famous skill pack wholesale. Prefer the narrowest skill that matches the user request.
 
@@ -17,6 +17,8 @@ This project intentionally avoids installing every famous skill pack wholesale. 
 | Task | Preferred skill | Secondary skill |
 |---|---|---|
 | Explore or refine a feature idea | `brainstorming` | `openspec-explore` when the work should become an OpenSpec change |
+| Create a Ralph-ready PRD | `ralph-prd` | `product-capability` when implementation interfaces need deeper analysis |
+| Convert or run Ralph stories | `ralph-loop` | `verification-loop` before marking a story complete |
 | Create an OpenSpec change | `openspec-propose` | `brainstorming` first when intent is unclear |
 | Implement an OpenSpec change | `openspec-apply-change` | `verification-loop` before completion |
 | React/Next performance | `vercel-react-best-practices` | `frontend-patterns` |

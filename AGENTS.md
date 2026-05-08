@@ -80,3 +80,4 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - One-off browser debugging: `webapp-testing`.
 - Durable Playwright suites: `e2e-testing`.
 - Skill creation/update: use Codex's system `skill-creator`, not a project-local copy.
+- Ralph autonomous story loops: use `ralph-prd` to prepare PRDs and `ralph-loop` only when the user explicitly wants Ralph-style repeated execution.

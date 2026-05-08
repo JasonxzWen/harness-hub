@@ -1,6 +1,6 @@
 # Source Projects And Candidates
 
-Date: 2026-05-07
+Date: 2026-05-08
 
 This file tracks source projects that are worth studying or adapting for Codex.
 
@@ -13,6 +13,7 @@ This file tracks source projects that are worth studying or adapting for Codex.
 | [Everything Claude Code](https://github.com/affaan-m/everything-claude-code) | Broad agent harness performance system with agents, skills, rules, hooks, MCP configs, and command shims. | Imported selectively for Codex: `.agents/skills`, `.codex/AGENTS.md`, `.codex/agents`, and adapted `.codex/config.toml`. |
 | [Vercel Labs Skills](https://github.com/vercel-labs/skills) | CLI/package manager for the open agent skills ecosystem, with Codex listed as a supported agent. | Installed the bundled `find-skills` skill into `.agents/skills/find-skills` and kept the source checkout under `vendor/` for reference. |
 | [Vercel Agent Skills](https://github.com/vercel-labs/agent-skills) | Vercel-maintained Web, React, Next.js, View Transition, deployment, and React Native skills. | Installed only the low-risk Web/React subset; deployment, token, and React Native skills remain explicit-only candidates. |
+| [Ralph](https://github.com/snarktank/ralph) | Autonomous PRD story loop that repeatedly launches a fresh coding agent until every story passes. | Installed as a Codex-specific PowerShell runner plus two focused skills. The upstream Bash runner remains reference-only because it targets Amp and Claude Code. |
 | [OpenAI Codex plugins and skills](https://openai.com/academy/codex-plugins-and-skills/) | Official explanation of Codex plugins and skills. | Use for terminology and product-aligned guidance. |
 
 ## Imported Sources
@@ -22,10 +23,12 @@ This file tracks source projects that are worth studying or adapting for Codex.
 | `affaan-m/everything-claude-code` | `vendor/everything-claude-code/` (ignored) | `2.0.0-rc.1` at `841beea45cb25ba51f29fa45b7e272938d19b80a` |
 | `vercel-labs/skills` | `vendor/vercel-labs-skills/` (ignored) | package `1.5.5` at `eec87fd44fca572d5275a472ea13c31aaceb65d0` |
 | `vercel-labs/agent-skills` | `vendor/vercel-labs-agent-skills/` (ignored) | at `b9c8ee0643d87d3c5a953d1e22382ff2ead39229` |
+| `snarktank/ralph` | `vendor/snarktank-ralph/` (ignored) | at `6c53cb0b831ebe8739c6a003e22af14902d8b0b5` |
 | ECC Codex skill surface | `.agents/skills/` | Copied from upstream `.agents/skills/` |
 | ECC Codex config supplement | `.codex/AGENTS.md`, `.codex/agents/` | Copied from upstream `.codex/` |
 | Vercel `find-skills` skill | `.agents/skills/find-skills/` | Copied from upstream `skills/find-skills/` |
 | Vercel Web/React skills | `.agents/skills/vercel-react-best-practices/`, `.agents/skills/web-design-guidelines/`, `.agents/skills/vercel-composition-patterns/`, `.agents/skills/vercel-react-view-transitions/` | Copied from upstream `skills/` with Codex metadata added |
+| Ralph Codex skills and runner | `.agents/skills/ralph-prd/`, `.agents/skills/ralph-loop/`, `scripts/ralph/` | Adapted from upstream PRD skills and loop prompt under MIT |
 
 ## Secondary Candidates
 
