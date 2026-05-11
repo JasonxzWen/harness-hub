@@ -7,12 +7,13 @@
   },
   "profiles": {
     "minimal": {
-      "description": "Low-noise daily engineering profile with plan pressure testing, runtime diagnosis, throwaway prototyping, HTML reports, quality, TDD, verification, security, docs lookup, and self-debugging.",
+      "description": "Low-noise daily engineering profile with plan pressure testing, runtime diagnosis, throwaway prototyping, structured code review, HTML reports, quality, TDD, verification, security, docs lookup, and self-debugging.",
       "components": [
         "skill:grill-me",
         "skill:diagnose",
         "skill:prototype",
         "skill:html-work-reports",
+        "skill:compound-code-review",
         "skill:coding-standards",
         "skill:tdd-workflow",
         "skill:verification-loop",
@@ -88,6 +89,15 @@
       "provides": ["self-contained-html-reports", "interactive-work-artifacts", "html-change-reports"],
       "overlapsWith": ["skill:web-artifacts-builder", "skill:frontend-slides", "skill:frontend-design"],
       "routing": "Default for non-trivial reports, plans, reviews, status updates, and explainers when Markdown is too flat."
+    },
+    "skill:compound-code-review": {
+      "kind": "skill",
+      "path": ".agents/skills/compound-code-review",
+      "version": "0.1.0",
+      "source": "compound-engineering-plugin-adapted",
+      "provides": ["structured-code-review", "reviewer-lenses", "anchored-confidence-review", "finding-routing"],
+      "overlapsWith": ["skill:coding-standards", "skill:security-review", "skill:verification-loop", "skill:web-design-guidelines"],
+      "routing": "Use for deep pre-PR or CE-style code review. Use security-review for focused security checklists, web-design-guidelines for UI/UX audits, and verification-loop for final command gates."
     },
     "skill:coding-standards": {
       "kind": "skill",

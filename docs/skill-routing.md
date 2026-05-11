@@ -32,6 +32,7 @@ This project intentionally avoids installing every famous skill pack wholesale. 
 | UI/accessibility/UX audit | `web-design-guidelines` | `security-review` only for security-sensitive findings |
 | One-off local UI debugging | `webapp-testing` | Browser plugin/Playwright as available |
 | Durable E2E test suite | `e2e-testing` | `verification-loop` |
+| Deep pre-PR or CE-style code review | `compound-code-review` | `coding-standards` for a broad quality baseline; `security-review` for security-only review; `verification-loop` for command gates |
 | Self-contained HTML work report, plan, review, status update, research explainer, or lightweight editor | `html-work-reports` | `web-artifacts-builder` when a bundled React/Tailwind app is needed |
 | General code quality | `coding-standards` | language/framework-specific skill when present |
 | Security review | `security-review` | `verification-loop` |
@@ -69,7 +70,7 @@ The installed Matt Pocock skills are narrow lanes, not replacements for the exis
 
 These overlaps are resolved here and in root `AGENTS.md`, so no existing skill needs to be removed.
 
-## Evaluated But Not Installed
+## Evaluated Sources And Install Decisions
 
 `mattpocock/skills` was evaluated on 2026-05-11. `grill-me`, `diagnose`, and `prototype` are installed because each fills a bounded workflow gap with stable routing. The local versions add Codex/source metadata, narrow trigger boundaries, and avoid default external issue-tracker side effects.
 
@@ -80,6 +81,12 @@ Other Matt Pocock skills remain explicit-only or rejected for now: `grill-with-d
 `michalvavra/agents` `html-tools` was evaluated on 2026-05-09. It is useful as a reference for single-file HTML utilities, but not installed because it overlaps existing HTML artifact skills and does not target work reports. The local `html-work-reports` skill covers the narrower routing gap.
 
 `Cocoon-AI/architecture-diagram-generator` was evaluated on 2026-05-09. Keep it explicit-only as an architecture diagram reference; do not install by default because it is narrow and CDN-dependent.
+
+`EveryInc/compound-engineering-plugin` was evaluated on 2026-05-11 at `d090bde0ff1bbc33ec3c3b2049cb4687e9d76532`. Do not install the full plugin by default. It overlaps existing ECC, Vercel, Ralph, OpenSpec, and local governance skills, and its best Codex behavior depends on a companion Bun agent install because native Codex plugin install does not yet register custom agents.
+
+The installed exception is code review: `ce-code-review` was adapted as `compound-code-review`. Preserve the boundary: structured reviewer lenses, anchored confidence, safe-auto/gated/manual routing, report-only/autofix modes, artifact handoff, and stable finding numbering are in scope; CE's commit, PR, tracker, Slack, Proof, Gemini, product-pulse, and autonomous-work flows are not.
+
+Other CE areas stay explicit-only or library-only: `ce-doc-review` and plan confidence checks can inform a future plan-review lane; `ce-compound`/`ce-sessions` should wait until this hub decides durable memory ownership; `ce-work`, `lfg`, `ce-commit-push-pr`, and `ce-resolve-pr-feedback` are too side-effect-heavy for default routing; `ce-product-pulse`, `ce-slack-research`, `ce-proof`, and `ce-gemini-imagegen` require credentials or external services; `coding-tutor` is a separate learning profile candidate, not a default engineering workflow.
 
 ## Superpowers Decision
 
@@ -101,3 +108,4 @@ Do not auto-install these until a user actually needs them:
 - React Native skills: mobile-specific context that is not part of the current repository focus.
 - Full Superpowers pack: useful but overlapping with ECC and existing workflow skills.
 - Matt Pocock `grill-with-docs`, `improve-codebase-architecture`, and `zoom-out`: useful references, but require a domain-doc or architecture profile before default installation.
+- Compound Engineering `ce-work`, `lfg`, PR/commit/push helpers, product pulse, Slack/Proof/Gemini integrations, and `coding-tutor`: useful only for explicit profile work because they add external actions, credentials, persistent local stores, or heavy workflow overlap.
