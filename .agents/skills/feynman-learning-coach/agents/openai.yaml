@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feynman Learning Coach"
+  short_description: "Teach with Feynman loops and learning logs."
+  default_prompt: "Use $feynman-learning-coach to help me learn this topic step by step and log the session."

@@ -2,7 +2,7 @@
 
 Skill Hub is a curated workspace for collecting and adapting famous agent skills into Codex-friendly versions.
 
-The current target is a small, high-signal set rather than "install everything": plan pressure-testing, runtime diagnosis, throwaway prototyping, structured code review, HTML work reports, OpenSpec workflows, Everything Claude Code, selected Anthropic built-in skills, selected Vercel web skills, and a Codex-adapted Ralph loop.
+The current target is a small, high-signal set rather than "install everything": plan pressure-testing, runtime diagnosis, throwaway prototyping, structured code review, HTML work reports, optional Feynman-style learning coaching, OpenSpec workflows, Everything Claude Code, selected Anthropic built-in skills, selected Vercel web skills, and a Codex-adapted Ralph loop.
 
 The CLI is written in TypeScript and built with Bun for development speed. Published npm packages keep a Node-compatible `bin/skill-hub.mjs` entrypoint that loads the generated `dist/skillHub.js`, so target users can still run `npx skill-hub ...` without installing Bun.
 
@@ -23,6 +23,7 @@ The CLI is written in TypeScript and built with Bun for development speed. Publi
 - Matt Pocock's `skills` repository is downloaded locally under `vendor/mattpocock-skills/`.
 - Matt Pocock `grill-me`, `diagnose`, and `prototype` are installed under `.agents/skills/` for pressure testing, runtime debugging, and throwaway design prototypes.
 - EveryInc's `compound-engineering-plugin` repository is downloaded locally under `vendor/EveryInc-compound-engineering-plugin/`; only its `ce-code-review` workflow has been adapted as `.agents/skills/compound-code-review/`.
+- `feynman-learning-coach` is installed under `.agents/skills/` as an explicit learning profile inspired by Learn FASTER's scoped learning lifecycle.
 - A machine-readable capability graph exists at `capabilities/index.json`, with a human-readable map in `docs/capability-map.md`.
 - A Node CLI skeleton exists as `skill-hub`, supporting profile-based `init` and `status` reports.
 - ECC's Codex config and multi-agent roles are configured under `.codex/`.
@@ -57,11 +58,13 @@ README.md             Project overview
 | [Karpathy-inspired guidelines](https://github.com/forrestchang/andrej-karpathy-skills) | Behavioral coding principles already embedded in root `AGENTS.md` | MIT per upstream plugin metadata/README, vendored source ignored |
 | [Matt Pocock Skills](https://github.com/mattpocock/skills) | `grill-me`, `diagnose`, and `prototype` adapted for Codex | MIT, vendored source ignored |
 | [Compound Engineering Plugin](https://github.com/EveryInc/compound-engineering-plugin) | `compound-code-review` adapted from `ce-code-review` only | MIT, vendored source ignored |
+| [Learn FASTER](https://github.com/hluaguo/learn-faster-kit) | Source inspiration for `feynman-learning-coach`; no CLI/runtime copied | MIT, referenced at evaluated commit |
 | [The unreasonable effectiveness of HTML](https://thariqs.github.io/html-effectiveness/) | Source inspiration for `html-work-reports` | Referenced, not copied |
 
 Superpowers is tracked as an optional upstream source but is not installed by default because its core workflow overlaps heavily with ECC and the adapted built-in skills.
 The Karpathy-inspired skill is not installed as a separate trigger because its core guidance is already project-level instruction in `AGENTS.md`.
 Compound Engineering is tracked as an optional upstream source, but only the code-review lane is installed. The rest of the plugin remains explicit-only because it overlaps this hub or requires external actions and credentials.
+Learn FASTER is tracked as a learning-coach source. Only the lightweight Feynman teaching and logging pattern is installed; its CLI, generated root instructions, and full `.learning` runtime are not copied.
 
 ## Initial Scope
 
@@ -72,6 +75,7 @@ This hub will track Codex-ready adaptations for:
 - One-question-at-a-time pressure testing before implementation.
 - Runtime diagnosis and disposable prototyping before production implementation.
 - Structured multi-perspective code review before PR readiness.
+- Explicit Feynman-style tutoring with teach-back checks and durable learning logs.
 - Focused specialist skills for testing, security, frontend, docs, Git, browser QA, and language ecosystems.
 - Cross-harness compatibility notes for Codex App, Codex CLI, Claude Code, Cursor, OpenCode, Gemini, and similar agent hosts.
 
@@ -144,6 +148,7 @@ powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExtern
 npx skill-hub analyze D:\path\to\target --json
 npx skill-hub analyze D:\path\to\target --html --output D:\tmp\skill-hub-analysis.html
 npx skill-hub install D:\path\to\target --profile minimal --agent codex --dry-run
+npx skill-hub install D:\path\to\target --profile learning --agent codex --dry-run
 npx skill-hub install D:\path\to\target --profile web --agent codex --agent claude-code --yes
 npx skill-hub status D:\path\to\target --html
 npx skill-hub update D:\path\to\target --dry-run --json

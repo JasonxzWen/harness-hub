@@ -19,6 +19,7 @@ This document summarizes the functional surface worth adapting from famous Claud
 | Code review | Review for behavior regressions, security risks, maintainability, and missing tests. `compound-code-review` provides the dedicated structured lane adapted from Compound Engineering `ce-code-review`. |
 | Completion verification | Run relevant tests/checks before declaring work done. |
 | HTML work reports | Produce self-contained HTML reports, plans, reviews, research explainers, status dashboards, and lightweight editors when Markdown is too flat. |
+| Feynman learning coach | Scope a learning target, teach from first principles, ask progressive diagnostic questions, require teach-back, and log learning events for future review. |
 | Capability lifecycle CLI | Analyze target repos, recommend missing capabilities, install managed assets, report drift, and safely remove only Skill Hub-owned files. |
 
 ## P0: Codex Adaptation Layer
@@ -41,6 +42,7 @@ This document summarizes the functional surface worth adapting from famous Claud
 | Ralph loop skills | 2 | `.agents/skills/` |
 | Matt Pocock adapted skills | 3 | `.agents/skills/` |
 | Compound Engineering adapted skills | 1 | `.agents/skills/` |
+| Local learning skills | 1 | `.agents/skills/` |
 | Local governance/reporting skills | 2 | `.agents/skills/` |
 | Adapted Anthropic/Claude built-ins | 20 | `.codex/skills/` |
 | Codex role configs | 3 | `.codex/agents/` |
@@ -72,3 +74,4 @@ The first usable Codex profile should include:
 | Compound Engineering `ce-compound` and `ce-sessions` | Institutional learning capture and session-history research. | Explicit-only reference until this hub decides whether `docs/solutions/`, Codex memory, or another store owns durable learnings. |
 | Compound Engineering `ce-optimize` | Metric-driven parallel experiment loop with durable logs and judge-budget controls. | Library candidate for a future optimization/eval profile, not default engineering workflow. |
 | Compound Engineering `coding-tutor` plugin | Personalized learning path, tutorials from real code, and spaced-repetition quizzes. | Separate learning profile candidate, not part of the default engineering execution surface. |
+| Learn FASTER learning lifecycle | Scoped learning modes, topic state, teach-back, progress logs, quizzes, and spaced repetition. | Adapted as `feynman-learning-coach` with a lighter Codex-native Feynman loop and local logging script; not part of the default minimal profile. |

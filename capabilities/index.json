@@ -53,6 +53,12 @@
         "skill:ralph-prd",
         "skill:ralph-loop"
       ]
+    },
+    "learning": {
+      "description": "Explicit learning-coach profile for Feynman-style tutoring, teach-back checks, and durable learning logs.",
+      "components": [
+        "skill:feynman-learning-coach"
+      ]
     }
   },
   "components": {
@@ -270,6 +276,49 @@
       ],
       "risk": "low",
       "recommendation": "Use for deep pre-PR or CE-style code review. Use security-review for focused security checklists, web-design-guidelines for UI/UX audits, and verification-loop for final command gates."
+    },
+    "skill:feynman-learning-coach": {
+      "kind": "skill",
+      "path": ".agents/skills/feynman-learning-coach",
+      "version": "0.1.0",
+      "source": "learn-faster-kit-inspired-local",
+      "provides": [
+        "feynman-learning-coaching",
+        "progressive-teaching",
+        "teach-back-checks",
+        "learning-session-logging"
+      ],
+      "overlapsWith": [
+        "skill:deep-research",
+        "skill:article-writing",
+        "skill:content-engine"
+      ],
+      "routing": "Use when the user explicitly wants to learn, study, master, review, or be coached through a topic; do not route ordinary implementation or factual lookup.",
+      "detects": [
+        {
+          "path": ".agents/skills/feynman-learning-coach/SKILL.md",
+          "agent": "codex"
+        },
+        {
+          "path": ".agents/skills/feynman-learning-coach/SKILL.md",
+          "agent": "opencode"
+        },
+        {
+          "path": ".claude/skills/feynman-learning-coach/SKILL.md",
+          "agent": "claude-code"
+        },
+        {
+          "path": ".codex/skills/feynman-learning-coach/SKILL.md",
+          "agent": "codex"
+        }
+      ],
+      "agents": [
+        "codex",
+        "opencode",
+        "claude-code"
+      ],
+      "risk": "low",
+      "recommendation": "Use for explicit learning sessions that need scoped teaching, Feynman teach-back loops, and durable logs."
     },
     "skill:coding-standards": {
       "kind": "skill",

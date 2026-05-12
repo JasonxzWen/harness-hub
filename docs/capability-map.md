@@ -12,6 +12,7 @@ This document is the human-readable index for `capabilities/index.json`. The JSO
 | `web` | Frontend design, UI prototyping, browser validation, HTML artifacts, slides, and UI audits. | Add when a repo regularly ships web UI. |
 | `openspec-formal` | Formal OpenSpec change proposal, apply, and archive lifecycle. | Explicit only; use when the user asks for OpenSpec or formal change artifacts. |
 | `ralph` | Ralph PRD and loop helpers. | Explicit only; use when the user wants Ralph-style repeated execution. |
+| `learning` | Feynman-style teaching, progressive diagnostic questions, teach-back checks, and learning logs. | Explicit only; use when the user wants to learn or study a topic. |
 
 ## Routing Principles
 
@@ -22,6 +23,7 @@ This document is the human-readable index for `capabilities/index.json`. The JSO
 - Use `prototype` for explicitly throwaway logic or UI experiments that answer one design question; return to `tdd-workflow` for production implementation.
 - Use `compound-code-review` for deep pre-PR or Compound Engineering-style code review with structured findings and routing.
 - Use `html-work-reports` for non-trivial plans, reviews, research, status reports, and explainers where a self-contained HTML artifact is more useful than Markdown.
+- Use `feynman-learning-coach` only for explicit learning or tutoring sessions, not for ordinary implementation or quick factual lookup.
 - Use `web-artifacts-builder` only when the HTML artifact needs a bundled React/Tailwind/shadcn app.
 - Use `frontend-slides` for decks.
 - Keep OpenSpec as an explicit formal lifecycle, not the default planning lane.
@@ -45,6 +47,7 @@ The main observed risk is not that OpenSpec is useless. It is that OpenSpec skil
 | `prototype` | `frontend-design`, `web-artifacts-builder`, `product-capability`, `tdd-workflow` | `prototype` owns disposable learning artifacts only. Production UI uses `frontend-design`, standalone HTML artifacts use `web-artifacts-builder`, durable planning uses `product-capability`, and production code returns to `tdd-workflow`. |
 | `grill-me` | `brainstorming`, `product-capability` | `grill-me` owns one-question-at-a-time pressure testing. `brainstorming` explores ideas broadly; `product-capability` writes implementation-ready contracts. |
 | `compound-code-review` | `coding-standards`, `security-review`, `verification-loop`, `web-design-guidelines` | `compound-code-review` owns deep structured review and finding routing. `coding-standards` remains the general quality baseline, `security-review` owns focused security checklists, `verification-loop` owns command gates, and `web-design-guidelines` owns UI/UX audits. |
+| `feynman-learning-coach` | `deep-research`, `article-writing`, `content-engine`, Compound Engineering `coding-tutor` candidate | `feynman-learning-coach` owns interactive learning sessions with logs. Research and writing skills produce content; coding-tutor remains an explicit-only upstream reference. |
 
 ## CLI Lifecycle Contract
 

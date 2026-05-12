@@ -36,6 +36,7 @@ This project intentionally avoids installing every famous skill pack wholesale. 
 | Self-contained HTML work report, plan, review, status update, research explainer, or lightweight editor | `html-work-reports` | `web-artifacts-builder` when a bundled React/Tailwind app is needed |
 | General code quality | `coding-standards` | language/framework-specific skill when present |
 | Security review | `security-review` | `verification-loop` |
+| Learning, studying, tutoring, exam/interview review, or step-by-step mastery of a topic | `feynman-learning-coach` | `deep-research` for source gathering; `article-writing` for finished instructional content |
 | Find more skills | `find-skills` | system `skill-installer` for actual installs |
 | Evaluate third-party skills | `skill-evaluator` | `find-skills` only when searching for alternatives |
 
@@ -88,6 +89,8 @@ The installed exception is code review: `ce-code-review` was adapted as `compoun
 
 Other CE areas stay explicit-only or library-only: `ce-doc-review` and plan confidence checks can inform a future plan-review lane; `ce-compound`/`ce-sessions` should wait until this hub decides durable memory ownership; `ce-work`, `lfg`, `ce-commit-push-pr`, and `ce-resolve-pr-feedback` are too side-effect-heavy for default routing; `ce-product-pulse`, `ce-slack-research`, `ce-proof`, and `ce-gemini-imagegen` require credentials or external services; `coding-tutor` is a separate learning profile candidate, not a default engineering workflow.
 
+`hluaguo/learn-faster-kit` was evaluated on 2026-05-12 at `cce560b51d765f08407d37afd3f4dad19d32b268`. Do not install it wholesale. The lightweight learning pattern was adapted as `feynman-learning-coach`: scoped learning contract, progressive Feynman loop, teach-back checks, and local `.learning/feynman/` logs. Keep it out of the default `minimal` profile because it changes the assistant posture from engineering execution to tutoring.
+
 ## Superpowers Decision
 
 Superpowers is not installed right now.
@@ -109,3 +112,4 @@ Do not auto-install these until a user actually needs them:
 - Full Superpowers pack: useful but overlapping with ECC and existing workflow skills.
 - Matt Pocock `grill-with-docs`, `improve-codebase-architecture`, and `zoom-out`: useful references, but require a domain-doc or architecture profile before default installation.
 - Compound Engineering `ce-work`, `lfg`, PR/commit/push helpers, product pulse, Slack/Proof/Gemini integrations, and `coding-tutor`: useful only for explicit profile work because they add external actions, credentials, persistent local stores, or heavy workflow overlap.
+- Learn FASTER-style learning coach: installed as `feynman-learning-coach`, but useful only through the explicit `learning` profile because it creates `.learning/` runtime state and changes the assistant's default behavior from engineering execution to tutoring.

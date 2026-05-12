@@ -85,6 +85,7 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - Plan/design pressure testing: use `grill-me`; use `brainstorming` for open-ended ideation and `product-capability` for implementation-ready contracts.
 - Runtime bugs/performance regressions: use `diagnose`; use `agent-introspection-debugging` only when the agent/tool harness is failing, and `verification-loop` after the fix.
 - Throwaway design exploration: use `prototype`; use `frontend-design` for production UI, `web-artifacts-builder` for standalone artifacts, and `tdd-workflow` for production implementation.
+- Learning/tutoring sessions: use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
 
 ## CLI Lifecycle
 
