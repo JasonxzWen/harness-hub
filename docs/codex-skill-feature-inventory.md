@@ -9,6 +9,7 @@ This document summarizes the functional surface worth adapting from famous Claud
 | Capability | Codex version should provide |
 |---|---|
 | Skill dispatch | Check applicable skills before major work while respecting user instructions. |
+| Skill quality governance | Keep descriptions routing-oriented, require eval evidence for trigger changes, and move heavy conditional content into progressive spokes. |
 | Brainstorming | Explore intent, constraints, alternatives, and non-goals before implementation. |
 | Spec creation | Capture accepted requirements in a concise design/spec artifact. |
 | Planning | Break work into small, verifiable tasks with target files, commands, risks, and checkpoints. |
@@ -62,8 +63,9 @@ The first usable Codex profile should include:
 4. Ralph-style repeated execution for PRD stories, when the user explicitly wants autonomous iteration.
 5. A small set of reviewer prompts: planner, code reviewer, security reviewer, build resolver.
 6. A source/license note for every adapted skill.
-7. A capability graph that marks overlap, routing, source, and install profiles before copying skills into target repos.
-8. A released CLI lifecycle that can analyze, install, report status, and remove Skill Hub-managed files from other repositories.
+7. Routing eval examples for high-overlap/default skills before broader description refactors.
+8. A capability graph that marks overlap, routing, source, and install profiles before copying skills into target repos.
+9. A released CLI lifecycle that can analyze, install, report status, and remove Skill Hub-managed files from other repositories.
 
 ## Evaluated Gap Candidates
 

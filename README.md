@@ -84,6 +84,8 @@ This hub will track Codex-ready adaptations for:
 - Prefer source attribution over unattributed prompt copying.
 - Adapt tool names and workflows to Codex instead of blindly preserving Claude Code assumptions.
 - Keep skills focused, composable, and testable.
+- Treat skill descriptions as routing triggers, not documentation summaries.
+- Require eval evidence before changing routing-sensitive skill text.
 - Start with a minimal reliable profile, then add larger batteries-included packs.
 - Review licenses and security posture before importing third-party content.
 
@@ -97,6 +99,8 @@ This hub will track Codex-ready adaptations for:
 - [Vercel Skills local setup](docs/vercel-skills-local-setup.md)
 - [Ralph Loop Codex setup](docs/ralph-loop.md)
 - [Skill evaluation policy](docs/skill-evaluation-policy.md)
+- [Skill quality guide](docs/skill-quality-guide.md)
+- [Skill quality rollout plan](docs/skill-quality-rollout-plan.md)
 - [Skill routing and de-duplication](docs/skill-routing.md)
 - [MCP validation notes](docs/mcp-validation.md)
 - [Source projects and candidates](docs/source-projects.md)
@@ -136,11 +140,13 @@ powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExtern
 ## Next Milestones
 
 1. Implement the `release-cli-capability-lifecycle` OpenSpec change: read-only analysis, install alias migration, lock-backed status, safe removal, and package smoke testing.
-2. Expand `capabilities/index.json` with detection metadata, recommendation text, supported agents, and lifecycle risk markers.
-3. Exercise `skill-hub analyze/install/status/remove` against disposable target repos for Codex, Claude Code, and OpenCode.
-4. Verify MCP startup from a non-sandboxed Codex shell with credentials available before recommending MCP-bearing profiles.
-5. Test the Ralph runner on a small disposable repo before using it on high-value branches.
-6. Keep source/license notes current whenever a third-party skill is added or refreshed.
+2. Keep the non-failing skill quality inventory report stable enough for review, then decide whether a checked-in baseline is worth maintaining.
+3. Expand routing eval fixtures beyond the initial high-overlap set before broader description refactors.
+4. Expand `capabilities/index.json` with detection metadata, recommendation text, supported agents, and lifecycle risk markers.
+5. Exercise `skill-hub analyze/install/status/remove` against disposable target repos for Codex, Claude Code, and OpenCode.
+6. Verify MCP startup from a non-sandboxed Codex shell with credentials available before recommending MCP-bearing profiles.
+7. Test the Ralph runner on a small disposable repo before using it on high-value branches.
+8. Keep source/license notes current whenever a third-party skill is added or refreshed.
 
 ## CLI Preview
 

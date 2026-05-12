@@ -87,6 +87,17 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - Throwaway design exploration: use `prototype`; use `frontend-design` for production UI, `web-artifacts-builder` for standalone artifacts, and `tdd-workflow` for production implementation.
 - Learning/tutoring sessions: use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
 
+## Skill Quality Governance
+
+Use `docs/skill-quality-guide.md` as the local quality bar for authoring, importing, reviewing, and maintaining skills.
+
+- Treat `SKILL.md` `description` as routing logic. Prefer "Load when..." phrasing, target 50 words or fewer, and describe user intent rather than workflow internals.
+- Do not change a skill description without adding or updating positive, negative, and forbidden-load eval coverage, unless the edit is purely mechanical and leaves trigger meaning unchanged.
+- Keep heavy or conditional content out of `SKILL.md`; use `scripts/`, `references/`, and `assets/` for progressive loading.
+- Add gotchas as concrete failure-derived notes. Avoid expanding broad workflow prose when a specific gotcha is enough.
+- Before installing a new default-profile skill, verify that it adds a bounded behavior gap and does not duplicate global `AGENTS.md` instructions.
+- Follow `docs/skill-quality-rollout-plan.md` for staged quality-gate work; inventory and warn before making broad imported-skill checks fail.
+
 ## CLI Lifecycle
 
 The release-oriented Skill Hub CLI contract is documented in `README.md`, `docs/cli-lifecycle-design.md`, and `docs/capability-map.md`.

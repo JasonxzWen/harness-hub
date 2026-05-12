@@ -206,7 +206,7 @@
         "skill:frontend-slides",
         "skill:frontend-design"
       ],
-      "routing": "Default for non-trivial reports, plans, reviews, status updates, and explainers when Markdown is too flat.",
+      "routing": "Load for self-contained HTML reports, reviews, plans, status updates, research explainers, architecture walkthroughs, and lightweight export editors when Markdown is too flat; use frontend-design, web-artifacts-builder, or frontend-slides for UI apps and decks.",
       "detects": [
         {
           "path": ".agents/skills/html-work-reports/SKILL.md",
@@ -231,7 +231,7 @@
         "claude-code"
       ],
       "risk": "low",
-      "recommendation": "Default for non-trivial reports, plans, reviews, status updates, and explainers when Markdown is too flat."
+      "recommendation": "Create self-contained HTML reports for non-trivial reviews, plans, status updates, research explainers, architecture walkthroughs, or lightweight export editors."
     },
     "skill:compound-code-review": {
       "kind": "skill",
@@ -293,7 +293,7 @@
         "skill:article-writing",
         "skill:content-engine"
       ],
-      "routing": "Use when the user explicitly wants to learn, study, master, review, or be coached through a topic; do not route ordinary implementation or factual lookup.",
+      "routing": "Load when the user explicitly wants to learn, study, master, review, prepare for an exam/interview, build a syllabus, or be coached through a topic; do not route ordinary implementation or factual lookup.",
       "detects": [
         {
           "path": ".agents/skills/feynman-learning-coach/SKILL.md",
@@ -318,7 +318,7 @@
         "claude-code"
       ],
       "risk": "low",
-      "recommendation": "Use for explicit learning sessions that need scoped teaching, Feynman teach-back loops, and durable logs."
+      "recommendation": "Use for explicit learning sessions with scoped teaching, Feynman teach-back checks, and durable logs."
     },
     "skill:coding-standards": {
       "kind": "skill",

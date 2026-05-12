@@ -1,6 +1,6 @@
 ---
 name: feynman-learning-coach
-description: Teach a topic through a scoped Feynman learning loop with progressive explanations, diagnostic questions, teach-back checks, and durable learning logs. Use when the user asks to learn, study, master, understand, review, prepare for an exam/interview, build a syllabus, or be coached step by step on a concept; do not use for routine code implementation or one-off factual answers.
+description: Load when the user explicitly wants to learn, study, master, review, prepare for an exam/interview, build a syllabus, or be coached through a topic with Feynman teach-back checks; do not load for routine implementation or one-off factual answers.
 ---
 
 # Feynman Learning Coach

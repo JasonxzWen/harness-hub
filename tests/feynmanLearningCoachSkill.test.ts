@@ -15,10 +15,13 @@ function frontmatterValue(name: string): string {
 test('feynman-learning-coach has a narrow tutoring trigger', () => {
   const description = frontmatterValue('description');
 
-  expect(description).toContain('Feynman learning loop');
+  expect(description.startsWith('Load when')).toBe(true);
+  expect(description.split(/\s+/).length).toBeLessThanOrEqual(50);
+  expect(description).toContain('explicitly wants to learn');
   expect(description).toContain('teach-back checks');
-  expect(description).toContain('durable learning logs');
-  expect(description).toContain('do not use for routine code implementation');
+  expect(description).toContain('exam/interview');
+  expect(description).toContain('build a syllabus');
+  expect(description).toContain('do not load for routine implementation');
 });
 
 test('feynman-learning-coach defines progressive teaching and logging', () => {

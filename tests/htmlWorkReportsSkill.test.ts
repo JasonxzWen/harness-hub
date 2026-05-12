@@ -12,12 +12,15 @@ function frontmatterValue(name: string): string {
 test('html-work-reports has a narrow trigger description', () => {
   const description = frontmatterValue('description');
 
-  expect(description).toContain('non-trivial planning');
-  expect(description).toContain('code review');
-  expect(description).toContain('architecture walkthroughs');
-  expect(description).toContain('copy/export controls');
-  expect(description).toContain('avoid simple answers and normal code edits');
-  expect(description).not.toContain('dashboards');
+  expect(description.startsWith('Load when')).toBe(true);
+  expect(description.split(/\s+/).length).toBeLessThanOrEqual(50);
+  expect(description).toContain('self-contained HTML report');
+  expect(description).toContain('review');
+  expect(description).toContain('architecture walkthrough');
+  expect(description).toContain('lightweight export editor');
+  expect(description).toContain('do not load for simple chat answers');
+  expect(description).toContain('normal code edits');
+  expect(description).toContain('bundled web apps');
 });
 
 test('html-work-reports documents positive and negative trigger examples', () => {

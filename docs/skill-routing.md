@@ -4,6 +4,8 @@ Date: 2026-05-11
 
 This project intentionally avoids installing every famous skill pack wholesale. Prefer the narrowest skill that matches the user request.
 
+Use [Skill quality guide](skill-quality-guide.md) for description, gotcha, progressive-loading, and routing-eval standards. Route changes should be treated as behavior changes, even when only frontmatter text changes.
+
 ## Current Skill Roots
 
 | Root | Purpose |
@@ -40,13 +42,35 @@ This project intentionally avoids installing every famous skill pack wholesale. 
 | Find more skills | `find-skills` | system `skill-installer` for actual installs |
 | Evaluate third-party skills | `skill-evaluator` | `find-skills` only when searching for alternatives |
 
+## Routing Quality Rules
+
+- Prefer descriptions that start with `Load when` and name user intent, not workflow steps.
+- Keep descriptions under 50 words by default; document exceptions for file-format or safety-critical routing.
+- Add positive, negative, and forbidden-load examples before semantic changes to an installed skill's description.
+- Add overlap notes here when a new skill could plausibly steal traffic from an existing skill.
+- Keep broad project behavior in `AGENTS.md`; keep conditional behavior in skills.
+
+## Routing Eval Boundaries
+
+These boundaries are mirrored by `tests/fixtures/skill-routing-cases.json` so description changes are reviewed against positive, negative, and forbidden-load examples.
+
+- `diagnose` loads for runtime bugs, failing commands, flaky behavior, and performance regressions.
+- `agent-introspection-debugging` loads only for agent runs, tool loops, context drift, or harness failures.
+- `prototype` loads for explicitly throwaway experiments that answer one design question.
+- `frontend-design` loads for production-grade visual UI creation, not routine reports or debugging.
+- `html-work-reports` loads for self-contained work artifacts where HTML navigation or export controls beat Markdown.
+- `compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere.
+- `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.
+- `verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis.
+- `feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions.
+
 ## Removed Duplicate
 
 The project-local `.codex/skills/skill-creator` copy was removed. Codex already provides a current system `skill-creator` skill, and keeping a second project-local copy risks stale instructions and duplicate triggering.
 
 ## HTML Work Reports
 
-Use `html-work-reports` when the output should be browsable, visual, interactive, or exportable. It is intentionally narrower than `web-artifacts-builder`: it covers one-file reports, reviews, plans, explainers, dashboards, and lightweight editors, while `web-artifacts-builder` remains the choice for complex bundled React/Tailwind artifacts.
+Use `html-work-reports` when the output should be browsable, visual, interactive, or exportable. It is intentionally narrower than `web-artifacts-builder`: it covers one-file reports, reviews, plans, explainers, status dashboards, and lightweight editors, while `web-artifacts-builder` remains the choice for complex bundled React/Tailwind artifacts.
 
 This skill is inspired by [The unreasonable effectiveness of HTML](https://thariqs.github.io/html-effectiveness/) and local evaluation of `html-tools`-style single-file artifacts. Third-party HTML artifact skills were not installed because the repository needed a governance/reporting trigger, not another broad tool-building trigger.
 

@@ -1,6 +1,6 @@
 ---
 name: html-work-reports
-description: Create self-contained HTML work reports for non-trivial planning, code review, architecture walkthroughs, research synthesis, status or incident updates, and task-specific export editors. Use when the user asks for a report, plan, review, explainer, or summary that needs side-by-side comparison, filtering, timelines, diagrams, collapsible detail, or copy/export controls; avoid simple answers and normal code edits.
+description: Load when the user needs a self-contained HTML report, review, plan, status update, research explainer, architecture walkthrough, or lightweight export editor; do not load for simple chat answers, normal code edits, production UI, slide decks, or bundled web apps.
 ---
 
 # HTML Work Reports

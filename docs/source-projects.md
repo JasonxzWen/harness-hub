@@ -100,8 +100,10 @@ This file tracks source projects that are worth studying or adapting for Codex.
 ## Import Policy
 
 - Use `skill-evaluator` for every third-party skill evaluation, including rejected candidates.
+- Apply `docs/skill-quality-guide.md` before deciding whether a candidate should enter the default index.
 - Do not copy large third-party skill bodies without checking license and attribution.
 - Prefer adaptation notes and small original Codex-native skills over bulk prompt mirroring.
 - Record source URL, license, upstream version/date, and local modifications for every imported skill.
 - Keep optional high-context packs behind named install profiles.
+- Record positive, negative, and forbidden-load examples before changing default-route descriptions.
 - Run security review before enabling hooks, MCP servers, shell automation, or credential-handling workflows.

@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "diagnose-positive-runtime-failure",
+      "skill": "diagnose",
+      "kind": "positive",
+      "prompt": "A CLI command intermittently times out; reproduce the failure, find the root cause, and add a regression test.",
+      "expectedSkill": "diagnose",
+      "docsBoundary": "`diagnose` loads for runtime bugs, failing commands, flaky behavior, and performance regressions."
+    },
+    {
+      "id": "diagnose-negative-agent-loop",
+      "skill": "diagnose",
+      "kind": "negative",
+      "prompt": "The agent keeps retrying the same tool calls and drifting away from the task; debug the harness failure.",
+      "expectedSkill": "agent-introspection-debugging",
+      "docsBoundary": "`diagnose` loads for runtime bugs, failing commands, flaky behavior, and performance regressions."
+    },
+    {
+      "id": "diagnose-forbidden-planned-feature",
+      "skill": "diagnose",
+      "kind": "forbidden-load",
+      "prompt": "Add validation to the settings form with tests.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`diagnose` loads for runtime bugs, failing commands, flaky behavior, and performance regressions."
+    },
+    {
+      "id": "agent-introspection-positive-tool-loop",
+      "skill": "agent-introspection-debugging",
+      "kind": "positive",
+      "prompt": "Codex is stuck in a repeated tool loop and burning context without progress; capture state and recover.",
+      "expectedSkill": "agent-introspection-debugging",
+      "docsBoundary": "`agent-introspection-debugging` loads only for agent runs, tool loops, context drift, or harness failures."
+    },
+    {
+      "id": "agent-introspection-negative-product-bug",
+      "skill": "agent-introspection-debugging",
+      "kind": "negative",
+      "prompt": "The API returns 500 for a valid payload; reproduce it and fix the product bug.",
+      "expectedSkill": "diagnose",
+      "docsBoundary": "`agent-introspection-debugging` loads only for agent runs, tool loops, context drift, or harness failures."
+    },
+    {
+      "id": "agent-introspection-forbidden-final-gates",
+      "skill": "agent-introspection-debugging",
+      "kind": "forbidden-load",
+      "prompt": "Before I open the PR, run the final build, typecheck, tests, and diff review.",
+      "expectedSkill": "verification-loop",
+      "docsBoundary": "`agent-introspection-debugging` loads only for agent runs, tool loops, context drift, or harness failures."
+    },
+    {
+      "id": "prototype-positive-throwaway-ui",
+      "skill": "prototype",
+      "kind": "positive",
+      "prompt": "Build a throwaway prototype so I can try two drag-and-drop interaction models before choosing one.",
+      "expectedSkill": "prototype",
+      "docsBoundary": "`prototype` loads for explicitly throwaway experiments that answer one design question."
+    },
+    {
+      "id": "prototype-negative-production-ui",
+      "skill": "prototype",
+      "kind": "negative",
+      "prompt": "Build the production dashboard page with polished responsive styling.",
+      "expectedSkill": "frontend-design",
+      "docsBoundary": "`prototype` loads for explicitly throwaway experiments that answer one design question."
+    },
+    {
+      "id": "prototype-forbidden-production-feature",
+      "skill": "prototype",
+      "kind": "forbidden-load",
+      "prompt": "Implement the selected onboarding flow in production and cover it with tests.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`prototype` loads for explicitly throwaway experiments that answer one design question."
+    },
+    {
+      "id": "frontend-design-positive-product-ui",
+      "skill": "frontend-design",
+      "kind": "positive",
+      "prompt": "Design and build a polished SaaS dashboard page with production-grade visual hierarchy.",
+      "expectedSkill": "frontend-design",
+      "docsBoundary": "`frontend-design` loads for production-grade visual UI creation, not routine reports or debugging."
+    },
+    {
+      "id": "frontend-design-negative-html-report",
+      "skill": "frontend-design",
+      "kind": "negative",
+      "prompt": "Turn this review into a self-contained HTML report with filters and severity sections.",
+      "expectedSkill": "html-work-reports",
+      "docsBoundary": "`frontend-design` loads for production-grade visual UI creation, not routine reports or debugging."
+    },
+    {
+      "id": "frontend-design-forbidden-failing-tests",
+      "skill": "frontend-design",
+      "kind": "forbidden-load",
+      "prompt": "The TypeScript test suite is failing; find the root cause and make it pass.",
+      "expectedSkill": "diagnose",
+      "docsBoundary": "`frontend-design` loads for production-grade visual UI creation, not routine reports or debugging."
+    },
+    {
+      "id": "html-work-reports-positive-review-artifact",
+      "skill": "html-work-reports",
+      "kind": "positive",
+      "prompt": "Create a one-file HTML work report for this PR review with collapsible findings and copyable action items.",
+      "expectedSkill": "html-work-reports",
+      "docsBoundary": "`html-work-reports` loads for self-contained work artifacts where HTML navigation or export controls beat Markdown."
+    },
+    {
+      "id": "html-work-reports-negative-product-page",
+      "skill": "html-work-reports",
+      "kind": "negative",
+      "prompt": "Build a branded product landing page as the first screen of the app.",
+      "expectedSkill": "frontend-design",
+      "docsBoundary": "`html-work-reports` loads for self-contained work artifacts where HTML navigation or export controls beat Markdown."
+    },
+    {
+      "id": "html-work-reports-forbidden-short-answer",
+      "skill": "html-work-reports",
+      "kind": "forbidden-load",
+      "prompt": "Summarize the command output in two sentences.",
+      "expectedSkill": null,
+      "docsBoundary": "`html-work-reports` loads for self-contained work artifacts where HTML navigation or export controls beat Markdown."
+    },
+    {
+      "id": "compound-code-review-positive-deep-review",
+      "skill": "compound-code-review",
+      "kind": "positive",
+      "prompt": "Run a deep pre-PR code review with structured findings, confidence, and fix routing.",
+      "expectedSkill": "compound-code-review",
+      "docsBoundary": "`compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere."
+    },
+    {
+      "id": "compound-code-review-negative-security",
+      "skill": "compound-code-review",
+      "kind": "negative",
+      "prompt": "Review this auth endpoint only for injection, secret handling, and unsafe IO risks.",
+      "expectedSkill": "security-review",
+      "docsBoundary": "`compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere."
+    },
+    {
+      "id": "compound-code-review-forbidden-final-gates",
+      "skill": "compound-code-review",
+      "kind": "forbidden-load",
+      "prompt": "Run the final validation commands and tell me whether the branch is ready.",
+      "expectedSkill": "verification-loop",
+      "docsBoundary": "`compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere."
+    },
+    {
+      "id": "security-review-positive-auth-risk",
+      "skill": "security-review",
+      "kind": "positive",
+      "prompt": "Check the payment webhook and auth middleware for secrets, injection, and unsafe input handling.",
+      "expectedSkill": "security-review",
+      "docsBoundary": "`security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments."
+    },
+    {
+      "id": "security-review-negative-general-pr",
+      "skill": "security-review",
+      "kind": "negative",
+      "prompt": "Review this PR for correctness, regressions, missing tests, and fix routing.",
+      "expectedSkill": "compound-code-review",
+      "docsBoundary": "`security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments."
+    },
+    {
+      "id": "security-review-forbidden-final-validation",
+      "skill": "security-review",
+      "kind": "forbidden-load",
+      "prompt": "Run typecheck, tests, validation, and git diff checks before completion.",
+      "expectedSkill": "verification-loop",
+      "docsBoundary": "`security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments."
+    },
+    {
+      "id": "verification-loop-positive-final-gates",
+      "skill": "verification-loop",
+      "kind": "positive",
+      "prompt": "Before declaring the work complete, run the build, typecheck, tests, lint, and diff review.",
+      "expectedSkill": "verification-loop",
+      "docsBoundary": "`verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis."
+    },
+    {
+      "id": "verification-loop-negative-root-cause",
+      "skill": "verification-loop",
+      "kind": "negative",
+      "prompt": "The test command fails with a new runtime error; reproduce it and fix the root cause.",
+      "expectedSkill": "diagnose",
+      "docsBoundary": "`verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis."
+    },
+    {
+      "id": "verification-loop-forbidden-code-review",
+      "skill": "verification-loop",
+      "kind": "forbidden-load",
+      "prompt": "Review the PR for behavioral regressions and missing tests before I ask for fixes.",
+      "expectedSkill": "compound-code-review",
+      "docsBoundary": "`verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis."
+    },
+    {
+      "id": "feynman-learning-positive-topic-mastery",
+      "skill": "feynman-learning-coach",
+      "kind": "positive",
+      "prompt": "Teach me event sourcing step by step and make me explain it back until I really understand it.",
+      "expectedSkill": "feynman-learning-coach",
+      "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
+    },
+    {
+      "id": "feynman-learning-negative-research-article",
+      "skill": "feynman-learning-coach",
+      "kind": "negative",
+      "prompt": "Research recent vector database trends and turn the findings into a polished article.",
+      "expectedSkill": "deep-research",
+      "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
+    },
+    {
+      "id": "feynman-learning-forbidden-implementation",
+      "skill": "feynman-learning-coach",
+      "kind": "forbidden-load",
+      "prompt": "Implement the queue worker fix with tests and run validation.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
+    }
+  ]
+}

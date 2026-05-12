@@ -17,6 +17,8 @@ This document is the human-readable index for `capabilities/index.json`. The JSO
 ## Routing Principles
 
 - Prefer the narrowest matching skill.
+- Treat skill descriptions and capability `routing` strings as routing-sensitive behavior.
+- Use [Skill quality guide](skill-quality-guide.md) for description, gotcha, progressive-loading, and eval standards.
 - Prefer ECC daily workflow skills for ordinary development.
 - Use `grill-me` when the user asks to be challenged, grilled, or pressure-tested before implementation.
 - Use `diagnose` for runtime bugs, failing commands, flaky behavior, and performance regressions; use `agent-introspection-debugging` only for agent/tool harness failures.
@@ -73,6 +75,8 @@ Each installable component should keep the current fields and gain lifecycle met
 | `agents` | Agent hosts this component can be installed for. |
 | `risk` | Operational risk marker for installs, updates, and future hooks/MCP configs. |
 | `recommendation` | Short user-facing reason used by JSON and HTML reports. |
+
+Description and routing metadata should stay aligned with the skill's `SKILL.md` frontmatter. Future quality checks should report drift before mutating install behavior depends on it.
 
 Initial detection is path-based only. V1 detect rules use exact repository-relative paths; absolute paths, `..` traversal, globs, and content matching are invalid.
 
