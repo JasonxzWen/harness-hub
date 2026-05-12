@@ -141,7 +141,7 @@ powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExtern
 
 ## Next Milestones
 
-1. Implement the `release-cli-capability-lifecycle` OpenSpec change: read-only analysis, install alias migration, lock-backed status, safe removal, and package smoke testing.
+1. Keep the archived `release-cli-capability-lifecycle` specs current as CLI behavior evolves.
 2. Exercise `skill-hub analyze --agent-readiness` against disposable target repos for Codex, Claude Code, and OpenCode.
 3. Keep the non-failing skill quality inventory report stable enough for review, then decide whether a checked-in baseline is worth maintaining.
 4. Expand routing eval fixtures beyond the initial high-overlap set before broader description refactors.

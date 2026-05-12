@@ -4,7 +4,7 @@ Date: 2026-05-11
 
 This document is the migration design for turning Skill Hub from a local installer skeleton into a released CLI that other repositories can use safely.
 
-The related OpenSpec change is `openspec/changes/release-cli-capability-lifecycle/`.
+The archived OpenSpec change is `openspec/changes/archive/2026-05-12-release-cli-capability-lifecycle/`. The active specs are under `openspec/specs/`.
 
 ## Product Goal
 

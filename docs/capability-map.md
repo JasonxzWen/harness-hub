@@ -53,7 +53,7 @@ The main observed risk is not that OpenSpec is useless. It is that OpenSpec skil
 
 ## CLI Lifecycle Contract
 
-The release-oriented command model is documented in [CLI lifecycle design](cli-lifecycle-design.md) and specified by the OpenSpec change `release-cli-capability-lifecycle`.
+The release-oriented command model is documented in [CLI lifecycle design](cli-lifecycle-design.md) and specified by the archived OpenSpec change `release-cli-capability-lifecycle`.
 
 | Command | Side effect | Contract |
 |---|---|---|
