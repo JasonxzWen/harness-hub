@@ -86,6 +86,21 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - Runtime bugs/performance regressions: use `diagnose`; use `agent-introspection-debugging` only when the agent/tool harness is failing, and `verification-loop` after the fix.
 - Throwaway design exploration: use `prototype`; use `frontend-design` for production UI, `web-artifacts-builder` for standalone artifacts, and `tdd-workflow` for production implementation.
 
+## CLI Lifecycle
+
+The release-oriented Skill Hub CLI contract is documented in `README.md`, `docs/cli-lifecycle-design.md`, and `docs/capability-map.md`.
+
+Use these verbs for target-repo lifecycle work:
+
+- `skill-hub analyze <target> --json` for read-only capability detection and recommendations.
+- `skill-hub install <target> --profile minimal --agent codex --dry-run` to preview installs.
+- `skill-hub install <target> --profile minimal --agent codex --yes` to copy managed assets and write `.skill-hub/lock.json`.
+- `skill-hub status <target> --json` to report current, missing, modified, update-available, skipped, and unknown components.
+- `skill-hub update <target> --dry-run --json` for first-release update planning only.
+- `skill-hub remove <target> --dry-run --json` to preview deletion and `skill-hub remove <target> --yes` to remove only lock-recorded Skill Hub files.
+
+Before opening a lifecycle CLI PR, run `bun run validate`, `openspec validate release-cli-capability-lifecycle`, `git diff --check`, `npm pack`, and a disposable target smoke flow for analyze/install/status/remove.
+
 ## Third-Party Skill Evaluation
 
 Use `skill-evaluator` whenever the user asks to evaluate, install, compare, or import a third-party skill repository.

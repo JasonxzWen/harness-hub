@@ -86,6 +86,7 @@ This hub will track Codex-ready adaptations for:
 ## Docs
 
 - [Capability map](docs/capability-map.md)
+- [CLI lifecycle design](docs/cli-lifecycle-design.md)
 - [Codex skill feature inventory](docs/codex-skill-feature-inventory.md)
 - [Claude built-in skills Codex adaptation](docs/codex-builtins-adaptation.md)
 - [Everything Claude Code local setup](docs/ecc-local-setup.md)
@@ -130,18 +131,23 @@ powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExtern
 
 ## Next Milestones
 
-1. Exercise `skill-hub init --dry-run` against disposable target repos for Codex, Claude Code, and OpenCode.
-2. Expand `capabilities/index.json` from skills-only components to rules, hooks, MCP config, and harness-specific config.
-3. Verify MCP startup from a non-sandboxed Codex shell with credentials available.
-4. Test the Ralph runner on a small disposable repo before using it on high-value branches.
-5. Keep source/license notes current whenever a third-party skill is added or refreshed.
+1. Implement the `release-cli-capability-lifecycle` OpenSpec change: read-only analysis, install alias migration, lock-backed status, safe removal, and package smoke testing.
+2. Expand `capabilities/index.json` with detection metadata, recommendation text, supported agents, and lifecycle risk markers.
+3. Exercise `skill-hub analyze/install/status/remove` against disposable target repos for Codex, Claude Code, and OpenCode.
+4. Verify MCP startup from a non-sandboxed Codex shell with credentials available before recommending MCP-bearing profiles.
+5. Test the Ralph runner on a small disposable repo before using it on high-value branches.
+6. Keep source/license notes current whenever a third-party skill is added or refreshed.
 
 ## CLI Preview
 
 ```powershell
-npx skill-hub init D:\path\to\target --profile minimal --agent codex --dry-run
-npx skill-hub init D:\path\to\target --profile web --agent codex --agent claude-code
+npx skill-hub analyze D:\path\to\target --json
+npx skill-hub analyze D:\path\to\target --html --output D:\tmp\skill-hub-analysis.html
+npx skill-hub install D:\path\to\target --profile minimal --agent codex --dry-run
+npx skill-hub install D:\path\to\target --profile web --agent codex --agent claude-code --yes
 npx skill-hub status D:\path\to\target --html
+npx skill-hub update D:\path\to\target --dry-run --json
+npx skill-hub remove D:\path\to\target --dry-run --json
 ```
 
-`init` writes selected skills, `.skill-hub/lock.json`, and a self-contained HTML install report.
+`analyze`, `status`, and first-release `update --dry-run` are read-only by default. `install` and `remove` mutate the target repo and must be backed by `.skill-hub/lock.json`. During migration, `init` remains a compatibility alias for `install`.

@@ -19,6 +19,7 @@ This document summarizes the functional surface worth adapting from famous Claud
 | Code review | Review for behavior regressions, security risks, maintainability, and missing tests. `compound-code-review` provides the dedicated structured lane adapted from Compound Engineering `ce-code-review`. |
 | Completion verification | Run relevant tests/checks before declaring work done. |
 | HTML work reports | Produce self-contained HTML reports, plans, reviews, research explainers, status dashboards, and lightweight editors when Markdown is too flat. |
+| Capability lifecycle CLI | Analyze target repos, recommend missing capabilities, install managed assets, report drift, and safely remove only Skill Hub-owned files. |
 
 ## P0: Codex Adaptation Layer
 
@@ -47,6 +48,7 @@ This document summarizes the functional surface worth adapting from famous Claud
 | Project Codex config | 1 | `.codex/config.toml` |
 | Capability graph | 1 | `capabilities/index.json` |
 | Node CLI | 1 | `bin/skill-hub.mjs` |
+| CLI lifecycle design | 1 | `docs/cli-lifecycle-design.md` |
 
 ## Minimal Import Profile
 
@@ -59,6 +61,7 @@ The first usable Codex profile should include:
 5. A small set of reviewer prompts: planner, code reviewer, security reviewer, build resolver.
 6. A source/license note for every adapted skill.
 7. A capability graph that marks overlap, routing, source, and install profiles before copying skills into target repos.
+8. A released CLI lifecycle that can analyze, install, report status, and remove Skill Hub-managed files from other repositories.
 
 ## Evaluated Gap Candidates
 
