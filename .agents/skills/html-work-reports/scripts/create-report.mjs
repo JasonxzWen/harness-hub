@@ -10,34 +10,107 @@ const reportUiJsPath = path.join(skillDir, "assets", "components", "report-ui.js
 const richRuntimeCssPath = path.join(skillDir, "assets", "components", "rich-render-runtime.css");
 const richRuntimeJsPath = path.join(skillDir, "assets", "components", "rich-render-runtime.js");
 
-const runtimePins = {
-  marked: "18.0.3",
-  DOMPurify: "3.4.2",
-  mermaid: "11.15.0",
-  "@highlightjs/cdn-assets": "11.11.1"
-};
+const renderModes = ["runtime-cdn", "pre-rendered", "fallback-only", "runtime"];
+
+const runtimeLibraries = [
+  {
+    id: "dompurify",
+    name: "DOMPurify",
+    version: "3.4.2",
+    url: "https://cdn.jsdelivr.net/npm/dompurify@3.4.2/dist/purify.min.js",
+    purpose: "插入 Markdown 渲染结果前进行净化",
+    required: true,
+    kind: "script"
+  },
+  {
+    id: "highlightjs",
+    name: "@highlightjs/cdn-assets",
+    version: "11.11.1",
+    url: "https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.11.1/highlight.min.js",
+    cssUrl: "https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.11.1/styles/github-dark.min.css",
+    purpose: "为代码块生成语法 token 高亮",
+    required: true,
+    kind: "script"
+  },
+  {
+    id: "marked",
+    name: "Marked",
+    version: "18.0.3",
+    url: "https://cdn.jsdelivr.net/npm/marked@18.0.3/lib/marked.esm.js",
+    purpose: "解析 runtime-cdn 报告中的 Markdown 源文本",
+    required: true,
+    kind: "module"
+  },
+  {
+    id: "mermaid",
+    name: "Mermaid",
+    version: "11.15.0",
+    url: "https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs",
+    purpose: "从 Mermaid 源文本渲染图表",
+    required: true,
+    kind: "module"
+  }
+];
 
 const templateMeta = {
   "implementation-handoff": {
-    label: "Implementation handoff",
-    useCase: "completed implementation work, verification gates, file evidence, risks, and next actions",
-    accent: "#2563eb"
+    label: "实现交付",
+    useCase: "已完成实现、验证门禁、文件证据、风险和下一步"
   },
   "review-findings": {
-    label: "Review findings",
-    useCase: "code or document review with severity filters, snippets, owners, and action export",
-    accent: "#c2414b"
+    label: "审查发现",
+    useCase: "代码或文档审查、严重级别筛选、证据片段、负责人和行动导出"
   },
   "research-explainer": {
-    label: "Research explainer",
-    useCase: "research synthesis, architecture walkthroughs, source-backed explanations, and diagrams",
-    accent: "#0f766e"
+    label: "研究解释",
+    useCase: "研究综合、架构 walkthrough、有来源支撑的解释和图表"
   },
   "decision-matrix": {
-    label: "Decision matrix",
-    useCase: "option comparison, recommendation, trade-offs, risks, and confirmation questions",
-    accent: "#b7791f"
+    label: "决策矩阵",
+    useCase: "选项比较、建议、取舍、风险和待确认问题"
   }
+};
+
+const groupLabels = {
+  summary: "摘要",
+  main: "正文",
+  changes: "变更",
+  impact: "影响",
+  risks: "风险",
+  decision: "决策",
+  next: "下一步",
+  details: "细节",
+  overview: "总览",
+  diagrams: "图表",
+  code: "代码",
+  evidence: "证据",
+  verification: "验证",
+  actions: "行动"
+};
+
+const statusLabels = {
+  complete: "完成",
+  ready: "就绪",
+  pass: "通过",
+  warn: "注意",
+  failed: "失败",
+  fail: "失败",
+  blocked: "阻塞",
+  review: "待审阅",
+  pending: "待处理",
+  degraded: "降级",
+  draft: "草稿",
+  info: "信息",
+  "not-run": "未运行",
+  "not-runtime": "非运行时"
+};
+
+const kindLabels = {
+  file: "文件",
+  command: "命令",
+  source: "来源",
+  assumption: "假设",
+  verification: "验证"
 };
 
 function parseArgs(argv) {
@@ -65,7 +138,7 @@ function usage() {
   return [
     "Usage: node .agents/skills/html-work-reports/scripts/create-report.mjs --input report.json [--out-dir reports] [--slug name] [--json] [--browser-mermaid]",
     "",
-    "Inputs follow references/report-input-schema.json. Default renderMode is pre-rendered."
+    "Inputs follow references/report-input-schema.json. Default renderMode is runtime-cdn."
   ].join("\n");
 }
 
@@ -80,6 +153,21 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value).replaceAll("`", "&#96;");
+}
+
+function stripTrailingWhitespace(value) {
+  return String(value).replace(/[ \t]+$/gm, "");
+}
+
+function hasLikelyMojibake(value) {
+  return /\?{4,}|\uFFFD/.test(String(value ?? ""));
+}
+
+function hasLikelyMojibakeInValue(value) {
+  if (typeof value === "string") return hasLikelyMojibake(value);
+  if (Array.isArray(value)) return value.some((item) => hasLikelyMojibakeInValue(item));
+  if (value && typeof value === "object") return Object.values(value).some((item) => hasLikelyMojibakeInValue(item));
+  return false;
 }
 
 function stripRawHtml(value) {
@@ -117,6 +205,63 @@ function safeLink(rawHref) {
   }
 }
 
+function normalizeRenderMode(mode) {
+  if (!mode) return { mode: "runtime-cdn", compatibility: "" };
+  if (mode === "runtime") return { mode: "runtime-cdn", compatibility: "legacy-runtime-alias" };
+  return { mode, compatibility: "" };
+}
+
+function isRuntimeMode(mode) {
+  return mode === "runtime-cdn";
+}
+
+function inferGroup(section) {
+  if (section.group) return section.group;
+  if (["evidence"].includes(section.type)) return "evidence";
+  if (["decision-matrix"].includes(section.type)) return "decision";
+  if (["actions"].includes(section.type)) return "next";
+  return "main";
+}
+
+function normalizeSection(section, index) {
+  const title = section.title || `Section ${index + 1}`;
+  return {
+    ...section,
+    title,
+    id: section.richId ? `section-${slugify(section.richId)}` : sectionId(title, index),
+    group: inferGroup(section),
+    priority: Number.isInteger(section.priority) ? section.priority : index,
+    status: section.status || "info",
+    summary: section.summary || ""
+  };
+}
+
+function sectionId(title, index = 0) {
+  return `section-${slugify(title)}-${index + 1}`;
+}
+
+function statusClass(status) {
+  if (["complete", "ready", "pass"].includes(status)) return "status-ok";
+  if (["blocked", "fail", "failed"].includes(status)) return "status-danger";
+  if (["warn", "degraded", "review", "pending", "not-run"].includes(status)) return "status-warn";
+  return "status-info";
+}
+
+function statusLabel(status) {
+  return statusLabels[status] || status || "信息";
+}
+
+function showSectionStatus(status) {
+  return ["warn", "failed", "fail", "blocked", "review", "pending", "degraded", "draft", "not-run"].includes(status);
+}
+
+function richStateForMode(mode, rendered) {
+  if (rendered) return "ready";
+  if (mode === "fallback-only") return "degraded";
+  if (isRuntimeMode(mode)) return "pending";
+  return "ready";
+}
+
 function sourceLabel(section) {
   const filePath = section.filePath || section.title || "source";
   const startLine = Number.isInteger(section.startLine) ? section.startLine : undefined;
@@ -132,7 +277,21 @@ function renderSourceLink(section, fallbackId) {
   if (href) {
     return `<a class="source-link" data-source-link data-file-path="${escapeAttr(section.filePath || "")}" href="${escapeAttr(href)}" rel="noreferrer">${escapeHtml(label)}</a>`;
   }
-  return `<a class="source-link" data-source-link data-file-path="${escapeAttr(section.filePath || "")}" href="#${escapeAttr(fallbackId)}">${escapeHtml(label)}</a>`;
+  return `<span class="source-link" data-source-link data-file-path="${escapeAttr(section.filePath || "")}" data-source-ref="${escapeAttr(fallbackId || "")}">${escapeHtml(label)}</span>`;
+}
+
+function renderSectionHeader(section, statusText = "") {
+  const summary = section.summary ? `<p class="section-summary">${escapeHtml(section.summary)}</p>` : "";
+  const status = statusText || section.status || "info";
+  const pill = showSectionStatus(status) ? `<span class="status-pill ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>` : "";
+  return `<div class="section-heading split-row">
+    <div>
+      <p class="meta">${escapeHtml(groupLabels[section.group] || section.group)}</p>
+      <h2>${escapeHtml(section.title)}</h2>
+      ${summary}
+    </div>
+    ${pill}
+  </div>`;
 }
 
 function inlineMarkdown(text) {
@@ -232,20 +391,21 @@ function highlightCode(source, language = "text", highlightLines = [], startLine
     }
     return `<span class="code-line" data-line="${lineNumber}">${rendered}</span>`;
   });
-  return `<code class="hljs language-${escapeAttr(language)}">${highlighted.join("\n")}</code>`;
+  return `<code class="hljs language-${escapeAttr(language)}">${highlighted.join("")}</code>`;
 }
 
 function highlightLine(line, language) {
   let html = escapeHtml(line);
   if (["javascript", "js", "typescript", "ts"].includes(language)) {
-    html = html.replace(/\b(async|await|const|let|var|return|function|export|import|from|if|else|try|catch|new)\b/g, '<span class="hljs-keyword">$1</span>');
+    html = html.replace(/\b(async|await|const|let|var|return|function|export|import|from|if|else|try|catch|new|type|string|boolean)\b/g, '<span class="hljs-keyword">$1</span>');
     html = html.replace(/(&quot;[^&]*?&quot;|&#39;[^&]*?&#39;|`[^`]*?`)/g, '<span class="hljs-string">$1</span>');
+    html = html.replace(/\b(true|false|null|undefined)\b/g, '<span class="hljs-literal">$1</span>');
     html = html.replace(/(\/\/.*)$/g, '<span class="hljs-comment">$1</span>');
   } else if (["json"].includes(language)) {
     html = html.replace(/(&quot;[^&]*?&quot;)(\s*:)?/g, '<span class="hljs-string">$1</span>$2');
     html = html.replace(/\b(true|false|null)\b/g, '<span class="hljs-literal">$1</span>');
-  } else if (["bash", "sh", "shell"].includes(language)) {
-    html = html.replace(/\b(bun|node|npm|git|openspec|powershell)\b/g, '<span class="hljs-keyword">$1</span>');
+  } else if (["bash", "sh", "shell", "powershell"].includes(language)) {
+    html = html.replace(/\b(bun|node|npm|git|openspec|powershell|pwsh)\b/g, '<span class="hljs-keyword">$1</span>');
   }
   return html;
 }
@@ -256,7 +416,7 @@ async function renderMermaidSvg(source, title, options) {
     if (rendered.ok) return rendered.svg;
     return fallbackMermaidSvg(source, title, rendered.error);
   }
-  return fallbackMermaidSvg(source, title, "Browser Mermaid rendering not requested; generated deterministic inline SVG fallback.");
+  return fallbackMermaidSvg(source, title, "未请求预渲染 Mermaid；源内容保留为隐藏 fallback。");
 }
 
 async function renderMermaidWithBrowser(source) {
@@ -271,9 +431,10 @@ async function renderMermaidWithBrowser(source) {
   try {
     browser = await chromium.launch({ channel: "chrome", headless: true });
     const page = await browser.newPage();
-    const html = `<!doctype html><div class="mermaid">${escapeHtml(source)}</div><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@${runtimePins.mermaid}/dist/mermaid.esm.min.mjs"; mermaid.initialize({startOnLoad:false, securityLevel:"strict"}); await mermaid.run({querySelector:".mermaid"});</script>`;
+    const mermaid = runtimeLibraries.find((item) => item.id === "mermaid");
+    const html = `<!doctype html><div id="diagram"></div><script type="module">import mermaid from "${mermaid.url}"; mermaid.initialize({startOnLoad:false, securityLevel:"strict", theme:"base"}); const result = await mermaid.render("diagram-svg", ${JSON.stringify(String(source ?? ""))}); document.getElementById("diagram").innerHTML = result.svg;</script>`;
     await page.setContent(html, { waitUntil: "networkidle" });
-    const svg = await page.locator(".mermaid svg").evaluate((node) => node.outerHTML);
+    const svg = await page.locator("#diagram svg").evaluate((node) => node.outerHTML);
     return { ok: true, svg };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -284,33 +445,31 @@ async function renderMermaidWithBrowser(source) {
 
 function fallbackMermaidSvg(source, title, message) {
   const lines = String(source ?? "").split("\n").filter(Boolean).slice(0, 6);
-  const width = 760;
-  const height = Math.max(180, 78 + lines.length * 24);
+  const width = 900;
+  const height = Math.max(190, 82 + lines.length * 24);
   const renderedLines = lines
-    .map((line, index) => `<text x="34" y="${88 + index * 24}" font-size="14" fill="#172033">${escapeHtml(line)}</text>`)
+    .map((line, index) => `<text x="34" y="${88 + index * 24}" font-size="14" fill="#172033">${escapeHtml(line.slice(0, 110))}</text>`)
     .join("");
 
   return [
     `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeAttr(title)} diagram" data-mermaid-renderer="fallback">`,
-    `<rect x="12" y="12" width="${width - 24}" height="${height - 24}" rx="10" fill="#ffffff" stroke="#d7dce5"/>`,
-    `<rect x="24" y="24" width="${width - 48}" height="34" rx="8" fill="#eef4ff" stroke="#2563eb"/>`,
-    `<text x="38" y="46" font-size="15" font-weight="700" fill="#172033">${escapeHtml(title)}</text>`,
+    `<rect x="12" y="12" width="${width - 24}" height="${height - 24}" rx="8" fill="#ffffff" stroke="#d7dce5"/>`,
+    `<rect x="24" y="24" width="${width - 48}" height="34" rx="6" fill="#eef4ff" stroke="#2563eb"/>`,
+    `<text x="38" y="46" font-size="15" font-weight="700" fill="#172033">${escapeHtml(title.slice(0, 96))}</text>`,
     renderedLines,
-    `<text x="34" y="${height - 30}" font-size="12" fill="#667085">${escapeHtml(message)}</text>`,
+    `<text x="34" y="${height - 30}" font-size="12" fill="#475467">${escapeHtml(message)}</text>`,
     `</svg>`
   ].join("");
 }
 
-function statusClass(status) {
-  if (["complete", "ready", "pass"].includes(status)) return "status-ok";
-  if (["blocked", "fail"].includes(status)) return "status-danger";
-  return "status-warn";
+function sectionAttrs(section) {
+  return `id="${escapeAttr(section.id)}" data-section-type="${escapeAttr(section.type)}" data-section-group="${escapeAttr(section.group)}" data-section-status="${escapeAttr(section.status)}"`;
 }
 
 function renderSummaryCards(section) {
   const cards = Array.isArray(section.cards) ? section.cards : [];
-  return `<section class="panel" id="${sectionId(section.title)}" data-section-type="summary-cards">
-    <h2>${escapeHtml(section.title)}</h2>
+  return `<section class="panel" ${sectionAttrs(section)}>
+    ${renderSectionHeader(section)}
     <div class="metric-grid focus-field">
       ${cards.map((card) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight><div class="meta">${escapeHtml(card.label)}</div><strong>${escapeHtml(card.value)}</strong></article>`).join("\n")}
     </div>
@@ -319,49 +478,67 @@ function renderSummaryCards(section) {
 
 function renderRuntimeMarkdown(section, index) {
   const sourceId = `markdown-source-${index}`;
-  return `<section class="panel" id="${sectionId(section.title)}" data-section-type="markdown" data-source-fallback>
-    <div class="split-row"><h2>${escapeHtml(section.title)}</h2><span class="rich-status" data-rich-status="${sourceId}">Markdown source fallback</span></div>
-    <div data-rich-markdown data-rich-status-id="${sourceId}">${escapeHtml(section.content)}</div>
-    <details><summary>Source fallback</summary><pre>${escapeHtml(safeAuditText(section.content))}</pre></details>
+  const statusId = `markdown-status-${index}`;
+  return `<section class="panel rich-section" ${sectionAttrs(section)} data-rich-section data-rich-kind="markdown" data-render-state="pending" data-source-fallback>
+    ${renderSectionHeader(section)}
+    <div class="rich-target" data-rich-markdown data-rich-status-id="${statusId}" data-rich-section-id="${escapeAttr(section.id)}">${escapeHtml(safeAuditText(section.content || ""))}</div>
+    <template id="${sourceId}" data-rich-source data-source-fallback>${escapeHtml(safeAuditText(section.content || ""))}</template>
   </section>`;
 }
 
 async function renderMarkdownSection(section, mode, index) {
-  if (mode === "runtime") return renderRuntimeMarkdown(section, index);
-  return `<section class="panel" id="${sectionId(section.title)}" data-section-type="markdown" data-source-fallback>
-    <div class="split-row"><h2>${escapeHtml(section.title)}</h2><span class="rich-status" data-state="ready">Markdown pre-rendered</span></div>
-    ${renderMarkdown(section.content)}
-    <details><summary>Source fallback</summary><pre>${escapeHtml(safeAuditText(section.content))}</pre></details>
+  if (isRuntimeMode(mode)) return renderRuntimeMarkdown(section, index);
+  const rendered = mode === "pre-rendered";
+  return `<section class="panel rich-section" ${sectionAttrs(section)} data-rich-section data-rich-kind="markdown" data-render-state="${richStateForMode(mode, rendered)}" data-source-fallback>
+    ${renderSectionHeader(section, rendered ? "ready" : "degraded")}
+    ${rendered ? renderMarkdown(section.content || "") : `<pre class="fallback-source-block">${escapeHtml(safeAuditText(section.content || ""))}</pre>`}
+    <template data-rich-source data-source-fallback>${escapeHtml(safeAuditText(section.content || ""))}</template>
   </section>`;
 }
 
 async function renderMermaidSection(section, mode, index, options) {
-  if (mode === "runtime") {
-    return `<section class="panel diagram-panel mermaid-evidence" id="${sectionId(section.title)}" data-section-type="mermaid" data-source-fallback>
-      <div class="split-row"><h2>${escapeHtml(section.title)}</h2><span class="rich-status" data-rich-status="mermaid">Mermaid source fallback</span></div>
-      <div data-rich-mermaid>${escapeHtml(section.content)}</div>
-      <details><summary>Mermaid source</summary><pre data-mermaid-source>${escapeHtml(section.content)}</pre></details>
+  const sourceId = `mermaid-source-${index}`;
+  const statusId = `mermaid-status-${index}`;
+
+  if (isRuntimeMode(mode)) {
+    return `<section class="panel diagram-panel mermaid-evidence rich-section" ${sectionAttrs(section)} data-rich-section data-rich-kind="mermaid" data-render-state="pending" data-source-fallback>
+      ${renderSectionHeader(section)}
+      <div class="mermaid-rendered" data-rich-mermaid-target data-rich-status-id="${statusId}" data-rich-section-id="${escapeAttr(section.id)}" data-source-id="${sourceId}"></div>
+      <template id="${sourceId}" data-rich-source data-source-fallback data-mermaid-source>${escapeHtml(section.content || "")}</template>
     </section>`;
   }
 
-  const svg = await renderMermaidSvg(section.content, section.title, options);
-  return `<section class="panel diagram-panel mermaid-evidence" id="${sectionId(section.title)}" data-section-type="mermaid" data-source-fallback>
-    <div class="split-row"><h2>${escapeHtml(section.title)}</h2><span class="rich-status" data-state="ready">Mermaid inline SVG</span></div>
-    ${svg}
-    <details><summary>Mermaid source</summary><pre data-mermaid-source>${escapeHtml(section.content)}</pre></details>
+  const rendered = mode === "pre-rendered";
+  const svg = rendered ? await renderMermaidSvg(section.content || "", section.title, options) : fallbackMermaidSvg(section.content || "", section.title, "Fallback-only mode keeps Mermaid source auditable.");
+  return `<section class="panel diagram-panel mermaid-evidence rich-section" ${sectionAttrs(section)} data-rich-section data-rich-kind="mermaid" data-render-state="${richStateForMode(mode, rendered)}" data-source-fallback>
+    ${renderSectionHeader(section, rendered ? "ready" : "degraded")}
+    <div class="mermaid-rendered">${svg}</div>
+    <template id="${sourceId}" data-rich-source data-source-fallback data-mermaid-source>${escapeHtml(section.content || "")}</template>
   </section>`;
 }
 
 function renderCodeSection(section, mode, index) {
   const language = section.language || "text";
-  const sourceId = `code-${index}`;
+  const sourceId = `code-source-${index}`;
+  const codeId = `code-${index}`;
+  const statusId = `code-status-${index}`;
   const startLine = Number.isInteger(section.startLine) ? section.startLine : 1;
-  const code = highlightCode(section.content, language, section.highlightLines || [], startLine);
+  const highlightLines = Array.isArray(section.highlightLines) ? section.highlightLines : [];
 
-  return `<section class="code-panel" id="${sectionId(section.title)}" data-section-type="code" data-source-fallback>
-    <header>${renderSourceLink(section, sourceId)}<button data-copy-from="#${sourceId}">Copy</button></header>
-    <pre id="${sourceId}" data-start-line="${startLine}" data-line-numbered>${code}</pre>
-    <details><summary>Code source</summary><pre>${escapeHtml(section.content)}</pre></details>
+  if (isRuntimeMode(mode)) {
+    return `<section class="code-panel rich-section" ${sectionAttrs(section)} data-rich-section data-rich-kind="code" data-render-state="pending" data-source-fallback>
+      <header><div>${renderSourceLink(section, sourceId)}</div><button data-copy-from="#${codeId}">复制</button></header>
+      <pre id="${codeId}" data-start-line="${startLine}" data-line-numbered><code class="hljs language-${escapeAttr(language)}" data-rich-code data-rich-status-id="${statusId}" data-rich-section-id="${escapeAttr(section.id)}" data-code-source-id="${sourceId}" data-start-line="${startLine}" data-highlight-lines="${escapeAttr(highlightLines.join(","))}">${escapeHtml(section.content || "")}</code></pre>
+      <template id="${sourceId}" data-rich-source data-source-fallback>${escapeHtml(section.content || "")}</template>
+    </section>`;
+  }
+
+  const rendered = mode === "pre-rendered";
+  const code = rendered ? highlightCode(section.content || "", language, highlightLines, startLine) : `<code class="language-${escapeAttr(language)}">${escapeHtml(section.content || "")}</code>`;
+  return `<section class="code-panel rich-section" ${sectionAttrs(section)} data-rich-section data-rich-kind="code" data-render-state="${richStateForMode(mode, rendered)}" data-source-fallback>
+    <header><div>${renderSourceLink(section, sourceId)}</div><button data-copy-from="#${codeId}">复制</button></header>
+    <pre id="${codeId}" data-start-line="${startLine}" data-line-numbered>${code}</pre>
+    <template id="${sourceId}" data-rich-source data-source-fallback>${escapeHtml(section.content || "")}</template>
   </section>`;
 }
 
@@ -380,14 +557,14 @@ function highlightDiff(source) {
       return `<span class="diff-line diff-hunk" data-line="${lineNumber}">${escaped}</span>`;
     }
     return `<span class="diff-line" data-line="${lineNumber}">${escaped}</span>`;
-  }).join("\n");
+  }).join("");
 }
 
 function renderDiffSection(section, index) {
   const sourceId = `diff-${index}`;
-  return `<section class="diff-panel" id="${sectionId(section.title)}" data-section-type="diff" data-source-fallback>
-    <header><div><h2>${escapeHtml(section.title)}</h2>${renderSourceLink(section, sourceId)}</div><button data-copy-from="#${sourceId}">Copy diff</button></header>
-    <pre id="${sourceId}" data-line-numbered><code>${highlightDiff(section.content)}</code></pre>
+  return `<section class="diff-panel rich-section" ${sectionAttrs(section)} data-rich-section data-rich-kind="diff" data-render-state="ready" data-source-fallback>
+    <header><div><h2>${escapeHtml(section.title)}</h2>${renderSourceLink(section, sourceId)}</div><button data-copy-from="#${sourceId}">复制 diff</button></header>
+    <pre id="${sourceId}" data-line-numbered><code>${highlightDiff(section.content || "")}</code></pre>
   </section>`;
 }
 
@@ -395,10 +572,11 @@ function renderFilterableCards(section) {
   const target = slugify(section.title);
   const items = Array.isArray(section.items) ? section.items : [];
   const groups = ["all", ...new Set(items.map((item) => item.group || "item"))];
-  return `<section class="panel" id="${sectionId(section.title)}" data-section-type="filterable-cards">
-    <div class="split-row"><h2>${escapeHtml(section.title)}</h2><div class="toolbar" role="toolbar" aria-label="${escapeAttr(section.filterLabel || section.title)} filters">
-      ${groups.map((group, index) => `<button data-filter-target="${target}" data-filter-value="${escapeAttr(group)}" aria-pressed="${index === 0 ? "true" : "false"}">${escapeHtml(group)}</button>`).join("")}
-    </div></div>
+  return `<section class="panel" ${sectionAttrs(section)}>
+    ${renderSectionHeader(section)}
+    <div class="toolbar" role="toolbar" aria-label="${escapeAttr(section.filterLabel || section.title)} filters">
+      ${groups.map((group, index) => `<button data-filter-target="${target}" data-filter-value="${escapeAttr(group)}" aria-pressed="${index === 0 ? "true" : "false"}">${escapeHtml(group === "all" ? "全部" : group)}</button>`).join("")}
+    </div>
     <div class="evidence-grid focus-field" data-focus-field="${target}">
       ${items.map((item) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight data-filter-target="${target}" data-filter-value="${escapeAttr(item.group || "item")}" data-search-target="${target}">
         <div class="meta">${escapeHtml(item.group || "item")}</div>
@@ -412,8 +590,8 @@ function renderFilterableCards(section) {
 function renderTabs(section) {
   const group = slugify(section.title);
   const tabs = Array.isArray(section.tabs) ? section.tabs : [];
-  return `<section class="panel" id="${sectionId(section.title)}" data-section-type="tabs">
-    <h2>${escapeHtml(section.title)}</h2>
+  return `<section class="panel" ${sectionAttrs(section)}>
+    ${renderSectionHeader(section)}
     <div class="toolbar" role="tablist" aria-label="${escapeAttr(section.title)} tabs">
       ${tabs.map((tab, index) => {
         const id = `${group}-tab-${index}`;
@@ -429,8 +607,8 @@ function renderTabs(section) {
 
 function renderTimeline(section) {
   const items = Array.isArray(section.items) ? section.items : [];
-  return `<section class="panel" id="${sectionId(section.title)}" data-section-type="timeline">
-    <h2>${escapeHtml(section.title)}</h2>
+  return `<section class="panel" ${sectionAttrs(section)}>
+    ${renderSectionHeader(section)}
     <div class="timeline">
       ${items.map((item) => `<div class="step"><strong>${escapeHtml(item.label || item.when)}</strong><span>${escapeHtml(item.detail || item.body)}</span></div>`).join("\n")}
     </div>
@@ -439,8 +617,8 @@ function renderTimeline(section) {
 
 function renderDecisionMatrix(section) {
   const options = Array.isArray(section.options) ? section.options : [];
-  return `<section class="panel" id="${sectionId(section.title)}" data-section-type="decision-matrix">
-    <h2>${escapeHtml(section.title)}</h2>
+  return `<section class="panel" ${sectionAttrs(section)}>
+    ${renderSectionHeader(section)}
     <div class="metric-grid focus-field">
       ${options.map((option) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight>
         <div class="meta">${escapeHtml(option.status || "option")}</div>
@@ -455,16 +633,16 @@ function renderDecisionMatrix(section) {
 
 function renderActions(section) {
   const actions = Array.isArray(section.items) ? section.items : [];
-  const id = `${sectionId(section.title)}-actions`;
-  return `<section class="panel" id="${sectionId(section.title)}" data-section-type="actions">
-    <div class="split-row"><h2>${escapeHtml(section.title)}</h2><button data-copy-from="#${id}">Copy actions</button></div>
+  const id = `${section.id}-actions`;
+  return `<section class="panel" ${sectionAttrs(section)}>
+    <div class="split-row">${renderSectionHeader(section)}<button data-copy-from="#${id}">复制行动项</button></div>
     <ul id="${id}">${actions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
   </section>`;
 }
 
 function renderEvidenceSection(section, input) {
-  return `<section class="panel" id="${sectionId(section.title || "Evidence")}" data-section-type="evidence">
-    <h2>${escapeHtml(section.title || "Evidence")}</h2>
+  return `<section class="panel" ${sectionAttrs(section)}>
+    ${renderSectionHeader(section)}
     ${renderEvidence(input.evidence || [])}
   </section>`;
 }
@@ -481,13 +659,13 @@ async function renderSection(section, mode, index, input, options) {
   if (section.type === "decision-matrix") return renderDecisionMatrix(section);
   if (section.type === "actions") return renderActions(section);
   if (section.type === "evidence") return renderEvidenceSection(section, input);
-  return `<section class="panel" id="${sectionId(section.title)}" data-section-type="${escapeAttr(section.type)}"><h2>${escapeHtml(section.title)}</h2><p>${escapeHtml(section.content || "")}</p></section>`;
+  return `<section class="panel" ${sectionAttrs(section)}>${renderSectionHeader(section)}<p>${escapeHtml(section.content || "")}</p></section>`;
 }
 
 function renderEvidence(items) {
   return `<div class="evidence-grid" data-evidence>
     ${items.map((item) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight data-evidence-kind="${escapeAttr(item.kind)}">
-      <div class="split-row"><span class="meta">${escapeHtml(item.kind)}</span><span class="status-pill ${statusClass(item.status || "info")}">${escapeHtml(item.status || "info")}</span></div>
+      <div class="split-row"><span class="meta">${escapeHtml(kindLabels[item.kind] || item.kind)}</span><span class="status-pill ${statusClass(item.status || "info")}">${escapeHtml(statusLabel(item.status || "info"))}</span></div>
       <h3>${escapeHtml(item.label)}</h3>
       <p>${escapeHtml(item.value || "")}</p>
     </article>`).join("\n")}
@@ -497,40 +675,91 @@ function renderEvidence(items) {
 function renderVerification(items) {
   return `<div class="evidence-grid" data-verification>
     ${(items || []).map((item) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight data-verification-status="${escapeAttr(item.status)}">
-      <div class="split-row"><span class="meta">Verification</span><span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status)}</span></div>
+      <div class="split-row"><span class="meta">验证</span><span class="status-pill ${statusClass(item.status)}">${escapeHtml(statusLabel(item.status))}</span></div>
       <h3>${escapeHtml(item.label)}</h3>
       <p>${escapeHtml(item.detail || "")}</p>
     </article>`).join("\n")}
   </div>`;
 }
 
-function renderRuntimeDependencies(mode) {
-  if (mode !== "runtime") return "";
-  const pins = Object.entries(runtimePins).map(([name, version]) => `${name}@${version}`);
-  return `<section class="panel" data-runtime-dependencies>
-    <h2>Runtime dependencies</h2>
+function renderRuntimeDependencies(mode, input = {}) {
+  if (!isRuntimeMode(mode)) return "";
+  const visible = input.showRuntimeDependencies === true;
+  const hiddenAttrs = visible ? "" : ' hidden aria-hidden="true"';
+  return `<section class="panel runtime-panel" id="runtime-dependencies" data-runtime-dependencies data-section-type="runtime-dependencies" data-section-group="verification"${hiddenAttrs}>
+    <div class="split-row">
+      <div>
+        <p class="meta">运行时</p>
+        <h2>运行时依赖</h2>
+        <p class="section-summary">runtime-cdn 使用的固定版本浏览器库；默认隐藏为机器可验证清单，不占用阅读界面。</p>
+      </div>
+      <span class="status-pill status-warn" data-runtime-state-pill>待处理</span>
+    </div>
     <div class="evidence-grid">
-      ${pins.map((pin) => `<article class="evidence-card" data-runtime-dependency="${escapeAttr(pin)}"><strong>${escapeHtml(pin)}</strong><p>Optional post-load enhancement. Source fallbacks remain visible.</p></article>`).join("\n")}
+      ${runtimeLibraries.map((item) => `<article class="evidence-card" data-runtime-dependency="${escapeAttr(item.id)}" data-runtime-dependency-name="${escapeAttr(item.name)}" data-runtime-dependency-version="${escapeAttr(item.version)}" data-runtime-dependency-url="${escapeAttr(item.url)}" data-runtime-dependency-state="pending">
+        <div class="split-row"><strong>${escapeHtml(item.name)}@${escapeHtml(item.version)}</strong><span class="status-pill status-warn">待处理</span></div>
+        <p>${escapeHtml(item.purpose)}</p>
+        <p class="source-link">${escapeHtml(item.url)}</p>
+      </article>`).join("\n")}
     </div>
   </section>`;
 }
 
 function runtimeScriptTags(mode) {
-  if (mode !== "runtime") return "";
+  if (!isRuntimeMode(mode)) return "";
+  const dompurify = runtimeLibraries.find((item) => item.id === "dompurify");
+  const highlight = runtimeLibraries.find((item) => item.id === "highlightjs");
+  const marked = runtimeLibraries.find((item) => item.id === "marked");
+  const mermaid = runtimeLibraries.find((item) => item.id === "mermaid");
   return `
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@${runtimePins.DOMPurify}/dist/purify.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@${runtimePins["@highlightjs/cdn-assets"]}/highlight.min.js"></script>
+  <link rel="stylesheet" href="${escapeAttr(highlight.cssUrl)}">
+  <script src="${escapeAttr(dompurify.url)}"></script>
+  <script src="${escapeAttr(highlight.url)}"></script>
   <script type="module">
-    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@${runtimePins.mermaid}/dist/mermaid.esm.min.mjs";
-    import { marked } from "https://cdn.jsdelivr.net/npm/marked@${runtimePins.marked}/lib/marked.esm.js";
-    window.mermaid = mermaid;
+    import { marked } from "${marked.url}";
+    import mermaid from "${mermaid.url}";
     window.marked = marked;
+    window.mermaid = mermaid;
     window.dispatchEvent(new Event("rich-render-libs-ready"));
   </script>`;
 }
 
-function sectionId(title) {
-  return `section-${slugify(title)}`;
+function renderGroupedNav(sections) {
+  const entries = sections.filter(Boolean);
+  const groups = new Map();
+  for (const section of entries) {
+    const group = section.group || "main";
+    if (!groups.has(group)) groups.set(group, []);
+    groups.get(group).push(section);
+  }
+
+  const preferredOrder = [
+    "summary",
+    "main",
+    "changes",
+    "impact",
+    "risks",
+    "decision",
+    "verification",
+    "next",
+    "details",
+    "overview",
+    "diagrams",
+    "code",
+    "evidence",
+    "actions"
+  ];
+  const groupOrder = [...preferredOrder, ...[...groups.keys()].filter((group) => !preferredOrder.includes(group))];
+  return `<nav class="report-nav" data-report-nav data-report-region="navigation" aria-label="报告目录">
+    <div class="report-nav-title">目录</div>
+    ${groupOrder.filter((group) => groups.has(group)).map((group) => {
+      const items = groups.get(group).sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
+      return `<div class="report-nav-group" data-nav-group="${escapeAttr(group)}">
+        <div class="report-nav-group-title">${escapeHtml(groupLabels[group] || group)}</div>
+        ${items.map((section) => `<a href="#${escapeAttr(section.id)}" title="${escapeAttr(section.title)}" data-nav-link data-nav-status="${escapeAttr(section.status || "info")}"><span>${escapeHtml(section.title)}</span></a>`).join("\n")}
+      </div>`;
+    }).join("\n")}
+  </nav>`;
 }
 
 function validateInput(input) {
@@ -540,80 +769,110 @@ function validateInput(input) {
   if (!input.summary) errors.push("Missing summary.");
   if (!input.status) errors.push("Missing status.");
   if (!Array.isArray(input.sections) || input.sections.length === 0) errors.push("sections must be a non-empty array.");
-  if (!Array.isArray(input.evidence)) errors.push("evidence must be an array.");
-  if (input.renderMode && !["pre-rendered", "runtime"].includes(input.renderMode)) errors.push("renderMode must be pre-rendered or runtime.");
+  if (input.evidence !== undefined && !Array.isArray(input.evidence)) errors.push("evidence must be an array when provided.");
+  if (input.verification !== undefined && !Array.isArray(input.verification)) errors.push("verification must be an array when provided.");
+  if (input.nextActions !== undefined && !Array.isArray(input.nextActions)) errors.push("nextActions must be an array when provided.");
+  if (input.renderMode && !renderModes.includes(input.renderMode)) errors.push("renderMode must be runtime-cdn, pre-rendered, fallback-only, or runtime alias.");
   if (input.template && !templateMeta[input.template]) errors.push(`Unknown template: ${input.template}`);
+  if (hasLikelyMojibakeInValue(input)) errors.push("Input contains likely mojibake. Write report JSON as UTF-8 and regenerate; continuous half-width question marks are not acceptable.");
   if (errors.length) throw new Error(errors.join(" "));
+}
+
+function supplementalSections(input, mode) {
+  const sections = [];
+  if (isRuntimeMode(mode) && input.showRuntimeDependencies === true) {
+    sections.push({ id: "runtime-dependencies", title: "运行时依赖", group: "verification", status: "pending", priority: 880 });
+  }
+  if ((input.evidence || []).length > 0) {
+    sections.push({ id: "evidence", title: "证据", group: "evidence", status: "info", priority: 900 });
+  }
+  if ((input.verification || []).length > 0) {
+    sections.push({ id: "verification", title: "验证", group: "verification", status: "info", priority: 901 });
+  }
+  if ((input.nextActions || []).length > 0) {
+    sections.push({ id: "next-actions", title: "下一步", group: "next", status: "info", priority: 902 });
+  }
+  return sections;
 }
 
 async function createReport(input, options = {}) {
   validateInput(input);
-  const mode = input.renderMode || "pre-rendered";
+  const { mode, compatibility } = normalizeRenderMode(input.renderMode);
   const template = input.template || "implementation-handoff";
   const meta = templateMeta[template];
   const generatedAt = input.generatedAt || new Date().toISOString();
+  const normalizedSections = input.sections.map(normalizeSection);
   const sections = [];
 
-  for (let index = 0; index < input.sections.length; index += 1) {
-    sections.push(await renderSection(input.sections[index], mode, index, input, options));
+  for (let index = 0; index < normalizedSections.length; index += 1) {
+    sections.push(await renderSection(normalizedSections[index], mode, index, input, options));
   }
 
   const css = [
     fs.readFileSync(reportUiCssPath, "utf8"),
-    mode === "runtime" ? fs.readFileSync(richRuntimeCssPath, "utf8") : "",
-    "table{width:100%;border-collapse:collapse;margin:10px 0}th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.timeline{display:grid;gap:10px}.step{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:10px;border-left:3px solid var(--accent);background:#f9fafc;border-radius:6px}.unsafe-link{color:var(--danger);font-weight:700}.rich-status{font-size:12px;color:var(--muted)}nav.report-nav{position:sticky;top:0;z-index:5;margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px)}nav.report-nav a{display:inline-block;margin:4px 10px 4px 0;font-weight:700;text-decoration:none}.report-section-stack{display:grid;gap:12px}.panel{margin-top:12px}details{margin-top:10px}.tab-panel{margin-top:10px}@media(max-width:720px){.step{grid-template-columns:1fr}}"
+    isRuntimeMode(mode) ? fs.readFileSync(richRuntimeCssPath, "utf8") : "",
+    "table{width:100%;border-collapse:collapse;margin:10px 0;min-width:520px}th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}.rendered-markdown table{display:table}.timeline{display:grid;gap:10px}.step{display:grid;grid-template-columns:minmax(90px,140px) minmax(0,1fr);gap:10px;padding:10px;border-left:3px solid var(--accent);background:#f9fafc;border-radius:6px;min-width:0}.unsafe-link{color:var(--danger);font-weight:700}.tab-panel{margin-top:10px}@media(max-width:720px){.step{grid-template-columns:1fr}}"
   ].join("\n");
 
   const js = [
     fs.readFileSync(reportUiJsPath, "utf8"),
-    mode === "runtime" ? fs.readFileSync(richRuntimeJsPath, "utf8") : ""
+    isRuntimeMode(mode) ? fs.readFileSync(richRuntimeJsPath, "utf8") : ""
   ].join("\n");
 
-  const nav = input.sections
-    .map((section) => `<a href="#${sectionId(section.title)}">${escapeHtml(section.title)}</a>`)
-    .join("");
+  const extras = supplementalSections(input, mode);
+  const nav = renderGroupedNav([...normalizedSections, ...extras]);
+  const compatibilityBadge = compatibility ? `<span class="status-pill status-warn" data-render-compatibility="${escapeAttr(compatibility)}">${escapeHtml(compatibility)}</span>` : "";
+  const evidenceSection = (input.evidence || []).length > 0
+    ? `<section class="panel" id="evidence" data-section-type="evidence" data-section-group="evidence" data-report-region="evidence"><h2>证据</h2>${renderEvidence(input.evidence || [])}</section>`
+    : "";
+  const verificationSection = (input.verification || []).length > 0
+    ? `<section class="panel" id="verification" data-section-type="verification" data-section-group="verification" data-report-region="verification"><h2>验证</h2>${renderVerification(input.verification || [])}</section>`
+    : "";
+  const nextActionsSection = (input.nextActions || []).length > 0
+    ? `<section class="panel" id="next-actions" data-section-type="actions" data-section-group="next" data-report-region="actions"><div class="split-row"><h2>下一步</h2><button data-copy-from="#next-action-list">复制行动项</button></div><ul id="next-action-list">${(input.nextActions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></section>`
+    : "";
 
-  return `<!doctype html>
-<html lang="en" data-html-work-report data-render-mode="${escapeAttr(mode)}" data-template="${escapeAttr(template)}">
+  return stripTrailingWhitespace(`<!doctype html>
+<html lang="zh-CN" data-html-work-report data-render-mode="${escapeAttr(mode)}" data-template="${escapeAttr(template)}" data-runtime-state="${isRuntimeMode(mode) ? "pending" : "not-runtime"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="html-work-reports create-report.mjs">
   <meta name="generated-at" content="${escapeAttr(generatedAt)}">
+  <meta name="render-mode" content="${escapeAttr(mode)}">
   <title>${escapeHtml(input.title)}</title>
   <style>${css}</style>
 </head>
 <body>
   <main class="report-shell">
-    <header class="report-hero">
+    <header class="report-hero" data-report-region="hero">
       <div class="title-row">
         <div>
           <div class="eyebrow">${escapeHtml(meta.label)} | ${escapeHtml(meta.useCase)}</div>
           <h1 class="report-title">${escapeHtml(input.title)}</h1>
         </div>
-        <span class="status-pill ${statusClass(input.status)}">Status: ${escapeHtml(input.status)}</span>
+        <div class="toolbar"><span class="status-pill ${statusClass(input.status)}">状态：${escapeHtml(statusLabel(input.status))}</span>${compatibilityBadge}</div>
       </div>
       <div class="lede-grid">
-        <article class="interactive-card evidence-card"><div class="meta">Conclusion</div><strong>${escapeHtml(input.summary)}</strong></article>
-        <article class="interactive-card evidence-card"><div class="meta">Generated</div><strong>${escapeHtml(generatedAt)}</strong></article>
-        <article class="interactive-card evidence-card"><div class="meta">Render mode</div><strong>${escapeHtml(mode)}</strong></article>
+        <article class="interactive-card evidence-card"><div class="meta">结论</div><strong>${escapeHtml(input.summary)}</strong></article>
       </div>
     </header>
 
-    <nav class="report-nav" aria-label="Report sections">${nav}<a href="#evidence">Evidence</a><a href="#verification">Verification</a><a href="#next-actions">Next</a></nav>
-
-    <div class="report-section-stack">
-      ${sections.join("\n")}
-      ${renderRuntimeDependencies(mode)}
-      <section class="panel" id="evidence" data-section-type="evidence"><h2>Evidence</h2>${renderEvidence(input.evidence || [])}</section>
-      <section class="panel" id="verification" data-section-type="verification"><h2>Verification</h2>${renderVerification(input.verification || [])}</section>
-      <section class="panel" id="next-actions" data-section-type="actions"><div class="split-row"><h2>Next actions</h2><button data-copy-from="#next-action-list">Copy actions</button></div><ul id="next-action-list">${(input.nextActions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></section>
+    <div class="report-layout">
+      ${nav}
+      <div class="report-section-stack" data-report-region="sections">
+        ${sections.join("\n")}
+        ${renderRuntimeDependencies(mode, input)}
+        ${evidenceSection}
+        ${verificationSection}
+        ${nextActionsSection}
+      </div>
     </div>
   </main>
   ${runtimeScriptTags(mode)}
   <script>${js}</script>
 </body>
-</html>`;
+</html>`);
 }
 
 async function main() {
@@ -633,9 +892,10 @@ async function main() {
     const slug = args.slug || slugify(input.title);
     const outputPath = path.join(outDir, `${slug}.html`);
     fs.writeFileSync(outputPath, html, "utf8");
+    const normalized = normalizeRenderMode(input.renderMode);
 
     if (args.json) {
-      console.log(JSON.stringify({ ok: true, outputPath, renderMode: input.renderMode || "pre-rendered", template: input.template || "implementation-handoff" }, null, 2));
+      console.log(JSON.stringify({ ok: true, outputPath, renderMode: normalized.mode, template: input.template || "implementation-handoff" }, null, 2));
     } else {
       console.log(outputPath);
     }
@@ -645,8 +905,9 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1].replaceAll("\\", "/")}` || process.argv[1]?.endsWith("create-report.mjs")) {
+const invokedPath = process.argv[1] ? process.argv[1].replaceAll("\\", "/") : "";
+if (invokedPath && (import.meta.url === `file://${invokedPath}` || process.argv[1]?.endsWith("create-report.mjs"))) {
   await main();
 }
 
-export { createReport, renderMarkdown, safeLink };
+export { createReport, renderMarkdown, safeLink, normalizeRenderMode, runtimeLibraries };
