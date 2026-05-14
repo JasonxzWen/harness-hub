@@ -716,16 +716,25 @@ table{width:100%;border-collapse:collapse;margin:10px 0;min-width:520px}th,td{bo
       </div>
       <div class="lede-grid">
         <article class="interactive-card evidence-card"><div class="meta">结论</div><strong>Stress the report generator with rich content, long labels, many sections, wide code, nested JSON, and grouped navigation that must remain readable inside Codex.</strong></article>
-        <article class="interactive-card evidence-card"><div class="meta">生成时间</div><strong>2026-05-14T00:00:00.000Z</strong></article>
-        <article class="interactive-card evidence-card"><div class="meta">渲染模式</div><strong>runtime-cdn</strong></article>
-        <article class="interactive-card evidence-card"><div class="meta">运行状态</div><strong data-runtime-state-label>待处理</strong></article>
       </div>
     </header>
 
     <div class="report-layout">
       <nav class="report-nav" data-report-nav data-report-region="navigation" aria-label="报告目录">
     <div class="report-nav-title">目录</div>
-    <div class="report-nav-group" data-nav-group="overview">
+    <div class="report-nav-group" data-nav-group="verification">
+        <div class="report-nav-group-title">验证</div>
+        <a href="#section-render-mode-decision-matrix-17" title="Render mode decision matrix" data-nav-link data-nav-status="ready"><span>Render mode decision matrix</span></a>
+<a href="#section-verification-note-browser-viewport-390-18" title="Verification note - browser viewport 390" data-nav-link data-nav-status="pending"><span>Verification note - browser viewport 390</span></a>
+<a href="#section-verification-note-browser-viewport-768-19" title="Verification note - browser viewport 768" data-nav-link data-nav-status="pending"><span>Verification note - browser viewport 768</span></a>
+<a href="#section-verification-note-browser-viewport-1440-20" title="Verification note - browser viewport 1440" data-nav-link data-nav-status="pending"><span>Verification note - browser viewport 1440</span></a>
+<a href="#verification" title="验证" data-nav-link data-nav-status="info"><span>验证</span></a>
+      </div>
+<div class="report-nav-group" data-nav-group="next">
+        <div class="report-nav-group-title">下一步</div>
+        <a href="#next-actions" title="下一步" data-nav-link data-nav-status="info"><span>下一步</span></a>
+      </div>
+<div class="report-nav-group" data-nav-group="overview">
         <div class="report-nav-group-title">总览</div>
         <a href="#section-executive-status-cards-with-long-labels-1" title="Executive status cards with long labels" data-nav-link data-nav-status="ready"><span>Executive status cards with long labels</span></a>
 <a href="#section-markdown-2" title="中文长标题和英文长标题混排的 Markdown 内容区" data-nav-link data-nav-status="ready"><span>中文长标题和英文长标题混排的 Markdown 内容区</span></a>
@@ -753,14 +762,6 @@ table{width:100%;border-collapse:collapse;margin:10px 0;min-width:520px}th,td{bo
 <a href="#section-evidence-note-2-source-fallback-15" title="Evidence note 2 - source fallback" data-nav-link data-nav-status="info"><span>Evidence note 2 - source fallback</span></a>
 <a href="#section-evidence-note-3-validation-coverage-16" title="Evidence note 3 - validation coverage" data-nav-link data-nav-status="info"><span>Evidence note 3 - validation coverage</span></a>
 <a href="#evidence" title="证据" data-nav-link data-nav-status="info"><span>证据</span></a>
-      </div>
-<div class="report-nav-group" data-nav-group="verification">
-        <div class="report-nav-group-title">验证</div>
-        <a href="#section-render-mode-decision-matrix-17" title="Render mode decision matrix" data-nav-link data-nav-status="ready"><span>Render mode decision matrix</span></a>
-<a href="#section-verification-note-browser-viewport-390-18" title="Verification note - browser viewport 390" data-nav-link data-nav-status="pending"><span>Verification note - browser viewport 390</span></a>
-<a href="#section-verification-note-browser-viewport-768-19" title="Verification note - browser viewport 768" data-nav-link data-nav-status="pending"><span>Verification note - browser viewport 768</span></a>
-<a href="#section-verification-note-browser-viewport-1440-20" title="Verification note - browser viewport 1440" data-nav-link data-nav-status="pending"><span>Verification note - browser viewport 1440</span></a>
-<a href="#verification" title="验证" data-nav-link data-nav-status="info"><span>验证</span></a>
       </div>
 <div class="report-nav-group" data-nav-group="actions">
         <div class="report-nav-group-title">行动</div>
@@ -1135,12 +1136,12 @@ bun .agents/skills/html-work-reports/scripts/validate-html-report.mjs reports/ht
   </div><button data-copy-from="#section-implementation-next-actions-21-actions">复制行动项</button></div>
     <ul id="section-implementation-next-actions-21-actions"><li>Generate this stress report through create-report.mjs.</li><li>Run validate-html-report.mjs with --require-browser.</li><li>Open the generated report in Codex and inspect Mermaid, code, and navigation.</li><li>Keep tasks.md synchronized as implementation groups complete.</li></ul>
   </section>
-        <section class="panel runtime-panel" id="runtime-dependencies" data-runtime-dependencies data-section-type="runtime-dependencies" data-section-group="verification">
+        <section class="panel runtime-panel" id="runtime-dependencies" data-runtime-dependencies data-section-type="runtime-dependencies" data-section-group="verification" hidden aria-hidden="true">
     <div class="split-row">
       <div>
         <p class="meta">运行时</p>
         <h2>运行时依赖</h2>
-        <p class="section-summary">runtime-cdn 使用的固定版本浏览器库；源内容保留为机器可验证的隐藏 fallback，不占用阅读界面。</p>
+        <p class="section-summary">runtime-cdn 使用的固定版本浏览器库；默认隐藏为机器可验证清单，不占用阅读界面。</p>
       </div>
       <span class="status-pill status-warn" data-runtime-state-pill>待处理</span>
     </div>
@@ -1201,7 +1202,7 @@ bun .agents/skills/html-work-reports/scripts/validate-html-report.mjs reports/ht
       <p>Run validate-html-report.mjs with --require-browser.</p>
     </article>
   </div></section>
-        <section class="panel" id="next-actions" data-section-type="actions" data-section-group="actions" data-report-region="actions"><div class="split-row"><h2>下一步</h2><button data-copy-from="#next-action-list">复制行动项</button></div><ul id="next-action-list"><li>Use this fixture as the browser validation stress target.</li><li>Keep the generated stress report under reports/ for local inspection.</li><li>Update showcase output from fixture-backed generation.</li></ul></section>
+        <section class="panel" id="next-actions" data-section-type="actions" data-section-group="next" data-report-region="actions"><div class="split-row"><h2>下一步</h2><button data-copy-from="#next-action-list">复制行动项</button></div><ul id="next-action-list"><li>Use this fixture as the browser validation stress target.</li><li>Keep the generated stress report under reports/ for local inspection.</li><li>Update showcase output from fixture-backed generation.</li></ul></section>
       </div>
     </div>
   </main>

@@ -5,7 +5,7 @@
     var done = function () {
       if (!button) return;
       var previous = button.textContent;
-      button.textContent = "Copied";
+      button.textContent = "已复制";
       setTimeout(function () {
         button.textContent = previous;
       }, 900);
@@ -81,6 +81,21 @@
     card.style.setProperty("--spotlight-y", event.clientY - rect.top + "px");
   }
 
+  function updateActiveNavigation() {
+    var sections = Array.prototype.slice.call(document.querySelectorAll("[id][data-section-type], #evidence, #verification, #next-actions"));
+    var active = sections
+      .map(function (section) {
+        var rect = section.getBoundingClientRect();
+        return { id: section.id, top: Math.abs(rect.top - 96), visible: rect.bottom > 80 && rect.top < window.innerHeight };
+      })
+      .filter(function (item) { return item.visible; })
+      .sort(function (a, b) { return a.top - b.top; })[0];
+
+    document.querySelectorAll("[data-nav-link]").forEach(function (link) {
+      link.setAttribute("aria-current", active && link.getAttribute("href") === "#" + active.id ? "true" : "false");
+    });
+  }
+
   document.addEventListener("click", function (event) {
     var button = event.target.closest("button");
     if (!button) return;
@@ -91,7 +106,7 @@
 
     if (button.matches("[data-copy-from]")) {
       var source = document.querySelector(button.getAttribute("data-copy-from"));
-      copyText(source ? source.textContent : "", button);
+      copyText(source ? (source.content ? source.content.textContent : source.textContent) : "", button);
     }
 
     if (button.matches("[data-filter-target][data-filter-value]")) {
@@ -115,4 +130,8 @@
       updateEvidenceSpotlight(card, event);
     }
   });
+
+  document.addEventListener("scroll", updateActiveNavigation, { passive: true });
+  window.addEventListener("resize", updateActiveNavigation);
+  updateActiveNavigation();
 })();
