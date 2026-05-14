@@ -1,18 +1,4 @@
-# cli-distribution Specification
-
-## Purpose
-Define the release-facing Skill Hub CLI package contract, including Node-compatible execution, documented command behavior, validation gates, predictable exit codes, and report output policy.
-## Requirements
-### Requirement: Node-compatible CLI package
-The system SHALL ship a Node-compatible CLI entrypoint so users can run Skill Hub without installing Bun.
-
-#### Scenario: Package entrypoint invokes built CLI
-- **WHEN** the npm package is installed or run with `npx skill-hub`
-- **THEN** the `skill-hub` binary loads the built Node-compatible CLI from `dist/`
-
-#### Scenario: Bun remains development-only
-- **WHEN** a target user runs a released CLI command
-- **THEN** the command does not require Bun to be installed on the target machine
+## MODIFIED Requirements
 
 ### Requirement: Command surface is documented
 The system SHALL document the stable lifecycle commands and their side effects.
@@ -24,17 +10,6 @@ The system SHALL document the stable lifecycle commands and their side effects.
 #### Scenario: Documentation distinguishes read-only and mutating commands
 - **WHEN** the user reads README command examples
 - **THEN** the docs identify `analyze`, `status`, `update --dry-run`, and `migrate-lock --dry-run` as read-only and `install`, `update --yes`, `update --force --yes`, `migrate-lock --yes`, and `remove` as mutating
-
-### Requirement: Release readiness validation
-The system SHALL provide a repeatable validation path before publishing a package.
-
-#### Scenario: Validate release candidate
-- **WHEN** maintainers prepare a release candidate
-- **THEN** they can run a documented sequence covering typecheck, tests, skill validation, build, and local package smoke testing
-
-#### Scenario: Package includes installable assets
-- **WHEN** maintainers inspect the packed npm artifact
-- **THEN** it includes the CLI entrypoint, built `dist/`, capability index, docs needed by reports, and installable skill/config assets listed in `package.json`
 
 ### Requirement: CLI exits predictably
 The system SHALL use predictable exit behavior for automation.
@@ -67,16 +42,7 @@ The system SHALL use predictable exit behavior for automation.
 - **WHEN** a requested mutation cannot fully complete because of non-force-overridable modified, missing, hashless, unsafe, skipped, or unknown managed component records
 - **THEN** the CLI exits with code 3 and reports the blocker
 
-### Requirement: Report output policy
-The system SHALL keep read-only commands side-effect free unless the user provides an explicit output path.
-
-#### Scenario: Read-only HTML prints to stdout
-- **WHEN** the user runs a read-only command with `--html` and no `--output`
-- **THEN** the CLI prints HTML to stdout without creating `.skill-hub/`
-
-#### Scenario: Explicit report output may create directories
-- **WHEN** the user runs a read-only command with `--output <file>`
-- **THEN** the CLI writes the selected report to that file and may create the file's parent directories
+## ADDED Requirements
 
 ### Requirement: Managed update acceptance validation
 The system SHALL include a repeatable local acceptance path for the managed update lifecycle.

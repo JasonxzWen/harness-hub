@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,11 +12,14 @@ import {
   getRemovePlan,
   getStatus,
   getUpdatePlan,
+  migrateLock,
   planInstall,
   readCapabilityIndex,
   readLock,
   removeManaged,
   runCli,
+  type SkillHubLock,
+  updateManaged,
   validateCapabilityIndex,
 } from '../src/skillHub';
 
@@ -640,12 +644,204 @@ test('update dry run reports version differences and modified blockers', () => {
   expect(planResult.blockers.some((row) => row.id === 'skill:grill-me')).toBe(true);
 });
 
-test('mutating update is rejected in first release', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-reject-'));
-  const result = await captureCli(['update', targetDir]);
+test('update applies unmodified managed components and refreshes lock metadata', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-apply-'));
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  applyInstall(plan);
+  const unmanagedFile = path.join(targetDir, '.agents', 'skills', 'grill-me', 'LOCAL.md');
+  fs.writeFileSync(unmanagedFile, 'keep local note\n');
+  const managedFile = path.join(targetDir, '.agents', 'skills', 'grill-me', 'SKILL.md');
+  const oldContent = 'old managed content\n';
+  fs.writeFileSync(managedFile, oldContent);
+  makeLockComponentStale(targetDir, 'skill:grill-me', {
+    version: '0.0.0',
+    fileOverrides: [{ path: '.agents/skills/grill-me/SKILL.md', content: oldContent }],
+  });
+  const before = readLock(targetDir);
+  if (!before || before.data.schemaVersion !== 2) {
+    throw new Error('expected schema version 2 lock');
+  }
+  const beforeRecord = before.data.components.find((component) => component.id === 'skill:grill-me');
 
-  expect(result.code).toBe(2);
-  expect(result.stderr).toContain('deferred');
+  const result = updateManaged(targetDir, { yes: true });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.updated.some((component) => component.id === 'skill:grill-me')).toBe(true);
+  expect(result.forced).toEqual([]);
+  expect(fs.readFileSync(managedFile, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), '.agents', 'skills', 'grill-me', 'SKILL.md'), 'utf8'));
+  expect(fs.existsSync(unmanagedFile)).toBe(true);
+  const after = readLock(targetDir);
+  if (!after || after.data.schemaVersion !== 2) {
+    throw new Error('expected updated schema version 2 lock');
+  }
+  const afterRecord = after.data.components.find((component) => component.id === 'skill:grill-me');
+  expect(afterRecord?.version).toBe(readCapabilityIndex().components['skill:grill-me'].version);
+  expect(afterRecord?.installedAt).toBe(beforeRecord?.installedAt);
+  expect(afterRecord?.updatedAt).toBeTruthy();
+  expect(afterRecord?.files.find((file) => file.path === '.agents/skills/grill-me/SKILL.md')?.sha256)
+    .not.toBe(hashContent(oldContent));
+});
+
+test('update can be scoped to selected components', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-selected-'));
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  applyInstall(plan);
+  makeLockComponentStale(targetDir, 'skill:grill-me');
+  makeLockComponentStale(targetDir, 'skill:diagnose');
+
+  const preview = getUpdatePlan({ targetDir, components: ['skill:grill-me'] });
+  const result = updateManaged(targetDir, { yes: true, components: ['skill:grill-me'] });
+
+  expect(preview.selectedComponents).toEqual(['skill:grill-me']);
+  expect(preview.updates.map((row) => row.id)).toEqual(['skill:grill-me']);
+  expect(result.exitCode).toBe(0);
+  const lock = readLock(targetDir);
+  if (!lock || lock.data.schemaVersion !== 2) {
+    throw new Error('expected schema version 2 lock');
+  }
+  const grill = lock.data.components.find((component) => component.id === 'skill:grill-me');
+  const diagnose = lock.data.components.find((component) => component.id === 'skill:diagnose');
+  expect(grill?.version).toBe(readCapabilityIndex().components['skill:grill-me'].version);
+  expect(diagnose?.version).toBe('0.0.0');
+});
+
+test('normal update blocks modified, missing, unsafe, schema v1, skipped, and unknown records', () => {
+  const modifiedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-modified-'));
+  applyInstall(planInstall({ targetDir: modifiedTarget, profile: 'minimal', agents: ['codex'] }));
+  makeLockComponentStale(modifiedTarget, 'skill:grill-me');
+  fs.appendFileSync(path.join(modifiedTarget, '.agents', 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
+
+  const missingTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-missing-'));
+  applyInstall(planInstall({ targetDir: missingTarget, profile: 'minimal', agents: ['codex'] }));
+  makeLockComponentStale(missingTarget, 'skill:grill-me');
+  fs.rmSync(path.join(missingTarget, '.agents', 'skills', 'grill-me', 'SKILL.md'));
+
+  const unsafeTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-unsafe-'));
+  applyInstall(planInstall({ targetDir: unsafeTarget, profile: 'minimal', agents: ['codex'] }));
+  mutateLock(unsafeTarget, (lock) => {
+    if (lock.schemaVersion !== 2) throw new Error('expected v2');
+    const component = lock.components.find((entry) => entry.id === 'skill:grill-me');
+    if (!component) throw new Error('missing component');
+    component.version = '0.0.0';
+    component.files = [{ path: '../outside.txt', sha256: '0'.repeat(64), size: 1 }];
+  });
+
+  const v1Target = createV1Target('skill-hub-update-v1-', { exact: true });
+  mutateLock(v1Target, (lock) => {
+    lock.components[0]!.version = '0.0.0';
+  });
+
+  const skippedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-skipped-'));
+  applyInstall(planInstall({ targetDir: skippedTarget, profile: 'minimal', agents: ['codex'] }));
+  mutateLock(skippedTarget, (lock) => {
+    if (lock.schemaVersion !== 2) throw new Error('expected v2');
+    const component = lock.components.find((entry) => entry.id === 'skill:grill-me');
+    if (!component) throw new Error('missing component');
+    component.version = '0.0.0';
+    component.status = 'skipped';
+    component.files = [];
+  });
+
+  const unknownTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-unknown-'));
+  applyInstall(planInstall({ targetDir: unknownTarget, profile: 'minimal', agents: ['codex'] }));
+  mutateLock(unknownTarget, (lock) => {
+    if (lock.schemaVersion !== 2) throw new Error('expected v2');
+    const component = lock.components.find((entry) => entry.id === 'skill:grill-me');
+    if (!component) throw new Error('missing component');
+    component.id = 'skill:missing-upstream';
+  });
+
+  for (const target of [modifiedTarget, missingTarget, unsafeTarget, v1Target, skippedTarget, unknownTarget]) {
+    const before = fs.readFileSync(path.join(target, '.skill-hub', 'lock.json'), 'utf8');
+    const result = updateManaged(target, { yes: true });
+    expect(result.exitCode).toBe(3);
+    expect(result.blockers.length).toBeGreaterThan(0);
+    expect(fs.readFileSync(path.join(target, '.skill-hub', 'lock.json'), 'utf8')).toBe(before);
+  }
+});
+
+test('force update overwrites modified and missing schema version two managed files only', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-force-'));
+  applyInstall(planInstall({ targetDir, profile: 'minimal', agents: ['codex'] }));
+  makeLockComponentStale(targetDir, 'skill:grill-me');
+  makeLockComponentStale(targetDir, 'skill:diagnose');
+  const localFile = path.join(targetDir, '.agents', 'skills', 'grill-me', 'LOCAL.md');
+  fs.writeFileSync(localFile, 'keep me\n');
+  const grillSkill = path.join(targetDir, '.agents', 'skills', 'grill-me', 'SKILL.md');
+  fs.writeFileSync(grillSkill, 'local edits\n');
+  const diagnoseSkill = path.join(targetDir, '.agents', 'skills', 'diagnose', 'SKILL.md');
+  fs.rmSync(diagnoseSkill);
+
+  const blocked = updateManaged(targetDir, { yes: true });
+  const forced = updateManaged(targetDir, { yes: true, force: true });
+
+  expect(blocked.exitCode).toBe(3);
+  expect(forced.exitCode).toBe(0);
+  expect(forced.forced.map((component) => component.id).sort()).toEqual(['skill:diagnose', 'skill:grill-me']);
+  expect(fs.readFileSync(grillSkill, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), '.agents', 'skills', 'grill-me', 'SKILL.md'), 'utf8'));
+  expect(fs.existsSync(diagnoseSkill)).toBe(true);
+  expect(fs.existsSync(localFile)).toBe(true);
+});
+
+test('migrate-lock converts exact schema version one records and blocks divergent records', () => {
+  const exactTarget = createV1Target('skill-hub-migrate-v1-exact-', { exact: true });
+  const dryRun = migrateLock(exactTarget, { dryRun: true });
+  const migrated = migrateLock(exactTarget, { yes: true });
+
+  expect(dryRun.exitCode).toBe(0);
+  expect(dryRun.migratable.some((row) => row.id === 'skill:grill-me')).toBe(true);
+  expect(migrated.exitCode).toBe(0);
+  const migratedLock = readLock(exactTarget);
+  if (!migratedLock || migratedLock.data.schemaVersion !== 2) {
+    throw new Error('expected migrated schema version 2 lock');
+  }
+  expect(migratedLock.data.components[0]?.files[0]?.sha256).toMatch(/^[a-f0-9]{64}$/);
+  expect(getStatus({ targetDir: exactTarget }).current.some((row) => row.id === 'skill:grill-me')).toBe(true);
+  expect(updateManaged(exactTarget, { yes: true }).exitCode).toBe(0);
+  expect(removeManaged(exactTarget, { yes: true }).exitCode).toBe(0);
+
+  const divergentTarget = createV1Target('skill-hub-migrate-v1-divergent-', { exact: false });
+  const before = fs.readFileSync(path.join(divergentTarget, '.skill-hub', 'lock.json'), 'utf8');
+  const blocked = migrateLock(divergentTarget, { yes: true });
+
+  expect(blocked.exitCode).toBe(3);
+  expect(blocked.blockers.some((row) => row.id === 'skill:grill-me')).toBe(true);
+  expect(fs.readFileSync(path.join(divergentTarget, '.skill-hub', 'lock.json'), 'utf8')).toBe(before);
+});
+
+test('update and migrate-lock CLI paths support confirmation, selection, force, and json output', async () => {
+  const confirmTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-confirm-'));
+  const missingConfirmation = await captureCli(['update', confirmTarget]);
+  expect(missingConfirmation.code).toBe(2);
+  expect(missingConfirmation.stdout).toContain('--yes');
+
+  const selectedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-cli-selected-'));
+  applyInstall(planInstall({ targetDir: selectedTarget, profile: 'minimal', agents: ['codex'] }));
+  makeLockComponentStale(selectedTarget, 'skill:grill-me');
+  makeLockComponentStale(selectedTarget, 'skill:diagnose');
+  const dryRun = await captureCli(['update', selectedTarget, '--dry-run', '--component', 'skill:grill-me', '--json']);
+  const selected = await captureCli(['update', selectedTarget, '--component', 'skill:grill-me', '--yes', '--json']);
+
+  expect(dryRun.code).toBe(0);
+  expect(JSON.parse(dryRun.stdout).updates.map((row: { id: string }) => row.id)).toEqual(['skill:grill-me']);
+  expect(selected.code).toBe(0);
+  expect(JSON.parse(selected.stdout).updated.map((row: { id: string }) => row.id)).toEqual(['skill:grill-me']);
+
+  const forceTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-cli-force-'));
+  applyInstall(planInstall({ targetDir: forceTarget, profile: 'minimal', agents: ['codex'] }));
+  makeLockComponentStale(forceTarget, 'skill:grill-me');
+  fs.appendFileSync(path.join(forceTarget, '.agents', 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
+  const force = await captureCli(['update', forceTarget, '--force', '--yes', '--json']);
+  expect(force.code).toBe(0);
+  expect(JSON.parse(force.stdout).forced.some((row: { id: string }) => row.id === 'skill:grill-me')).toBe(true);
+
+  const migrateTarget = createV1Target('skill-hub-migrate-cli-', { exact: true });
+  const migrateDryRun = await captureCli(['migrate-lock', migrateTarget, '--dry-run', '--json']);
+  const migrateConfirmed = await captureCli(['migrate-lock', migrateTarget, '--yes', '--json']);
+  expect(migrateDryRun.code).toBe(0);
+  expect(JSON.parse(migrateDryRun.stdout).migratable.length).toBe(1);
+  expect(migrateConfirmed.code).toBe(0);
+  expect(JSON.parse(migrateConfirmed.stdout).migrated.length).toBe(1);
 });
 
 test('analyze html without output writes to stdout only', async () => {
@@ -763,4 +959,71 @@ function listSnapshotEntries(root: string, current: string): string[] {
     }
   }
   return entries;
+}
+
+function hashContent(content: string): string {
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+function mutateLock(targetDir: string, mutate: (lock: SkillHubLock) => void): void {
+  const lockPath = path.join(targetDir, '.skill-hub', 'lock.json');
+  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8')) as SkillHubLock;
+  mutate(lock);
+  fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
+}
+
+function makeLockComponentStale(
+  targetDir: string,
+  componentId: string,
+  options: {
+    version?: string;
+    fileOverrides?: Array<{ path: string; content: string }>;
+  } = {},
+): void {
+  mutateLock(targetDir, (lock) => {
+    if (lock.schemaVersion !== 2) {
+      throw new Error('expected schema version 2 lock');
+    }
+    const component = lock.components.find((entry) => entry.id === componentId);
+    if (!component) {
+      throw new Error(`missing component ${componentId}`);
+    }
+    component.version = options.version || '0.0.0';
+    for (const override of options.fileOverrides || []) {
+      const file = component.files.find((entry) => entry.path === override.path);
+      if (!file) {
+        throw new Error(`missing managed file ${override.path}`);
+      }
+      file.sha256 = hashContent(override.content);
+      file.size = Buffer.byteLength(override.content);
+    }
+  });
+}
+
+function createV1Target(prefix: string, options: { exact: boolean }): string {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  const source = path.join(process.cwd(), '.agents', 'skills', 'grill-me');
+  const dest = path.join(targetDir, '.agents', 'skills', 'grill-me');
+  fs.cpSync(source, dest, { recursive: true });
+  if (!options.exact) {
+    fs.appendFileSync(path.join(dest, 'SKILL.md'), '\ndivergent');
+  }
+  fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.skill-hub', 'lock.json'), `${JSON.stringify({
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    hubVersion: '0.1.0',
+    profile: 'minimal',
+    agents: ['codex'],
+    components: [
+      {
+        id: 'skill:grill-me',
+        version: readCapabilityIndex().components['skill:grill-me'].version,
+        agent: 'codex',
+        dest: '.agents/skills/grill-me',
+        status: 'installed',
+      },
+    ],
+  }, null, 2)}\n`);
+  return targetDir;
 }

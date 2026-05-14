@@ -131,6 +131,8 @@ export interface ManagedComponentRecord {
   dest: string;
   files: ManagedFileRecord[];
   installedAt: string;
+  updatedAt?: string;
+  migratedAt?: string;
   status: 'installed' | 'skipped';
 }
 
@@ -199,10 +201,43 @@ export interface RemoveResult {
   reason: string;
 }
 
+export interface UpdateResultItem {
+  id: string;
+  agent: AgentName;
+  dest: string;
+  previousVersion: string;
+  version: string;
+  files: string[];
+  forced: boolean;
+}
+
 export interface UpdatePlan {
   targetDir: string;
+  selectedComponents: string[];
   updates: StatusRow[];
   blockers: StatusRow[];
+  forceOverridable: StatusRow[];
+  skipped: StatusRow[];
+  unchanged: StatusRow[];
+}
+
+export interface UpdateResult extends UpdatePlan {
+  exitCode: number;
+  updated: UpdateResultItem[];
+  forced: UpdateResultItem[];
+  lock: LockReadResult | null;
+  reason: string;
+}
+
+export interface LockMigrationResult {
+  exitCode: number;
+  targetDir: string;
+  migratable: StatusRow[];
+  migrated: UpdateResultItem[];
+  blockers: StatusRow[];
+  skipped: StatusRow[];
+  lock: LockReadResult | null;
+  reason: string;
 }
 
 interface HtmlRow {
@@ -285,6 +320,7 @@ interface CliOptions {
   output: string | null;
   force: boolean;
   agentReadiness: boolean;
+  componentIds: string[];
 }
 
 interface PlanInstallOptions {
@@ -299,6 +335,21 @@ interface StatusOptions {
   hubRoot?: string;
   targetDir?: string;
   index?: CapabilityIndex;
+}
+
+interface UpdatePlanOptions extends StatusOptions {
+  components?: string[];
+  force?: boolean;
+}
+
+interface UpdateApplyOptions extends UpdatePlanOptions {
+  dryRun?: boolean;
+  yes?: boolean;
+}
+
+interface MigrateLockOptions extends StatusOptions {
+  dryRun?: boolean;
+  yes?: boolean;
 }
 
 class CliError extends Error {
@@ -1302,6 +1353,14 @@ export function readLock(targetDir: string): LockReadResult | null {
   };
 }
 
+function writeLockData(targetDir: string, lock: SkillHubLock): LockReadResult {
+  const skillHubDir = path.join(path.resolve(targetDir), '.skill-hub');
+  fs.mkdirSync(skillHubDir, { recursive: true });
+  const lockPath = path.join(skillHubDir, 'lock.json');
+  fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
+  return { path: lockPath, data: lock };
+}
+
 export function getStatus(options: StatusOptions = {}): SkillHubStatus {
   const targetDir = path.resolve(options.targetDir || process.cwd());
   const index = options.index || readCapabilityIndex(options.hubRoot || HUB_ROOT);
@@ -1527,42 +1586,132 @@ function pruneEmptyParents(targetDir: string, startDir: string): void {
   }
 }
 
-export function getUpdatePlan(options: StatusOptions = {}): UpdatePlan {
+function uniqueComponentIds(componentIds: string[] = []): string[] {
+  return [...new Set(componentIds.filter((id) => id.trim().length > 0))];
+}
+
+function validateSelectedComponents(lock: LockReadResult | null, selectedComponents: string[]): void {
+  if (selectedComponents.length === 0) {
+    return;
+  }
+  if (!lock) {
+    throw new Error(`Selected component '${selectedComponents[0]}' is not managed because no Skill Hub lock was found.`);
+  }
+  const managed = new Set(lock.data.components.map((component) => component.id));
+  for (const componentId of selectedComponents) {
+    if (!managed.has(componentId)) {
+      throw new Error(`Selected component '${componentId}' is not managed by this lock.`);
+    }
+  }
+}
+
+function shouldIncludeComponent(componentId: string, selectedComponents: string[]): boolean {
+  return selectedComponents.length === 0 || selectedComponents.includes(componentId);
+}
+
+function componentSourcePath(hubRoot: string, component: CapabilityComponent): string {
+  return path.join(hubRoot, component.path);
+}
+
+function makeStatusRow(
+  targetDir: string,
+  component: SkillHubLock['components'][number],
+  latest: CapabilityComponent | undefined,
+  state: StatusState,
+  reason: string,
+  evidence: string[],
+): StatusRow {
+  return {
+    id: component.id,
+    version: component.version,
+    latestVersion: latest?.version || null,
+    agent: component.agent,
+    dest: component.dest,
+    state,
+    evidence,
+    reason,
+    exists: safeRelativePathExists(targetDir, component.dest),
+    status: component.status,
+  };
+}
+
+export function getUpdatePlan(options: UpdatePlanOptions = {}): UpdatePlan {
   const targetDir = path.resolve(options.targetDir || process.cwd());
   const index = options.index || readCapabilityIndex(options.hubRoot || HUB_ROOT);
   const lock = readLock(targetDir);
+  const selectedComponents = uniqueComponentIds(options.components || []);
   const updates: StatusRow[] = [];
   const blockers: StatusRow[] = [];
+  const forceOverridable: StatusRow[] = [];
+  const skipped: StatusRow[] = [];
+  const unchanged: StatusRow[] = [];
 
+  validateSelectedComponents(lock, selectedComponents);
   if (!lock) {
-    return { targetDir, updates, blockers };
+    return { targetDir, selectedComponents, updates, blockers, forceOverridable, skipped, unchanged };
   }
 
   for (const component of lock.data.components) {
-    const latest = index.components[component.id];
-    if (!latest || latest.version === component.version) {
+    if (!shouldIncludeComponent(component.id, selectedComponents)) {
       continue;
     }
 
-    const baseRow: StatusRow = {
-      id: component.id,
-      version: component.version,
-      latestVersion: latest.version,
-      agent: component.agent,
-      dest: component.dest,
-      state: 'update-available',
-      evidence: [component.dest],
-      reason: 'Component version differs from the current capability index.',
-      exists: safeRelativePathExists(targetDir, component.dest),
-      status: component.status,
-    };
-    updates.push(baseRow);
+    const latest = index.components[component.id];
+    if (component.status === 'skipped') {
+      const row = makeStatusRow(
+        targetDir,
+        component,
+        latest,
+        'skipped',
+        'Component was skipped during install and cannot be updated.',
+        [component.dest],
+      );
+      skipped.push(row);
+      if (latest && latest.version !== component.version) {
+        blockers.push(row);
+      }
+      continue;
+    }
+
+    if (!latest) {
+      blockers.push(makeStatusRow(
+        targetDir,
+        component,
+        undefined,
+        'unknown-component',
+        'Component is not present in the current capability index; update is blocked.',
+        [component.id],
+      ));
+      continue;
+    }
+
+    if (latest.version === component.version) {
+      unchanged.push(makeStatusRow(
+        targetDir,
+        component,
+        latest,
+        'current',
+        'Component version matches the current capability index.',
+        [component.dest],
+      ));
+      continue;
+    }
+
+    const updateRow = makeStatusRow(
+      targetDir,
+      component,
+      latest,
+      'update-available',
+      'Component version differs from the current capability index.',
+      [component.dest],
+    );
+    updates.push(updateRow);
 
     if (lock.data.schemaVersion === 1) {
       blockers.push({
-        ...baseRow,
+        ...updateRow,
         state: 'unknown-component',
-        reason: 'Schema version 1 lock has no file hashes; update is blocked.',
+        reason: 'Schema version 1 lock has no file hashes; run migrate-lock before updating.',
       });
     } else {
       let fileStatus: ReturnType<typeof inspectManagedFiles>;
@@ -1571,25 +1720,386 @@ export function getUpdatePlan(options: StatusOptions = {}): UpdatePlan {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         blockers.push({
-          ...baseRow,
+          ...updateRow,
           state: 'modified',
           evidence: [component.dest],
           reason: `Lock contains an unsafe managed path: ${message}`,
         });
         continue;
       }
+      if (fileStatus.missing.length > 0) {
+        const row = {
+          ...updateRow,
+          state: 'missing' as const,
+          evidence: fileStatus.missing,
+          reason: options.force
+            ? 'Managed files are missing; force update will restore them.'
+            : 'Managed files are missing; use --force --yes to restore them.',
+        };
+        if (options.force) {
+          forceOverridable.push(row);
+        } else {
+          blockers.push(row);
+        }
+      }
       if (fileStatus.modified.length > 0) {
-        blockers.push({
-          ...baseRow,
+        const row = {
+          ...updateRow,
           state: 'modified',
           evidence: fileStatus.modified,
-          reason: 'Managed files were modified; update is blocked.',
-        });
+          reason: options.force
+            ? 'Managed files were modified; force update will overwrite them.'
+            : 'Managed files were modified; use --force --yes to overwrite them.',
+        } as StatusRow;
+        if (options.force) {
+          forceOverridable.push(row);
+        } else {
+          blockers.push(row);
+        }
       }
     }
   }
 
-  return { targetDir, updates, blockers };
+  return { targetDir, selectedComponents, updates, blockers, forceOverridable, skipped, unchanged };
+}
+
+export function updateManaged(
+  targetDirInput: string,
+  options: UpdateApplyOptions = {},
+): UpdateResult {
+  const targetDir = path.resolve(targetDirInput);
+  if (!options.dryRun && !options.yes) {
+    return {
+      targetDir,
+      selectedComponents: uniqueComponentIds(options.components || []),
+      updates: [],
+      blockers: [],
+      forceOverridable: [],
+      skipped: [],
+      unchanged: [],
+      exitCode: 2,
+      updated: [],
+      forced: [],
+      lock: readLock(targetDir),
+      reason: 'Use --yes to confirm non-interactive update or --dry-run to preview.',
+    };
+  }
+
+  const hubRoot = options.hubRoot || HUB_ROOT;
+  const index = options.index || readCapabilityIndex(hubRoot);
+  const plan = getUpdatePlan({
+    hubRoot,
+    targetDir,
+    index,
+    components: options.components,
+    force: options.force,
+  });
+
+  if (options.dryRun) {
+    return {
+      ...plan,
+      exitCode: 0,
+      updated: [],
+      forced: [],
+      lock: readLock(targetDir),
+      reason: 'Update preview is side-effect free.',
+    };
+  }
+
+  const lock = readLock(targetDir);
+  if (!lock || lock.data.schemaVersion !== 2) {
+    return {
+      ...plan,
+      exitCode: plan.blockers.length > 0 ? 3 : 0,
+      updated: [],
+      forced: [],
+      lock,
+      reason: plan.blockers.length > 0 ? 'Update blocked by safety checks.' : 'No Skill Hub lock found.',
+    };
+  }
+
+  if (plan.blockers.length > 0) {
+    return {
+      ...plan,
+      exitCode: 3,
+      updated: [],
+      forced: [],
+      lock,
+      reason: 'Update blocked by safety checks.',
+    };
+  }
+
+  if (plan.updates.length === 0) {
+    return {
+      ...plan,
+      exitCode: 0,
+      updated: [],
+      forced: [],
+      lock,
+      reason: 'No managed component updates available.',
+    };
+  }
+
+  const updatedAt = new Date().toISOString();
+  const updateIds = new Set(plan.updates.map((row) => row.id));
+  const forcedIds = new Set(plan.forceOverridable.map((row) => row.id));
+  const nextLock: SkillHubLockV2 = {
+    ...JSON.parse(JSON.stringify(lock.data)) as SkillHubLockV2,
+    generatedAt: updatedAt,
+    hubVersion: index.version,
+    components: (JSON.parse(JSON.stringify(lock.data.components)) as ManagedComponentRecord[]).map((component) => ({ ...component })),
+  };
+  const updated: UpdateResultItem[] = [];
+  const forced: UpdateResultItem[] = [];
+
+  for (const component of nextLock.components) {
+    if (!updateIds.has(component.id)) {
+      continue;
+    }
+    const latest = index.components[component.id];
+    if (!latest) {
+      continue;
+    }
+
+    const oldFiles = [...component.files];
+    for (const file of oldFiles) {
+      const filePath = assertSafeRelativePath(targetDir, file.path);
+      if (fs.existsSync(filePath)) {
+        fs.rmSync(filePath);
+        pruneEmptyParents(targetDir, path.dirname(filePath));
+      }
+    }
+
+    const source = componentSourcePath(hubRoot, latest);
+    const dest = assertSafeRelativePath(targetDir, component.dest);
+    copyRecursive(source, dest);
+    const files = collectManagedFiles(targetDir, dest);
+    const previousVersion = component.version;
+    const isForced = forcedIds.has(component.id);
+    component.version = latest.version;
+    component.kind = latest.kind;
+    component.source = toPortablePath(path.relative(hubRoot, source));
+    component.files = files;
+    component.updatedAt = updatedAt;
+    component.status = 'installed';
+
+    const item: UpdateResultItem = {
+      id: component.id,
+      agent: component.agent,
+      dest: component.dest,
+      previousVersion,
+      version: component.version,
+      files: files.map((file) => file.path),
+      forced: isForced,
+    };
+    updated.push(item);
+    if (isForced) {
+      forced.push(item);
+    }
+  }
+
+  const writtenLock = writeLockData(targetDir, nextLock);
+  return {
+    ...plan,
+    exitCode: 0,
+    updated,
+    forced,
+    lock: writtenLock,
+    reason: `${updated.length} managed components updated.`,
+  };
+}
+
+function fileDigest(filePath: string): { sha256: string; size: number } {
+  const bytes = fs.readFileSync(filePath);
+  return {
+    sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+    size: bytes.byteLength,
+  };
+}
+
+function collectRelativeFileDigests(root: string): Map<string, { sha256: string; size: number }> {
+  const stat = fs.statSync(root);
+  const base = stat.isDirectory() ? root : path.dirname(root);
+  const files = listFilesRecursive(root);
+  const digests = new Map<string, { sha256: string; size: number }>();
+  for (const filePath of files) {
+    digests.set(toPortablePath(path.relative(base, filePath)), fileDigest(filePath));
+  }
+  return digests;
+}
+
+function compareSourceAndDestination(source: string, dest: string): { matches: boolean; evidence: string[]; reason: string } {
+  if (!fs.existsSync(source)) {
+    return { matches: false, evidence: [source], reason: 'Component source does not exist.' };
+  }
+  if (!fs.existsSync(dest)) {
+    return { matches: false, evidence: [dest], reason: 'Managed destination is missing.' };
+  }
+
+  const sourceFiles = collectRelativeFileDigests(source);
+  const destFiles = collectRelativeFileDigests(dest);
+  const sourceKeys = [...sourceFiles.keys()].sort();
+  const destKeys = [...destFiles.keys()].sort();
+  if (sourceKeys.join('\0') !== destKeys.join('\0')) {
+    return {
+      matches: false,
+      evidence: [...new Set([...sourceKeys, ...destKeys])].sort(),
+      reason: 'Destination file list differs from current Skill Hub component assets.',
+    };
+  }
+
+  for (const key of sourceKeys) {
+    if (sourceFiles.get(key)?.sha256 !== destFiles.get(key)?.sha256) {
+      return { matches: false, evidence: [key], reason: 'Destination file content differs from current Skill Hub component assets.' };
+    }
+  }
+
+  return { matches: true, evidence: sourceKeys, reason: 'Destination exactly matches current Skill Hub component assets.' };
+}
+
+export function migrateLock(
+  targetDirInput: string,
+  options: MigrateLockOptions = {},
+): LockMigrationResult {
+  const targetDir = path.resolve(targetDirInput);
+  const lock = readLock(targetDir);
+  const migratable: StatusRow[] = [];
+  const migrated: UpdateResultItem[] = [];
+  const blockers: StatusRow[] = [];
+  const skipped: StatusRow[] = [];
+
+  if (!options.dryRun && !options.yes) {
+    return {
+      exitCode: 2,
+      targetDir,
+      migratable,
+      migrated,
+      blockers,
+      skipped,
+      lock,
+      reason: 'Use --yes to confirm non-interactive lock migration or --dry-run to preview.',
+    };
+  }
+
+  if (!lock) {
+    return {
+      exitCode: 0,
+      targetDir,
+      migratable,
+      migrated,
+      blockers,
+      skipped,
+      lock: null,
+      reason: 'No Skill Hub lock found.',
+    };
+  }
+
+  if (lock.data.schemaVersion === 2) {
+    return {
+      exitCode: 0,
+      targetDir,
+      migratable,
+      migrated,
+      blockers,
+      skipped,
+      lock,
+      reason: 'Lock is already schema version 2.',
+    };
+  }
+
+  const hubRoot = options.hubRoot || HUB_ROOT;
+  const index = options.index || readCapabilityIndex(hubRoot);
+  const migratedAt = new Date().toISOString();
+  const nextComponents: ManagedComponentRecord[] = [];
+
+  for (const component of lock.data.components) {
+    const latest = index.components[component.id];
+    if (component.status === 'skipped') {
+      const row = makeStatusRow(targetDir, component, latest, 'skipped', 'Skipped schema version 1 records cannot be migrated safely.', [component.dest]);
+      skipped.push(row);
+      blockers.push(row);
+      continue;
+    }
+    if (!latest) {
+      blockers.push(makeStatusRow(targetDir, component, undefined, 'unknown-component', 'Component is not present in the current capability index; migration is blocked.', [component.id]));
+      continue;
+    }
+
+    let dest: string;
+    try {
+      dest = assertSafeRelativePath(targetDir, component.dest);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      blockers.push(makeStatusRow(targetDir, component, latest, 'modified', `Lock contains an unsafe managed path: ${message}`, [component.dest]));
+      continue;
+    }
+
+    const source = componentSourcePath(hubRoot, latest);
+    const comparison = compareSourceAndDestination(source, dest);
+    if (!comparison.matches) {
+      blockers.push(makeStatusRow(targetDir, component, latest, safeRelativePathExists(targetDir, component.dest) ? 'modified' : 'missing', comparison.reason, comparison.evidence));
+      continue;
+    }
+
+    migratable.push(makeStatusRow(targetDir, component, latest, 'current', comparison.reason, comparison.evidence));
+    nextComponents.push({
+      id: component.id,
+      version: latest.version,
+      agent: component.agent,
+      kind: latest.kind,
+      source: toPortablePath(path.relative(hubRoot, source)),
+      dest: component.dest,
+      files: collectManagedFiles(targetDir, dest),
+      installedAt: migratedAt,
+      migratedAt,
+      status: 'installed',
+    });
+  }
+
+  if (options.dryRun || blockers.length > 0) {
+    return {
+      exitCode: blockers.length > 0 ? 3 : 0,
+      targetDir,
+      migratable,
+      migrated,
+      blockers,
+      skipped,
+      lock,
+      reason: blockers.length > 0 ? 'Lock migration blocked by safety checks.' : 'Lock migration preview is side-effect free.',
+    };
+  }
+
+  const nextLock: SkillHubLockV2 = {
+    schemaVersion: 2,
+    generatedAt: migratedAt,
+    hubVersion: index.version,
+    profile: lock.data.profile,
+    agents: lock.data.agents,
+    components: nextComponents,
+  };
+  const writtenLock = writeLockData(targetDir, nextLock);
+  for (const component of nextComponents) {
+    migrated.push({
+      id: component.id,
+      agent: component.agent,
+      dest: component.dest,
+      previousVersion: lock.data.components.find((entry) => entry.id === component.id)?.version || component.version,
+      version: component.version,
+      files: component.files.map((file) => file.path),
+      forced: false,
+    });
+  }
+
+  return {
+    exitCode: 0,
+    targetDir,
+    migratable,
+    migrated,
+    blockers,
+    skipped,
+    lock: writtenLock,
+    reason: `${migrated.length} schema version 1 records migrated.`,
+  };
 }
 
 export function writeStatusReport(status: SkillHubStatus, hubVersion: string): string {
@@ -1721,6 +2231,7 @@ function parseArgs(argv: string[]): CliOptions {
     output: null,
     force: false,
     agentReadiness: false,
+    componentIds: [],
   };
   const positional: string[] = [];
 
@@ -1744,6 +2255,8 @@ function parseArgs(argv: string[]): CliOptions {
       options.output = readOptionValue(argv, ++index, arg);
     } else if (arg === '--force') {
       options.force = true;
+    } else if (arg === '--component') {
+      options.componentIds.push(readOptionValue(argv, ++index, arg));
     } else if (arg === '--agent-readiness') {
       options.agentReadiness = true;
     } else if (arg.startsWith('-')) {
@@ -1781,7 +2294,7 @@ export async function runCli(argv: string[]): Promise<number> {
       return error.exitCode;
     }
     const message = error instanceof Error ? error.message : String(error);
-    const exitCode = /Unknown profile|Unsupported agent|Unknown command|Missing value/.test(message) ? 2 : 1;
+    const exitCode = /Unknown profile|Unsupported agent|Unknown command|Missing value|Selected component/.test(message) ? 2 : 1;
     console.error(`skill-hub: ${message}`);
     return exitCode;
   }
@@ -1870,13 +2383,33 @@ async function runCliInner(argv: string[]): Promise<number> {
   }
 
   if (options.command === 'update') {
-    if (!options.dryRun) {
-      throw new CliError('Mutating update is deferred in the first release. Use --dry-run to preview updates.', 2);
+    if (options.dryRun) {
+      const index = readCapabilityIndex();
+      const updatePlan = getUpdatePlan({
+        targetDir: options.targetDir || undefined,
+        index,
+        components: options.componentIds,
+        force: options.force,
+      });
+      emitReport(renderLifecycleReport('Skill Hub Update Report', updatePlan, options), options);
+      return 0;
     }
-    const index = readCapabilityIndex();
-    const updatePlan = getUpdatePlan({ targetDir: options.targetDir || undefined, index });
-    emitReport(renderLifecycleReport('Skill Hub Update Report', updatePlan, options), options);
-    return 0;
+    const updateResult = updateManaged(options.targetDir || process.cwd(), {
+      yes: options.yes,
+      force: options.force,
+      components: options.componentIds,
+    });
+    emitReport(renderLifecycleReport('Skill Hub Update Report', updateResult, options), options);
+    return updateResult.exitCode;
+  }
+
+  if (options.command === 'migrate-lock') {
+    const migration = migrateLock(options.targetDir || process.cwd(), {
+      dryRun: options.dryRun,
+      yes: options.yes,
+    });
+    emitReport(renderLifecycleReport('Skill Hub Lock Migration Report', migration, options), options);
+    return migration.exitCode;
   }
 
   throw new CliError(`Unknown command '${options.command}'`, 2);
@@ -1884,7 +2417,7 @@ async function runCliInner(argv: string[]): Promise<number> {
 
 function renderLifecycleReport(
   title: string,
-  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan,
+  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
   options: CliOptions,
 ): string {
   if (options.json) {
@@ -1905,7 +2438,7 @@ function renderLifecycleReport(
 }
 
 function rowsForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan,
+  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): HtmlRow[] {
   if ('findings' in data) {
     if (data.agentReadiness) {
@@ -1969,14 +2502,50 @@ function rowsForLifecycleData(
     ];
   }
 
+  if ('migratable' in data) {
+    return [
+      ...data.migrated.map((row) => ({
+        id: row.id,
+        agent: row.agent,
+        dest: row.dest,
+        state: 'migrated',
+        version: row.previousVersion,
+        latestVersion: row.version,
+      })),
+      ...data.migratable.map((row) => ({ ...row, state: 'migratable' })),
+      ...data.blockers.map((row) => ({ ...row, state: row.state })),
+      ...data.skipped.map((row) => ({ ...row, state: 'skipped' })),
+    ];
+  }
+
+  if ('updated' in data) {
+    return [
+      ...data.updated.map((row) => ({
+        id: row.id,
+        agent: row.agent,
+        dest: row.dest,
+        state: row.forced ? 'force-updated' : 'updated',
+        version: row.previousVersion,
+        latestVersion: row.version,
+      })),
+      ...data.blockers.map((row) => ({ ...row, state: row.state })),
+      ...data.forceOverridable.map((row) => ({ ...row, state: 'force-overridable' })),
+      ...data.skipped.map((row) => ({ ...row, state: 'skipped' })),
+      ...data.unchanged.map((row) => ({ ...row, state: 'unchanged' })),
+    ];
+  }
+
   return [
     ...data.updates.map((row) => ({ ...row, state: 'update-available' })),
     ...data.blockers.map((row) => ({ ...row, state: row.state })),
+    ...data.forceOverridable.map((row) => ({ ...row, state: 'force-overridable' })),
+    ...data.skipped.map((row) => ({ ...row, state: 'skipped' })),
+    ...data.unchanged.map((row) => ({ ...row, state: 'unchanged' })),
   ];
 }
 
 function summaryForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan,
+  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): string {
   if ('findings' in data) {
     if (data.agentReadiness) {
@@ -2009,7 +2578,15 @@ function summaryForLifecycleData(
     return `${data.removed.length} managed files planned, ${data.blocked.length} blockers, ${data.skipped.length} skipped. ${data.reason}`;
   }
 
-  return `${data.updates.length} updates, ${data.blockers.length} blockers.`;
+  if ('migratable' in data) {
+    return `${data.migrated.length} migrated, ${data.migratable.length} migratable, ${data.blockers.length} blockers. ${data.reason}`;
+  }
+
+  if ('updated' in data) {
+    return `${data.updated.length} updated, ${data.forced.length} forced, ${data.blockers.length} blockers, ${data.unchanged.length} unchanged. ${data.reason}`;
+  }
+
+  return `${data.updates.length} updates, ${data.blockers.length} blockers, ${data.forceOverridable.length} force-overridable, ${data.unchanged.length} unchanged.`;
 }
 
 function summaryForReadinessAnalysis(data: AnalysisResult): string {
@@ -2063,7 +2640,8 @@ Usage:
   skill-hub install [target] [--profile minimal] [--agent codex] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
   skill-hub init [target] [--profile minimal] [--agent codex] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
   skill-hub status [target] [--json|--html] [--output file]
-  skill-hub update [target] --dry-run [--json|--html]
+  skill-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
+  skill-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
   skill-hub remove [target] [--dry-run|--yes] [--force] [--json|--html]
   skill-hub profiles
   skill-hub components

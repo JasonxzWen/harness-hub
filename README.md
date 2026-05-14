@@ -26,7 +26,7 @@ The CLI is written in TypeScript and built with Bun for development speed. Publi
 - `feynman-learning-coach` is installed under `.agents/skills/` as an explicit learning profile inspired by Learn FASTER's scoped learning lifecycle.
 - A `harness` install profile can scaffold root `AGENTS.md` plus state, verification, handoff, and quality templates under `harness/` for target repos.
 - A machine-readable capability graph exists at `capabilities/index.json`, with a human-readable map in `docs/capability-map.md`.
-- A Node-compatible CLI exists as `skill-hub`, supporting profile-based `analyze`, `install`, `init`, `status`, `update --dry-run`, and `remove` reports.
+- A Node-compatible CLI exists as `skill-hub`, supporting profile-based `analyze`, `install`, `init`, `status`, `update`, `migrate-lock`, and `remove` reports.
 - An opt-in agent-readiness analysis extension is documented in `docs/agent-readiness-analysis.md` and specified by `openspec/specs/agent-readiness-analysis/spec.md`.
 - ECC's Codex config and multi-agent roles are configured under `.codex/`.
 - Claude Code built-in skills copied into `.codex/skills/` have been adapted for Codex; the duplicate local `skill-creator` copy was removed in favor of Codex's system skill.
@@ -176,10 +176,15 @@ npx skill-hub install D:\path\to\target --profile learning --agent codex --dry-r
 npx skill-hub install D:\path\to\target --profile web --agent codex --agent claude-code --yes
 npx skill-hub status D:\path\to\target --html
 npx skill-hub update D:\path\to\target --dry-run --json
+npx skill-hub update D:\path\to\target --component skill:grill-me --yes --json
+npx skill-hub update D:\path\to\target --force --yes --json
+npx skill-hub migrate-lock D:\path\to\target --dry-run --json
 npx skill-hub remove D:\path\to\target --dry-run --json
 ```
 
-`analyze`, `status`, and first-release `update --dry-run` are read-only by default. `install` and `remove` mutate the target repo and must be backed by `.skill-hub/lock.json`. During migration, `init` remains a compatibility alias for `install`.
+`analyze`, `status`, `update --dry-run`, and `migrate-lock --dry-run` are read-only by default. `install`, `update --yes`, `update --force --yes`, `migrate-lock --yes`, and `remove` mutate the target repo and must be backed by `.skill-hub/lock.json`. During migration, `init` remains a compatibility alias for `install`.
+
+Managed updates are lock-backed. Normal `update --yes` refreshes only schema version 2 managed components whose recorded hashes still match the target files. `--component <id>` scopes the selected update set. `update --force --yes` can intentionally overwrite modified or restore missing schema version 2 lock-recorded files, but it does not override unsafe paths, schema version 1 records, skipped records, or unknown components. Legacy schema version 1 locks require explicit `migrate-lock` before update or safe removal can rely on file hashes.
 
 Agent readiness analysis:
 

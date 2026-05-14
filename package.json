@@ -21,6 +21,7 @@
     ".codex/config.toml",
     ".codex/skills/",
     "scripts/ralph/",
+    "scripts/smoke-managed-update.ps1",
     "scripts/skill-quality-inventory.ts",
     "scripts/validate-skills.ps1"
   ],
@@ -29,6 +30,7 @@
     "prepack": "bun run build",
     "test": "bun test ./tests",
     "skill:quality-inventory": "bun ./scripts/skill-quality-inventory.ts",
+    "smoke:managed-update": "powershell -ExecutionPolicy Bypass -File ./scripts/smoke-managed-update.ps1",
     "typecheck": "tsc --noEmit",
     "validate": "bun run typecheck && bun test ./tests && powershell -ExecutionPolicy Bypass -File ./scripts/validate-skills.ps1 -SkipExternal",
     "validate:release": "bun run validate && bun run build && node bin/skill-hub.mjs --help && npm pack --dry-run"

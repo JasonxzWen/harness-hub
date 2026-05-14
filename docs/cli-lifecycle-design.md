@@ -36,7 +36,11 @@ The archived OpenSpec change `add-agent-readiness-analysis` adds a fifth read-on
 | `install <target>` | Mutating | Copy selected components, write `.skill-hub/lock.json`, and produce an install report. |
 | `init <target>` | Mutating alias | Compatibility alias for `install` during migration. |
 | `status <target>` | Read-only by default | Read the lock and current hub index, then report current, missing, modified, update-available, skipped, and unknown components. |
-| `update <target> --dry-run` | Read-only in first release | Show a replacement plan for managed components whose current index version differs from the lock. Mutating update is deferred. |
+| `update <target> --dry-run` | Read-only | Show a replacement plan for managed components whose current index version differs from the lock. Supports `--component <id>` scoping and `--force` preview. |
+| `update <target> --yes` | Mutating | Refresh schema version 2 managed components whose current file hashes still match the lock. |
+| `update <target> --force --yes` | Mutating | Overwrite modified or restore missing schema version 2 lock-recorded files only; unsafe, schema version 1, skipped, and unknown records remain blockers. |
+| `migrate-lock <target> --dry-run` | Read-only | Report schema version 1 records that exactly match current Skill Hub component assets and can be converted to schema version 2. |
+| `migrate-lock <target> --yes` | Mutating | Convert verifiable schema version 1 records into schema version 2 records with file hashes. |
 | `remove <target>` | Mutating | Remove only schema version 2 lock-recorded, unmodified managed files unless `--force` is provided for modified schema version 2 files. |
 | `profiles` | Read-only | List install profiles. |
 | `components` | Read-only | List installable components and metadata. |
@@ -44,10 +48,11 @@ The archived OpenSpec change `add-agent-readiness-analysis` adds a fifth read-on
 First release command decisions:
 
 - `install` is the canonical verb; `init` is an alias that must produce the same plan, writes, lock, report, and exit behavior.
-- `update` is plan-only in the first release. `skill-hub update <target> --dry-run` is valid; `skill-hub update <target>` without `--dry-run` exits with usage error code `2` and explains that mutating update is deferred.
+- `update --dry-run` is the side-effect-free preview path. `update --yes` applies safe schema version 2 managed updates, and `update --force --yes` intentionally overwrites modified or restores missing schema version 2 lock-recorded files.
+- `migrate-lock` is the explicit schema version 1 conversion path. It never runs implicitly inside `update`.
 - Report-capable commands write to stdout unless the user passes `--output <file>`. `--html` selects HTML format; it does not imply `.skill-hub/reports/` for read-only commands.
 - Mutating commands may write default reports under `.skill-hub/reports/` because they already create or modify Skill Hub-managed state.
-- First-release mutating commands are non-interactive. `install`, `init`, and `remove` require either `--dry-run` or `--yes`; without either flag they exit with code `2` and explain the required confirmation flag.
+- Mutating commands are non-interactive. `install`, `init`, `update`, `migrate-lock`, and `remove` require either `--dry-run` or `--yes`; without either flag they exit with code `2` and explain the required confirmation flag.
 
 ## CLI Options
 
@@ -55,13 +60,14 @@ First release command decisions:
 |---|---|---|
 | `--profile <name>` | `analyze`, `install`, `init` | Selects a capability profile. Defaults to `capabilities.index.defaults.profile`. |
 | `--agent <name>` | `analyze`, `install`, `init` | May be repeated. Defaults to `capabilities.index.defaults.agents`. |
-| `--json` | `analyze`, `install`, `init`, `status`, `update --dry-run`, `remove` | Prints the stable JSON report to stdout. |
-| `--html` | `analyze`, `install`, `init`, `status`, `update --dry-run`, `remove` | Prints HTML to stdout unless `--output` is provided. |
+| `--json` | `analyze`, `install`, `init`, `status`, `update`, `migrate-lock`, `remove` | Prints the stable JSON report to stdout. |
+| `--html` | `analyze`, `install`, `init`, `status`, `update`, `migrate-lock`, `remove` | Prints HTML to stdout unless `--output` is provided. |
 | `--output <file>` | reporting commands | Writes the selected report format to an explicit path. Parent directories may be created. |
-| `--dry-run` | `install`, `init`, `update`, `remove` | Plans the mutation without copying, replacing, or deleting files. |
-| `--yes` | `install`, `init`, `remove` | Confirms mutating behavior in non-interactive use. |
+| `--dry-run` | `install`, `init`, `update`, `migrate-lock`, `remove` | Plans the mutation without copying, replacing, deleting, or rewriting files. |
+| `--yes` | `install`, `init`, `update`, `migrate-lock`, `remove` | Confirms mutating behavior in non-interactive use. |
 | `--overwrite` | `install`, `init` | Replaces existing destinations and records the new files as managed. |
-| `--force` | `remove` | Allows removal of modified schema version 2 managed files. Does not remove unmanaged or schema version 1 hashless files. |
+| `--force` | `update`, `remove` | For update, overwrites modified or restores missing schema version 2 lock-recorded files. For remove, allows removal of modified schema version 2 managed files. It does not override unsafe, schema version 1, skipped, unknown, or unmanaged files. |
+| `--component <id>` | `update` | May be repeated to scope update preview or mutation to selected managed component ids. |
 
 Unsupported options must fail with exit code `2`.
 
@@ -275,7 +281,7 @@ Schema compatibility:
 - Schema version 1 locks must be readable by `status`.
 - Schema version 1 locks do not contain per-file hashes, so `remove --yes` must skip those components and exit `3` rather than deleting unverifiable files.
 - `--force` does not override schema version 1 hash absence in the first release; force applies only to schema version 2 files that are explicitly recorded in the lock.
-- Schema version 1 locks can be upgraded only by a future explicit migration or reinstall flow; V1 removal must not infer file ownership from directory names.
+- Schema version 1 locks can be upgraded only by explicit `migrate-lock` when the destination exactly matches current Skill Hub component assets, or by a manual reinstall flow; V1 removal must not infer file ownership from directory names.
 
 ## Removal Safety
 
@@ -295,15 +301,20 @@ If a lock exists but lacks per-file hashes, `remove` reports a safety blocker an
 
 ## Update Semantics
 
-Mutating update is explicitly out of scope for the first release.
+`status` reports `update-available` when current `capabilities/index.json` component versions differ from the lock. `skill-hub update <target> --dry-run` shows the replacement plan and blockers without mutating files.
 
-First release behavior:
+Mutating update behavior:
 
-1. `status` reports `update-available` when current `capabilities/index.json` component versions differ from the lock.
-2. `skill-hub update <target> --dry-run` shows the replacement plan and modified-file blockers.
-3. `skill-hub update <target>` without `--dry-run` exits with code `2` and does not mutate files.
+1. `skill-hub update <target> --yes` applies only schema version 2 component updates whose managed file hashes still match the lock.
+2. `skill-hub update <target> --component <id> --yes` scopes the selected update set and leaves unselected update-available components unchanged.
+3. `skill-hub update <target> --force --yes` can intentionally overwrite modified or restore missing schema version 2 lock-recorded files, but still blocks unsafe paths, schema version 1 records, skipped records, unknown components, and unmanaged files.
+4. `skill-hub update <target>` without `--dry-run` or `--yes` exits with code `2` and does not mutate files.
 
-This keeps the riskiest operation, replacing existing managed files, behind a tested install/remove lock model.
+Schema version 1 migration behavior:
+
+1. `skill-hub migrate-lock <target> --dry-run` reports legacy records that exactly match current Skill Hub component assets.
+2. `skill-hub migrate-lock <target> --yes` writes schema version 2 records with file hashes only when all selected legacy records are verifiable.
+3. Divergent, missing, unsafe, skipped, or unknown legacy records block migration and leave the lock unchanged.
 
 ## Exit Codes
 
@@ -311,8 +322,8 @@ This keeps the riskiest operation, replacing existing managed files, behind a te
 |---:|---|---|
 | `0` | Command completed successfully | Recommendations found; conflicts reported by `analyze`; no lock found by idempotent `remove`; install completed with skips. |
 | `1` | Unexpected runtime failure | unreadable target after validation, filesystem error, malformed current capability index, report write failure. |
-| `2` | Invalid usage or unsupported request | unknown command, unsupported option, unknown profile, unsupported agent, missing `--yes` for non-dry-run mutation, mutating `update` without `--dry-run`. |
-| `3` | Safety blocker prevented full requested mutation | `remove --yes` skipped modified managed files without `--force`; `install --strict` finds conflicts if strict mode is later added. |
+| `2` | Invalid usage or unsupported request | unknown command, unsupported option, unknown profile, unsupported agent, missing `--yes` for non-dry-run mutation, invalid `--component` selector. |
+| `3` | Safety blocker prevented full requested mutation | `update --yes` found modified managed files without `--force`; `migrate-lock --yes` found divergent schema version 1 records; `remove --yes` skipped modified managed files without `--force`. |
 
 Default install conflicts are skipped and exit `0` because the command completed with a report. Safety blockers exit `3` only when the user requested a mutation that could not be fully applied.
 
@@ -394,7 +405,7 @@ It should not include ignored vendor checkouts.
 - Extend `status` with modified and update-available states.
 - Implement `remove --dry-run` and safe `remove --yes`.
 - Add `--force` only after modified-file protection is covered by tests.
-- Add `update --dry-run`; defer mutating update.
+- Add `update --dry-run`, `update --yes`, selected update, force update, and explicit `migrate-lock`.
 
 ### Phase 5: Release candidate
 
@@ -418,7 +429,11 @@ It should not include ignored vendor checkouts.
 - `remove` deletes only unmodified lock-recorded files by default.
 - `remove --yes` exits `3` when modified managed files block full removal, and `remove --force --yes` removes only lock-recorded files.
 - Schema version 1 locks are readable by `status`, and `remove` does not delete unverifiable hashless records.
-- `update --dry-run` reports replacement plans, while mutating `update` exits `2`.
+- `update --dry-run` reports replacement plans without side effects.
+- `update --yes` refreshes safe schema version 2 managed components and rewrites lock metadata.
+- `update --component <id> --yes` updates only selected managed components.
+- `update --force --yes` overwrites or restores only schema version 2 lock-recorded files.
+- `migrate-lock --yes` converts exact-match schema version 1 records into schema version 2 records with hashes.
 - The package can be built and smoke-tested through the Node-compatible binary.
 
 ## Review Checklist

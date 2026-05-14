@@ -64,7 +64,10 @@ The release-oriented command model is documented in [CLI lifecycle design](cli-l
 | `skill-hub install` | Mutating | Resolve a profile, copy selected components, write `.skill-hub/lock.json`, and create an install report. |
 | `skill-hub init` | Mutating alias | Compatibility alias for `install` during migration. |
 | `skill-hub status` | Read-only by default | Read `.skill-hub/lock.json` and report current, missing, modified, update-available, skipped, and unknown managed components. |
-| `skill-hub update --dry-run` | Read-only in the first release | Show replacement plans after status reports update-available for version differences. Mutating update is deferred. |
+| `skill-hub update --dry-run` | Read-only | Show replacement plans after status reports update-available for version differences. Supports `--component <id>` scoping and `--force` preview. |
+| `skill-hub update --yes` | Mutating | Refresh schema version 2 managed components whose file hashes still match the lock. `--component <id>` narrows the selected set. |
+| `skill-hub update --force --yes` | Mutating | Overwrite modified or restore missing schema version 2 lock-recorded files only; unsafe paths, schema version 1 records, skipped records, and unknown components remain blockers. |
+| `skill-hub migrate-lock` | Read-only with `--dry-run`, mutating with `--yes` | Convert verifiably matching schema version 1 lock records to schema version 2 records with file hashes. Divergent or unverifiable records block migration. |
 | `skill-hub remove` | Mutating | Remove only schema version 2 lock-recorded, unmodified managed files, then delete the Skill Hub lock after successful full removal; `--force` applies only to modified schema version 2 managed files. |
 
 ## Capability Metadata Contract
@@ -88,6 +91,8 @@ Initial detection is path-based only. V1 detect rules use exact repository-relat
 `skill-hub install` reads `capabilities/index.json`, resolves a profile, copies selected skill directories to the requested agent skill roots, writes `.skill-hub/lock.json`, and creates an HTML install report under `.skill-hub/reports/`. `skill-hub init` remains a compatibility alias while docs and tests migrate.
 
 The lock file is the ownership boundary for future status, update, and removal. Deletion must be lock-backed and hash-aware; same-name unmanaged files are never removed by loose path matching.
+
+Managed update follows the same boundary: normal updates require matching schema version 2 hashes, force updates only touch lock-recorded schema version 2 files, and schema version 1 locks must be migrated explicitly before hash-backed update or removal.
 
 Future component kinds can add hooks, rules, MCP config snippets, and harness-specific config files without changing the profile model.
 
