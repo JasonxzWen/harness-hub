@@ -10,7 +10,7 @@
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.45; }
     .shell { width:min(1180px,calc(100vw - 32px)); margin:0 auto; padding:28px 0 44px; }
-    header,.panel,.finding,.code { background:var(--panel); border:1px solid var(--line); border-radius:8px; }
+    header,.panel,.finding,.code,.diff-panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; }
     header,.panel,.finding { padding:16px; }
     h1,h2,h3,p { margin-top:0; }
     h1 { font-size:clamp(28px,4vw,42px); line-height:1.05; margin-bottom:8px; }
@@ -32,7 +32,16 @@
     .code { overflow:auto; background:#111827; color:#dbe4f0; position:sticky; top:70px; }
     .code header { display:flex; justify-content:space-between; gap:10px; border:0; border-bottom:1px solid #263244; background:#111827; color:#b7c4d8; }
     .code pre { margin:0; padding:12px; font:13px/1.55 "SFMono-Regular",Consolas,"Liberation Mono",monospace; }
-    .hot { display:block; margin-inline:-12px; padding-inline:12px; background:rgba(194,65,75,.25); }
+    .source-link { color:inherit; font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace; font-size:12px; font-weight:700; overflow-wrap:anywhere; text-decoration:none; }
+    .source-link::before { content:"#"; color:var(--accent); margin-right:6px; }
+    .line,.hot,.diff-line { display:block; position:relative; margin-inline:-12px; padding-inline:58px 12px; }
+    .line::before,.hot::before,.diff-line::before { content:attr(data-line); position:absolute; left:12px; width:36px; color:#7f8da3; text-align:right; user-select:none; }
+    .hot { background:rgba(194,65,75,.25); }
+    .diff-panel { overflow:auto; margin-top:12px; background:#101827; color:#dbe4f0; }
+    .diff-panel header { display:flex; justify-content:space-between; gap:10px; border:0; border-bottom:1px solid #263244; background:#111827; color:#b7c4d8; }
+    .diff-panel pre { margin:0; padding:12px; font:13px/1.55 "SFMono-Regular",Consolas,"Liberation Mono",monospace; }
+    .diff-added { background:rgba(22,132,91,.2); color:#b7f7d4; }
+    .diff-removed { background:rgba(194,65,75,.22); color:#ffd1d5; }
     [hidden] { display:none!important; }
     @media (max-width:880px) { .shell{width:min(100vw - 20px,1180px); padding-top:14px;} .layout{grid-template-columns:1fr;} .code{position:static;} .finding-grid{grid-template-columns:1fr;} }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after{transition:none!important;animation:none!important;} .finding:hover{transform:none;} }
@@ -103,12 +112,18 @@
       </div>
 
       <aside class="code" aria-label="Highlighted code evidence">
-        <header><span>src/example.ts:42</span><button data-copy-from="#snippet">Copy snippet</button></header>
-        <pre id="snippet"><code>40  async function save(input) {
-41    const target = path.join(root, input.name);
-42    <span class="hot">await fs.writeFile(target, input.body);</span>
-43  }</code></pre>
+        <header><a class="source-link" data-source-link href="#snippet">src/example.ts:40-43</a><button data-copy-from="#snippet">Copy snippet</button></header>
+        <pre id="snippet"><code><span class="line" data-line="40">async function save(input) {</span>
+<span class="line" data-line="41">  const target = path.join(root, input.name);</span>
+<span class="hot" data-line="42">  await fs.writeFile(target, input.body);</span>
+<span class="line" data-line="43">}</span></code></pre>
       </aside>
+    </section>
+
+    <section class="diff-panel" data-section-type="diff">
+      <header><a class="source-link" data-source-link href="#review-diff">src/example.ts:42</a><button data-copy-from="#review-diff">Copy diff</button></header>
+      <pre id="review-diff"><code><span class="diff-line diff-removed" data-line="1">- await fs.writeFile(target, input.body);</span>
+<span class="diff-line diff-added" data-line="2">+ await fs.writeFile(resolveSafePath(root, input.name), input.body);</span></code></pre>
     </section>
 
     <section class="panel" style="margin-top:12px">

@@ -103,6 +103,28 @@ a {
   transform: translateY(-2px);
 }
 
+.evidence-spotlight {
+  position: relative;
+  overflow: hidden;
+  --spotlight-x: 50%;
+  --spotlight-y: 0%;
+}
+
+.evidence-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--spotlight-x) var(--spotlight-y), rgba(37, 99, 235, 0.14), transparent 56%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.evidence-spotlight:hover::before,
+.evidence-spotlight:focus-within::before {
+  opacity: 1;
+}
+
 .focus-field:has(.interactive-card:hover) .interactive-card:not(:hover),
 .focus-field.has-filter .interactive-card[hidden] {
   opacity: 0.34;
@@ -139,6 +161,24 @@ a {
 .status-danger {
   border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
   color: var(--danger);
+}
+
+.source-link {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+  overflow-wrap: anywhere;
+  color: inherit;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.source-link::before {
+  content: "#";
+  color: var(--accent);
 }
 
 button,
@@ -191,11 +231,85 @@ a:focus-visible {
   font: 13px/1.55 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
+.code-line,
 .line-hot {
   display: block;
   margin-inline: -12px;
-  padding-inline: 12px;
+  padding-inline: 58px 12px;
+  position: relative;
+}
+
+.code-line::before,
+.line-hot::before,
+.diff-line::before {
+  content: attr(data-line);
+  position: absolute;
+  left: 12px;
+  width: 36px;
+  color: #7f8da3;
+  text-align: right;
+  user-select: none;
+}
+
+.line-hot {
   background: rgba(37, 99, 235, 0.22);
+}
+
+.diff-panel {
+  overflow: auto;
+  border: 1px solid #263244;
+  border-radius: 8px;
+  background: #101827;
+  color: #dbe4f0;
+}
+
+.diff-panel header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #263244;
+  background: #111827;
+  color: #b7c4d8;
+}
+
+.diff-panel h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 16px;
+}
+
+.diff-panel pre {
+  margin: 0;
+  padding: 12px;
+  font: 13px/1.55 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.diff-line {
+  display: block;
+  margin-inline: -12px;
+  padding-inline: 58px 12px;
+  position: relative;
+  white-space: pre;
+}
+
+.diff-added {
+  background: rgba(22, 132, 91, 0.2);
+  color: #b7f7d4;
+}
+
+.diff-removed {
+  background: rgba(194, 65, 75, 0.22);
+  color: #ffd1d5;
+}
+
+.diff-hunk {
+  color: #bfdbfe;
+  background: rgba(37, 99, 235, 0.16);
+}
+
+.mermaid-evidence {
+  border-left: 4px solid var(--accent);
 }
 
 .diagram-panel svg {

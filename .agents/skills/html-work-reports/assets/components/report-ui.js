@@ -75,6 +75,12 @@
     });
   }
 
+  function updateEvidenceSpotlight(card, event) {
+    var rect = card.getBoundingClientRect();
+    card.style.setProperty("--spotlight-x", event.clientX - rect.left + "px");
+    card.style.setProperty("--spotlight-y", event.clientY - rect.top + "px");
+  }
+
   document.addEventListener("click", function (event) {
     var button = event.target.closest("button");
     if (!button) return;
@@ -100,6 +106,13 @@
   document.addEventListener("input", function (event) {
     if (event.target.matches("[data-search-for]")) {
       applySearch(event.target);
+    }
+  });
+
+  document.addEventListener("pointermove", function (event) {
+    var card = event.target.closest("[data-evidence-spotlight]");
+    if (card) {
+      updateEvidenceSpotlight(card, event);
     }
   });
 })();

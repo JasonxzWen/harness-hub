@@ -94,6 +94,23 @@ function validateStatic(html) {
       issues
     );
     add(checks, "code-paths-inert", html.includes("data-file-path="), "code section lacks inert file path label", issues);
+    add(
+      checks,
+      "source-linked-code-evidence",
+      html.includes("data-source-link") && html.includes("data-line="),
+      "code section lacks source link or line numbers",
+      issues
+    );
+  }
+
+  if (html.includes('data-section-type="diff"')) {
+    add(
+      checks,
+      "diff-rendered",
+      html.includes("diff-panel") && (html.includes("diff-added") || html.includes("diff-removed")),
+      "diff section lacks added/removed line markup",
+      issues
+    );
   }
 
   add(checks, "evidence-present", html.includes("data-evidence") && html.includes("data-evidence-kind="), "missing evidence blocks", issues);

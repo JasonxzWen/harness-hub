@@ -10,6 +10,7 @@ The previous version was too passive:
 - **Rich-text debt**: Mermaid, Markdown, and code snippets were mentioned but not enforced as rendered content.
 - **Evidence debt**: file paths, command output, and code anchors were preserved only as generic notes.
 - **Interaction debt**: hover focus, filters, dim/blur states, copy buttons, and motion were optional instead of reusable defaults.
+- **Code-review debt**: source-linked code evidence, line numbers, highlighted snippets, and diff views were not treated as mandatory when reports discuss code changes.
 
 ## Source Inspiration
 
@@ -39,10 +40,14 @@ Use the closest asset and delete sections that do not apply:
 | `assets/templates/review-findings.html` | A PR/code/doc review has multiple findings, severity levels, or reviewer focus areas. | severity filters, finding cards, annotated code panel, file tour, action export |
 | `assets/templates/research-explainer.html` | Research, architecture, or module understanding needs citations, diagrams, examples, and a glossary. | TL;DR grid, rendered rich-text sections, tabbed examples, diagram panel, source rail |
 | `assets/templates/decision-matrix.html` | Multiple options, product choices, or implementation approaches need trade-off comparison. | option cards, recommendation, risk notes, confirmation questions |
-| `assets/components/report-ui.css` | A custom page needs common visual primitives. | cards, chips, status pills, code blocks, focus/dim effects, responsive grids |
-| `assets/components/report-ui.js` | A custom page needs simple interactions. | filters, tabs, search, copy/export buttons, selected-state focus |
+| `assets/components/report-ui.css` | A custom page needs common visual primitives. | cards, chips, source links, code blocks, diff panels, Mermaid evidence panels, focus/dim effects, responsive grids |
+| `assets/components/report-ui.js` | A custom page needs simple interactions. | filters, tabs, search, copy/export buttons, evidence spotlight, selected-state focus |
 | `assets/components/rich-render-runtime.css` | A report needs runtime-rendered Markdown, Mermaid, or highlighted code. | rendered Markdown styling, Mermaid fallback styling, highlight token affordances |
 | `assets/components/rich-render-runtime.js` | A report needs runtime-rendered Markdown, Mermaid, or highlighted code. | Marked + DOMPurify bridge, Mermaid `run`, highlight.js `highlightElement`, status badges |
+
+## Static Component Boundary
+
+Report components must preserve the self-contained static HTML contract. Use inlineable HTML, CSS, and vanilla JS only. If a visual idea requires React, Tailwind compilation, Vite, bundling, or a long-lived app runtime, do not add that dependency to this skill; port only the static shape that can be embedded in a single report file, or skip the idea.
 
 ## Generator Contract
 
@@ -65,7 +70,8 @@ Input is JSON and follows `references/report-input-schema.json`. The minimum use
   "sections": [
     { "type": "markdown", "title": "What changed", "content": "- Short bullet" },
     { "type": "mermaid", "title": "Flow", "content": "graph LR\n  A --> B" },
-    { "type": "code", "title": "Snippet", "language": "typescript", "filePath": "src/file.ts", "content": "export const ok = true;" }
+    { "type": "code", "title": "Snippet", "language": "typescript", "filePath": "src/file.ts", "startLine": 42, "highlightLines": [42], "content": "export const ok = true;" },
+    { "type": "diff", "title": "Behavior diff", "filePath": "src/file.ts", "startLine": 42, "content": "- return oldValue;\n+ return newValue;" }
   ],
   "evidence": [
     { "kind": "file", "label": "Implementation", "value": "src/file.ts", "status": "info" }
@@ -76,7 +82,7 @@ Input is JSON and follows `references/report-input-schema.json`. The minimum use
 }
 ```
 
-Supported section types: `summary-cards`, `markdown`, `mermaid`, `code`, `timeline`, `evidence`, `decision-matrix`, `actions`, `tabs`, and `filterable-cards`.
+Supported section types: `summary-cards`, `markdown`, `mermaid`, `code`, `diff`, `timeline`, `evidence`, `decision-matrix`, `actions`, `tabs`, and `filterable-cards`.
 
 Generator and validator scripts are internal `html-work-reports` assets. Do not expose them as a separate installable capability unless a later OpenSpec change approves that boundary.
 
@@ -85,7 +91,7 @@ Generator and validator scripts are internal `html-work-reports` assets. Do not 
 | Work type | HTML pattern | Useful controls |
 |---|---|---|
 | Planning | timeline + risk matrix + dependency sketch | filter by owner, copy checklist |
-| Code review | annotated diff + file tour + severity index | jump links, collapse low-risk notes |
+| Code review | source-linked code evidence + annotated diff + file tour + severity index | jump links, collapse low-risk notes |
 | Code understanding | module boxes + arrows + entry point list | highlight hot path |
 | Design system | swatches + type scale + component contact sheet | copy token, state tabs |
 | Prototype | isolated interaction or animation | sliders, toggles, reset |
@@ -97,8 +103,9 @@ Generator and validator scripts are internal `html-work-reports` assets. Do not 
 ## Rich Content Contract
 
 - **Markdown**: convert headings, lists, tables, callouts, and links into semantic HTML. Do not make the user read raw Markdown unless it is an explicit source excerpt.
-- **Mermaid**: prefer pre-rendered inline SVG for stable reports. For dynamic diagrams, pin Mermaid and call `mermaid.run` or `mermaid.render`; always include the Mermaid source in a collapsed `<details>` block.
-- **Code**: show only the smallest useful snippet. Include file path and line numbers, highlight the decisive lines, and add a one-line reason beside the snippet.
+- **Mermaid**: use it for non-trivial sequence, architecture, call-path, and data-flow explanations; prefer pre-rendered inline SVG for stable reports. For dynamic diagrams, pin Mermaid and call `mermaid.run` or `mermaid.render`; always include the Mermaid source in a collapsed `<details>` block.
+- **Code**: show only the smallest useful snippet. Include source-linked code evidence: a source file link, line number or range, copied snippet, highlighted decisive lines, and a one-line reason beside the snippet.
+- **Diff**: include a `diff` section for code-review findings, behavioral changes, or before/after examples where a snippet alone would hide the change.
 - **File references**: render as clickable local-path anchors when the host supports them, or as copyable path chips otherwise.
 - **Citations**: keep source cards short: title, source, date/accessed, and why it matters.
 
