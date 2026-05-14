@@ -7,13 +7,13 @@ description: Load when a non-trivial task has a complete conclusion needing a se
 
 ## Overview
 
-Turn completed agent work into one portable `.html` file when the handoff needs visual scanning, rendered rich content, evidence, or export controls. This is for the conclusion boundary, not permission pauses.
+Turn completed work into one portable `.html` when the handoff needs visual scanning, rendered content, evidence, or export controls.
 
 ## Decision Rule
 
 Use this skill when:
 
-- A non-trivial task has a complete conclusion with findings, tradeoffs, file/code evidence, diagrams, metrics, timelines, or next actions.
+- A non-trivial task has a complete conclusion with findings, tradeoffs, file/code evidence, diagrams, metrics, or next actions.
 - The user asks for a report, review, plan, status update, research explainer, architecture walkthrough, dashboard, or lightweight editor.
 - The answer would otherwise become a long Markdown wall, raw Mermaid block, raw table, or unrendered code dump.
 
@@ -46,9 +46,15 @@ Do not use this skill for:
 
 ## Output Contract
 
-Every artifact should be one self-contained `.html` file under `reports/` unless the repo has a better convention. Pair it with a short chat handoff that links the file and names verification performed.
+Write one self-contained static `.html` under `reports/` unless the repo has a better convention. In chat, link the file and verification.
 
-Build with visual blocks, tables, timelines, diagrams, cards, code panels, and chips instead of long paragraphs. Keep keyboard access, narrow width readability, and `prefers-reduced-motion`.
+Build with visual blocks, tables, timelines, diagrams, cards, code panels, and chips. Keep keyboard access, narrow width readability, and `prefers-reduced-motion`.
+
+Use only inlineable HTML/CSS and vanilla JS for report components. If a visual idea needs React, Tailwind, Vite, or another build step, port the static shape or skip it.
+
+For code-changing work, include a source file link with line number, copy the decisive code snippet into the HTML, and highlight the exact lines. Add a `diff` block when before/after behavior or review evidence matters.
+
+For complex sequence, architecture, call-path, or data-flow changes, render Mermaid in HTML and keep source fallback.
 
 ## Generator First Workflow
 
@@ -65,19 +71,20 @@ Use hand-written HTML only for custom visual exceptions. Reuse `assets/component
 
 Start from the closest template when it fits:
 
-- `assets/templates/implementation-handoff.html`: changed areas, evidence, verification gates, risks, and next actions.
-- `assets/templates/conclusion-dashboard.html`: completed task handoffs, release readiness, implementation summaries, verification reports.
+- `assets/templates/implementation-handoff.html`: changed areas, evidence, verification, risks, and next actions.
+- `assets/templates/conclusion-dashboard.html`: task handoffs, release readiness, implementation summaries, verification reports.
 - `assets/templates/review-findings.html`: code review, PR review, risk triage, finding-by-severity reports.
-- `assets/templates/research-explainer.html`: research synthesis, architecture walkthroughs, module understanding, concept explainers.
+- `assets/templates/research-explainer.html`: research synthesis, architecture walkthroughs, module understanding.
 - `assets/templates/decision-matrix.html`: option comparison, recommendation, risks, and confirmation questions.
 
-Use `assets/components/report-ui.css` and `assets/components/report-ui.js` for cards, chips, filters, tabs, copy buttons, hover focus, and dim/blur behavior. Use `rich-render-runtime.*` only for explicit runtime Markdown/Mermaid/code rendering with pinned libraries and source fallbacks.
+Use `assets/components/report-ui.css` and `assets/components/report-ui.js` for cards, filters, tabs, copy buttons, hover focus, and dim/blur behavior.
 
 ## Visual And Rich Content Rules
 
-- Put the conclusion first: decision, status, top risks, next action.
+- Put conclusion first: decision, status, top risks, next action.
 - Prefer bullets, callouts, tables, diagrams, timelines, and annotated snippets.
 - Render Markdown to semantic HTML, Mermaid to inline SVG or pinned runtime with fallback, and code to highlighted snippets.
+- Treat source-linked code evidence as mandatory for code reports: source file link, line number, copied snippet, and highlighted line or diff.
 - Escape/sanitize mixed-trust content. Code and paths stay inert unless a safe local reference is explicit.
 - Use sticky nav, jump links, filters, tabs, details, copy buttons, hover highlights, selected states, and dim/blur focus.
 - Include file paths, commands, dates, sources, assumptions, and verification status.
@@ -86,7 +93,7 @@ Use `assets/components/report-ui.css` and `assets/components/report-ui.js` for c
 
 Before handing off:
 
-Run `scripts/validate-html-report.mjs` when possible. Otherwise inspect enough to confirm non-empty output, narrow viewport sanity, rendered Markdown/Mermaid/code, working controls, and linked evidence.
+Run `scripts/validate-html-report.mjs` when possible. Otherwise inspect non-empty output, narrow viewport sanity, rendered Markdown/Mermaid/code, controls, and linked evidence.
 
 ## Related Skills
 
@@ -95,4 +102,4 @@ Run `scripts/validate-html-report.mjs` when possible. Otherwise inspect enough t
 - Use `frontend-design` for polished product UI, websites, or applications.
 - Use `webapp-testing` or browser tooling when the HTML must be visually verified in a real browser.
 
-For detailed patterns, schema, template selection, rich-content handling, validation, and source inspiration, read `references/html-report-patterns.md`.
+For patterns, schema, template selection, rich-content handling, and validation, read `references/html-report-patterns.md`.

@@ -39,8 +39,16 @@
       "title": "Core code path",
       "filePath": ".agents/skills/html-work-reports/scripts/create-report.mjs",
       "language": "javascript",
-      "highlightLines": [2],
+      "startLine": 504,
+      "highlightLines": [505],
       "content": "export function createReport(input) {\n  return renderHtml(input);\n}"
+    },
+    {
+      "type": "diff",
+      "title": "Generated evidence diff",
+      "filePath": ".agents/skills/html-work-reports/scripts/create-report.mjs",
+      "startLine": 505,
+      "content": "- return renderMarkdownOnly(input);\n+ return renderHtml(input);"
     },
     {
       "type": "filterable-cards",

@@ -117,6 +117,24 @@ function safeLink(rawHref) {
   }
 }
 
+function sourceLabel(section) {
+  const filePath = section.filePath || section.title || "source";
+  const startLine = Number.isInteger(section.startLine) ? section.startLine : undefined;
+  const endLine = Number.isInteger(section.endLine) ? section.endLine : undefined;
+  if (startLine && endLine && endLine !== startLine) return `${filePath}:${startLine}-${endLine}`;
+  if (startLine) return `${filePath}:${startLine}`;
+  return filePath;
+}
+
+function renderSourceLink(section, fallbackId) {
+  const label = sourceLabel(section);
+  const href = safeLink(section.sourceHref);
+  if (href) {
+    return `<a class="source-link" data-source-link data-file-path="${escapeAttr(section.filePath || "")}" href="${escapeAttr(href)}" rel="noreferrer">${escapeHtml(label)}</a>`;
+  }
+  return `<a class="source-link" data-source-link data-file-path="${escapeAttr(section.filePath || "")}" href="#${escapeAttr(fallbackId)}">${escapeHtml(label)}</a>`;
+}
+
 function inlineMarkdown(text) {
   const escaped = escapeHtml(stripRawHtml(text));
   return escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
@@ -202,13 +220,14 @@ function renderTable(headers, rows) {
   return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
 
-function highlightCode(source, language = "text", highlightLines = []) {
+function highlightCode(source, language = "text", highlightLines = [], startLine = 1) {
   const hotLines = new Set(highlightLines);
   const lines = String(source ?? "").replace(/\r\n/g, "\n").split("\n");
   const highlighted = lines.map((line, index) => {
-    const lineNumber = index + 1;
+    const lineNumber = startLine + index;
+    const relativeLine = index + 1;
     const rendered = highlightLine(line, language);
-    if (hotLines.has(lineNumber)) {
+    if (hotLines.has(lineNumber) || hotLines.has(relativeLine)) {
       return `<span class="line-hot" data-line="${lineNumber}">${rendered}</span>`;
     }
     return `<span class="code-line" data-line="${lineNumber}">${rendered}</span>`;
@@ -293,7 +312,7 @@ function renderSummaryCards(section) {
   return `<section class="panel" id="${sectionId(section.title)}" data-section-type="summary-cards">
     <h2>${escapeHtml(section.title)}</h2>
     <div class="metric-grid focus-field">
-      ${cards.map((card) => `<article class="interactive-card evidence-card"><div class="meta">${escapeHtml(card.label)}</div><strong>${escapeHtml(card.value)}</strong></article>`).join("\n")}
+      ${cards.map((card) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight><div class="meta">${escapeHtml(card.label)}</div><strong>${escapeHtml(card.value)}</strong></article>`).join("\n")}
     </div>
   </section>`;
 }
@@ -318,7 +337,7 @@ async function renderMarkdownSection(section, mode, index) {
 
 async function renderMermaidSection(section, mode, index, options) {
   if (mode === "runtime") {
-    return `<section class="panel diagram-panel" id="${sectionId(section.title)}" data-section-type="mermaid" data-source-fallback>
+    return `<section class="panel diagram-panel mermaid-evidence" id="${sectionId(section.title)}" data-section-type="mermaid" data-source-fallback>
       <div class="split-row"><h2>${escapeHtml(section.title)}</h2><span class="rich-status" data-rich-status="mermaid">Mermaid source fallback</span></div>
       <div data-rich-mermaid>${escapeHtml(section.content)}</div>
       <details><summary>Mermaid source</summary><pre data-mermaid-source>${escapeHtml(section.content)}</pre></details>
@@ -326,7 +345,7 @@ async function renderMermaidSection(section, mode, index, options) {
   }
 
   const svg = await renderMermaidSvg(section.content, section.title, options);
-  return `<section class="panel diagram-panel" id="${sectionId(section.title)}" data-section-type="mermaid" data-source-fallback>
+  return `<section class="panel diagram-panel mermaid-evidence" id="${sectionId(section.title)}" data-section-type="mermaid" data-source-fallback>
     <div class="split-row"><h2>${escapeHtml(section.title)}</h2><span class="rich-status" data-state="ready">Mermaid inline SVG</span></div>
     ${svg}
     <details><summary>Mermaid source</summary><pre data-mermaid-source>${escapeHtml(section.content)}</pre></details>
@@ -336,14 +355,39 @@ async function renderMermaidSection(section, mode, index, options) {
 function renderCodeSection(section, mode, index) {
   const language = section.language || "text";
   const sourceId = `code-${index}`;
-  const code = mode === "runtime"
-    ? `<code class="language-${escapeAttr(language)}">${escapeHtml(section.content)}</code>`
-    : highlightCode(section.content, language, section.highlightLines || []);
+  const startLine = Number.isInteger(section.startLine) ? section.startLine : 1;
+  const code = highlightCode(section.content, language, section.highlightLines || [], startLine);
 
   return `<section class="code-panel" id="${sectionId(section.title)}" data-section-type="code" data-source-fallback>
-    <header><span data-file-path="${escapeAttr(section.filePath || "")}">${escapeHtml(section.filePath || section.title)}</span><button data-copy-from="#${sourceId}">Copy</button></header>
-    <pre id="${sourceId}">${code}</pre>
+    <header>${renderSourceLink(section, sourceId)}<button data-copy-from="#${sourceId}">Copy</button></header>
+    <pre id="${sourceId}" data-start-line="${startLine}" data-line-numbered>${code}</pre>
     <details><summary>Code source</summary><pre>${escapeHtml(section.content)}</pre></details>
+  </section>`;
+}
+
+function highlightDiff(source) {
+  const lines = String(source ?? "").replace(/\r\n/g, "\n").split("\n");
+  return lines.map((line, index) => {
+    const escaped = escapeHtml(line);
+    const lineNumber = index + 1;
+    if (line.startsWith("+") && !line.startsWith("+++")) {
+      return `<span class="diff-line diff-added" data-line="${lineNumber}">${escaped}</span>`;
+    }
+    if (line.startsWith("-") && !line.startsWith("---")) {
+      return `<span class="diff-line diff-removed" data-line="${lineNumber}">${escaped}</span>`;
+    }
+    if (line.startsWith("@@")) {
+      return `<span class="diff-line diff-hunk" data-line="${lineNumber}">${escaped}</span>`;
+    }
+    return `<span class="diff-line" data-line="${lineNumber}">${escaped}</span>`;
+  }).join("\n");
+}
+
+function renderDiffSection(section, index) {
+  const sourceId = `diff-${index}`;
+  return `<section class="diff-panel" id="${sectionId(section.title)}" data-section-type="diff" data-source-fallback>
+    <header><div><h2>${escapeHtml(section.title)}</h2>${renderSourceLink(section, sourceId)}</div><button data-copy-from="#${sourceId}">Copy diff</button></header>
+    <pre id="${sourceId}" data-line-numbered><code>${highlightDiff(section.content)}</code></pre>
   </section>`;
 }
 
@@ -356,7 +400,7 @@ function renderFilterableCards(section) {
       ${groups.map((group, index) => `<button data-filter-target="${target}" data-filter-value="${escapeAttr(group)}" aria-pressed="${index === 0 ? "true" : "false"}">${escapeHtml(group)}</button>`).join("")}
     </div></div>
     <div class="evidence-grid focus-field" data-focus-field="${target}">
-      ${items.map((item) => `<article class="interactive-card evidence-card" data-filter-target="${target}" data-filter-value="${escapeAttr(item.group || "item")}" data-search-target="${target}">
+      ${items.map((item) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight data-filter-target="${target}" data-filter-value="${escapeAttr(item.group || "item")}" data-search-target="${target}">
         <div class="meta">${escapeHtml(item.group || "item")}</div>
         <h3>${escapeHtml(item.title)}</h3>
         <p>${escapeHtml(item.body)}</p>
@@ -398,7 +442,7 @@ function renderDecisionMatrix(section) {
   return `<section class="panel" id="${sectionId(section.title)}" data-section-type="decision-matrix">
     <h2>${escapeHtml(section.title)}</h2>
     <div class="metric-grid focus-field">
-      ${options.map((option) => `<article class="interactive-card evidence-card">
+      ${options.map((option) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight>
         <div class="meta">${escapeHtml(option.status || "option")}</div>
         <h3>${escapeHtml(option.name)}</h3>
         <ul>
@@ -430,6 +474,7 @@ async function renderSection(section, mode, index, input, options) {
   if (section.type === "markdown") return renderMarkdownSection(section, mode, index);
   if (section.type === "mermaid") return renderMermaidSection(section, mode, index, options);
   if (section.type === "code") return renderCodeSection(section, mode, index);
+  if (section.type === "diff") return renderDiffSection(section, index);
   if (section.type === "filterable-cards") return renderFilterableCards(section);
   if (section.type === "tabs") return renderTabs(section);
   if (section.type === "timeline") return renderTimeline(section);
@@ -441,7 +486,7 @@ async function renderSection(section, mode, index, input, options) {
 
 function renderEvidence(items) {
   return `<div class="evidence-grid" data-evidence>
-    ${items.map((item) => `<article class="interactive-card evidence-card" data-evidence-kind="${escapeAttr(item.kind)}">
+    ${items.map((item) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight data-evidence-kind="${escapeAttr(item.kind)}">
       <div class="split-row"><span class="meta">${escapeHtml(item.kind)}</span><span class="status-pill ${statusClass(item.status || "info")}">${escapeHtml(item.status || "info")}</span></div>
       <h3>${escapeHtml(item.label)}</h3>
       <p>${escapeHtml(item.value || "")}</p>
@@ -451,7 +496,7 @@ function renderEvidence(items) {
 
 function renderVerification(items) {
   return `<div class="evidence-grid" data-verification>
-    ${(items || []).map((item) => `<article class="interactive-card evidence-card" data-verification-status="${escapeAttr(item.status)}">
+    ${(items || []).map((item) => `<article class="interactive-card evidence-card evidence-spotlight" data-evidence-spotlight data-verification-status="${escapeAttr(item.status)}">
       <div class="split-row"><span class="meta">Verification</span><span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status)}</span></div>
       <h3>${escapeHtml(item.label)}</h3>
       <p>${escapeHtml(item.detail || "")}</p>

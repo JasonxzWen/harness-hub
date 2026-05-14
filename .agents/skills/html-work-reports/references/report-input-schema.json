@@ -47,6 +47,7 @@
               "markdown",
               "mermaid",
               "code",
+              "diff",
               "timeline",
               "evidence",
               "decision-matrix",
@@ -66,6 +67,17 @@
           },
           "filePath": {
             "type": "string"
+          },
+          "sourceHref": {
+            "type": "string"
+          },
+          "startLine": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "endLine": {
+            "type": "integer",
+            "minimum": 1
           },
           "highlightLines": {
             "type": "array",

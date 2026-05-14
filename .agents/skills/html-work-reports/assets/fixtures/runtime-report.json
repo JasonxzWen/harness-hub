@@ -21,7 +21,8 @@
       "title": "Runtime code",
       "filePath": ".agents/skills/html-work-reports/assets/components/rich-render-runtime.js",
       "language": "javascript",
-      "highlightLines": [2],
+      "startLine": 103,
+      "highlightLines": [104],
       "content": "window.HTMLWorkReportsRichRender = {\n  renderAll\n};"
     }
   ],

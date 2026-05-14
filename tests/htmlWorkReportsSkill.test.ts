@@ -89,6 +89,63 @@ test('html-work-reports ships reusable template and component assets', () => {
   expect(patterns).toContain('DOMPurify');
 });
 
+test('html-work-reports emphasizes source-linked code evidence, diffs, and rendered diagrams', () => {
+  const css = fs.readFileSync(`${skillDir}/assets/components/report-ui.css`, 'utf8');
+  const js = fs.readFileSync(`${skillDir}/assets/components/report-ui.js`, 'utf8');
+  const patterns = fs.readFileSync(`${skillDir}/references/html-report-patterns.md`, 'utf8');
+  const reviewTemplate = fs.readFileSync(`${skillDir}/assets/templates/review-findings.html`, 'utf8');
+  const schema = JSON.parse(fs.readFileSync(`${skillDir}/references/report-input-schema.json`, 'utf8'));
+
+  expect(skill).toContain('source file link');
+  expect(skill).toContain('line number');
+  expect(skill).toContain('diff');
+  expect(skill).toContain('Mermaid');
+  expect(patterns).toContain('source-linked code evidence');
+  expect(patterns).toContain('diff');
+  expect(patterns).toContain('Mermaid');
+  expect(schema.properties.sections.items.properties.type.enum).toContain('diff');
+  expect(css).toContain('evidence-spotlight');
+  expect(css).toContain('source-link');
+  expect(css).toContain('diff-panel');
+  expect(css).toContain('diff-added');
+  expect(css).toContain('diff-removed');
+  expect(css).toContain('mermaid-evidence');
+  expect(js).toContain('data-evidence-spotlight');
+  expect(reviewTemplate).toContain('data-source-link');
+  expect(reviewTemplate).toContain('data-section-type="diff"');
+});
+
+test('html-work-reports preserves the static self-contained report boundary', () => {
+  const patterns = fs.readFileSync(`${skillDir}/references/html-report-patterns.md`, 'utf8');
+
+  expect(skill).toContain('self-contained static `.html`');
+  expect(skill).toContain('inlineable HTML/CSS and vanilla JS');
+  expect(skill).toContain('build step');
+  expect(patterns).toContain('Static Component Boundary');
+  expect(patterns).toContain('self-contained static HTML contract');
+  expect(patterns).toContain('vanilla JS only');
+  expect(patterns).toContain('single report file');
+});
+
+test('html-work-reports does not reference external component libraries', () => {
+  const searchedFiles = [
+    skillPath,
+    `${skillDir}/references/html-report-patterns.md`,
+    `${skillDir}/assets/components/report-ui.css`,
+    `${skillDir}/assets/components/report-ui.js`,
+    `${skillDir}/assets/templates/implementation-handoff.html`,
+    `${skillDir}/assets/templates/review-findings.html`,
+  ];
+  const forbiddenTerms = ['react' + ' bits', 'react' + 'bits', 'react-' + 'bits'];
+
+  for (const file of searchedFiles) {
+    const content = fs.readFileSync(file, 'utf8').toLowerCase();
+    for (const term of forbiddenTerms) {
+      expect(content).not.toContain(term);
+    }
+  }
+});
+
 test('html-work-reports ships generator, validator, schema, and fixtures', () => {
   const expectedFiles = [
     createReportScript,
@@ -107,6 +164,7 @@ test('html-work-reports ships generator, validator, schema, and fixtures', () =>
   expect(schema.properties.template.enum).toEqual(
     expect.arrayContaining(['implementation-handoff', 'review-findings', 'research-explainer', 'decision-matrix']),
   );
+  expect(schema.properties.sections.items.properties.type.enum).toContain('diff');
   expect(schema.properties.renderMode.enum).toEqual(['pre-rendered', 'runtime']);
 });
 
@@ -138,6 +196,11 @@ test('html-work-reports generator creates a self-contained pre-rendered report',
   expect(html).toContain('data-mermaid-source');
   expect(html).toContain('class="hljs');
   expect(html).toContain('data-file-path=');
+  expect(html).toContain('data-source-link');
+  expect(html).toContain('data-line="505"');
+  expect(html).toContain('data-section-type="diff"');
+  expect(html).toContain('diff-added');
+  expect(html).toContain('diff-removed');
   expect(html).toContain('data-evidence-kind="file"');
   expect(html).toContain('data-verification-status=');
   expect(html).not.toContain('https://cdn.jsdelivr.net');
@@ -204,6 +267,8 @@ test('html-work-reports validator checks structure and reports degraded browser 
     'markdown-rendered',
     'mermaid-rendered',
     'code-highlighted',
+    'source-linked-code-evidence',
+    'diff-rendered',
     'evidence-present',
     'verification-present',
     'interactive-controls',
