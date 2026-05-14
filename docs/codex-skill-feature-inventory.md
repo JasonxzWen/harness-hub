@@ -1,6 +1,6 @@
 # Codex Skill Feature Inventory
 
-Date: 2026-05-11
+Date: 2026-05-14
 
 This document summarizes the functional surface worth adapting from famous Claude Code skill ecosystems into Codex-friendly skills.
 
@@ -29,7 +29,7 @@ This document summarizes the functional surface worth adapting from famous Claud
 | Claude Code assumption | Codex adaptation |
 |---|---|
 | `Task` tool | Use Codex multi-agent tools such as `spawn_agent`, `wait_agent`, and `close_agent` when available. |
-| Named agents | Represent as Codex worker/explorer prompts until native named-agent registries exist. |
+| Named agents | Use Codex built-in agents or project-scoped custom agents under `.codex/agents/` when a stable role is needed. |
 | `TodoWrite` | Use `update_plan` or local checklist artifacts. |
 | Claude file tools | Use Codex native file read/edit tools and `apply_patch` for manual edits. |
 | Claude shell tool | Use Codex shell execution with sandbox and escalation rules. |

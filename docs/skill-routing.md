@@ -115,7 +115,7 @@ Other Matt Pocock skills remain explicit-only or rejected for now: `grill-with-d
 
 `Cocoon-AI/architecture-diagram-generator` was evaluated on 2026-05-09. Keep it explicit-only as an architecture diagram reference; do not install by default because it is narrow and CDN-dependent.
 
-`EveryInc/compound-engineering-plugin` was evaluated on 2026-05-11 at `d090bde0ff1bbc33ec3c3b2049cb4687e9d76532`. Do not install the full plugin by default. It overlaps existing ECC, Vercel, Ralph, OpenSpec, and local governance skills, and its best Codex behavior depends on a companion Bun agent install because native Codex plugin install does not yet register custom agents.
+`EveryInc/compound-engineering-plugin` was evaluated on 2026-05-11 at `d090bde0ff1bbc33ec3c3b2049cb4687e9d76532`. Do not install the full plugin by default. It overlaps existing ECC, Vercel, Ralph, OpenSpec, and local governance skills, and its custom-agent files need a separate Codex adaptation path outside the plugin package.
 
 The installed exception is code review: `ce-code-review` was adapted as `compound-code-review`. Preserve the boundary: structured reviewer lenses, anchored confidence, safe-auto/gated/manual routing, report-only/autofix modes, artifact handoff, and stable finding numbering are in scope; CE's commit, PR, tracker, Slack, Proof, Gemini, product-pulse, and autonomous-work flows are not.
 

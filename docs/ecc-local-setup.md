@@ -28,7 +28,7 @@ The local checkout is ignored by Git so the repository does not accidentally ven
 
 - Removed the upstream macOS `terminal-notifier` notify command from `.codex/config.toml` because this workspace is Windows-based.
 - Kept `approval_policy = "on-request"` and `sandbox_mode = "workspace-write"`.
-- Enabled `features.multi_agent = true`.
+- Kept `features.multi_agent = true` as an older-CLI/ECC compatibility setting; current Codex releases enable subagent workflows by default.
 - Kept ECC's baseline MCP server definitions: GitHub, Context7, Exa, Memory, Playwright, and Sequential Thinking.
 
 ## Usage Notes

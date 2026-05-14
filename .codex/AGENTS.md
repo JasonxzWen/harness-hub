@@ -68,11 +68,11 @@ When approval is ambiguous, produce a local plan or draft artifact instead of ta
 
 ## Multi-Agent Support
 
-Codex now supports multi-agent workflows behind the experimental `features.multi_agent` flag.
+Current Codex releases enable subagent workflows by default.
 
-- Enable it in `.codex/config.toml` with `[features] multi_agent = true`
 - Define project-local roles under `[agents.<name>]`
 - Point each role at a TOML layer under `.codex/agents/`
+- Keep `[features] multi_agent = true` only as an older-CLI/ECC compatibility knob when it already exists in the project config
 - Use `/agent` inside Codex CLI to inspect and steer child agents
 
 Sample role configs in this repo:
@@ -84,17 +84,17 @@ Sample role configs in this repo:
 
 | Feature | Claude Code | Codex CLI |
 |---------|------------|-----------|
-| Hooks | 8+ event types | Not yet supported |
-| Context file | CLAUDE.md + AGENTS.md | AGENTS.md only |
-| Skills | Skills loaded via plugin | `.agents/skills/` directory |
-| Commands | `/slash` commands | Instruction-based |
-| Agents | Subagent Task tool | Multi-agent via `/agent` and `[agents.<name>]` roles |
-| Security | Hook-based enforcement | Instruction + sandbox |
+| Hooks | 8+ event types | Supported behind a Codex feature flag, with config/local hooks and plugin-bundled lifecycle config |
+| Context file | CLAUDE.md + AGENTS.md | Layered AGENTS.md / AGENTS.override.md guidance |
+| Skills | Skills loaded via plugin | Native `.agents/skills/`; plugins are the installable distribution unit |
+| Commands | `/slash` commands | Slash commands plus model-invoked skills |
+| Agents | Subagent Task tool | Subagents via `/agent`, built-in roles, and project-local `[agents.<name>]` role configs |
+| Security | Hook-based enforcement | Instruction + sandbox first; optional hooks can add deterministic checks |
 | MCP | Full support | Supported via `config.toml` and `codex mcp add` |
 
-## Security Without Hooks
+## Security With Optional Hooks
 
-Since Codex lacks hooks, security enforcement is instruction-based:
+Use instructions and sandboxing as the baseline. Hooks can supplement this when they are deliberately configured and trusted, but they should not replace reviewable project policy:
 1. Always validate inputs at system boundaries
 2. Never hardcode secrets — use environment variables
 3. Run `npm audit` / `pip audit` before committing
