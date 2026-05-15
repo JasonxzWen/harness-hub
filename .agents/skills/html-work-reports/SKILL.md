@@ -13,13 +13,6 @@ Turn completed work into one portable Chinese `.html` only when HTML makes the h
 
 Use when a completed non-trivial task needs findings, tradeoffs, metrics, next actions, or a report/review/plan/status/explainer/dashboard/editor that would otherwise become a Markdown wall.
 
-Skip this skill for:
-
-- permission pauses before publishing, pushing, spending money, installing, changing credentials, or mutating third-party resources
-- short answers, one-command summaries, tiny fixes, or ordinary chat
-- implementation/debugging while work is still in progress
-- product UI, websites, apps, decks, or bundled React/Tailwind artifacts
-
 ## Trigger Examples
 
 Use this skill for requests like:
@@ -44,7 +37,7 @@ Do not use this skill for:
 
 Write one single static `.html` as UTF-8 Chinese under `reports/` unless the repo has a better convention. Link the file and verification.
 
-Start with the shortest useful conclusion. Add visual blocks, tables, timelines, diagrams, cards, code panels, chips, or controls only when they reduce reading effort for this report. Use only inlineable HTML/CSS and vanilla JS. Runtime-cdn may reference pinned browser libraries for Mermaid, Markdown, sanitization, and code highlighting; do not add React, Tailwind, Vite, or another build step.
+Start with a one-sentence conclusion. Prefer tables for structured, segmented, point-by-point, status, or comparison data. Keep section summaries one line, table cells phrase-like, and bullets to one judgment or action. Mark key conclusions, risks, changes, and verification with `**...**` or `==...==`. Add other visual blocks or controls only when they reduce reading effort. Use inlineable HTML/CSS and vanilla JS; runtime-cdn may reference pinned Mermaid, Markdown, sanitizer, and code-highlighting libraries, but never React, Tailwind, Vite, or another build step.
 
 For code-changing work, include code only when prose cannot carry the point. If used, include a source file link label with line number, copy only the decisive snippet, and highlight exact lines. Keep snippets short. Add a `diff` block only when before/after evidence matters.
 
@@ -69,13 +62,13 @@ Use `assets/components/report-ui.css` and `assets/components/report-ui.js` for c
 
 ## Visual And Rich Content Rules
 
-- Put conclusion first: decision, status, top risks, next action.
+- Put conclusion first: decision, status, top risks, next action. Prefer one sentence before details.
 - Use grouped navigation that follows the report's argument, not the component inventory. Prefer groups like 摘要、变更、影响、风险、验证、下一步、细节.
-- Prefer bullets and short tables. Use diagrams, code, evidence cards, tabs, and filters only when they serve a concrete reader need.
+- Prefer `data-table` sections for structured, segmented, point-by-point, status, comparison, or checklist-like data. Keep cells phrase-like. Use bullets for short unordered notes, one judgment or action per bullet; use diagrams, code, evidence cards, tabs, and filters only when they serve a concrete reader need.
 - Render Markdown, Mermaid, and code through pinned runtime-cdn libraries by default; preserve machine-readable state, but do not show effect tags such as `Markdown rendered`, `code highlighted`, or `Source fallback`.
 - Code reports need source link, line number, copied snippet, highlighted line or diff, but reports do not need code by default.
 - Escape/sanitize mixed-trust content; code and paths stay inert.
-- Use jump links, filters, tabs, copy buttons, selected states, and dim/blur focus without layout-shifting hover transforms.
+- Use jump links, filters, tabs, copy buttons, selected states, and dim/blur focus without layout-shifting hover transforms. The dedicated `data-table` component may scale only the hovered cell with `transform`; the rest of the row and column should highlight without reflow.
 
 ## Failure Lessons
 
