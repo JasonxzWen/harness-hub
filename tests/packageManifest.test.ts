@@ -26,10 +26,12 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.scripts['validate:release']).toContain('node bin/skill-hub.mjs --help');
   expect(packageJson.scripts['validate:release']).toContain('npm pack --dry-run');
   expect(packageJson.scripts.validate).toContain('bun run validate:artifact-policy');
+  expect(packageJson.scripts.validate).toContain('bun run validate:skills');
   expect(packageJson.files).toEqual(artifactPolicy.npm.files);
   expect(packageJson.files).toContain('CHANGELOG.md');
   expect(packageJson.files).toContain('config/');
   expect(packageJson.files).toContain('harness/');
+  expect(packageJson.files).toContain('scripts/run-validate-skills.mjs');
   expect(packageJson.files).toContain('openspec/config.yaml');
   expect(packageJson.files).toContain('openspec/specs/');
   expect(packageJson.files).toContain('openspec/changes/archive/');

@@ -1,6 +1,6 @@
 {
   "name": "@jasonwen/skill-hub",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Curated agent capability installer for Codex, Claude Code, OpenCode, and compatible skill hosts.",
   "type": "module",
   "main": "dist/skillHub.js",
@@ -39,6 +39,7 @@
     "scripts/ralph/CODEX.md",
     "scripts/ralph/prd.json.example",
     "scripts/ralph/ralph.ps1",
+    "scripts/run-validate-skills.mjs",
     "scripts/smoke-managed-update.ps1",
     "scripts/skill-quality-inventory.ts",
     "scripts/validate-artifact-policy.ts",
@@ -52,7 +53,8 @@
     "smoke:managed-update": "powershell -ExecutionPolicy Bypass -File ./scripts/smoke-managed-update.ps1",
     "typecheck": "tsc --noEmit",
     "validate:artifact-policy": "bun ./scripts/validate-artifact-policy.ts",
-    "validate": "bun run typecheck && bun test ./tests && bun run validate:artifact-policy && powershell -ExecutionPolicy Bypass -File ./scripts/validate-skills.ps1 -SkipExternal",
+    "validate:skills": "node ./scripts/run-validate-skills.mjs -SkipExternal",
+    "validate": "bun run typecheck && bun test ./tests && bun run validate:artifact-policy && bun run validate:skills",
     "validate:release": "bun run validate && bun run build && node bin/skill-hub.mjs --help && npm pack --dry-run"
   },
   "keywords": [
