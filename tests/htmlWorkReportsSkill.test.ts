@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { expect, test } from 'bun:test';
 
 const skillPath = '.agents/skills/html-work-reports/SKILL.md';
@@ -194,6 +195,7 @@ test('html-work-reports stress fixture covers runtime-cdn quality risks', () => 
   expect(fixture.sections.some((section: any) => section.type === 'diff')).toBe(true);
   expect(fixture.sections.some((section: any) => section.type === 'filterable-cards')).toBe(true);
   expect(fixture.sections.some((section: any) => section.type === 'tabs')).toBe(true);
+  expect(JSON.stringify(fixture)).not.toMatch(/(^|[^A-Za-z])[A-Za-z]:[\\/]/);
 });
 
 test('html-work-reports generator creates a self-contained pre-rendered report', () => {
@@ -238,6 +240,63 @@ test('html-work-reports generator creates a self-contained pre-rendered report',
   expect(html).not.toContain('javascript:');
   expect(html).not.toContain('onerror=');
   expect(html).not.toContain('<script>alert');
+});
+
+test('html-work-reports sanitizes Mermaid fallback diagnostics', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-mermaid-'));
+  const result = spawnSync(process.execPath, [
+    createReportScript,
+    '--input',
+    `${skillDir}/assets/fixtures/pre-rendered-report.json`,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'browser-mermaid-fallback',
+    '--json',
+    '--browser-mermaid',
+  ], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  const payload = JSON.parse(result.stdout);
+  const html = fs.readFileSync(payload.outputPath, 'utf8');
+
+  expect(html).toContain('data-mermaid-renderer="fallback"');
+  expect(html).toContain('Playwright unavailable');
+  expect(html).not.toContain(process.cwd());
+  expect(html).not.toMatch(/[A-Za-z]:[\\/](?:Users|skill-hub|code-agent-harness)[^<\s]*/);
+  expect(html).not.toMatch(/file:\/\/\//i);
+  expect(html).not.toMatch(/\b(?:gho|ghp|github_pat)_[A-Za-z0-9_]+/);
+});
+
+test('html-work-reports sanitizes generator and validator diagnostics', async () => {
+  const createModule = await import(pathToFileURL(path.resolve(createReportScript)).href);
+  const validateModule = await import(pathToFileURL(path.resolve(validateReportScript)).href);
+  const raw = [
+    'file:///C:/Users/Admin/secret/report.html',
+    'C:\\Users\\Admin\\token\\report.html',
+    '/home/admin/private/report.html',
+    '<script>alert(1)</script>',
+    'javascript:alert(1)',
+    'onerror=alert(1)',
+    'ghp_abcdefghijklmnopqrstuvwxyz1234567890',
+  ].join(' ');
+
+  for (const sanitize of [createModule.sanitizeDiagnosticMessage, validateModule.sanitizeDiagnosticMessage]) {
+    const cleaned = sanitize(raw);
+
+    expect(cleaned).toContain('[local-file]');
+    expect(cleaned).toContain('[local-path]');
+    expect(cleaned).toContain('[token]');
+    expect(cleaned).toContain('blocked-protocol:');
+    expect(cleaned).not.toContain('C:\\Users');
+    expect(cleaned).not.toContain('/home/admin');
+    expect(cleaned).not.toContain('file:///');
+    expect(cleaned).not.toContain('<script>');
+    expect(cleaned).not.toContain('onerror=');
+    expect(cleaned).not.toContain('ghp_');
+    expect(cleaned).not.toContain('javascript:');
+    expect(cleaned.length).toBeLessThanOrEqual(220);
+  }
 });
 
 test('html-work-reports runtime-cdn mode declares pinned dependencies and source fallbacks', () => {

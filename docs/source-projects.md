@@ -46,6 +46,7 @@ This file tracks source projects that are worth studying or adapting for Codex.
 | Learn FASTER-inspired Feynman coach | `.agents/skills/feynman-learning-coach/` | Original local skill inspired by upstream `cce560b51d765f08407d37afd3f4dad19d32b268` under MIT review |
 | Learn Harness Engineering-inspired harness templates | `harness/templates/` | Original local templates adapted from the course's five-subsystem model and Chinese template library under MIT review |
 | HTML work report guidance | `.agents/skills/html-work-reports/` | Original local skill inspired by Thariq Shihipar's HTML effectiveness article |
+| Skill Hub maintenance workflow | `.agents/skills/update-skill-hub/` | Original local skill for auditing installed skill updates and target-fit candidate decisions |
 
 ## Evaluated Matt Pocock Skills
 

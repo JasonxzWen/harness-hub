@@ -1,3 +1,5 @@
+# Required release and ignore boundaries are validated by scripts/validate-artifact-policy.ts.
+
 # OS and editor files
 .DS_Store
 Thumbs.db

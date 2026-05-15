@@ -81,6 +81,7 @@ Use `assets/components/report-ui.css` and `assets/components/report-ui.js` for c
 
 - 必须使用 UTF-8 中文输入和输出。连续问号乱码通常来自 PowerShell/stdin/codepage 把中文转成非 UTF-8；优先写 UTF-8 JSON 文件。
 - 不要外显 Source fallback、Code source 或 rich render status。它们只应作为隐藏 fallback 和校验状态存在，否则报告会显得像调试页面。
+- 浏览器、Mermaid 预渲染或验证器错误只能写入清洗后的诊断；不要把本地绝对路径、`file:///` URL、token 或原始 HTML/script 泄露到报告里。
 - 代码行必须紧凑。逐行 `<span>` 之间不要插入换行文本节点，CSS 行高保持接近正常代码阅读密度。
 - 不要为了展示能力硬加图标、代码、证据、Mermaid 或效果标签。组件必须服务于内容，否则它们会把目录和正文变成噪音。
 - 模板先给结论，再按本次汇报的实际问题分组；避免固定套用“图表/代码/证据/验证/行动”的组件目录。

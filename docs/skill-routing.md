@@ -36,6 +36,7 @@ Use [Skill quality guide](skill-quality-guide.md) for description, gotcha, progr
 | Durable E2E test suite | `e2e-testing` | `verification-loop` |
 | Deep pre-PR or CE-style code review | `compound-code-review` | `coding-standards` for a broad quality baseline; `security-review` for security-only review; `verification-loop` for command gates |
 | Non-trivial completed-task conclusion, self-contained HTML work report, plan, review, status update, research explainer, or lightweight editor | `html-work-reports` | `web-artifacts-builder` when a bundled React/Tailwind app is needed |
+| Skill Hub maintenance, installed skill refresh, or target-repo candidate skill discovery | `update-skill-hub` | `skill-evaluator` for one third-party repository; `agent-sort` for an ECC-only target-repo install plan |
 | General code quality | `coding-standards` | language/framework-specific skill when present |
 | Security review | `security-review` | `verification-loop` |
 | Learning, studying, tutoring, exam/interview review, or step-by-step mastery of a topic | `feynman-learning-coach` | `deep-research` for source gathering; `article-writing` for finished instructional content |
@@ -64,6 +65,7 @@ These boundaries are mirrored by `tests/fixtures/skill-routing-cases.json` so de
 - `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.
 - `verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis.
 - `feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions.
+- `update-skill-hub` loads for maintaining this Skill Hub's installed skills and candidate-source decisions; package dependency updates, single-repo third-party evaluations, and generic target-repo installs route elsewhere.
 
 ## Codex Host Boundary
 
@@ -82,6 +84,12 @@ Use `html-work-reports` when a non-trivial task is complete and the handoff shou
 The strengthened version ships reusable assets under `.agents/skills/html-work-reports/assets/` plus internal generator and validator scripts under `.agents/skills/html-work-reports/scripts/`. Prefer JSON-driven generation through `create-report.mjs`; use custom HTML only for exceptions, and run `validate-html-report.mjs` before handoff.
 
 This skill is inspired by [The unreasonable effectiveness of HTML](https://thariqs.github.io/html-effectiveness/) and local evaluation of `html-tools`-style single-file artifacts. Third-party HTML artifact skills were not installed because the repository needed a governance/reporting trigger, not another broad tool-building trigger.
+
+## Skill Hub Maintenance
+
+Use `update-skill-hub` when the work is to refresh this repository's skill surface: check recorded upstream versions, update eligible local adaptations, and evaluate whether newly discovered skills fit a target repo's actual stack.
+
+Keep the boundary strict: deterministic target-repo distribution, status, update, migration, and removal should call the `skill-hub` CLI instead of being reimplemented by AI. New candidates still use `skill-evaluator`; ECC-only sorting still uses `agent-sort`; ordinary npm/Bun dependency upgrades do not use this skill. A candidate must match target-repo evidence before installation, so backend-only projects do not receive frontend, design, mobile, or browser-testing skills by default.
 
 ## OpenSpec Routing Decision
 

@@ -51,6 +51,7 @@
 - [x] 6.6 Validate interactions for grouped nav, filters, tabs, and copy controls without hiding primary conclusion, evidence, or verification state.
 - [x] 6.7 Make `--require-browser` fail when browser automation is unavailable or runtime-cdn visual quality cannot be checked.
 - [x] 6.8 Keep non-required browser validation explicitly degraded rather than silently passing browser-only checks.
+- [x] 6.9 Sanitize browser, Mermaid pre-render, and validator diagnostics so fallback HTML and JSON results do not leak local absolute paths, `file:///` URLs, token-shaped secrets, or raw HTML.
 
 ## 7. Documentation And Skill Guidance
 
