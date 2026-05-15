@@ -153,6 +153,11 @@ The system SHALL render rich content through controlled runtime or pre-rendered 
 - **THEN** those values are escaped or generated from trusted constants
 - **AND** dependency metadata cannot inject script, event handlers, or unsupported protocols into the page
 
+#### Scenario: Runtime and validation diagnostics are sanitized
+- **WHEN** Mermaid pre-rendering, browser validation, or another report diagnostic path receives an error message containing local absolute paths, `file:///` URLs, token-shaped secrets, raw HTML, event handlers, or unsupported protocols
+- **THEN** the report generator and validator replace sensitive local details with placeholders before writing HTML or JSON output
+- **AND** the diagnostic remains short enough to explain the failure without exposing machine-specific or credential-like data
+
 ### Requirement: Report validation checks visual and interactive behavior
 The system SHALL provide validation that checks generated reports for rendering, evidence, accessibility, runtime state, visual stability, responsive layout, and interaction readiness.
 

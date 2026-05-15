@@ -156,6 +156,7 @@ Runtime rules:
 - highlight.js should use explicit language classes such as `language-typescript`; line-number wrappers and highlighted lines are applied by local report JS around highlighted token markup. Do not insert text newlines between block line wrappers; that creates fake blank rows in `<pre>`.
 - Every runtime-rendered block still needs hidden source fallback data for audit and degraded states, but do not show `Source fallback`, `Code source`, `Markdown rendered`, or `Code highlighted` labels during normal successful rendering.
 - CDN runtime use is a conscious tradeoff: better Codex-visible rendering, but weaker offline guarantees than pre-rendered output.
+- Browser, Mermaid pre-render, and validator diagnostics must be sanitized before entering HTML or JSON output. Replace local absolute paths, `file:///` URLs, home-directory paths, and GitHub-style tokens with placeholders, strip raw HTML/script, and keep only the short actionable error.
 
 ## Grouped Navigation Contract
 
@@ -207,6 +208,7 @@ Security rules are generator defaults, not optional polish:
 - Sanitize Markdown output and strip unsupported HTML/event-handler content.
 - Restrict rendered links to `http`, `https`, `mailto`, or local anchors; neutralize `javascript:` links.
 - Treat file paths and code snippets as inert text unless a host-specific safe file link is intentionally created.
+- Treat diagnostic strings as mixed-trust content: sanitize local paths, `file:///` URLs, token-shaped secrets, raw HTML, and event handlers before they are embedded in report fallback SVGs or validator JSON.
 
 ## Layout Skeleton
 

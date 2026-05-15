@@ -4,7 +4,7 @@ Skill Hub is a curated workspace for collecting and adapting famous agent skills
 
 The current target is a small, high-signal set rather than "install everything": plan pressure-testing, runtime diagnosis, throwaway prototyping, structured code review, HTML work reports, optional Feynman-style learning coaching, harness environment templates, OpenSpec workflows, Everything Claude Code, selected Anthropic built-in skills, selected Vercel web skills, and a Codex-adapted Ralph loop.
 
-The CLI is written in TypeScript and built with Bun for development speed. Published npm packages keep a Node-compatible `bin/skill-hub.mjs` entrypoint that loads the generated `dist/skillHub.js`, so target users can still run `npx skill-hub ...` without installing Bun.
+The CLI is written in TypeScript and built with Bun for development speed. Published npm packages keep a Node-compatible `bin/skill-hub.mjs` entrypoint that loads the generated `dist/skillHub.js`, so target users can still run `npx @jasonwen/skill-hub ...` without installing Bun.
 
 ## Current Status
 
@@ -20,6 +20,7 @@ The CLI is written in TypeScript and built with Bun for development speed. Publi
 - Ralph is downloaded locally under `vendor/snarktank-ralph/`.
 - Ralph PRD and loop skills are installed under `.agents/skills/`, with a Codex-native runner under `scripts/ralph/`.
 - `html-work-reports` is installed under `.agents/skills/` to generate and validate self-contained visual HTML handoffs for non-trivial completed-task conclusions and work artifacts.
+- `update-skill-hub` is installed under `.agents/skills/` to audit installed skill updates and evaluate new candidate skills against target-repo evidence.
 - Matt Pocock's `skills` repository is downloaded locally under `vendor/mattpocock-skills/`.
 - Matt Pocock `grill-me`, `diagnose`, and `prototype` are installed under `.agents/skills/` for pressure testing, runtime debugging, and throwaway design prototypes.
 - EveryInc's `compound-engineering-plugin` repository is downloaded locally under `vendor/EveryInc-compound-engineering-plugin/`; only its `ce-code-review` workflow has been adapted as `.agents/skills/compound-code-review/`.
@@ -40,8 +41,9 @@ The CLI is written in TypeScript and built with Bun for development speed. Publi
 .codex/agents/        ECC Codex multi-agent role configs
 .agents/skills/       Cross-agent skill assets from ECC, Vercel, Ralph, local, and adapted sources
 capabilities/         Machine-readable capability graph and install profiles
+config/               Artifact policy for Git tracking and npm package contents
 harness/              Installable harness environment templates for target repos
-openspec/             Maintainer specs and archived change records for source traceability
+openspec/             Maintainer specs and change records; active changes stay Git-only
 docs/                 Research notes, feature inventory, and source map
 bin/, src/, tests/    Node CLI entrypoint, implementation, and tests
 scripts/              Local validation helpers
@@ -145,7 +147,23 @@ Run the release validation before publishing or cutting a CLI lifecycle release:
 bun run validate:release
 ```
 
-This runs the normal validation gate, rebuilds the Node-compatible `dist/` entrypoint, smoke-tests `bin/skill-hub.mjs`, and checks the npm pack file list.
+This runs the normal validation gate, checks `config/artifact-policy.json`, rebuilds the Node-compatible `dist/` entrypoint, smoke-tests `bin/skill-hub.mjs`, and checks the npm pack file list.
+
+## Publishing
+
+The npm package name is `@jasonwen/skill-hub`, and the repository URL is `https://github.com/JasonxzWen/skill-hub`. The installed binary command remains `skill-hub`.
+
+Install from npm after the first public release:
+
+```powershell
+npx @jasonwen/skill-hub@latest --help
+npm install -g @jasonwen/skill-hub@latest
+skill-hub --help
+```
+
+Publishing uses GitHub Actions trusted publishing after the package exists and npm is configured. See [npm publishing](docs/npm-publishing.md) for the maintainer checklist.
+
+Git and npm inclusion rules are centralized in `config/artifact-policy.json`. `dist/` is generated for npm and ignored by Git, installable skills such as `.agents/skills/html-work-reports/` are both committed and published, and active `openspec/changes/<name>/` work stays Git-only until archived.
 
 In the current sandbox, `openspec` may warn as not visible even though it is installed on the host. Use `-SkipExternal` to validate only repository files:
 
@@ -168,18 +186,18 @@ powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExtern
 ## CLI Preview
 
 ```powershell
-npx skill-hub analyze D:\path\to\target --json
-npx skill-hub analyze D:\path\to\target --html --output D:\tmp\skill-hub-analysis.html
-npx skill-hub install D:\path\to\target --profile minimal --agent codex --dry-run
-npx skill-hub install D:\path\to\target --profile harness --agent codex --dry-run
-npx skill-hub install D:\path\to\target --profile learning --agent codex --dry-run
-npx skill-hub install D:\path\to\target --profile web --agent codex --agent claude-code --yes
-npx skill-hub status D:\path\to\target --html
-npx skill-hub update D:\path\to\target --dry-run --json
-npx skill-hub update D:\path\to\target --component skill:grill-me --yes --json
-npx skill-hub update D:\path\to\target --force --yes --json
-npx skill-hub migrate-lock D:\path\to\target --dry-run --json
-npx skill-hub remove D:\path\to\target --dry-run --json
+npx @jasonwen/skill-hub analyze D:\path\to\target --json
+npx @jasonwen/skill-hub analyze D:\path\to\target --html --output D:\tmp\skill-hub-analysis.html
+npx @jasonwen/skill-hub install D:\path\to\target --profile minimal --agent codex --dry-run
+npx @jasonwen/skill-hub install D:\path\to\target --profile harness --agent codex --dry-run
+npx @jasonwen/skill-hub install D:\path\to\target --profile learning --agent codex --dry-run
+npx @jasonwen/skill-hub install D:\path\to\target --profile web --agent codex --agent claude-code --yes
+npx @jasonwen/skill-hub status D:\path\to\target --html
+npx @jasonwen/skill-hub update D:\path\to\target --dry-run --json
+npx @jasonwen/skill-hub update D:\path\to\target --component skill:grill-me --yes --json
+npx @jasonwen/skill-hub update D:\path\to\target --force --yes --json
+npx @jasonwen/skill-hub migrate-lock D:\path\to\target --dry-run --json
+npx @jasonwen/skill-hub remove D:\path\to\target --dry-run --json
 ```
 
 `analyze`, `status`, `update --dry-run`, and `migrate-lock --dry-run` are read-only by default. `install`, `update --yes`, `update --force --yes`, `migrate-lock --yes`, and `remove` mutate the target repo and must be backed by `.skill-hub/lock.json`. During migration, `init` remains a compatibility alias for `install`.
@@ -189,7 +207,7 @@ Managed updates are lock-backed. Normal `update --yes` refreshes only schema ver
 Agent readiness analysis:
 
 ```powershell
-npx skill-hub analyze D:\path\to\target --agent-readiness --json
+npx @jasonwen/skill-hub analyze D:\path\to\target --agent-readiness --json
 ```
 
 The readiness report remains read-only and evaluates context budget, outcome criteria, verification gates, routing boundaries, automation candidates, and reviewable learning capture.

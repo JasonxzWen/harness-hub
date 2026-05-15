@@ -55,6 +55,20 @@ function hasLikelyMojibake(html) {
   return /\?{4,}|\uFFFD/.test(html);
 }
 
+function sanitizeDiagnosticMessage(value) {
+  return String(value ?? "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/javascript\s*:/gi, "blocked-protocol:")
+    .replace(/\son[a-z]+\s*=/gi, " data-removed=")
+    .replace(/file:\/\/\/[^\s'")<>]+/gi, "[local-file]")
+    .replace(/[A-Za-z]:[\\/][^\s'")<>]+/g, "[local-path]")
+    .replace(/\/(?:Users|home)\/[^\s'")<>]+/gi, "[local-path]")
+    .replace(/\b(?:gho|ghp|github_pat)_[A-Za-z0-9_]+/g, "[token]")
+    .slice(0, 220);
+}
+
 function validateStatic(html) {
   const checks = [];
   const issues = [];
@@ -598,7 +612,7 @@ async function validateBrowser(file, options, mode = "unknown") {
   } catch (error) {
     return {
       status: options.requireBrowser ? "failed" : "degraded",
-      reason: error.message
+      reason: sanitizeDiagnosticMessage(error.message) || "browser validation failed"
     };
   }
 }
@@ -647,4 +661,4 @@ if (invokedPath && (import.meta.url === `file://${invokedPath}` || process.argv[
   await main();
 }
 
-export { validateStatic, validateBrowser };
+export { validateStatic, validateBrowser, sanitizeDiagnosticMessage };

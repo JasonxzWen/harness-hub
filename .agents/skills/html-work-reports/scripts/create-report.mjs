@@ -183,6 +183,15 @@ function safeAuditText(value) {
     .replace(/\son[a-z]+\s*=/gi, " data-removed=");
 }
 
+function sanitizeDiagnosticMessage(value) {
+  return safeAuditText(value)
+    .replace(/file:\/\/\/[^\s'")<>]+/gi, "[local-file]")
+    .replace(/[A-Za-z]:[\\/][^\s'")<>]+/g, "[local-path]")
+    .replace(/\/(?:Users|home)\/[^\s'")<>]+/gi, "[local-path]")
+    .replace(/\b(?:gho|ghp|github_pat)_[A-Za-z0-9_]+/g, "[token]")
+    .slice(0, 220);
+}
+
 function slugify(value) {
   const slug = String(value ?? "")
     .toLowerCase()
@@ -414,7 +423,7 @@ async function renderMermaidSvg(source, title, options) {
   if (options.browserMermaid) {
     const rendered = await renderMermaidWithBrowser(source);
     if (rendered.ok) return rendered.svg;
-    return fallbackMermaidSvg(source, title, rendered.error);
+    return fallbackMermaidSvg(source, title, rendered.error || "Mermaid 预渲染不可用；已保留源内容 fallback。");
   }
   return fallbackMermaidSvg(source, title, "未请求预渲染 Mermaid；源内容保留为隐藏 fallback。");
 }
@@ -424,7 +433,10 @@ async function renderMermaidWithBrowser(source) {
   try {
     ({ chromium } = await import("playwright"));
   } catch (error) {
-    return { ok: false, error: `Playwright unavailable: ${error.message}` };
+    return {
+      ok: false,
+      error: `Playwright unavailable: ${sanitizeDiagnosticMessage(error.message) || "module not installed"}`
+    };
   }
 
   let browser;
@@ -437,7 +449,10 @@ async function renderMermaidWithBrowser(source) {
     const svg = await page.locator("#diagram svg").evaluate((node) => node.outerHTML);
     return { ok: true, svg };
   } catch (error) {
-    return { ok: false, error: error.message };
+    return {
+      ok: false,
+      error: sanitizeDiagnosticMessage(error.message) || "Browser Mermaid rendering failed"
+    };
   } finally {
     if (browser) await browser.close();
   }
@@ -910,4 +925,4 @@ if (invokedPath && (import.meta.url === `file://${invokedPath}` || process.argv[
   await main();
 }
 
-export { createReport, renderMarkdown, safeLink, normalizeRenderMode, runtimeLibraries };
+export { createReport, renderMarkdown, safeLink, normalizeRenderMode, runtimeLibraries, sanitizeDiagnosticMessage };

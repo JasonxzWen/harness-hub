@@ -21,6 +21,7 @@ This document summarizes the functional surface worth adapting from famous Claud
 | Completion verification | Run relevant tests/checks before declaring work done. |
 | HTML work reports | Generate and validate self-contained visual HTML handoffs for non-trivial completed-task conclusions, reports, plans, reviews, research explainers, status dashboards, and lightweight editors. |
 | Feynman learning coach | Scope a learning target, teach from first principles, ask progressive diagnostic questions, require teach-back, and log learning events for future review. |
+| Skill Hub maintenance | Audit installed skill source versions, refresh eligible local adaptations, and evaluate new skill candidates against target-repo evidence instead of installing off-stack skills. |
 | Capability lifecycle CLI | Analyze target repos, recommend missing capabilities, install managed assets, report drift, and safely remove only Skill Hub-owned files. |
 | Agent readiness analysis | Read-only `analyze` extension for context budget, outcomes, verification gates, routing boundaries, automation candidates, and reviewable learning capture. |
 
@@ -58,7 +59,7 @@ When Codex internalizes a capability that Skill Hub already documents or adapts,
 | Matt Pocock adapted skills | 3 | `.agents/skills/` |
 | Compound Engineering adapted skills | 1 | `.agents/skills/` |
 | Local learning skills | 1 | `.agents/skills/` |
-| Local governance/reporting skills | 2 | `.agents/skills/` |
+| Local governance/reporting skills | 3 | `.agents/skills/` |
 | Adapted Anthropic/Claude built-ins | 20 | `.codex/skills/` |
 | Codex role configs | 3 | `.codex/agents/` |
 | Codex reference supplement | 1 | `.codex/AGENTS.md` |

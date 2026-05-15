@@ -102,7 +102,7 @@
       "priority": 1,
       "status": "ready",
       "summary": "Wide code must scroll inside the panel and keep line numbers aligned.",
-      "filePath": "D:/skill-hub/.agents/skills/html-work-reports/scripts/create-report.mjs",
+      "filePath": ".agents/skills/html-work-reports/scripts/create-report.mjs",
       "language": "typescript",
       "startLine": 118,
       "highlightLines": [119, 123],

@@ -1,28 +1,47 @@
 {
-  "name": "skill-hub",
+  "name": "@jasonwen/skill-hub",
   "version": "0.1.0",
   "description": "Curated agent capability installer for Codex, Claude Code, OpenCode, and compatible skill hosts.",
   "type": "module",
   "main": "dist/skillHub.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JasonxzWen/skill-hub.git"
+  },
+  "homepage": "https://github.com/JasonxzWen/skill-hub#readme",
+  "bugs": {
+    "url": "https://github.com/JasonxzWen/skill-hub/issues"
+  },
   "bin": {
     "skill-hub": "bin/skill-hub.mjs"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "files": [
     "AGENTS.md",
+    "CHANGELOG.md",
     "README.md",
     "bin/",
     "capabilities/",
+    "config/",
     "dist/",
     "docs/",
     "harness/",
-    "openspec/",
+    "openspec/config.yaml",
+    "openspec/specs/",
+    "openspec/changes/archive/",
     ".agents/skills/",
     ".codex/agents/",
     ".codex/config.toml",
     ".codex/skills/",
-    "scripts/ralph/",
+    "scripts/ralph/CODEX.md",
+    "scripts/ralph/prd.json.example",
+    "scripts/ralph/ralph.ps1",
     "scripts/smoke-managed-update.ps1",
     "scripts/skill-quality-inventory.ts",
+    "scripts/validate-artifact-policy.ts",
     "scripts/validate-skills.ps1"
   ],
   "scripts": {
@@ -32,7 +51,8 @@
     "skill:quality-inventory": "bun ./scripts/skill-quality-inventory.ts",
     "smoke:managed-update": "powershell -ExecutionPolicy Bypass -File ./scripts/smoke-managed-update.ps1",
     "typecheck": "tsc --noEmit",
-    "validate": "bun run typecheck && bun test ./tests && powershell -ExecutionPolicy Bypass -File ./scripts/validate-skills.ps1 -SkipExternal",
+    "validate:artifact-policy": "bun ./scripts/validate-artifact-policy.ts",
+    "validate": "bun run typecheck && bun test ./tests && bun run validate:artifact-policy && powershell -ExecutionPolicy Bypass -File ./scripts/validate-skills.ps1 -SkipExternal",
     "validate:release": "bun run validate && bun run build && node bin/skill-hub.mjs --help && npm pack --dry-run"
   },
   "keywords": [

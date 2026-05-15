@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Skill Hub"
+  short_description: "Audit Skill Hub updates and fit new skills."
+  default_prompt: "Use $update-skill-hub to audit installed skill updates, refresh eligible local adaptations, and evaluate new skill candidates against the current project."

@@ -360,6 +360,7 @@ The release validation wraps the lower-level checks:
 ```powershell
 bun run typecheck
 bun test ./tests
+bun run validate:artifact-policy
 powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExternal
 bun run build
 node bin\skill-hub.mjs --help
@@ -373,10 +374,10 @@ The packed artifact should include:
 - `capabilities/index.json`;
 - installable `.agents/skills/`, `.codex/skills/`, `.codex/agents/`, and `.codex/config.toml` assets that are referenced by profiles;
 - docs needed for user-facing reports and package context;
-- `openspec/` specs and archived change records for source traceability;
-- `scripts/ralph/` and `scripts/validate-skills.ps1` when they are referenced by installable components or validation docs.
+- `openspec/specs/`, `openspec/config.yaml`, and archived OpenSpec change records for source traceability;
+- selected `scripts/ralph/` files and validation scripts when they are referenced by installable components or validation docs.
 
-It should not include ignored vendor checkouts.
+It should not include ignored vendor checkouts, active `openspec/changes/<name>/` work, test sources, generated reports, or local runtime state.
 
 ## Migration Phases
 
