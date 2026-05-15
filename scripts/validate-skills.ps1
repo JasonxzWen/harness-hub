@@ -6,6 +6,7 @@ $ErrorActionPreference = "Stop"
 
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $QuickValidate = "C:\Users\Admin\.codex\skills\.system\skill-creator\scripts\quick_validate.py"
+$QuickValidateAvailable = Test-Path $QuickValidate
 $Failures = New-Object System.Collections.Generic.List[string]
 
 function Add-Failure($Message) {
@@ -33,16 +34,18 @@ try {
     Add-Failure "No skills found under .codex/skills or .agents/skills"
   }
 
+  if (-not $QuickValidateAvailable) {
+    Write-Warning "quick_validate.py is not available at $QuickValidate; skipping system skill-creator validation."
+  }
+
   foreach ($skill in $skillDirs) {
     $skillMd = Join-Path $skill.FullName "SKILL.md"
 
-    if (Test-Path $QuickValidate) {
+    if ($QuickValidateAvailable) {
       $output = & python $QuickValidate $skill.FullName 2>&1
       if ($LASTEXITCODE -ne 0) {
         Add-Failure "quick_validate failed for $($skill.FullName): $($output -join ' ')"
       }
-    } else {
-      Add-Failure "Missing quick_validate.py at $QuickValidate"
     }
 
     $agentYaml = Join-Path $skill.FullName "agents\openai.yaml"

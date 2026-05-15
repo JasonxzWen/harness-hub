@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 - 2026-05-15
+
+- Skip system `skill-creator` quick validation in CI when the host-only validator is unavailable.
+
 ## 0.1.2 - 2026-05-15
 
 - Make release validation run the skill validator through Windows PowerShell or PowerShell Core.
