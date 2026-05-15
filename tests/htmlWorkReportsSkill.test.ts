@@ -79,9 +79,17 @@ test('html-work-reports ships reusable template and component assets', () => {
   expect(css).toContain('blur');
   expect(css).toContain(':focus-visible');
   expect(css).toContain('prefers-reduced-motion');
+  expect(css).toContain('report-data-table');
+  expect(css).toContain('table-row-highlight');
+  expect(css).toContain('table-column-highlight');
+  expect(css).toContain('table-cell-highlight');
+  expect(css).toContain('text-highlight');
+  expect(css).toContain('mark.text-highlight');
   expect(js).toContain('data-filter-target');
   expect(js).toContain('data-tab-group');
   expect(js).toContain('data-copy-from');
+  expect(js).toContain('data-report-data-table');
+  expect(js).toContain('applyDataTableHighlight');
   expect(richCss).toContain('rendered-markdown');
   expect(richCss).toContain('rich-status');
   expect(richJs).toContain('marked');
@@ -159,6 +167,7 @@ test('html-work-reports ships generator, validator, schema, and fixtures', () =>
     `${skillDir}/assets/fixtures/pre-rendered-report.json`,
     `${skillDir}/assets/fixtures/runtime-report.json`,
     `${skillDir}/assets/fixtures/runtime-cdn-stress-report.json`,
+    `${skillDir}/assets/fixtures/table-component-report.json`,
   ];
 
   for (const file of expectedFiles) {
@@ -173,12 +182,100 @@ test('html-work-reports ships generator, validator, schema, and fixtures', () =>
   );
   expect(schema.properties.showRuntimeDependencies.type).toBe('boolean');
   expect(schema.properties.sections.items.properties.type.enum).toContain('diff');
+  expect(schema.properties.sections.items.properties.type.enum).toContain('data-table');
+  expect(schema.properties.sections.items.properties.columns.type).toBe('array');
+  expect(schema.properties.sections.items.properties.rows.type).toBe('array');
   expect(schema.properties.renderMode.enum).toEqual(['runtime-cdn', 'pre-rendered', 'fallback-only', 'runtime']);
   expect(schema.properties.renderMode.default).toBe('runtime-cdn');
   expect(schema.properties.sections.items.properties.group.type).toBe('string');
   expect(schema.properties.sections.items.properties.priority.type).toBe('integer');
   expect(schema.properties.sections.items.properties.summary.type).toBe('string');
   expect(schema.properties.sections.items.properties.status.enum).toContain('degraded');
+});
+
+test('html-work-reports data-table component renders hoverable row and column highlights', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-table-'));
+  const result = spawnSync(process.execPath, [
+    createReportScript,
+    '--input',
+    `${skillDir}/assets/fixtures/table-component-report.json`,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'table-component-fixture',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  const payload = JSON.parse(result.stdout);
+  const html = fs.readFileSync(payload.outputPath, 'utf8');
+
+  expect(html).toContain('data-section-type="data-table"');
+  expect(html).toContain('data-table-section');
+  expect(html).toContain('class="report-data-table"');
+  expect(html).toContain('data-report-data-table');
+  expect(html).toContain('data-table-cell');
+  expect(html).toContain('data-table-row=');
+  expect(html).toContain('data-table-column=');
+  expect(html).toContain('table-row-highlight');
+  expect(html).toContain('table-column-highlight');
+  expect(html).toContain('table-cell-highlight');
+  expect(html).toContain('transform: scale(1.045)');
+  expect(html).toContain('applyDataTableHighlight');
+  expect(html).toContain('<strong>Table-first</strong>');
+  expect(html).toContain('<em>short phrases</em>');
+  expect(html).toContain('<mark class="text-highlight">visual anchor</mark>');
+  expect(html).toContain('<strong>Risk</strong>');
+  expect(html).toContain('<mark class="text-highlight">row + column</mark>');
+  expect(html).not.toMatch(/\?{4,}/);
+
+  const validation = spawnSync(process.execPath, [
+    validateReportScript,
+    payload.outputPath,
+    '--json',
+    '--skip-browser',
+  ], { encoding: 'utf8' });
+  expect(validation.status, validation.stderr).toBe(0);
+  const validationPayload = JSON.parse(validation.stdout);
+  expect(validationPayload.ok).toBe(true);
+  expect(validationPayload.checks).toEqual(expect.arrayContaining([
+    'data-table-rendered',
+    'data-table-hover',
+  ]));
+});
+
+test('html-work-reports validator emits non-blocking readability warnings', async () => {
+  const validateModule = await import(pathToFileURL(path.resolve(validateReportScript)).href);
+  const longParagraph = 'This paragraph intentionally keeps many words in one block so the readability validator can warn that the report should be split into a shorter conclusion, bullets, table rows, or progressive disclosure instead of one dense paragraph.';
+  const longBullet = 'This bullet intentionally combines a risk, an action, supporting context, and validation status into one item so the validator can recommend one judgment or action per bullet.';
+  const longCell = 'This table cell intentionally reads like a sentence with multiple clauses instead of a short phrase, so the validator can warn that table cells should stay concise.';
+  const html = `<!doctype html>
+<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered">
+<head><meta charset="utf-8"><style>@media (prefers-reduced-motion: reduce) { * { transition: none; } }</style></head>
+<body>
+  <main>
+    <nav data-report-nav><div class="report-nav-group"><a data-nav-link href="#summary">Summary</a></div></nav>
+    <section id="summary" data-section-type="markdown" data-section-group="summary" data-render-state="ready" data-source-fallback>
+      <div class="rendered-markdown">
+        <p>${longParagraph}</p>
+        <ul><li>${longBullet}</li></ul>
+        <table><thead><tr><th>Status</th></tr></thead><tbody><tr><td>${longCell}</td></tr></tbody></table>
+      </div>
+      <template data-rich-source data-source-fallback>source</template>
+    </section>
+  </main>
+</body>
+</html>`;
+
+  const result = validateModule.validateStatic(html);
+
+  expect(result.ok).toBe(true);
+  expect(result.warnings).toEqual(expect.arrayContaining([
+    expect.stringContaining('paragraph too long'),
+    expect.stringContaining('bullet too long'),
+    expect.stringContaining('table cell too long'),
+    expect.stringContaining('missing visual anchors'),
+  ]));
 });
 
 test('html-work-reports stress fixture covers runtime-cdn quality risks', () => {

@@ -42,8 +42,8 @@ Use the closest asset and delete sections that do not apply:
 | `assets/templates/review-findings.html` | A PR/code/doc review has multiple findings, severity levels, or reviewer focus areas. | severity filters, finding cards, annotated code panel, file tour, action export |
 | `assets/templates/research-explainer.html` | Research, architecture, or module understanding needs citations, diagrams, examples, and a glossary. | TL;DR grid, rendered rich-text sections, tabbed examples, diagram panel, source rail |
 | `assets/templates/decision-matrix.html` | Multiple options, product choices, or implementation approaches need trade-off comparison. | option cards, recommendation, risk notes, confirmation questions |
-| `assets/components/report-ui.css` | A custom page needs common visual primitives. | cards, chips, source links, code blocks, diff panels, Mermaid evidence panels, focus/dim effects, responsive grids |
-| `assets/components/report-ui.js` | A custom page needs simple interactions. | filters, tabs, search, copy/export buttons, evidence spotlight, selected-state focus |
+| `assets/components/report-ui.css` | A custom page needs common visual primitives. | cards, chips, source links, data tables, code blocks, diff panels, Mermaid evidence panels, focus/dim effects, responsive grids |
+| `assets/components/report-ui.js` | A custom page needs simple interactions. | filters, tabs, search, copy/export buttons, evidence spotlight, data-table row/column hover, selected-state focus |
 | `assets/components/rich-render-runtime.css` | A report needs runtime-rendered Markdown, Mermaid, or highlighted code. | rendered Markdown styling, Mermaid fallback styling, highlight token affordances |
 | `assets/components/rich-render-runtime.js` | A report needs runtime-rendered Markdown, Mermaid, or highlighted code. | Marked + DOMPurify bridge, per-diagram Mermaid `render`, highlight.js tokenization, status badges |
 
@@ -92,7 +92,18 @@ Add richer sections only when they shorten the explanation:
 }
 ```
 
-Supported section types: `summary-cards`, `markdown`, `mermaid`, `code`, `diff`, `timeline`, `evidence`, `decision-matrix`, `actions`, `tabs`, and `filterable-cards`. Optional section fields `group`, `priority`, `summary`, `status`, and `richId` drive grouped navigation and runtime state. Optional root fields `evidence`, `verification`, and `nextActions` are rendered only when non-empty.
+Supported section types: `summary-cards`, `data-table`, `markdown`, `mermaid`, `code`, `diff`, `timeline`, `evidence`, `decision-matrix`, `actions`, `tabs`, and `filterable-cards`. Optional section fields `group`, `priority`, `summary`, `status`, and `richId` drive grouped navigation and runtime state. Optional root fields `evidence`, `verification`, and `nextActions` are rendered only when non-empty.
+
+## Writing Density Contract
+
+- Lead with the conclusion. Prefer one sentence before supporting detail.
+- Prefer `data-table` for structured, segmented, point-by-point, status, comparison, checklist, metric, or ownership data.
+- Keep section summaries to one short line; do not use them as paragraphs.
+- Keep table cells as phrases. Move long explanation to a short Markdown note or a dedicated detail section.
+- Keep each bullet to one judgment or one action. Split mixed risk/action/context bullets.
+- Mark key conclusions, risks, changes, and verification results with `**...**` or `==...==` so the page has visible reading anchors.
+
+Use `data-table` for structured, segmented, point-by-point, status, checklist, metric, comparison, or ownership data. A table section accepts `columns` as strings or `{ "key": "...", "label": "...", "align": "left|center|right" }` objects and `rows` as arrays or objects keyed by column. Cell values may be strings, numbers, arrays, or simple objects. Keep the table semantically useful: if the data has no stable row/column relationship, use bullets or cards instead.
 
 Generator and validator scripts are internal `html-work-reports` assets. Do not expose them as a separate installable capability unless a later OpenSpec change approves that boundary.
 
@@ -110,10 +121,17 @@ Generator and validator scripts are internal `html-work-reports` assets. Do not 
 | Incident report | minute-by-minute timeline + logs + follow-ups | severity tags, owner filters |
 | Custom editor | board/form/table for a specific decision | export Markdown/JSON/diff |
 
+## Data Table Component
+
+- Use a `data-table` section when the report has repeated fields across multiple items, because the reader can compare rows faster than scanning separate cards.
+- The component highlights the hovered or focused cell, its row, and its column. The hovered cell receives both row and column highlight classes plus a small `transform: scale(...)` emphasis; neighboring cells use color and outline only, so the table does not reflow.
+- Keep column labels short, use `align: "right"` only for numbers, and let long text wrap inside cells. On narrow screens the table must scroll inside its own wrapper rather than widening the page.
+- Do not use the table component as decoration. A two-column key/value table is useful for status summaries; a single row of large prose is usually better as normal Markdown.
+
 ## Rich Content Contract
 
 - **Language/encoding**: generated reports are Chinese-first UTF-8 artifacts. Continuous half-width question marks or replacement characters are validation failures because they usually indicate a non-UTF-8 shell/stdin path corrupted the report input.
-- **Markdown**: convert headings, lists, tables, callouts, and links into semantic HTML. Do not make the user read raw Markdown unless it is an explicit source excerpt.
+- **Markdown**: convert headings, lists, tables, callouts, links, `**strong**`, `*emphasis*`, and `==highlight==` into semantic HTML. Do not make the user read raw Markdown unless it is an explicit source excerpt.
 - **Mermaid**: use it only when a non-trivial sequence, architecture, call-path, or data-flow diagram is faster than text. For dynamic diagrams, pin Mermaid and call `mermaid.render`; keep Mermaid source in hidden machine-verifiable fallback data, not a visible source block.
 - **Code**: show code only when the report needs exact implementation evidence. Use the smallest useful snippet with source file link, line number or range, copied snippet, highlighted decisive lines, and a one-line reason.
 - **Diff**: include a `diff` section only for review findings, behavioral changes, or before/after examples where prose would be ambiguous.

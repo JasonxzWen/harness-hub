@@ -72,6 +72,10 @@
     }
   }
 
+  function applyReportMarkSyntax(source) {
+    return String(source || "").replace(/==([^=\n]+)==/g, '<mark class="text-highlight">$1</mark>');
+  }
+
   function updatePageRuntimeState() {
     var richSections = query("[data-rich-section]");
     var states = richSections.map(function (section) {
@@ -128,7 +132,7 @@
       }
 
       try {
-        var html = parser.parse(source);
+        var html = parser.parse(applyReportMarkSyntax(source));
         node.innerHTML = purifier ? purifier.sanitize(html) : html;
         node.classList.add("rendered-markdown");
         node.dataset.rendered = "true";

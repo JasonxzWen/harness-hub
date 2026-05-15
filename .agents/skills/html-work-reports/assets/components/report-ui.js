@@ -81,6 +81,35 @@
     card.style.setProperty("--spotlight-y", event.clientY - rect.top + "px");
   }
 
+  function clearDataTableHighlight(table) {
+    if (!table) return;
+    table.removeAttribute("data-hover-row");
+    table.removeAttribute("data-hover-column");
+    table.querySelectorAll(".table-row-highlight, .table-column-highlight, .table-cell-highlight").forEach(function (cell) {
+      cell.classList.remove("table-row-highlight", "table-column-highlight", "table-cell-highlight");
+    });
+  }
+
+  function applyDataTableHighlight(cell) {
+    var table = cell.closest("[data-report-data-table]");
+    if (!table) return;
+    var row = cell.getAttribute("data-table-row");
+    var column = cell.getAttribute("data-table-column");
+    clearDataTableHighlight(table);
+    if (!row || !column) return;
+
+    table.setAttribute("data-hover-row", row);
+    table.setAttribute("data-hover-column", column);
+
+    table.querySelectorAll("[data-table-row='" + row + "']").forEach(function (peer) {
+      peer.classList.add("table-row-highlight");
+    });
+    table.querySelectorAll("[data-table-column='" + column + "']").forEach(function (peer) {
+      peer.classList.add("table-column-highlight");
+    });
+    cell.classList.add("table-cell-highlight");
+  }
+
   function updateActiveNavigation() {
     var sections = Array.prototype.slice.call(document.querySelectorAll("[id][data-section-type], #evidence, #verification, #next-actions"));
     var active = sections
@@ -128,6 +157,33 @@
     var card = event.target.closest("[data-evidence-spotlight]");
     if (card) {
       updateEvidenceSpotlight(card, event);
+    }
+  });
+
+  document.addEventListener("pointerover", function (event) {
+    var cell = event.target.closest("[data-table-cell]");
+    if (cell) {
+      applyDataTableHighlight(cell);
+    }
+  });
+
+  document.addEventListener("pointerout", function (event) {
+    var table = event.target.closest("[data-report-data-table]");
+    if (table && !table.contains(event.relatedTarget)) {
+      clearDataTableHighlight(table);
+    }
+  });
+
+  document.addEventListener("focusin", function (event) {
+    if (event.target.matches("[data-table-cell]")) {
+      applyDataTableHighlight(event.target);
+    }
+  });
+
+  document.addEventListener("focusout", function (event) {
+    var table = event.target.closest("[data-report-data-table]");
+    if (table && !table.contains(event.relatedTarget)) {
+      clearDataTableHighlight(table);
     }
   });
 

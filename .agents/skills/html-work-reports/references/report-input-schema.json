@@ -24,7 +24,7 @@
     },
     "template": {
       "type": "string",
-      "enum": ["implementation-handoff", "review-findings", "research-explainer", "decision-matrix"],
+      "enum": ["implementation-handoff", "conclusion-dashboard", "review-findings", "research-explainer", "decision-matrix"],
       "default": "implementation-handoff"
     },
     "renderMode": {
@@ -50,6 +50,7 @@
             "type": "string",
             "enum": [
               "summary-cards",
+              "data-table",
               "markdown",
               "mermaid",
               "code",
@@ -111,6 +112,40 @@
               "type": "integer",
               "minimum": 1
             }
+          },
+          "columns": {
+            "type": "array",
+            "description": "Columns for data-table sections. Items may be strings or objects with key, label, and optional align.",
+            "items": {
+              "oneOf": [
+                { "type": "string" },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["label"],
+                  "properties": {
+                    "key": { "type": "string" },
+                    "label": { "type": "string" },
+                    "align": { "type": "string", "enum": ["left", "center", "right"] },
+                    "width": { "type": "string" }
+                  }
+                }
+              ]
+            }
+          },
+          "rows": {
+            "type": "array",
+            "description": "Rows for data-table sections. Items may be arrays or objects keyed by column key.",
+            "items": {
+              "oneOf": [
+                { "type": "array" },
+                { "type": "object" }
+              ]
+            }
+          },
+          "caption": {
+            "type": "string",
+            "description": "Optional short caption shown above a data-table section."
           }
         }
       }

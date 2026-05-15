@@ -57,6 +57,10 @@ const templateMeta = {
     label: "实现交付",
     useCase: "已完成实现、验证门禁、文件证据、风险和下一步"
   },
+  "conclusion-dashboard": {
+    label: "\u7ed3\u8bba\u4eea\u8868\u76d8",
+    useCase: "\u5df2\u5b8c\u6210\u4efb\u52a1\u7684\u7ed3\u8bba\u3001\u6587\u4ef6\u3001\u9a8c\u8bc1\u548c\u4e0b\u4e00\u6b65"
+  },
   "review-findings": {
     label: "审查发现",
     useCase: "代码或文档审查、严重级别筛选、证据片段、负责人和行动导出"
@@ -303,13 +307,27 @@ function renderSectionHeader(section, statusText = "") {
   </div>`;
 }
 
+function renderInlineEmphasis(escaped) {
+  return String(escaped ?? "")
+    .replace(/==([^=\n]+)==/g, '<mark class="text-highlight">$1</mark>')
+    .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^\*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+}
+
 function inlineMarkdown(text) {
   const escaped = escapeHtml(stripRawHtml(text));
-  return escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
+  const links = [];
+  const withLinkTokens = escaped.replace(/\[([^\]\n]+)\]\(([^)\n]+)\)/g, (_match, label, href) => {
     const safe = safeLink(href);
-    if (!safe) return `<span class="unsafe-link">${escapeHtml(label)}</span>`;
-    return `<a href="${escapeAttr(safe)}" rel="noreferrer">${escapeHtml(label)}</a>`;
+    const renderedLabel = renderInlineEmphasis(label);
+    const html = safe
+      ? `<a href="${escapeAttr(safe)}" rel="noreferrer">${renderedLabel}</a>`
+      : `<span class="unsafe-link">${renderedLabel}</span>`;
+    const token = `\u0000HTML_WORK_REPORT_LINK_${links.length}\u0000`;
+    links.push(html);
+    return token;
   });
+  return renderInlineEmphasis(withLinkTokens).replace(/\u0000HTML_WORK_REPORT_LINK_(\d+)\u0000/g, (_match, index) => links[Number(index)] || "");
 }
 
 function renderMarkdown(source) {
@@ -386,6 +404,107 @@ function renderTable(headers, rows) {
     .map((row) => `<tr>${row.map((cell) => `<td>${inlineMarkdown(cell)}</td>`).join("")}</tr>`)
     .join("");
   return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function safeCssWidth(value) {
+  const text = String(value ?? "").trim();
+  return /^(?:\d+(?:\.\d+)?(?:px|%|rem|em|ch)?|auto|min-content|max-content)$/.test(text) ? text : "";
+}
+
+function normalizeTableColumn(column, index) {
+  if (column && typeof column === "object") {
+    const label = column.label || column.key || `Column ${index + 1}`;
+    return {
+      key: column.key || label,
+      label,
+      align: ["center", "right"].includes(column.align) ? column.align : "left",
+      width: safeCssWidth(column.width)
+    };
+  }
+  const label = String(column ?? `Column ${index + 1}`);
+  return { key: label, label, align: "left", width: "" };
+}
+
+function normalizeTableColumns(section) {
+  const explicitColumns = Array.isArray(section.columns)
+    ? section.columns
+    : Array.isArray(section.headers)
+      ? section.headers
+      : [];
+  if (explicitColumns.length > 0) return explicitColumns.map(normalizeTableColumn);
+
+  const rows = Array.isArray(section.rows) ? section.rows : [];
+  const objectRow = rows.find((row) => row && typeof row === "object" && !Array.isArray(row));
+  if (objectRow) {
+    return Object.keys(objectRow)
+      .filter((key) => !key.startsWith("_"))
+      .map((key, index) => normalizeTableColumn({ key, label: key }, index));
+  }
+
+  const arrayRow = rows.find((row) => Array.isArray(row));
+  return arrayRow ? arrayRow.map((_value, index) => normalizeTableColumn(`Column ${index + 1}`, index)) : [];
+}
+
+function hasOwnValue(object, key) {
+  return Object.prototype.hasOwnProperty.call(object, key);
+}
+
+function tableCellValue(row, column, columnIndex) {
+  if (Array.isArray(row)) return row[columnIndex];
+  if (row && typeof row === "object") {
+    if (hasOwnValue(row, column.key)) return row[column.key];
+    if (hasOwnValue(row, column.label)) return row[column.label];
+    if (hasOwnValue(row, String(columnIndex))) return row[String(columnIndex)];
+  }
+  return "";
+}
+
+function renderTableValue(value) {
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) {
+    return `<ul class="table-cell-list">${value.map((item) => `<li>${renderTableValue(item)}</li>`).join("")}</ul>`;
+  }
+  if (typeof value === "object") {
+    return `<dl class="table-cell-map">${Object.entries(value).map(([key, item]) => `<div><dt>${escapeHtml(key)}</dt><dd>${renderTableValue(item)}</dd></div>`).join("")}</dl>`;
+  }
+  return inlineMarkdown(value).replace(/\r?\n/g, "<br>");
+}
+
+function renderDataTableSection(section) {
+  const columns = normalizeTableColumns(section);
+  const rows = Array.isArray(section.rows) ? section.rows : [];
+  if (columns.length === 0 || rows.length === 0) {
+    return `<section class="panel" ${sectionAttrs(section)} data-table-section>
+      ${renderSectionHeader(section)}
+      <p>${escapeHtml(section.emptyState || "No table data.")}</p>
+    </section>`;
+  }
+
+  const colgroup = columns
+    .map((column) => column.width ? `<col style="width:${escapeAttr(column.width)}">` : "<col>")
+    .join("");
+  const caption = section.caption ? `<p class="table-caption">${escapeHtml(section.caption)}</p>` : "";
+  const head = columns.map((column, columnIndex) => (
+    `<th scope="col" tabindex="0" data-table-cell data-table-row="0" data-table-column="${columnIndex}" data-align="${escapeAttr(column.align)}">${escapeHtml(column.label)}</th>`
+  )).join("");
+  const body = rows.map((row, rowIndex) => {
+    const tableRow = rowIndex + 1;
+    return `<tr>${columns.map((column, columnIndex) => (
+      `<td tabindex="0" data-table-cell data-table-row="${tableRow}" data-table-column="${columnIndex}" data-align="${escapeAttr(column.align)}">${renderTableValue(tableCellValue(row, column, columnIndex))}</td>`
+    )).join("")}</tr>`;
+  }).join("\n");
+
+  return `<section class="panel" ${sectionAttrs(section)} data-table-section>
+    ${renderSectionHeader(section)}
+    ${caption}
+    <div class="table-scroll" data-table-wrap>
+      <table class="report-data-table" data-report-data-table>
+        <colgroup>${colgroup}</colgroup>
+        <thead><tr>${head}</tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  </section>`;
 }
 
 function highlightCode(source, language = "text", highlightLines = [], startLine = 1) {
@@ -664,6 +783,7 @@ function renderEvidenceSection(section, input) {
 
 async function renderSection(section, mode, index, input, options) {
   if (section.type === "summary-cards") return renderSummaryCards(section);
+  if (section.type === "data-table") return renderDataTableSection(section);
   if (section.type === "markdown") return renderMarkdownSection(section, mode, index);
   if (section.type === "mermaid") return renderMermaidSection(section, mode, index, options);
   if (section.type === "code") return renderCodeSection(section, mode, index);

@@ -69,6 +69,55 @@ function sanitizeDiagnosticMessage(value) {
     .slice(0, 220);
 }
 
+function textFromHtml(fragment) {
+  return String(fragment ?? "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function collectTagText(html, tagName) {
+  const pattern = new RegExp(`<${tagName}\\b[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "gi");
+  const values = [];
+  let match;
+  while ((match = pattern.exec(html)) !== null) {
+    values.push(textFromHtml(match[1]));
+  }
+  return values.filter(Boolean);
+}
+
+function addLengthWarnings(warnings, label, values, maxLength) {
+  let count = 0;
+  for (const value of values) {
+    if (value.length <= maxLength) continue;
+    if (count < 5) warnings.push(`${label} too long (${value.length} chars): ${value.slice(0, 80)}`);
+    count += 1;
+  }
+  if (count > 5) warnings.push(`${label} too long: ${count - 5} more item(s) omitted`);
+}
+
+function collectReadabilityWarnings(documentMarkup) {
+  const warnings = [];
+  addLengthWarnings(warnings, "paragraph", collectTagText(documentMarkup, "p"), 180);
+  addLengthWarnings(warnings, "bullet", collectTagText(documentMarkup, "li"), 120);
+  addLengthWarnings(warnings, "table cell", [
+    ...collectTagText(documentMarkup, "td"),
+    ...collectTagText(documentMarkup, "th")
+  ], 110);
+  if (!/<strong\b/i.test(documentMarkup) && !/<mark\b/i.test(documentMarkup)) {
+    warnings.push('missing visual anchors: add <strong> or <mark class="text-highlight"> to key conclusions, risks, changes, or verification results');
+  }
+  return warnings;
+}
+
 function validateStatic(html) {
   const checks = [];
   const issues = [];
@@ -79,7 +128,9 @@ function validateStatic(html) {
   const hasRichSections = /data-rich-section|data-section-type="(markdown|mermaid|code|diff)"/.test(html);
   const hasEvidenceSection = html.includes('id="evidence"') || html.includes('data-section-type="evidence"');
   const hasVerificationSection = html.includes('id="verification"') || html.includes('data-verification');
+  const hasDataTable = html.includes('data-section-type="data-table"');
   const hasInteractiveControls = /<(button|input|select)[^>]+data-(filter-target|tab-group|copy-from|copy-text|search-for)/.test(documentMarkup);
+  const warnings = collectReadabilityWarnings(documentMarkup);
 
   add(checks, "report-root", html.includes("data-html-work-report"), "missing data-html-work-report root", issues);
   add(checks, "render-mode", ["runtime-cdn", "pre-rendered", "fallback-only"].includes(mode), `unexpected render mode: ${mode}`, issues);
@@ -146,6 +197,11 @@ function validateStatic(html) {
     );
   }
 
+  if (hasDataTable) {
+    add(checks, "data-table-rendered", html.includes("report-data-table") && html.includes("data-report-data-table") && html.includes("data-table-cell"), "data-table section lacks table component markers", issues);
+    add(checks, "data-table-hover", html.includes("table-row-highlight") && html.includes("table-column-highlight") && html.includes("table-cell-highlight"), "data-table section lacks row, column, and cell hover states", issues);
+  }
+
   if (hasEvidenceSection) add(checks, "evidence-present", html.includes("data-evidence") && html.includes("data-evidence-kind="), "missing evidence blocks", issues);
   if (hasVerificationSection) add(checks, "verification-present", html.includes("data-verification-status="), "missing verification status blocks", issues);
   if (hasInteractiveControls) add(checks, "interactive-controls", true, "", issues);
@@ -158,7 +214,7 @@ function validateStatic(html) {
     add(checks, "self-contained-primary", !html.includes("https://cdn.jsdelivr.net"), "pre-rendered report includes CDN dependency", issues);
   }
 
-  return { ok: issues.length === 0, checks, issues, mode };
+  return { ok: issues.length === 0, checks, issues, warnings, mode };
 }
 
 const browserViewports = [
@@ -169,6 +225,16 @@ const browserViewports = [
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function transformScale(value) {
+  const text = String(value || "");
+  if (!text || text === "none") return 1;
+  const matrix = text.match(/^matrix\(([^,]+),[^,]+,[^,]+,([^,]+),/);
+  if (matrix) return Math.max(Math.abs(Number(matrix[1])), Math.abs(Number(matrix[2])));
+  const matrix3d = text.match(/^matrix3d\(([^,]+),[^,]+,[^,]+,[^,]+,[^,]+,([^,]+),/);
+  if (matrix3d) return Math.max(Math.abs(Number(matrix3d[1])), Math.abs(Number(matrix3d[2])));
+  return 1;
 }
 
 function chromeCandidates() {
@@ -507,6 +573,47 @@ async function inspectCodeCdp(client) {
   );
 }
 
+async function inspectDataTablesCdp(client) {
+  return await evaluate(
+    client,
+    `(async () => {
+      const tables = Array.from(document.querySelectorAll('[data-report-data-table]'));
+      const results = [];
+      for (const table of tables) {
+        const first = table.querySelector('tbody [data-table-cell]') || table.querySelector('[data-table-cell]');
+        if (!first) {
+          results.push({ id: table.closest('[data-section-type]')?.id || '', cellCount: 0 });
+          continue;
+        }
+        const rect = first.getBoundingClientRect();
+        first.dispatchEvent(new PointerEvent('pointerover', {
+          bubbles: true,
+          clientX: rect.left + Math.min(8, rect.width / 2),
+          clientY: rect.top + Math.min(8, rect.height / 2)
+        }));
+        first.focus();
+        await new Promise((resolve) => setTimeout(resolve, 220));
+        const row = first.getAttribute('data-table-row');
+        const column = first.getAttribute('data-table-column');
+        const style = getComputedStyle(first);
+        results.push({
+          id: table.closest('[data-section-type]')?.id || '',
+          cellCount: table.querySelectorAll('[data-table-cell]').length,
+          row,
+          column,
+          rowHighlights: table.querySelectorAll("[data-table-row='" + row + "'].table-row-highlight").length,
+          columnHighlights: table.querySelectorAll("[data-table-column='" + column + "'].table-column-highlight").length,
+          hovered: first.classList.contains('table-cell-highlight'),
+          transform: style.transform,
+          boxShadow: style.boxShadow
+        });
+      }
+      return results;
+    })()`,
+    5000
+  );
+}
+
 async function exerciseInteractionsCdp(client) {
   return await evaluate(
     client,
@@ -552,6 +659,7 @@ async function validateBrowserWithCdp(file, mode) {
     }
     const mermaid = await inspectMermaidCdp(client);
     const code = await inspectCodeCdp(client);
+    const dataTables = await inspectDataTablesCdp(client);
     const interactions = await exerciseInteractionsCdp(client);
 
     const issues = [];
@@ -574,6 +682,13 @@ async function validateBrowserWithCdp(file, mode) {
       if (item.maxLineGap > Math.max(3, item.lineHeight * 0.35)) issues.push(`code ${item.id} has excessive inter-line gap ${item.maxLineGap}px`);
       if (!item.hasSource) issues.push(`code ${item.id} lacks source fallback`);
     }
+    for (const item of dataTables) {
+      if (item.cellCount === 0) issues.push(`data table ${item.id} has no cells`);
+      if (!item.hovered) issues.push(`data table ${item.id} did not mark hovered cell`);
+      if (item.rowHighlights < 1) issues.push(`data table ${item.id} did not highlight hovered row`);
+      if (item.columnHighlights < 1) issues.push(`data table ${item.id} did not highlight hovered column`);
+      if (transformScale(item.transform) < 1.02) issues.push(`data table ${item.id} did not scale hovered cell`);
+    }
     if (mode === "runtime-cdn" && code.length > 0 && totalHighlightTokens === 0) issues.push("runtime code blocks are ready without highlight tokens");
     if (!interactions.titleVisible || !interactions.evidenceVisible) issues.push("interactions hid primary title or evidence");
     if (mode === "runtime-cdn" && runtime.pending > 0) issues.push(`runtime still pending for ${runtime.pending} sections`);
@@ -581,7 +696,7 @@ async function validateBrowserWithCdp(file, mode) {
     if (mode === "runtime-cdn" && runtime.dependencyStates?.includes("pending")) issues.push("runtime dependency states are still pending");
 
     if (issues.length) {
-      return { status: "failed", reason: issues.join(" | "), runtime, viewports, mermaid, code, interactions };
+      return { status: "failed", reason: issues.join(" | "), runtime, viewports, mermaid, code, dataTables, interactions };
     }
 
     return {
@@ -591,6 +706,7 @@ async function validateBrowserWithCdp(file, mode) {
       viewports,
       mermaid,
       code,
+      dataTables,
       interactions
     };
   } finally {
@@ -637,6 +753,7 @@ async function main() {
       mode: staticResult.mode,
       checks: staticResult.checks,
       issues: staticResult.issues,
+      warnings: staticResult.warnings,
       browser
     };
 
@@ -646,6 +763,7 @@ async function main() {
       console.log(`${ok ? "PASS" : "FAIL"} ${file}`);
       for (const check of staticResult.checks) console.log(`- ok: ${check}`);
       for (const issue of staticResult.issues) console.log(`- issue: ${issue}`);
+      for (const warning of staticResult.warnings) console.log(`- warning: ${warning}`);
       console.log(`- browser: ${browser.status} (${browser.reason})`);
     }
 
