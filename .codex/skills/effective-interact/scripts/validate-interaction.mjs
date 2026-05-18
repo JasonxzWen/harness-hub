@@ -87,8 +87,7 @@ function textFromHtml(fragment) {
 function collectTagText(html, tagName) {
   const pattern = new RegExp(`<${tagName}\\b[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "gi");
   const values = [];
-  let match;
-  while ((match = pattern.exec(html)) !== null) {
+  for (const match of html.matchAll(pattern)) {
     values.push(textFromHtml(match[1]));
   }
   return values.filter(Boolean);

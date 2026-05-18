@@ -1,5 +1,21 @@
 # Effective Interact Patterns
 
+## Table of Contents
+
+- [Interaction Workflow](#interaction-workflow)
+- [HTML Usefulness Gate](#html-usefulness-gate)
+- [Pattern Selection](#pattern-selection)
+- [Template Catalogue](#template-catalogue)
+- [Generator Contract](#generator-contract)
+- [Decision Quality Contract](#decision-quality-contract)
+- [Artifact Selection](#artifact-selection)
+- [Rich Content Contract](#rich-content-contract)
+- [Runtime Rendering Support](#runtime-rendering-support)
+- [Validation Contract](#validation-contract)
+- [Layout Skeleton](#layout-skeleton)
+- [Interaction Rules](#interaction-rules)
+- [Visual Rules](#visual-rules)
+
 ## Interaction Workflow
 
 Use this workflow every time the skill loads:

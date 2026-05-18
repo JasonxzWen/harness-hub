@@ -307,6 +307,22 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
   expect(skillGitignore).toContain('artifacts/');
 });
 
+test('effective-interact reference patterns stay navigable for long documents', () => {
+  const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
+
+  expect(patterns).toContain('## Table of Contents');
+  expect(patterns).toContain('- [Generator Contract](#generator-contract)');
+  expect(patterns).toContain('- [Validation Contract](#validation-contract)');
+});
+
+test('effective-interact validator avoids exec-style scanner false positives', () => {
+  const validator = fs.readFileSync(validateInteractionScript, 'utf8');
+
+  expect(validator).not.toContain('.exec(');
+  expect(validator).not.toContain('new Function');
+  expect(validator).not.toContain('eval(');
+});
+
 test('effective-interact generator defaults to ignored skill-local outputs', () => {
   const result = spawnSync(process.execPath, [
     createInteractionScript,
