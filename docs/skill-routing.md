@@ -34,7 +34,7 @@ Use [Skill quality guide](skill-quality-guide.md) for description, gotcha, progr
 | One-off local UI debugging | `webapp-testing` | Browser plugin/Playwright as available |
 | Durable E2E test suite | `e2e-testing` | `verification-loop` |
 | Deep pre-PR or CE-style code review | `compound-code-review` | `coding-standards` for a broad quality baseline; `security-review` for security-only review; `verification-loop` for command gates |
-| Intermediate or final user-interaction artifact, option comparison, architecture walkthrough, research explainer, status update, or lightweight export editor needing a self-contained HTML surface | `effective-interact` | `web-artifacts-builder` for bundled React/Tailwind apps; `frontend-slides` for decks |
+| Non-trivial session, implementation/review progress, material repo or skill handoff, option comparison, architecture walkthrough, research explainer, status update, or lightweight export editor needing a self-contained HTML surface | `effective-interact` | `web-artifacts-builder` for bundled React/Tailwind apps; `frontend-slides` for decks |
 | Skill Hub maintenance, installed skill refresh, or target-repo candidate skill discovery | `update-skill-hub` | `skill-evaluator` for one third-party repository; `agent-sort` for an ECC-only target-repo install plan |
 | General code quality | `coding-standards` | language/framework-specific skill when present |
 | Security review | `security-review` | `verification-loop` |
@@ -59,7 +59,7 @@ These boundaries are mirrored by `tests/fixtures/skill-routing-cases.json` so de
 - `agent-introspection-debugging` loads only for agent runs, tool loops, context drift, or harness failures.
 - `prototype` loads for explicitly throwaway experiments that answer one design question.
 - `frontend-design` loads for production-grade visual UI creation, not routine reports or debugging.
-- `effective-interact` loads for non-trivial user-interaction artifacts where HTML navigation, option comparison, rendered diagrams, code evidence, explorable controls, or visible export controls beat Markdown; permission pauses, simple chat, production UI, bundled apps, and decks route elsewhere.
+- `effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere.
 - `compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere.
 - `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.
 - `verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis.
@@ -78,7 +78,7 @@ The project-local `.codex/skills/skill-creator` copy was removed. Codex already 
 
 ## Effective Interact
 
-Use `effective-interact` when a non-trivial user interaction point should be browsable, visual, interactive, or exportable instead of Markdown. Use it before, during, or after implementation for option comparison, module maps, review tours, research explainers, status dashboards, local triage/tuning editors, OpenSpec acceptance, and final handoffs when HTML lowers decision cost. The user does not need to literally ask for "HTML".
+Use `effective-interact` as a default-considered skill for non-trivial sessions where a browsable, visual, interactive, or exportable HTML surface would make the work easier to decide, verify, or continue than chat alone. Use it before, during, or after implementation for option comparison, module maps, review tours, research explainers, status dashboards, local triage/tuning editors, OpenSpec acceptance, material repo or skill change reports, and final handoffs when HTML lowers decision cost. The user does not need to literally ask for "HTML".
 
 It is intentionally narrower than `web-artifacts-builder`: it covers one-file interaction artifacts for reviews, plans, explainers, status dashboards, option galleries, architecture walkthroughs, handoffs, and local export editors, while `web-artifacts-builder` remains the choice for complex bundled React/Tailwind artifacts. `frontend-slides` remains the deck lane.
 
@@ -130,6 +130,8 @@ Other Matt Pocock skills remain explicit-only or rejected for now: `grill-with-d
 `michalvavra/agents` `html-tools` was evaluated on 2026-05-09. It is useful as a reference for single-file HTML utilities, but not installed because it overlaps existing HTML artifact skills and does not target user interaction artifacts. The local `effective-interact` skill covers the narrower routing gap.
 
 `Cocoon-AI/architecture-diagram-generator` was evaluated on 2026-05-09. Keep it explicit-only as an architecture diagram reference; do not install by default because it is narrow and CDN-dependent.
+
+`zarazhangrui/frontend-slides` was evaluated on 2026-05-19 at `8dca834fc61abc9dd633cbe6a74ed7be3d82a608`. Keep it as the upstream reference and refresh source for the existing `frontend-slides` lane. Do not merge it into `effective-interact`: the useful ideas are visual style discovery, viewport-fit rules, and export/deploy gotchas for decks, while `effective-interact` owns report-like interaction artifacts and should not inherit slide generation, localStorage editing, Vercel deploy, npm, or Playwright export side effects.
 
 `EveryInc/compound-engineering-plugin` was evaluated on 2026-05-11 at `d090bde0ff1bbc33ec3c3b2049cb4687e9d76532`. Do not install the full plugin by default. It overlaps existing ECC, Vercel, Ralph, OpenSpec, and local governance skills, and its custom-agent files need a separate Codex adaptation path outside the plugin package.
 

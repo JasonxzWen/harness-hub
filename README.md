@@ -66,12 +66,14 @@ README.md             Project overview
 | [Learn FASTER](https://github.com/hluaguo/learn-faster-kit) | Source inspiration for `feynman-learning-coach`; no CLI/runtime copied | MIT, referenced at evaluated commit |
 | [Learn Harness Engineering](https://github.com/walkinglabs/learn-harness-engineering) | Source inspiration for the `harness` environment profile and templates | MIT, adapted from the course and Chinese template library |
 | [The unreasonable effectiveness of HTML](https://thariqs.github.io/html-effectiveness/) | Source reference for `effective-interact` option galleries, flow maps, explainers, status artifacts, and export editors | Referenced, not copied |
+| [Zara Zhang Frontend Slides](https://github.com/zarazhangrui/frontend-slides) | Upstream reference for the `frontend-slides` deck lane; useful for visual style discovery, viewport-fit rules, PPT conversion, and export/deploy gotchas | MIT, evaluated at `8dca834fc61abc9dd633cbe6a74ed7be3d82a608`; not merged into `effective-interact` |
 
 Superpowers is tracked as an optional upstream source but is not installed by default because its core workflow overlaps heavily with ECC and the adapted built-in skills.
 The Karpathy-inspired skill is not installed as a separate trigger because its core guidance is already project-level instruction in `AGENTS.md`.
 Compound Engineering is tracked as an optional upstream source, but only the code-review lane is installed. The rest of the plugin remains explicit-only because it overlaps this hub or requires external actions and credentials.
 Learn FASTER is tracked as a learning-coach source. Only the lightweight Feynman teaching and logging pattern is installed; its CLI, generated root instructions, and full `.learning` runtime are not copied.
 Learn Harness Engineering is tracked as a harness environment source. The local adaptation installs a root `AGENTS.md` plus compact `harness/` templates instead of copying the course repository or skill wholesale.
+Zara Zhang's Frontend Slides is tracked as a reference for the existing `frontend-slides` capability. It should refresh the deck workflow selectively, not broaden `effective-interact`, because reports and slide decks remain separate lanes.
 
 ## Initial Scope
 

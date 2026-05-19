@@ -1,6 +1,6 @@
 # Source Projects And Candidates
 
-Date: 2026-05-11
+Date: 2026-05-19
 
 This file tracks source projects that are worth studying or adapting for Codex.
 
@@ -21,6 +21,7 @@ This file tracks source projects that are worth studying or adapting for Codex.
 | [Matt Pocock Skills](https://github.com/mattpocock/skills) | Small, composable engineering and productivity skills for alignment, feedback loops, diagnosis, issue workflows, and architecture thinking. | Adapted `grill-me`, `diagnose`, and `prototype`. Other skills are useful references, but many overlap current TDD, verification, planning, and issue-workflow surfaces or have stronger side effects. |
 | [OpenAI Codex plugins and skills](https://openai.com/academy/codex-plugins-and-skills/) | Official explanation of Codex plugins and skills. | Use for terminology and product-aligned guidance. |
 | [The unreasonable effectiveness of HTML](https://thariqs.github.io/html-effectiveness/) | Practical examples showing how self-contained HTML can outperform Markdown for option comparison, plans, reviews, diagrams, reports, research, and small export editors. | Adapted as local `effective-interact`; source is referenced, not copied. Deck examples remain routed to `frontend-slides`. |
+| [`zarazhangrui/frontend-slides`](https://github.com/zarazhangrui/frontend-slides) | Claude Code HTML presentation skill with zero-dependency deck generation, visual style previews, viewport-fitting rules, PPT conversion, PDF export, and Vercel deploy scripts. | Evaluated on 2026-05-19 at `8dca834fc61abc9dd633cbe6a74ed7be3d82a608` under MIT. Keep as the upstream reference and refresh candidate for local `frontend-slides`; do not merge into `effective-interact`, whose lane is reports and interaction artifacts rather than decks. |
 
 ## Imported Sources
 
@@ -46,6 +47,7 @@ This file tracks source projects that are worth studying or adapting for Codex.
 | Learn FASTER-inspired Feynman coach | `.codex/skills/feynman-learning-coach/` | Original local skill inspired by upstream `cce560b51d765f08407d37afd3f4dad19d32b268` under MIT review |
 | Learn Harness Engineering-inspired harness templates | `harness/templates/` | Original local templates adapted from the course's five-subsystem model and Chinese template library under MIT review |
 | effective interaction guidance | `.codex/skills/effective-interact/` | Original local skill adapted from Thariq Shihipar's HTML effectiveness article |
+| Zara Zhang `frontend-slides`-inspired presentation lane | `.codex/skills/frontend-slides/` | Existing compact Codex adaptation for decks and PPT/PPTX-to-web work; upstream `zarazhangrui/frontend-slides` was evaluated at `8dca834fc61abc9dd633cbe6a74ed7be3d82a608` and remains a reference/refresh source, not a wholesale import |
 | Skill Hub maintenance workflow | `.codex/skills/update-skill-hub/` | Original local skill for auditing installed skill updates and target-fit candidate decisions |
 
 ## Evaluated Matt Pocock Skills
@@ -99,6 +101,7 @@ This file tracks source projects that are worth studying or adapting for Codex.
 |---|---|---|---|
 | [`michalvavra/agents` `html-tools`](https://github.com/michalvavra/agents/tree/main/archive/skills/html-tools) | `b7eab78594595ffdb58c9b00eccd1e134d4a69b8` | Adapt ideas, do not install | Useful single-file HTML utility patterns, but it targets converters/tools rather than agent work reports and overlaps with `web-artifacts-builder`. No plugin metadata found at `.codex-plugin/plugin.json` or `.claude-plugin/plugin.json`. |
 | [`Cocoon-AI/architecture-diagram-generator`](https://github.com/Cocoon-AI/architecture-diagram-generator) | `9bac8372cb63f969fd2a052e82ddc8de7c6f3f21` | Explicit-only reference | Useful architecture diagram template, but too narrow for default installation and uses external CDN assets. No plugin metadata found at `.claude-plugin/plugin.json`. |
+| [`zarazhangrui/frontend-slides`](https://github.com/zarazhangrui/frontend-slides) | `8dca834fc61abc9dd633cbe6a74ed7be3d82a608`; plugin metadata `frontend-slides` `1.0.0`; MIT | Reference for `frontend-slides`, do not install into `effective-interact` | High-quality deck workflow and useful refresh source for the existing presentation lane: visual style discovery, viewport-fit constraints, PPT extraction, PDF export, and deploy gotchas. It should not expand `effective-interact` because it is deck-oriented, has optional localStorage editing, and includes side-effectful Vercel/npm/Playwright export paths that belong behind the explicit `frontend-slides` route. |
 
 ## Import Policy
 

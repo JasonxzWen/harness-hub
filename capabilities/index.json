@@ -434,7 +434,7 @@
         "skill:frontend-slides",
         "skill:frontend-design"
       ],
-      "routing": "Load for non-trivial user-interaction artifacts that need generated, validated self-contained HTML surfaces for alignment, option galleries, reviews, plans, status dashboards, research explainers, architecture walkthroughs, explorable explanations, handoffs, or lightweight export editors instead of Markdown; skip permission pauses, simple chat, UI apps, decks, and bundled artifacts.",
+      "routing": "Load broadly for non-trivial sessions when a generated, validated self-contained HTML surface can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider every session and require an HTML report after material repo or skill changes; skip permission pauses, trivial chat, UI apps, decks, and bundled artifacts.",
       "detects": [
         {
           "path": ".codex/skills/effective-interact/SKILL.md",
