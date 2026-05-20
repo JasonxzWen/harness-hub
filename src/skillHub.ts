@@ -81,6 +81,11 @@ export interface CapabilityIndex {
   components: Record<string, CapabilityComponent>;
 }
 
+interface ManagedComponentRename {
+  to: string;
+  reason: string;
+}
+
 export interface RepoSignals {
   packageJson: boolean;
   tsconfig: boolean;
@@ -366,6 +371,13 @@ export const AGENT_SKILL_DIRS = Object.freeze({
   opencode: '.opencode/skills',
   'claude-code': '.claude/skills',
 } satisfies Record<AgentName, string>);
+
+const MANAGED_COMPONENT_RENAMES: Readonly<Record<string, ManagedComponentRename>> = Object.freeze({
+  'skill:html-work-reports': {
+    to: 'skill:effective-interact',
+    reason: 'Component was renamed from skill:html-work-reports to skill:effective-interact.',
+  },
+});
 
 const VALID_RISKS = new Set<LifecycleRisk>(['low', 'medium', 'high']);
 const GLOB_CHARS = /[*?[\]{}]/;
@@ -1378,7 +1390,8 @@ export function getStatus(options: StatusOptions = {}): SkillHubStatus {
   const unknown: StatusRow[] = [];
 
   for (const installed of lock.data.components) {
-    const component = index.components[installed.id];
+    const latestRef = resolveManagedComponentLatest(index, installed);
+    const component = latestRef.component;
     const exists = safeRelativePathExists(targetDir, installed.dest);
     const baseRow: Omit<StatusRow, 'state' | 'reason' | 'evidence'> = {
       id: installed.id,
@@ -1389,6 +1402,10 @@ export function getStatus(options: StatusOptions = {}): SkillHubStatus {
       exists,
       latestVersion: component?.version || null,
     };
+    const updateReason = latestRef.rename?.reason || 'Component version differs from the current capability index.';
+    const updateEvidence = latestRef.rename && component
+      ? [installed.dest, resolveComponentDest(component, installed.agent)]
+      : [installed.dest];
 
     let row: StatusRow;
     if (installed.status === 'skipped') {
@@ -1401,8 +1418,8 @@ export function getStatus(options: StatusOptions = {}): SkillHubStatus {
       if (!exists) {
         row = { ...baseRow, state: 'missing', evidence: [installed.dest], reason: 'Managed destination is missing.' };
         missing.push(row);
-      } else if (component.version !== installed.version) {
-        row = { ...baseRow, state: 'update-available', evidence: [installed.dest], reason: 'Component version differs from the current capability index.' };
+      } else if (latestRef.rename || component.version !== installed.version) {
+        row = { ...baseRow, state: 'update-available', evidence: updateEvidence, reason: updateReason };
         updates.push(row);
       } else {
         row = { ...baseRow, state: 'current', evidence: [installed.dest], reason: 'Component destination exists; schema version 1 lock has no hashes, so content was not verified.' };
@@ -1424,8 +1441,8 @@ export function getStatus(options: StatusOptions = {}): SkillHubStatus {
       } else if (fileStatus.modified.length > 0) {
         row = { ...baseRow, state: 'modified', evidence: fileStatus.modified, reason: 'One or more managed files differ from the recorded hash.' };
         modified.push(row);
-      } else if (component.version !== installed.version) {
-        row = { ...baseRow, state: 'update-available', evidence: [installed.dest], reason: 'Component version differs from the current capability index.' };
+      } else if (latestRef.rename || component.version !== installed.version) {
+        row = { ...baseRow, state: 'update-available', evidence: updateEvidence, reason: updateReason };
         updates.push(row);
       } else {
         row = { ...baseRow, state: 'current', evidence: (installed as ManagedComponentRecord).files.map((file) => file.path), reason: 'All managed files match the lock.' };
@@ -1598,16 +1615,12 @@ function validateSelectedComponents(lock: LockReadResult | null, selectedCompone
   if (!lock) {
     throw new Error(`Selected component '${selectedComponents[0]}' is not managed because no Skill Hub lock was found.`);
   }
-  const managed = new Set(lock.data.components.map((component) => component.id));
+  const managed = new Set(lock.data.components.flatMap((component) => managedSelectionIds(component.id)));
   for (const componentId of selectedComponents) {
     if (!managed.has(componentId)) {
       throw new Error(`Selected component '${componentId}' is not managed by this lock.`);
     }
   }
-}
-
-function shouldIncludeComponent(componentId: string, selectedComponents: string[]): boolean {
-  return selectedComponents.length === 0 || selectedComponents.includes(componentId);
 }
 
 function componentSourcePath(hubRoot: string, component: CapabilityComponent): string {
@@ -1636,6 +1649,42 @@ function makeStatusRow(
   };
 }
 
+function resolveManagedComponentLatest(
+  index: CapabilityIndex,
+  component: SkillHubLock['components'][number],
+): { id: string; component?: CapabilityComponent; rename?: ManagedComponentRename } {
+  const current = index.components[component.id];
+  if (current) {
+    return { id: component.id, component: current };
+  }
+
+  const rename = MANAGED_COMPONENT_RENAMES[component.id];
+  if (!rename) {
+    return { id: component.id };
+  }
+
+  const replacement = index.components[rename.to];
+  return replacement
+    ? { id: rename.to, component: replacement, rename }
+    : { id: rename.to, rename };
+}
+
+function managedSelectionIds(componentId: string): string[] {
+  const rename = MANAGED_COMPONENT_RENAMES[componentId];
+  return rename ? [componentId, rename.to] : [componentId];
+}
+
+function shouldIncludeManagedComponent(
+  component: SkillHubLock['components'][number],
+  selectedComponents: string[],
+): boolean {
+  if (selectedComponents.length === 0) {
+    return true;
+  }
+
+  return managedSelectionIds(component.id).some((id) => selectedComponents.includes(id));
+}
+
 export function getUpdatePlan(options: UpdatePlanOptions = {}): UpdatePlan {
   const targetDir = path.resolve(options.targetDir || process.cwd());
   const index = options.index || readCapabilityIndex(options.hubRoot || HUB_ROOT);
@@ -1653,11 +1702,12 @@ export function getUpdatePlan(options: UpdatePlanOptions = {}): UpdatePlan {
   }
 
   for (const component of lock.data.components) {
-    if (!shouldIncludeComponent(component.id, selectedComponents)) {
+    if (!shouldIncludeManagedComponent(component, selectedComponents)) {
       continue;
     }
 
-    const latest = index.components[component.id];
+    const latestRef = resolveManagedComponentLatest(index, component);
+    const latest = latestRef.component;
     if (component.status === 'skipped') {
       const row = makeStatusRow(
         targetDir,
@@ -1668,7 +1718,7 @@ export function getUpdatePlan(options: UpdatePlanOptions = {}): UpdatePlan {
         [component.dest],
       );
       skipped.push(row);
-      if (latest && latest.version !== component.version) {
+      if (latest && (latestRef.rename || latest.version !== component.version)) {
         blockers.push(row);
       }
       continue;
@@ -1686,7 +1736,7 @@ export function getUpdatePlan(options: UpdatePlanOptions = {}): UpdatePlan {
       continue;
     }
 
-    if (latest.version === component.version) {
+    if (!latestRef.rename && latest.version === component.version) {
       unchanged.push(makeStatusRow(
         targetDir,
         component,
@@ -1703,8 +1753,8 @@ export function getUpdatePlan(options: UpdatePlanOptions = {}): UpdatePlan {
       component,
       latest,
       'update-available',
-      'Component version differs from the current capability index.',
-      [component.dest],
+      latestRef.rename?.reason || 'Component version differs from the current capability index.',
+      latestRef.rename ? [component.dest, resolveComponentDest(latest, component.agent)] : [component.dest],
     );
     updates.push(updateRow);
 
@@ -1857,7 +1907,8 @@ export function updateManaged(
     if (!updateIds.has(component.id)) {
       continue;
     }
-    const latest = index.components[component.id];
+    const latestRef = resolveManagedComponentLatest(index, component);
+    const latest = latestRef.component;
     if (!latest) {
       continue;
     }
@@ -1872,14 +1923,21 @@ export function updateManaged(
     }
 
     const source = componentSourcePath(hubRoot, latest);
-    const dest = assertSafeRelativePath(targetDir, component.dest);
+    const nextDest = latestRef.rename ? resolveComponentDest(latest, component.agent) : component.dest;
+    const dest = assertSafeRelativePath(targetDir, nextDest);
+    if (latestRef.rename && fs.existsSync(dest)) {
+      fs.rmSync(dest, { recursive: true, force: true });
+    }
     copyRecursive(source, dest);
     const files = collectManagedFiles(targetDir, dest);
+    const nextComponentId = latestRef.id;
     const previousVersion = component.version;
     const isForced = forcedIds.has(component.id);
+    component.id = nextComponentId;
     component.version = latest.version;
     component.kind = latest.kind;
     component.source = toPortablePath(path.relative(hubRoot, source));
+    component.dest = nextDest;
     component.files = files;
     component.updatedAt = updatedAt;
     component.status = 'installed';
@@ -2014,7 +2072,8 @@ export function migrateLock(
   const nextComponents: ManagedComponentRecord[] = [];
 
   for (const component of lock.data.components) {
-    const latest = index.components[component.id];
+    const latestRef = resolveManagedComponentLatest(index, component);
+    const latest = latestRef.component;
     if (component.status === 'skipped') {
       const row = makeStatusRow(targetDir, component, latest, 'skipped', 'Skipped schema version 1 records cannot be migrated safely.', [component.dest]);
       skipped.push(row);
@@ -2044,7 +2103,7 @@ export function migrateLock(
 
     migratable.push(makeStatusRow(targetDir, component, latest, 'current', comparison.reason, comparison.evidence));
     nextComponents.push({
-      id: component.id,
+      id: latestRef.id,
       version: latest.version,
       agent: component.agent,
       kind: latest.kind,

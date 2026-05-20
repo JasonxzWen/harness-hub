@@ -697,6 +697,48 @@ test('update applies unmodified managed components and refreshes lock metadata',
     .not.toBe(hashContent(oldContent));
 });
 
+test('update migrates legacy html-work-reports locks to effective-interact', () => {
+  const targetDir = createLegacyHtmlWorkReportsTarget('skill-hub-update-legacy-html-');
+
+  const status = getStatus({ targetDir });
+  const preview = getUpdatePlan({ targetDir, components: ['skill:effective-interact'] });
+  const result = updateManaged(targetDir, { yes: true, components: ['skill:effective-interact'] });
+
+  expect(status.updates.some((row) => row.id === 'skill:html-work-reports')).toBe(true);
+  expect(preview.updates.map((row) => row.id)).toEqual(['skill:html-work-reports']);
+  expect(preview.blockers).toEqual([]);
+  expect(result.exitCode).toBe(0);
+  expect(result.updated.map((row) => row.id)).toEqual(['skill:effective-interact']);
+  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'html-work-reports', 'SKILL.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'effective-interact', 'SKILL.md'))).toBe(true);
+
+  const lock = readLock(targetDir);
+  if (!lock || lock.data.schemaVersion !== 2) {
+    throw new Error('expected schema version 2 lock');
+  }
+  const migrated = lock.data.components.find((component) => component.id === 'skill:effective-interact');
+  expect(migrated?.dest).toBe('.codex/skills/effective-interact');
+  expect(migrated?.source).toBe('.codex/skills/effective-interact');
+  expect(getStatus({ targetDir }).current.some((row) => row.id === 'skill:effective-interact')).toBe(true);
+});
+
+test('legacy html-work-reports migration overwrites same-name replacement destinations', () => {
+  const targetDir = createLegacyHtmlWorkReportsTarget('skill-hub-update-legacy-html-overwrite-');
+  const replacementDir = path.join(targetDir, '.codex', 'skills', 'effective-interact');
+  fs.mkdirSync(replacementDir, { recursive: true });
+  fs.writeFileSync(path.join(replacementDir, 'LOCAL.md'), 'local effective-interact copy\n');
+
+  const preview = getUpdatePlan({ targetDir });
+  const result = updateManaged(targetDir, { yes: true });
+
+  expect(preview.blockers).toEqual([]);
+  expect(result.exitCode).toBe(0);
+  expect(result.updated.map((row) => row.id)).toEqual(['skill:effective-interact']);
+  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'html-work-reports', 'SKILL.md'))).toBe(false);
+  expect(fs.existsSync(path.join(replacementDir, 'LOCAL.md'))).toBe(false);
+  expect(fs.existsSync(path.join(replacementDir, 'SKILL.md'))).toBe(true);
+});
+
 test('update can be scoped to selected components', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-selected-'));
   const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
@@ -1013,6 +1055,57 @@ function makeLockComponentStale(
       file.size = Buffer.byteLength(override.content);
     }
   });
+}
+
+function createLegacyHtmlWorkReportsTarget(prefix: string): string {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  const legacyContent = [
+    '---',
+    'name: html-work-reports',
+    'description: Legacy HTML report skill.',
+    '---',
+    '',
+    '# HTML Work Reports',
+    '',
+  ].join('\n');
+  const legacyAsset = 'legacy managed asset\n';
+  const skillDir = path.join(targetDir, '.codex', 'skills', 'html-work-reports');
+  fs.mkdirSync(skillDir, { recursive: true });
+  fs.writeFileSync(path.join(skillDir, 'SKILL.md'), legacyContent);
+  fs.writeFileSync(path.join(skillDir, 'asset.txt'), legacyAsset);
+  fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.skill-hub', 'lock.json'), `${JSON.stringify({
+    schemaVersion: 2,
+    generatedAt: new Date().toISOString(),
+    hubVersion: '0.1.4',
+    profile: 'minimal',
+    agents: ['codex'],
+    components: [
+      {
+        id: 'skill:html-work-reports',
+        version: '0.1.0',
+        agent: 'codex',
+        kind: 'skill',
+        source: '.codex/skills/html-work-reports',
+        dest: '.codex/skills/html-work-reports',
+        files: [
+          {
+            path: '.codex/skills/html-work-reports/SKILL.md',
+            sha256: hashContent(legacyContent),
+            size: Buffer.byteLength(legacyContent),
+          },
+          {
+            path: '.codex/skills/html-work-reports/asset.txt',
+            sha256: hashContent(legacyAsset),
+            size: Buffer.byteLength(legacyAsset),
+          },
+        ],
+        installedAt: new Date().toISOString(),
+        status: 'installed',
+      },
+    ],
+  }, null, 2)}\n`);
+  return targetDir;
 }
 
 function createV1Target(prefix: string, options: { exact: boolean }): string {

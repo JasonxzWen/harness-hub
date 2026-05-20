@@ -1,6 +1,6 @@
 {
   "name": "@jasonwen/skill-hub",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Curated agent capability installer for Codex, Claude Code, OpenCode, and compatible skill hosts.",
   "type": "module",
   "main": "dist/skillHub.js",

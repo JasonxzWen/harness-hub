@@ -307,8 +307,9 @@ Mutating update behavior:
 
 1. `skill-hub update <target> --yes` applies only schema version 2 component updates whose managed file hashes still match the lock.
 2. `skill-hub update <target> --component <id> --yes` scopes the selected update set and leaves unselected update-available components unchanged.
-3. `skill-hub update <target> --force --yes` can intentionally overwrite modified or restore missing schema version 2 lock-recorded files, but still blocks unsafe paths, schema version 1 records, skipped records, unknown components, and unmanaged files.
-4. `skill-hub update <target>` without `--dry-run` or `--yes` exits with code `2` and does not mutate files.
+3. Known component renames use the same schema version 2 hash-backed update path. The current rename is `skill:html-work-reports` to `skill:effective-interact`; update removes the lock-recorded legacy files, replaces an existing same-name `effective-interact` skill destination, and rewrites the lock record to the new id.
+4. `skill-hub update <target> --force --yes` can intentionally overwrite modified or restore missing schema version 2 lock-recorded files, but still blocks unsafe paths, schema version 1 records, skipped records, unknown components, and unmanaged files outside explicit rename destinations.
+5. `skill-hub update <target>` without `--dry-run` or `--yes` exits with code `2` and does not mutate files.
 
 Schema version 1 migration behavior:
 
