@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6 - 2026-05-20
+
+- Migrate schema version 2 managed `skill:html-work-reports` lock records to `skill:effective-interact` during `skill-hub update`, after hash checks and while replacing an existing same-name `effective-interact` skill destination.
+
 ## 0.1.5 - 2026-05-18
 
 - Rename `html-work-reports` to `effective-interact` and broaden it into a visual HTML interaction skill for alignment, option comparison, reviews, architecture walkthroughs, explainers, status artifacts, and lightweight export editors.

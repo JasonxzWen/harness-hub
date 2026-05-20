@@ -203,7 +203,7 @@ npx @jasonwen/skill-hub remove D:\path\to\target --dry-run --json
 
 `analyze`, `status`, `update --dry-run`, and `migrate-lock --dry-run` are read-only by default. `install`, `update --yes`, `update --force --yes`, `migrate-lock --yes`, and `remove` mutate the target repo and must be backed by `.skill-hub/lock.json`. During migration, `init` remains a compatibility alias for `install`.
 
-Managed updates are lock-backed. Normal `update --yes` refreshes only schema version 2 managed components whose recorded hashes still match the target files. `--component <id>` scopes the selected update set. `update --force --yes` can intentionally overwrite modified or restore missing schema version 2 lock-recorded files, but it does not override unsafe paths, schema version 1 records, skipped records, or unknown components. Legacy schema version 1 locks require explicit `migrate-lock` before update or safe removal can rely on file hashes.
+Managed updates are lock-backed. Normal `update --yes` refreshes only schema version 2 managed components whose recorded hashes still match the target files. `--component <id>` scopes the selected update set. Known component renames, including `skill:html-work-reports` to `skill:effective-interact`, are migrated through the same hash-backed update path and replace an existing same-name `effective-interact` skill destination. `update --force --yes` can intentionally overwrite modified or restore missing schema version 2 lock-recorded files, but it does not override unsafe paths, schema version 1 records, skipped records, or unknown components. Legacy schema version 1 locks require explicit `migrate-lock` before update or safe removal can rely on file hashes.
 
 Agent readiness analysis:
 
