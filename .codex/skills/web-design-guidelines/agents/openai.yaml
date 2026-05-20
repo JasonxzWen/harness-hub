@@ -1,7 +1,0 @@
-interface:
-  display_name: "Web Design Guidelines"
-  short_description: "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my si..."
-  default_prompt: "Use $web-design-guidelines to help with this task."
-
-policy:
-  allow_implicit_invocation: true

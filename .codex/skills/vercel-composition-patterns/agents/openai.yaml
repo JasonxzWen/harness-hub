@@ -1,7 +1,0 @@
-interface:
-  display_name: "Vercel Composition Patterns"
-  short_description: ""
-  default_prompt: "Use $vercel-composition-patterns to help with this task."
-
-policy:
-  allow_implicit_invocation: true

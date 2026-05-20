@@ -4,7 +4,7 @@
 TBD - created by archiving change harden-effective-interact-generation. Update Purpose after archive.
 ## Requirements
 ### Requirement: Interaction generator produces reliable HTML by default
-The system SHALL provide a reusable generation path that converts structured JSON interaction input into a single `.html` artifact whose primary content is reliable in Codex, local browsers, and common constrained environments.
+The system SHALL provide a reusable generation path that converts structured JSON interaction input into a single `.html` artifact whose primary content is reliable in local browsers and common constrained environments.
 
 #### Scenario: Generate implementation handoff artifact
 - **WHEN** the agent provides structured interaction input with title, summary, sections, evidence, and verification state

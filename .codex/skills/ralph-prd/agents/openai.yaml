@@ -1,3 +1,0 @@
-display_name: Ralph PRD
-short_description: Create Ralph-ready PRDs with one-iteration stories.
-default_prompt: Create a Ralph-ready PRD for this feature. Ask essential clarifying questions first if needed, then save the PRD under tasks/.

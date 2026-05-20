@@ -29,7 +29,7 @@
       "id": "agent-introspection-positive-tool-loop",
       "skill": "agent-introspection-debugging",
       "kind": "positive",
-      "prompt": "Codex is stuck in a repeated tool loop and burning context without progress; capture state and recover.",
+      "prompt": "The agent is stuck in a repeated tool loop and burning context without progress; capture state and recover.",
       "expectedSkill": "agent-introspection-debugging",
       "docsBoundary": "`agent-introspection-debugging` loads only for agent runs, tool loops, context drift, or harness failures."
     },
@@ -72,6 +72,30 @@
       "prompt": "Implement the selected onboarding flow in production and cover it with tests.",
       "expectedSkill": "tdd-workflow",
       "docsBoundary": "`prototype` loads for explicitly throwaway experiments that answer one design question."
+    },
+    {
+      "id": "tdd-positive-feature-slice",
+      "skill": "tdd-workflow",
+      "kind": "positive",
+      "prompt": "Implement the selected checkout validation change one behavior at a time with a failing test first.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`tdd-workflow` loads for production features, confirmed bug fixes, and refactors with tests; unknown root-cause diagnosis and throwaway exploration route elsewhere."
+    },
+    {
+      "id": "tdd-negative-unknown-root-cause",
+      "skill": "tdd-workflow",
+      "kind": "negative",
+      "prompt": "The test suite fails with an unknown intermittent timeout; reproduce it and find the root cause before changing code.",
+      "expectedSkill": "diagnose",
+      "docsBoundary": "`tdd-workflow` loads for production features, confirmed bug fixes, and refactors with tests; unknown root-cause diagnosis and throwaway exploration route elsewhere."
+    },
+    {
+      "id": "tdd-forbidden-throwaway-prototype",
+      "skill": "tdd-workflow",
+      "kind": "forbidden-load",
+      "prompt": "Build a throwaway prototype to compare two reducer shapes before we choose the production implementation.",
+      "expectedSkill": "prototype",
+      "docsBoundary": "`tdd-workflow` loads for production features, confirmed bug fixes, and refactors with tests; unknown root-cause diagnosis and throwaway exploration route elsewhere."
     },
     {
       "id": "frontend-design-positive-product-ui",
@@ -176,6 +200,30 @@
       "prompt": "Before pushing this branch, stop and ask me for approval.",
       "expectedSkill": null,
       "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "handoff-positive-restart-notes",
+      "skill": "handoff",
+      "kind": "positive",
+      "prompt": "Create a handoff for the next agent with current status, changed files, validation, risks, and suggested skills.",
+      "expectedSkill": "handoff",
+      "docsBoundary": "`handoff` loads for restart notes or compact agent/session handoff documents; visual HTML reports and context-limit advice route elsewhere."
+    },
+    {
+      "id": "handoff-negative-visual-report",
+      "skill": "handoff",
+      "kind": "negative",
+      "prompt": "Create a visual HTML handoff report for this skill change with evidence, validation, and next actions.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`handoff` loads for restart notes or compact agent/session handoff documents; visual HTML reports and context-limit advice route elsewhere."
+    },
+    {
+      "id": "handoff-forbidden-context-limit-advice",
+      "skill": "handoff",
+      "kind": "forbidden-load",
+      "prompt": "Should I compact now or keep the context until after implementation?",
+      "expectedSkill": null,
+      "docsBoundary": "`handoff` loads for restart notes or compact agent/session handoff documents; visual HTML reports and context-limit advice route elsewhere."
     },
     {
       "id": "compound-code-review-positive-deep-review",

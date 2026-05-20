@@ -1,25 +1,11 @@
 ## Why
 
-`effective-interact` 已经具备 JSON 输入、生成器、模板、runtime 渲染和浏览器校验，但它的核心合同仍偏向“组件能渲染”。下一阶段需要把质量重心提升到“读者能更快做判断、追溯证据、理解风险并继续行动”，否则 HTML 只会变成更漂亮的长文档。
-
-这次变更承接对 HTML 汇报、可视化、静态 HTML、安全与 skill 组织的调研：HTML 的价值不是装饰，而是把 agent 输出变成可扫描、可比较、可审计、可交互的轻量工作界面。
-
+`effective-interact` 宸茬粡鍏峰 JSON 杈撳叆銆佺敓鎴愬櫒銆佹ā鏉裤€乺untime 娓叉煋鍜屾祻瑙堝櫒鏍￠獙锛屼絾瀹冪殑鏍稿績鍚堝悓浠嶅亸鍚戔€滅粍浠惰兘娓叉煋鈥濄€備笅涓€闃舵闇€瑕佹妸璐ㄩ噺閲嶅績鎻愬崌鍒扳€滆鑰呰兘鏇村揩鍋氬垽鏂€佽拷婧瘉鎹€佺悊瑙ｉ闄╁苟缁х画琛屽姩鈥濓紝鍚﹀垯 HTML 鍙細鍙樻垚鏇存紓浜殑闀挎枃妗ｃ€?
+杩欐鍙樻洿鎵挎帴瀵?HTML 姹囨姤銆佸彲瑙嗗寲銆侀潤鎬?HTML銆佸畨鍏ㄤ笌 skill 缁勭粐鐨勮皟鐮旓細HTML 鐨勪环鍊间笉鏄楗帮紝鑰屾槸鎶?agent 杈撳嚭鍙樻垚鍙壂鎻忋€佸彲姣旇緝銆佸彲瀹¤銆佸彲浜や簰鐨勮交閲忓伐浣滅晫闈€?
 ## What Changes
 
-- 引入 artifact intent 合同：生成输入需要表达读者、主要问题、决策目标、时间预算、成功标准和 artifact 类型，生成器据此选择模板和信息架构。
-- 引入 claim/evidence 合同：关键结论、数字、趋势、风险和建议需要绑定证据、来源、置信度、时间窗口和已知限制。
-- 扩展可视化合同：新增受限 chart spec，用于生成 bar、line、sparkline、bullet、slope、matrix 等常见静态图；每个图必须有文本结论、数据表替代和来源信息。
-- 强化 accessibility 合同：图表、控件、导航和富内容必须满足键盘可达、可见 focus、非颜色唯一编码、heading 顺序、文本替代和基本对比度门槛。
-- 强化 runtime-cdn 安全合同：CDN runtime 依赖需要 pinned version、可审计 manifest，并优先加入 SRI 校验；高信任或归档场景保留 `pre-rendered` 路线。
-- 强化 trust model：报告内容按 trusted generated、mixed-trust、untrusted 区分，生成器和 runtime 必须在正确上下文中 escape/sanitize。
-- 增加主动阅读模式：研究解释和决策报告可包含 assumption controls、scenario table、model inspector 等轻量交互，但静态结论仍必须不依赖交互即可理解。
-- 更新 `effective-interact` skill 文档、schema、fixtures、生成器、验证器和项目说明，使后续实现以测试和 AI 自动验收驱动。
-- Non-goals:
-  - 不把 `effective-interact` 扩成通用 frontend builder。
-  - 不默认引入 React、Tailwind、Vite 或长期运行的 app runtime。
-  - 不让所有总结都变成 HTML；短答、一次性命令输出和权限暂停仍走直接聊天。
-  - 不在本变更中发布、推送或改变第三方资源。
-
+- 寮曞叆 artifact intent 鍚堝悓锛氱敓鎴愯緭鍏ラ渶瑕佽〃杈捐鑰呫€佷富瑕侀棶棰樸€佸喅绛栫洰鏍囥€佹椂闂撮绠椼€佹垚鍔熸爣鍑嗗拰 artifact 绫诲瀷锛岀敓鎴愬櫒鎹閫夋嫨妯℃澘鍜屼俊鎭灦鏋勩€?- 寮曞叆 claim/evidence 鍚堝悓锛氬叧閿粨璁恒€佹暟瀛椼€佽秼鍔裤€侀闄╁拰寤鸿闇€瑕佺粦瀹氳瘉鎹€佹潵婧愩€佺疆淇″害銆佹椂闂寸獥鍙ｅ拰宸茬煡闄愬埗銆?- 鎵╁睍鍙鍖栧悎鍚岋細鏂板鍙楅檺 chart spec锛岀敤浜庣敓鎴?bar銆乴ine銆乻parkline銆乥ullet銆乻lope銆乵atrix 绛夊父瑙侀潤鎬佸浘锛涙瘡涓浘蹇呴』鏈夋枃鏈粨璁恒€佹暟鎹〃鏇夸唬鍜屾潵婧愪俊鎭€?- 寮哄寲 accessibility 鍚堝悓锛氬浘琛ㄣ€佹帶浠躲€佸鑸拰瀵屽唴瀹瑰繀椤绘弧瓒抽敭鐩樺彲杈俱€佸彲瑙?focus銆侀潪棰滆壊鍞竴缂栫爜銆乭eading 椤哄簭銆佹枃鏈浛浠ｅ拰鍩烘湰瀵规瘮搴﹂棬妲涖€?- 寮哄寲 runtime-cdn 瀹夊叏鍚堝悓锛欳DN runtime 渚濊禆闇€瑕?pinned version銆佸彲瀹¤ manifest锛屽苟浼樺厛鍔犲叆 SRI 鏍￠獙锛涢珮淇′换鎴栧綊妗ｅ満鏅繚鐣?`pre-rendered` 璺嚎銆?- 寮哄寲 trust model锛氭姤鍛婂唴瀹规寜 trusted generated銆乵ixed-trust銆乽ntrusted 鍖哄垎锛岀敓鎴愬櫒鍜?runtime 蹇呴』鍦ㄦ纭笂涓嬫枃涓?escape/sanitize銆?- 澧炲姞涓诲姩闃呰妯″紡锛氱爺绌惰В閲婂拰鍐崇瓥鎶ュ憡鍙寘鍚?assumption controls銆乻cenario table銆乵odel inspector 绛夎交閲忎氦浜掞紝浣嗛潤鎬佺粨璁轰粛蹇呴』涓嶄緷璧栦氦浜掑嵆鍙悊瑙ｃ€?- 鏇存柊 `effective-interact` skill 鏂囨。銆乻chema銆乫ixtures銆佺敓鎴愬櫒銆侀獙璇佸櫒鍜岄」鐩鏄庯紝浣垮悗缁疄鐜颁互娴嬭瘯鍜?AI 鑷姩楠屾敹椹卞姩銆?- Non-goals:
+  - 涓嶆妸 `effective-interact` 鎵╂垚閫氱敤 frontend builder銆?  - 涓嶉粯璁ゅ紩鍏?React銆乀ailwind銆乂ite 鎴栭暱鏈熻繍琛岀殑 app runtime銆?  - 涓嶈鎵€鏈夋€荤粨閮藉彉鎴?HTML锛涚煭绛斻€佷竴娆℃€у懡浠よ緭鍑哄拰鏉冮檺鏆傚仠浠嶈蛋鐩存帴鑱婂ぉ銆?  - 涓嶅湪鏈彉鏇翠腑鍙戝竷銆佹帹閫佹垨鏀瑰彉绗笁鏂硅祫婧愩€?
 ## Capabilities
 
 ### New Capabilities
@@ -28,23 +14,22 @@
 
 ### Modified Capabilities
 
-- `effective-interact-generation`: 把报告生成合同从“可靠渲染 HTML”扩展为“意图驱动、证据绑定、可视化可访问、安全可审计、可自动验收的 HTML 工作汇报”。
-
+- `effective-interact-generation`: 鎶婃姤鍛婄敓鎴愬悎鍚屼粠鈥滃彲闈犳覆鏌?HTML鈥濇墿灞曚负鈥滄剰鍥鹃┍鍔ㄣ€佽瘉鎹粦瀹氥€佸彲瑙嗗寲鍙闂€佸畨鍏ㄥ彲瀹¤銆佸彲鑷姩楠屾敹鐨?HTML 宸ヤ綔姹囨姤鈥濄€?
 ## Impact
 
 - Affected skill assets:
-  - `.codex/skills/effective-interact/SKILL.md`
-  - `.codex/skills/effective-interact/references/interaction-patterns.md`
-  - `.codex/skills/effective-interact/references/interaction-input-schema.json`
-  - `.codex/skills/effective-interact/assets/fixtures/*.json`
-  - `.codex/skills/effective-interact/assets/components/*.css`
-  - `.codex/skills/effective-interact/assets/components/*.js`
-  - `.codex/skills/effective-interact/scripts/create-interaction.mjs`
-  - `.codex/skills/effective-interact/scripts/validate-interaction.mjs`
+  - `skills/effective-interact/SKILL.md`
+  - `skills/effective-interact/references/interaction-patterns.md`
+  - `skills/effective-interact/references/interaction-input-schema.json`
+  - `skills/effective-interact/assets/fixtures/*.json`
+  - `skills/effective-interact/assets/components/*.css`
+  - `skills/effective-interact/assets/components/*.js`
+  - `skills/effective-interact/scripts/create-interaction.mjs`
+  - `skills/effective-interact/scripts/validate-interaction.mjs`
 - Affected docs:
   - `docs/effective-interact-decision-quality.md`
   - `docs/skill-routing.md` only if routing wording changes.
-  - `docs/codex-skill-feature-inventory.md` only if the user-facing capability summary changes.
+  - `docs/skill-feature-inventory.md` only if the user-facing capability summary changes.
 - Affected tests:
   - `tests/effectiveInteractSkill.test.ts`
   - `tests/fixtures/skill-routing-cases.json` only if trigger wording changes.

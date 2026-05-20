@@ -1,7 +1,0 @@
-interface:
-  display_name: "Brand Guidelines"
-  short_description: "Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand co..."
-  default_prompt: "Use $brand-guidelines to help with this task."
-
-policy:
-  allow_implicit_invocation: true

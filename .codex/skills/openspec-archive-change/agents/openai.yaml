@@ -1,7 +1,0 @@
-interface:
-  display_name: "Openspec Archive Change"
-  short_description: "Archive a completed change in the experimental workflow. Use when the user wants to finalize and archive a change after implementation is complete."
-  default_prompt: "Use $openspec-archive-change to help with this task."
-
-policy:
-  allow_implicit_invocation: true

@@ -2,12 +2,12 @@ schema: spec-driven
 
 context: |
   Project: skill-hub
-  Purpose: Curate and adapt famous agent skills into Codex-friendly versions.
+  Purpose: Curate and adapt famous agent skills into platform-neutral standard skill folders.
   Primary language: Chinese documentation, with source URLs and technical names preserved in English.
-  Initial focus: Superpowers, Everything Claude Code, and adjacent high-signal coding skill packs.
+  Initial focus: high-signal platform-neutral coding skill packs.
   Constraints:
     - Prefer source attribution over unattributed prompt copying.
-    - Adapt Claude Code tool assumptions to Codex-native tools and workflows.
+    - Normalize host-specific tool assumptions into platform-neutral workflows.
     - Keep skills focused, composable, and testable.
     - Review licenses and security posture before importing third-party content.
 

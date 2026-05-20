@@ -27,36 +27,36 @@ const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const AGENT_READINESS_FIXTURES = path.join(TEST_DIR, 'fixtures', 'agent-readiness');
 const READINESS_CATEGORIES = [...AGENT_READINESS_CATEGORIES];
 
-test('plans default install into Codex skill directory', () => {
+test('plans default install into standard skill directory', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-plan-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
 
   expect(plan.profileName).toBe('minimal');
   expect(plan.items.some((item) => item.componentId === 'skill:effective-interact')).toBe(true);
   expect(plan.items.some((item) => item.componentId === 'skill:grill-me')).toBe(true);
   expect(plan.items.some((item) => item.componentId === 'skill:diagnose')).toBe(true);
   expect(plan.items.some((item) => item.componentId === 'skill:prototype')).toBe(true);
-  expect(plan.items.every((item) => item.dest.includes(`${path.sep}.codex${path.sep}skills${path.sep}`))).toBe(true);
+  expect(plan.items.every((item) => path.relative(targetDir, item.dest).startsWith(`skills${path.sep}`))).toBe(true);
 });
 
-test('plans skills into each selected agent skill directory', () => {
+test('plans skills into the selected standard skill directory', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-agent-dirs-'));
   const plan = planInstall({
     targetDir,
     profile: 'minimal',
-    agents: ['codex', 'opencode', 'claude-code'],
+    agents: ['standard'],
   });
   const dests = plan.items.map((item) => path.relative(targetDir, item.dest).replaceAll(path.sep, '/'));
 
-  expect(dests).toContain('.codex/skills/grill-me');
-  expect(dests).toContain('.opencode/skills/grill-me');
-  expect(dests).toContain('.claude/skills/grill-me');
+  expect(dests).toContain('skills/grill-me');
+  expect(dests).not.toContain('.opencode/skills/grill-me');
+  expect(dests).not.toContain('.claude/skills/grill-me');
   expect(dests.some((dest) => dest.startsWith('.agents/skills/'))).toBe(false);
 });
 
 test('plans harness environment files outside skill directories', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-plan-'));
-  const plan = planInstall({ targetDir, profile: 'harness', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'harness', agents: ['standard'] });
   const plannedDests = plan.items.map((item) => path.relative(targetDir, item.dest).replaceAll(path.sep, '/'));
 
   expect(plan.profileName).toBe('harness');
@@ -70,7 +70,7 @@ test('plans harness environment files outside skill directories', () => {
 
 test('installs harness environment files with lock-backed status', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-install-'));
-  const plan = planInstall({ targetDir, profile: 'harness', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'harness', agents: ['standard'] });
   const result = applyInstall(plan);
 
   expect(result.installed.length).toBe(plan.items.length);
@@ -99,7 +99,7 @@ test('harness planning skips existing target files instead of overwriting them',
   fs.mkdirSync(path.join(targetDir, 'harness'), { recursive: true });
   fs.writeFileSync(path.join(targetDir, 'harness', 'feature_list.json'), '{}\n');
 
-  const plan = planInstall({ targetDir, profile: 'harness', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'harness', agents: ['standard'] });
   const agentsItem = plan.items.find((item) => item.componentId === 'harness:agents-md');
   const featureListItem = plan.items.find((item) => item.componentId === 'harness:feature-list');
   const initItem = plan.items.find((item) => item.componentId === 'harness:init-script');
@@ -111,14 +111,14 @@ test('harness planning skips existing target files instead of overwriting them',
 
 test('installs skills, writes lock, and reports current status', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   const result = applyInstall(plan);
 
   expect(result.installed.length).toBeGreaterThan(0);
-  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'effective-interact', 'SKILL.md'))).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'grill-me', 'SKILL.md'))).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'diagnose', 'SKILL.md'))).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'prototype', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'effective-interact', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'grill-me', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'diagnose', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'prototype', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(true);
   expect(fs.existsSync(result.report)).toBe(true);
   expect(result.lock.data.schemaVersion).toBe(2);
@@ -136,10 +136,10 @@ test('installs skills, writes lock, and reports current status', () => {
 
 test('skips existing skills unless overwrite is requested', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-skip-'));
-  const firstPlan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const firstPlan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(firstPlan);
 
-  const secondPlan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const secondPlan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   const secondResult = applyInstall(secondPlan);
 
   expect(secondResult.installed.length).toBe(0);
@@ -148,11 +148,11 @@ test('skips existing skills unless overwrite is requested', () => {
 
 test('install planning skips capabilities already detected outside install destination', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-plan-detected-'));
-  const skillDir = path.join(targetDir, '.codex', 'skills', 'verification-loop');
+  const skillDir = path.join(targetDir, 'skills', 'verification-loop');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '---\nname: verification-loop\n---\n');
 
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   const item = plan.items.find((entry) => entry.componentId === 'skill:verification-loop');
 
   expect(item?.exists).toBe(true);
@@ -180,7 +180,7 @@ test('capability index validation rejects unsafe detect paths', () => {
           { path: '' },
           { path: '/absolute/path/SKILL.md' },
           { path: '../outside/SKILL.md' },
-          { path: '.codex/skills/*/SKILL.md' },
+          { path: 'skills/*/SKILL.md' },
         ],
       },
     },
@@ -196,11 +196,11 @@ test('capability index validation rejects unsafe detect paths', () => {
 
 test('analyzes empty target repo without writing Skill Hub state', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-empty-'));
-  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['standard'] });
 
   expect(result.schemaVersion).toBe(1);
   expect(result.profile).toBe('minimal');
-  expect(result.agents).toEqual(['codex']);
+  expect(result.agents).toEqual(['standard']);
   expect(result.signals.packageJson).toBe(false);
   expect(result.findings.length).toBeGreaterThan(0);
   expect(result.findings.every((finding) => finding.state === 'recommended')).toBe(true);
@@ -210,44 +210,44 @@ test('analyzes empty target repo without writing Skill Hub state', () => {
 
 test('analyzes existing detected capability path', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-detected-'));
-  const skillDir = path.join(targetDir, '.codex', 'skills', 'verification-loop');
+  const skillDir = path.join(targetDir, 'skills', 'verification-loop');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '---\nname: verification-loop\n---\n');
 
-  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['standard'] });
   const finding = result.findings.find((item) => item.componentId === 'skill:verification-loop');
 
   expect(finding?.state).toBe('detected');
   expect(finding?.defaultAction).toBe('none');
-  expect(finding?.evidence).toContain('.codex/skills/verification-loop/SKILL.md');
+  expect(finding?.evidence).toContain('skills/verification-loop/SKILL.md');
 });
 
 test('analyzes destination conflict separately from detected capability', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-conflict-'));
-  const skillDir = path.join(targetDir, '.codex', 'skills', 'grill-me');
+  const skillDir = path.join(targetDir, 'skills', 'grill-me');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'README.md'), 'local placeholder');
 
-  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['standard'] });
   const finding = result.findings.find((item) => item.componentId === 'skill:grill-me');
 
   expect(finding?.state).toBe('conflict');
   expect(finding?.defaultAction).toBe('skip');
-  expect(finding?.dest).toBe('.codex/skills/grill-me');
+  expect(finding?.dest).toBe('skills/grill-me');
 });
 
 test('analysis findings are deterministic after normalizing generated timestamp', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-stable-'));
 
-  const first = analyzeTarget({ targetDir, profile: 'minimal', agents: ['codex'] });
-  const second = analyzeTarget({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const first = analyzeTarget({ targetDir, profile: 'minimal', agents: ['standard'] });
+  const second = analyzeTarget({ targetDir, profile: 'minimal', agents: ['standard'] });
 
   expect({ ...first, generatedAt: '<timestamp>' }).toEqual({ ...second, generatedAt: '<timestamp>' });
 });
 
 test('default analysis omits agent readiness data unless requested', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-default-shape-'));
-  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['standard'] });
 
   expect('agentReadiness' in result).toBe(false);
 });
@@ -327,9 +327,8 @@ test('readiness analysis reports duplicated always-loaded context risk', async (
   expect(contextFinding.state).toBe('risk');
   expect(contextFinding.severity).toBe('warning');
   expect(contextFinding.evidence.map((item: { value: string }) => item.value)).toEqual([
-    '.agents/AGENTS.md',
-    '.codex/AGENTS.md',
     'AGENTS.md',
+    'skills',
   ]);
 });
 
@@ -359,7 +358,7 @@ test('readiness analysis has no target side effects', () => {
   fs.writeFileSync(path.join(targetDir, '.git', 'HEAD'), 'ref: refs/heads/main\n');
   const before = snapshotDirectory(targetDir);
 
-  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['codex'], agentReadiness: true });
+  const result = analyzeTarget({ targetDir, profile: 'minimal', agents: ['standard'], agentReadiness: true });
   const after = snapshotDirectory(targetDir);
 
   expect(result.agentReadiness?.categories).toEqual(READINESS_CATEGORIES);
@@ -402,7 +401,7 @@ test('readiness option is rejected outside analyze', async () => {
 
 test('install dry run does not copy files or write a lock', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-dry-run-'));
-  const exitCode = await captureCli(['install', targetDir, '--profile', 'minimal', '--agent', 'codex', '--dry-run']);
+  const exitCode = await captureCli(['install', targetDir, '--profile', 'minimal', '--target', 'standard', '--dry-run']);
 
   expect(exitCode.code).toBe(0);
   expect(fs.existsSync(path.join(targetDir, '.agents'))).toBe(false);
@@ -411,7 +410,7 @@ test('install dry run does not copy files or write a lock', async () => {
 
 test('install dry run supports json output without side effects', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-dry-run-json-'));
-  const result = await captureCli(['install', targetDir, '--profile', 'minimal', '--agent', 'codex', '--dry-run', '--json']);
+  const result = await captureCli(['install', targetDir, '--profile', 'minimal', '--target', 'standard', '--dry-run', '--json']);
 
   expect(result.code).toBe(0);
   const report = JSON.parse(result.stdout);
@@ -422,7 +421,7 @@ test('install dry run supports json output without side effects', async () => {
 
 test('install supports json output after mutation', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-json-'));
-  const result = await captureCli(['install', targetDir, '--profile', 'minimal', '--agent', 'codex', '--yes', '--json']);
+  const result = await captureCli(['install', targetDir, '--profile', 'minimal', '--target', 'standard', '--yes', '--json']);
 
   expect(result.code).toBe(0);
   const report = JSON.parse(result.stdout);
@@ -433,7 +432,7 @@ test('install supports json output after mutation', async () => {
 
 test('install html output includes component versions', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-html-'));
-  const result = await captureCli(['install', targetDir, '--profile', 'minimal', '--agent', 'codex', '--dry-run', '--html']);
+  const result = await captureCli(['install', targetDir, '--profile', 'minimal', '--target', 'standard', '--dry-run', '--html']);
 
   expect(result.code).toBe(0);
   expect(result.stdout).toContain('Skill Hub Install Plan');
@@ -444,8 +443,8 @@ test('install and init produce equivalent plans', async () => {
   const installTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-plan-'));
   const initTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-init-plan-'));
 
-  const install = await captureCli(['install', installTarget, '--profile', 'minimal', '--agent', 'codex', '--dry-run']);
-  const init = await captureCli(['init', initTarget, '--profile', 'minimal', '--agent', 'codex', '--dry-run']);
+  const install = await captureCli(['install', installTarget, '--profile', 'minimal', '--target', 'standard', '--dry-run']);
+  const init = await captureCli(['init', initTarget, '--profile', 'minimal', '--target', 'standard', '--dry-run']);
 
   expect(install.code).toBe(0);
   expect(init.code).toBe(0);
@@ -454,7 +453,7 @@ test('install and init produce equivalent plans', async () => {
 
 test('mutating install requires explicit yes', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-confirm-'));
-  const result = await captureCli(['install', targetDir, '--profile', 'minimal', '--agent', 'codex']);
+  const result = await captureCli(['install', targetDir, '--profile', 'minimal', '--target', 'standard']);
 
   expect(result.code).toBe(2);
   expect(result.stderr).toContain('--yes');
@@ -463,11 +462,11 @@ test('mutating install requires explicit yes', async () => {
 
 test('status reports modified, missing, and update available states', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-status-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(plan);
 
-  fs.appendFileSync(path.join(targetDir, '.codex', 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
-  fs.rmSync(path.join(targetDir, '.codex', 'skills', 'diagnose', 'SKILL.md'));
+  fs.appendFileSync(path.join(targetDir, 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
+  fs.rmSync(path.join(targetDir, 'skills', 'diagnose', 'SKILL.md'));
   const index = readCapabilityIndex();
   const changedIndex = {
     ...index,
@@ -489,7 +488,7 @@ test('status reports modified, missing, and update available states', () => {
 
 test('status reads schema version one locks without crashing', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-status-v1-'));
-  const skillDir = path.join(targetDir, '.codex', 'skills', 'grill-me');
+  const skillDir = path.join(targetDir, 'skills', 'grill-me');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), 'local');
   fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
@@ -498,13 +497,13 @@ test('status reads schema version one locks without crashing', () => {
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.0',
     profile: 'minimal',
-    agents: ['codex'],
+    agents: ['standard'],
     components: [
       {
         id: 'skill:grill-me',
         version: '0.1.0',
-        agent: 'codex',
-        dest: '.codex/skills/grill-me',
+        agent: 'standard',
+        dest: 'skills/grill-me',
         status: 'installed',
       },
     ],
@@ -518,36 +517,36 @@ test('status reads schema version one locks without crashing', () => {
 
 test('remove dry run uses lock records without deleting files', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-dry-run-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(plan);
 
   const result = removeManaged(targetDir, { dryRun: true });
 
   expect(result.exitCode).toBe(0);
   expect(result.removed.length).toBeGreaterThan(0);
-  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'grill-me', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'grill-me', 'SKILL.md'))).toBe(true);
 });
 
 test('remove deletes managed files and preserves unmanaged same-name files', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(plan);
-  const unmanagedFile = path.join(targetDir, '.codex', 'skills', 'grill-me', 'LOCAL.md');
+  const unmanagedFile = path.join(targetDir, 'skills', 'grill-me', 'LOCAL.md');
   fs.writeFileSync(unmanagedFile, 'keep me');
 
   const result = removeManaged(targetDir, { yes: true });
 
   expect(result.exitCode).toBe(0);
-  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'grill-me', 'SKILL.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'grill-me', 'SKILL.md'))).toBe(false);
   expect(fs.existsSync(unmanagedFile)).toBe(true);
   expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
 });
 
 test('remove blocks modified files unless force is used', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-modified-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(plan);
-  const file = path.join(targetDir, '.codex', 'skills', 'grill-me', 'SKILL.md');
+  const file = path.join(targetDir, 'skills', 'grill-me', 'SKILL.md');
   fs.appendFileSync(file, '\nmodified');
 
   const blocked = removeManaged(targetDir, { yes: true });
@@ -570,7 +569,7 @@ test('remove treats missing lock as idempotent no-op with confirmation', () => {
 
 test('remove blocks schema version one hashless locks even with force', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-v1-'));
-  const skillDir = path.join(targetDir, '.codex', 'skills', 'grill-me');
+  const skillDir = path.join(targetDir, 'skills', 'grill-me');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), 'local');
   fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
@@ -579,13 +578,13 @@ test('remove blocks schema version one hashless locks even with force', () => {
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.0',
     profile: 'minimal',
-    agents: ['codex'],
+    agents: ['standard'],
     components: [
       {
         id: 'skill:grill-me',
         version: '0.1.0',
-        agent: 'codex',
-        dest: '.codex/skills/grill-me',
+        agent: 'standard',
+        dest: 'skills/grill-me',
         status: 'installed',
       },
     ],
@@ -605,15 +604,15 @@ test('remove blocks unsafe schema version two lock paths', () => {
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.0',
     profile: 'minimal',
-    agents: ['codex'],
+    agents: ['standard'],
     components: [
       {
         id: 'skill:grill-me',
         version: '0.1.0',
-        agent: 'codex',
+        agent: 'standard',
         kind: 'skill',
-        source: '.codex/skills/grill-me',
-        dest: '.codex/skills/grill-me',
+        source: 'skills/grill-me',
+        dest: 'skills/grill-me',
         files: [
           {
             path: '../outside.txt',
@@ -638,9 +637,9 @@ test('remove blocks unsafe schema version two lock paths', () => {
 
 test('update dry run reports version differences and modified blockers', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(plan);
-  fs.appendFileSync(path.join(targetDir, '.codex', 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
+  fs.appendFileSync(path.join(targetDir, 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
   const index = readCapabilityIndex();
   const changedIndex = {
     ...index,
@@ -661,16 +660,16 @@ test('update dry run reports version differences and modified blockers', () => {
 
 test('update applies unmodified managed components and refreshes lock metadata', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-apply-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(plan);
-  const unmanagedFile = path.join(targetDir, '.codex', 'skills', 'grill-me', 'LOCAL.md');
+  const unmanagedFile = path.join(targetDir, 'skills', 'grill-me', 'LOCAL.md');
   fs.writeFileSync(unmanagedFile, 'keep local note\n');
-  const managedFile = path.join(targetDir, '.codex', 'skills', 'grill-me', 'SKILL.md');
+  const managedFile = path.join(targetDir, 'skills', 'grill-me', 'SKILL.md');
   const oldContent = 'old managed content\n';
   fs.writeFileSync(managedFile, oldContent);
   makeLockComponentStale(targetDir, 'skill:grill-me', {
     version: '0.0.0',
-    fileOverrides: [{ path: '.codex/skills/grill-me/SKILL.md', content: oldContent }],
+    fileOverrides: [{ path: 'skills/grill-me/SKILL.md', content: oldContent }],
   });
   const before = readLock(targetDir);
   if (!before || before.data.schemaVersion !== 2) {
@@ -683,7 +682,7 @@ test('update applies unmodified managed components and refreshes lock metadata',
   expect(result.exitCode).toBe(0);
   expect(result.updated.some((component) => component.id === 'skill:grill-me')).toBe(true);
   expect(result.forced).toEqual([]);
-  expect(fs.readFileSync(managedFile, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), '.codex', 'skills', 'grill-me', 'SKILL.md'), 'utf8'));
+  expect(fs.readFileSync(managedFile, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'skills', 'grill-me', 'SKILL.md'), 'utf8'));
   expect(fs.existsSync(unmanagedFile)).toBe(true);
   const after = readLock(targetDir);
   if (!after || after.data.schemaVersion !== 2) {
@@ -693,7 +692,7 @@ test('update applies unmodified managed components and refreshes lock metadata',
   expect(afterRecord?.version).toBe(readCapabilityIndex().components['skill:grill-me'].version);
   expect(afterRecord?.installedAt).toBe(beforeRecord?.installedAt);
   expect(afterRecord?.updatedAt).toBeTruthy();
-  expect(afterRecord?.files.find((file) => file.path === '.codex/skills/grill-me/SKILL.md')?.sha256)
+  expect(afterRecord?.files.find((file) => file.path === 'skills/grill-me/SKILL.md')?.sha256)
     .not.toBe(hashContent(oldContent));
 });
 
@@ -709,22 +708,22 @@ test('update migrates legacy html-work-reports locks to effective-interact', () 
   expect(preview.blockers).toEqual([]);
   expect(result.exitCode).toBe(0);
   expect(result.updated.map((row) => row.id)).toEqual(['skill:effective-interact']);
-  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'html-work-reports', 'SKILL.md'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'effective-interact', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'html-work-reports', 'SKILL.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'effective-interact', 'SKILL.md'))).toBe(true);
 
   const lock = readLock(targetDir);
   if (!lock || lock.data.schemaVersion !== 2) {
     throw new Error('expected schema version 2 lock');
   }
   const migrated = lock.data.components.find((component) => component.id === 'skill:effective-interact');
-  expect(migrated?.dest).toBe('.codex/skills/effective-interact');
-  expect(migrated?.source).toBe('.codex/skills/effective-interact');
+  expect(migrated?.dest).toBe('skills/effective-interact');
+  expect(migrated?.source).toBe('skills/effective-interact');
   expect(getStatus({ targetDir }).current.some((row) => row.id === 'skill:effective-interact')).toBe(true);
 });
 
 test('legacy html-work-reports migration overwrites same-name replacement destinations', () => {
   const targetDir = createLegacyHtmlWorkReportsTarget('skill-hub-update-legacy-html-overwrite-');
-  const replacementDir = path.join(targetDir, '.codex', 'skills', 'effective-interact');
+  const replacementDir = path.join(targetDir, 'skills', 'effective-interact');
   fs.mkdirSync(replacementDir, { recursive: true });
   fs.writeFileSync(path.join(replacementDir, 'LOCAL.md'), 'local effective-interact copy\n');
 
@@ -734,14 +733,14 @@ test('legacy html-work-reports migration overwrites same-name replacement destin
   expect(preview.blockers).toEqual([]);
   expect(result.exitCode).toBe(0);
   expect(result.updated.map((row) => row.id)).toEqual(['skill:effective-interact']);
-  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'html-work-reports', 'SKILL.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'html-work-reports', 'SKILL.md'))).toBe(false);
   expect(fs.existsSync(path.join(replacementDir, 'LOCAL.md'))).toBe(false);
   expect(fs.existsSync(path.join(replacementDir, 'SKILL.md'))).toBe(true);
 });
 
 test('update can be scoped to selected components', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-selected-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(plan);
   makeLockComponentStale(targetDir, 'skill:grill-me');
   makeLockComponentStale(targetDir, 'skill:diagnose');
@@ -764,17 +763,17 @@ test('update can be scoped to selected components', () => {
 
 test('normal update blocks modified, missing, unsafe, schema v1, skipped, and unknown records', () => {
   const modifiedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-modified-'));
-  applyInstall(planInstall({ targetDir: modifiedTarget, profile: 'minimal', agents: ['codex'] }));
+  applyInstall(planInstall({ targetDir: modifiedTarget, profile: 'minimal', agents: ['standard'] }));
   makeLockComponentStale(modifiedTarget, 'skill:grill-me');
-  fs.appendFileSync(path.join(modifiedTarget, '.codex', 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
+  fs.appendFileSync(path.join(modifiedTarget, 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
 
   const missingTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-missing-'));
-  applyInstall(planInstall({ targetDir: missingTarget, profile: 'minimal', agents: ['codex'] }));
+  applyInstall(planInstall({ targetDir: missingTarget, profile: 'minimal', agents: ['standard'] }));
   makeLockComponentStale(missingTarget, 'skill:grill-me');
-  fs.rmSync(path.join(missingTarget, '.codex', 'skills', 'grill-me', 'SKILL.md'));
+  fs.rmSync(path.join(missingTarget, 'skills', 'grill-me', 'SKILL.md'));
 
   const unsafeTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-unsafe-'));
-  applyInstall(planInstall({ targetDir: unsafeTarget, profile: 'minimal', agents: ['codex'] }));
+  applyInstall(planInstall({ targetDir: unsafeTarget, profile: 'minimal', agents: ['standard'] }));
   mutateLock(unsafeTarget, (lock) => {
     if (lock.schemaVersion !== 2) throw new Error('expected v2');
     const component = lock.components.find((entry) => entry.id === 'skill:grill-me');
@@ -789,7 +788,7 @@ test('normal update blocks modified, missing, unsafe, schema v1, skipped, and un
   });
 
   const skippedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-skipped-'));
-  applyInstall(planInstall({ targetDir: skippedTarget, profile: 'minimal', agents: ['codex'] }));
+  applyInstall(planInstall({ targetDir: skippedTarget, profile: 'minimal', agents: ['standard'] }));
   mutateLock(skippedTarget, (lock) => {
     if (lock.schemaVersion !== 2) throw new Error('expected v2');
     const component = lock.components.find((entry) => entry.id === 'skill:grill-me');
@@ -800,7 +799,7 @@ test('normal update blocks modified, missing, unsafe, schema v1, skipped, and un
   });
 
   const unknownTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-unknown-'));
-  applyInstall(planInstall({ targetDir: unknownTarget, profile: 'minimal', agents: ['codex'] }));
+  applyInstall(planInstall({ targetDir: unknownTarget, profile: 'minimal', agents: ['standard'] }));
   mutateLock(unknownTarget, (lock) => {
     if (lock.schemaVersion !== 2) throw new Error('expected v2');
     const component = lock.components.find((entry) => entry.id === 'skill:grill-me');
@@ -819,14 +818,14 @@ test('normal update blocks modified, missing, unsafe, schema v1, skipped, and un
 
 test('force update overwrites modified and missing schema version two managed files only', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-force-'));
-  applyInstall(planInstall({ targetDir, profile: 'minimal', agents: ['codex'] }));
+  applyInstall(planInstall({ targetDir, profile: 'minimal', agents: ['standard'] }));
   makeLockComponentStale(targetDir, 'skill:grill-me');
   makeLockComponentStale(targetDir, 'skill:diagnose');
-  const localFile = path.join(targetDir, '.codex', 'skills', 'grill-me', 'LOCAL.md');
+  const localFile = path.join(targetDir, 'skills', 'grill-me', 'LOCAL.md');
   fs.writeFileSync(localFile, 'keep me\n');
-  const grillSkill = path.join(targetDir, '.codex', 'skills', 'grill-me', 'SKILL.md');
+  const grillSkill = path.join(targetDir, 'skills', 'grill-me', 'SKILL.md');
   fs.writeFileSync(grillSkill, 'local edits\n');
-  const diagnoseSkill = path.join(targetDir, '.codex', 'skills', 'diagnose', 'SKILL.md');
+  const diagnoseSkill = path.join(targetDir, 'skills', 'diagnose', 'SKILL.md');
   fs.rmSync(diagnoseSkill);
 
   const blocked = updateManaged(targetDir, { yes: true });
@@ -835,7 +834,7 @@ test('force update overwrites modified and missing schema version two managed fi
   expect(blocked.exitCode).toBe(3);
   expect(forced.exitCode).toBe(0);
   expect(forced.forced.map((component) => component.id).sort()).toEqual(['skill:diagnose', 'skill:grill-me']);
-  expect(fs.readFileSync(grillSkill, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), '.codex', 'skills', 'grill-me', 'SKILL.md'), 'utf8'));
+  expect(fs.readFileSync(grillSkill, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'skills', 'grill-me', 'SKILL.md'), 'utf8'));
   expect(fs.existsSync(diagnoseSkill)).toBe(true);
   expect(fs.existsSync(localFile)).toBe(true);
 });
@@ -873,7 +872,7 @@ test('update and migrate-lock CLI paths support confirmation, selection, force, 
   expect(missingConfirmation.stdout).toContain('--yes');
 
   const selectedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-cli-selected-'));
-  applyInstall(planInstall({ targetDir: selectedTarget, profile: 'minimal', agents: ['codex'] }));
+  applyInstall(planInstall({ targetDir: selectedTarget, profile: 'minimal', agents: ['standard'] }));
   makeLockComponentStale(selectedTarget, 'skill:grill-me');
   makeLockComponentStale(selectedTarget, 'skill:diagnose');
   const dryRun = await captureCli(['update', selectedTarget, '--dry-run', '--component', 'skill:grill-me', '--json']);
@@ -885,9 +884,9 @@ test('update and migrate-lock CLI paths support confirmation, selection, force, 
   expect(JSON.parse(selected.stdout).updated.map((row: { id: string }) => row.id)).toEqual(['skill:grill-me']);
 
   const forceTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-cli-force-'));
-  applyInstall(planInstall({ targetDir: forceTarget, profile: 'minimal', agents: ['codex'] }));
+  applyInstall(planInstall({ targetDir: forceTarget, profile: 'minimal', agents: ['standard'] }));
   makeLockComponentStale(forceTarget, 'skill:grill-me');
-  fs.appendFileSync(path.join(forceTarget, '.codex', 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
+  fs.appendFileSync(path.join(forceTarget, 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
   const force = await captureCli(['update', forceTarget, '--force', '--yes', '--json']);
   expect(force.code).toBe(0);
   expect(JSON.parse(force.stdout).forced.some((row: { id: string }) => row.id === 'skill:grill-me')).toBe(true);
@@ -934,7 +933,7 @@ test('analyze reports invalid option and unknown profile as usage errors', async
 
 test('status supports json, html stdout, and explicit output', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-status-cli-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(plan);
   const output = path.join(os.tmpdir(), `skill-hub-status-${Date.now()}.html`);
 
@@ -960,7 +959,7 @@ test('remove command requires confirmation for mutation', async () => {
 
 test('update command supports dry-run json output', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-cli-'));
-  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['codex'] });
+  const plan = planInstall({ targetDir, profile: 'minimal', agents: ['standard'] });
   applyInstall(plan);
 
   const result = await captureCli(['update', targetDir, '--dry-run', '--json']);
@@ -1069,7 +1068,7 @@ function createLegacyHtmlWorkReportsTarget(prefix: string): string {
     '',
   ].join('\n');
   const legacyAsset = 'legacy managed asset\n';
-  const skillDir = path.join(targetDir, '.codex', 'skills', 'html-work-reports');
+  const skillDir = path.join(targetDir, 'skills', 'html-work-reports');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), legacyContent);
   fs.writeFileSync(path.join(skillDir, 'asset.txt'), legacyAsset);
@@ -1079,23 +1078,23 @@ function createLegacyHtmlWorkReportsTarget(prefix: string): string {
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.4',
     profile: 'minimal',
-    agents: ['codex'],
+    agents: ['standard'],
     components: [
       {
         id: 'skill:html-work-reports',
         version: '0.1.0',
-        agent: 'codex',
+        agent: 'standard',
         kind: 'skill',
-        source: '.codex/skills/html-work-reports',
-        dest: '.codex/skills/html-work-reports',
+        source: 'skills/html-work-reports',
+        dest: 'skills/html-work-reports',
         files: [
           {
-            path: '.codex/skills/html-work-reports/SKILL.md',
+            path: 'skills/html-work-reports/SKILL.md',
             sha256: hashContent(legacyContent),
             size: Buffer.byteLength(legacyContent),
           },
           {
-            path: '.codex/skills/html-work-reports/asset.txt',
+            path: 'skills/html-work-reports/asset.txt',
             sha256: hashContent(legacyAsset),
             size: Buffer.byteLength(legacyAsset),
           },
@@ -1110,8 +1109,8 @@ function createLegacyHtmlWorkReportsTarget(prefix: string): string {
 
 function createV1Target(prefix: string, options: { exact: boolean }): string {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-  const source = path.join(process.cwd(), '.codex', 'skills', 'grill-me');
-  const dest = path.join(targetDir, '.codex', 'skills', 'grill-me');
+  const source = path.join(process.cwd(), 'skills', 'grill-me');
+  const dest = path.join(targetDir, 'skills', 'grill-me');
   fs.cpSync(source, dest, { recursive: true });
   if (!options.exact) {
     fs.appendFileSync(path.join(dest, 'SKILL.md'), '\ndivergent');
@@ -1122,13 +1121,13 @@ function createV1Target(prefix: string, options: { exact: boolean }): string {
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.0',
     profile: 'minimal',
-    agents: ['codex'],
+    agents: ['standard'],
     components: [
       {
         id: 'skill:grill-me',
         version: readCapabilityIndex().components['skill:grill-me'].version,
-        agent: 'codex',
-        dest: '.codex/skills/grill-me',
+        agent: 'standard',
+        dest: 'skills/grill-me',
         status: 'installed',
       },
     ],

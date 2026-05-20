@@ -1,7 +1,0 @@
-interface:
-  display_name: "Brainstorming"
-  short_description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requi..."
-  default_prompt: "Use $brainstorming to help with this task."
-
-policy:
-  allow_implicit_invocation: true

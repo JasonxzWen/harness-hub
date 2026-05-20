@@ -1,8 +1,0 @@
-interface:
-  display_name: "Web Artifacts Builder"
-  short_description: "Suite of tools for creating elaborate, multi-component Codex/local browser HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use..."
-  default_prompt: "Use $web-artifacts-builder to help with this task."
-
-policy:
-  allow_implicit_invocation: true
-

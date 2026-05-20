@@ -22,7 +22,7 @@ The workflow uses npm trusted publishing, so it should not need an `NPM_TOKEN` s
 
 Git tracking, Git ignore rules, and npm package contents are coordinated through `config/artifact-policy.json`.
 
-- `publishAndGit`: source assets that must be committed and shipped, such as `.codex/skills/effective-interact/`, capability profiles, docs, harness templates, stable OpenSpec specs, and archived OpenSpec changes.
+- `publishAndGit`: source assets that must be committed and shipped, such as `skills/effective-interact/`, capability profiles, docs, harness templates, and stable OpenSpec specs.
 - `publishOnlyGenerated`: generated files that ship to npm but stay ignored in Git. Today this is `dist/`, rebuilt by `prepack`.
 - `gitOnly`: maintainer work files that are committed to GitHub but not shipped to npm, such as `.github/`, `src/`, `tests/`, `reports/`, and active `openspec/changes/<name>/` directories.
 - `ignoredLocal`: local runtime or vendor state that should be neither committed nor published.

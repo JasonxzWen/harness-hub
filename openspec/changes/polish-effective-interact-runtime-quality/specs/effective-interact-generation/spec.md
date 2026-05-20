@@ -36,7 +36,7 @@ The system SHALL apply consistent visual quality rules for typography, spacing, 
 #### Scenario: Color contrast is intentional
 - **WHEN** a generated artifact uses status colors, muted text, code tokens, highlighted lines, or diagram labels
 - **THEN** foreground and background token pairs meet the project's report contrast threshold
-- **AND** muted text, code comments, line numbers, and status labels remain legible in Codex and local browser rendering
+- **AND** muted text, code comments, line numbers, and status labels remain legible in local browser rendering
 
 #### Scenario: Code panels preserve layout
 - **WHEN** a code or diff section contains long lines, highlighted lines, file paths, copy buttons, or line numbers
@@ -76,7 +76,7 @@ The system SHALL include stress fixtures that exercise report content likely to 
 ## MODIFIED Requirements
 
 ### Requirement: Interaction generator produces reliable HTML by default
-The system SHALL provide a reusable generation path that converts structured JSON interaction input into a single `.html` artifact whose conclusions, evidence, source fallbacks, and runtime-rendered rich content are reliable in Codex and local browser environments.
+The system SHALL provide a reusable generation path that converts structured JSON interaction input into a single `.html` artifact whose conclusions, evidence, source fallbacks, and runtime-rendered rich content are reliable in local browser environments.
 
 #### Scenario: Generate implementation handoff report
 - **WHEN** the agent provides structured artifact input with title, summary, sections, evidence, and verification state
@@ -86,7 +86,7 @@ The system SHALL provide a reusable generation path that converts structured JSO
 
 #### Scenario: Default output uses runtime-cdn rendering
 - **WHEN** the report is generated without an explicit render mode
-- **THEN** the system generates a `runtime-cdn` report optimized for viewing inside Codex and local browsers with network access
+- **THEN** the system generates a `runtime-cdn` report optimized for viewing inside local browsers with network access
 - **AND** the report includes pinned runtime dependencies for Markdown rendering, Markdown sanitization, Mermaid rendering, and code highlighting
 - **AND** the report does not claim full offline rendering support unless an explicit offline-capable mode is selected
 

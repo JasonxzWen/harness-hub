@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { expect, test } from 'bun:test';
 
 function readSkill(name: string): string {
-  return fs.readFileSync(`.codex/skills/${name}/SKILL.md`, 'utf8');
+  return fs.readFileSync(`skills/${name}/SKILL.md`, 'utf8');
 }
 
 function frontmatterValue(skill: string, name: string): string {
@@ -33,7 +33,7 @@ test('prototype is routed to throwaway design learning', () => {
 });
 
 test('prototype keeps detailed branch guidance in references', () => {
-  expect(fs.existsSync('.codex/skills/prototype/references/logic-prototype.md')).toBe(true);
-  expect(fs.existsSync('.codex/skills/prototype/references/ui-prototype.md')).toBe(true);
+  expect(fs.existsSync('skills/prototype/references/logic-prototype.md')).toBe(true);
+  expect(fs.existsSync('skills/prototype/references/ui-prototype.md')).toBe(true);
   expect(readSkill('prototype').length).toBeLessThan(6000);
 });

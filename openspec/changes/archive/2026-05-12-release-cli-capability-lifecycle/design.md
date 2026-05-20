@@ -19,7 +19,7 @@ The target users are maintainers of Codex, Claude Code, OpenCode, and compatible
 
 - Publishing to npm or GitHub in this change.
 - Automatically enabling hooks, MCP servers, credentials, or third-party integrations.
-- Solving every agent host at once. Codex and `.codex/skills` remain the first-class path; Claude Code and OpenCode support is metadata-driven and tested where practical.
+- Solving every agent host at once. Codex and `skills` remain the first-class path; Claude Code and OpenCode support is metadata-driven and tested where practical.
 - Installing optional upstream packs wholesale.
 
 ## Decisions

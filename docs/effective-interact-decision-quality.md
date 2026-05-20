@@ -31,7 +31,7 @@ The implemented contract keeps existing minimal artifact inputs compatible while
 - case-derived HTML effectiveness patterns for option galleries, module maps, flow drilldowns, PR writeups, explorable explainers, status timelines, and disposable export editors while keeping decks routed to `frontend-slides`.
 - browser interaction validation now treats target-section focus/highlight as valid navigation evidence for dense long-table artifacts and falls back to a DOM click when coordinate or keyboard copy probes miss a visible copy button.
 
-New fixture inputs live under `.codex/skills/effective-interact/assets/fixtures/`:
+New fixture inputs live under `skills/effective-interact/assets/fixtures/`:
 
 - `concise-handoff-report.json`
 - `decision-quality-report.json`
@@ -41,7 +41,7 @@ New fixture inputs live under `.codex/skills/effective-interact/assets/fixtures/
 - `trigger-scope-retro-report.json`
 - `decision-brief-self-check-report.json`
 
-Intermediate generated artifacts default to ignored `.codex/skills/effective-interact/artifacts/`. Durable fixture artifacts that maintainers intentionally review can still live under `reports/`:
+Intermediate generated artifacts default to ignored `skills/effective-interact/artifacts/`. Durable fixture artifacts that maintainers intentionally review can still live under `reports/`:
 
 - `effective-interact-concise-handoff.html`
 - `effective-interact-decision-quality.html`
@@ -125,7 +125,7 @@ Validation should cover:
 
 ### Runtime and trust boundaries
 
-Runtime CDN remains allowed for Codex-visible artifacts, but dependencies should be pinned and auditable. Where practical, generated tags should include SRI metadata.
+Runtime CDN remains allowed for browser-visible artifacts, but dependencies should be pinned and auditable. Where practical, generated tags should include SRI metadata.
 
 Report content should distinguish:
 
@@ -171,25 +171,25 @@ This implementation should be accepted only when:
 Focused fixture generation:
 
 ```powershell
-bun .codex/skills/effective-interact/scripts/create-interaction.mjs --input .codex/skills/effective-interact/assets/fixtures/concise-handoff-report.json --out-dir reports --slug effective-interact-concise-handoff --json
-bun .codex/skills/effective-interact/scripts/create-interaction.mjs --input .codex/skills/effective-interact/assets/fixtures/decision-quality-report.json --out-dir reports --slug effective-interact-decision-quality --json
-bun .codex/skills/effective-interact/scripts/create-interaction.mjs --input .codex/skills/effective-interact/assets/fixtures/option-gallery-report.json --out-dir reports --slug effective-interact-option-gallery --json
-bun .codex/skills/effective-interact/scripts/create-interaction.mjs --input .codex/skills/effective-interact/assets/fixtures/disposable-export-editor-report.json --out-dir reports --slug effective-interact-disposable-export-editor --json
-bun .codex/skills/effective-interact/scripts/create-interaction.mjs --input .codex/skills/effective-interact/assets/fixtures/chart-accessibility-stress-report.json --out-dir reports --slug effective-interact-chart-accessibility-stress --json
-bun .codex/skills/effective-interact/scripts/create-interaction.mjs --input .codex/skills/effective-interact/assets/fixtures/trigger-scope-retro-report.json --out-dir reports --slug effective-interact-trigger-scope-retro --json
-bun .codex/skills/effective-interact/scripts/create-interaction.mjs --input .codex/skills/effective-interact/assets/fixtures/decision-brief-self-check-report.json --out-dir reports --slug effective-interact-decision-brief-self-check --json
+bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/concise-handoff-report.json --out-dir reports --slug effective-interact-concise-handoff --json
+bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/decision-quality-report.json --out-dir reports --slug effective-interact-decision-quality --json
+bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/option-gallery-report.json --out-dir reports --slug effective-interact-option-gallery --json
+bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/disposable-export-editor-report.json --out-dir reports --slug effective-interact-disposable-export-editor --json
+bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/chart-accessibility-stress-report.json --out-dir reports --slug effective-interact-chart-accessibility-stress --json
+bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/trigger-scope-retro-report.json --out-dir reports --slug effective-interact-trigger-scope-retro --json
+bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/decision-brief-self-check-report.json --out-dir reports --slug effective-interact-decision-brief-self-check --json
 ```
 
 Focused fixture validation:
 
 ```powershell
-bun .codex/skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-concise-handoff.html --json --skip-browser
-bun .codex/skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-decision-quality.html --json --skip-browser
-bun .codex/skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-option-gallery.html --json --skip-browser
-bun .codex/skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-disposable-export-editor.html --json --require-browser
-bun .codex/skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-chart-accessibility-stress.html --json --require-browser
-bun .codex/skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-trigger-scope-retro.html --json --require-browser
-bun .codex/skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-decision-brief-self-check.html --json --require-browser
+bun skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-concise-handoff.html --json --skip-browser
+bun skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-decision-quality.html --json --skip-browser
+bun skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-option-gallery.html --json --skip-browser
+bun skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-disposable-export-editor.html --json --require-browser
+bun skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-chart-accessibility-stress.html --json --require-browser
+bun skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-trigger-scope-retro.html --json --require-browser
+bun skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-decision-brief-self-check.html --json --require-browser
 ```
 
 Final gates:

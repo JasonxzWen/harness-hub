@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { expect, test } from 'bun:test';
 
-const skillPath = '.codex/skills/grill-me/SKILL.md';
+const skillPath = 'skills/grill-me/SKILL.md';
 const skill = fs.readFileSync(skillPath, 'utf8');
 
 function frontmatterValue(name: string): string {

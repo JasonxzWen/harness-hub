@@ -1,7 +1,0 @@
-interface:
-  display_name: "Algorithmic Art"
-  short_description: "Creating algorithmic art using p5.js with seeded randomness and interactive parameter exploration. Use this when users request creating art using code, gener..."
-  default_prompt: "Use $algorithmic-art to help with this task."
-
-policy:
-  allow_implicit_invocation: true

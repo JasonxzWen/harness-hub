@@ -1,7 +1,0 @@
-interface:
-  display_name: "Mcp Builder"
-  short_description: "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use whe..."
-  default_prompt: "Use $mcp-builder to help with this task."
-
-policy:
-  allow_implicit_invocation: true

@@ -1,7 +1,0 @@
-interface:
-  display_name: "Openspec Explore"
-  short_description: "Enter explore mode - a thinking partner for exploring ideas, investigating problems, and clarifying requirements. Use when the user wants to think through so..."
-  default_prompt: "Use $openspec-explore to help with this task."
-
-policy:
-  allow_implicit_invocation: true

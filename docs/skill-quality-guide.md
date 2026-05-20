@@ -27,8 +27,8 @@ Create or install a skill when at least one condition is true:
 Do not create or install a skill when:
 
 - The content is only a list of ordinary commands the model already knows.
-- The content duplicates root `AGENTS.md`, Codex system instructions, or common project conventions.
-- The content only reimplements host-native UI, orchestration, automation, review, browser, or multi-agent behavior already supplied by Codex.
+- The content duplicates root `AGENTS.md`, host system instructions, or common project conventions.
+- The content only reimplements host-native UI, orchestration, automation, review, browser, or multi-agent behavior already supplied by the active agent host.
 - The source changes faster than Skill Hub can maintain it.
 - The capability belongs in a named CLI/profile decision rather than automatic routing.
 - The main value is broad advice, not a bounded workflow or durable special case.
@@ -137,7 +137,7 @@ For third-party evaluations, capture the eval rationale in docs even if the skil
 - Prefer selective adaptation over wholesale imports.
 - Keep broad workflow principles in `AGENTS.md`; keep conditional workflow context in skills.
 - Keep volatile API/tool behavior in live documentation lookup, not static skills.
-- Re-check current Codex host capabilities before adding host-specific skills, wrappers, or workflow docs; prefer portable assets, lifecycle governance, deterministic checks, and cross-host mapping over duplicating native Codex surfaces.
+- Re-check current host capabilities before adding host-specific skills, wrappers, or workflow docs; prefer portable assets, lifecycle governance, deterministic checks, and standard skill content over duplicating native host surfaces.
 - Keep side-effect-heavy workflows explicit-only until the repo has confirmed safety boundaries.
 - Run `scripts/validate-skills.ps1 -SkipExternal` after skill file changes.
 - Run `bun run validate` before claiming repo-level changes are complete.

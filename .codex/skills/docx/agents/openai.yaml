@@ -1,7 +1,0 @@
-interface:
-  display_name: "Docx"
-  short_description: "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word..."
-  default_prompt: "Use $docx to help with this task."
-
-policy:
-  allow_implicit_invocation: true

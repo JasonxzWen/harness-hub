@@ -2,19 +2,19 @@
 
 - [x] 1.1 Re-check branch state, active OpenSpec changes, and current `effective-interact` files before editing.
 - [x] 1.2 Run baseline focused checks for the current skill: `bun test ./tests/effectiveInteractSkill.test.ts` and `openspec validate advance-effective-interact-decision-quality`.
-- [x] 1.3 Confirm implementation scope is limited to `.codex/skills/effective-interact/`, `tests/effectiveInteractSkill.test.ts`, docs, reports/fixtures, and this OpenSpec change unless a task explicitly expands scope.
+- [x] 1.3 Confirm implementation scope is limited to `skills/effective-interact/`, `tests/effectiveInteractSkill.test.ts`, docs, reports/fixtures, and this OpenSpec change unless a task explicitly expands scope.
 
 ## 2. Schema and Fixtures
 
-- [x] 2.1 Extend `.codex/skills/effective-interact/references/interaction-input-schema.json` with optional artifact intent fields: audience, primary question, decision, time budget, artifact kind, and success criteria.
+- [x] 2.1 Extend `skills/effective-interact/references/interaction-input-schema.json` with optional artifact intent fields: audience, primary question, decision, time budget, artifact kind, and success criteria.
 - [x] 2.2 Extend the schema with `claims[]` and richer `evidence[]` fields for evidence ids, confidence, date range, known limits, source metadata, command/file anchors, and trust level.
 - [x] 2.3 Add a constrained `chart` section schema supporting bar, line, sparkline, bullet, slope, and matrix charts with title, takeaway, data, encoding, source, alt text, and table fallback.
-- [x] 2.4 Add or update fixtures for concise handoff, decision report with claims/evidence, and chart/accessibility stress coverage under `.codex/skills/effective-interact/assets/fixtures/`.
+- [x] 2.4 Add or update fixtures for concise handoff, decision report with claims/evidence, and chart/accessibility stress coverage under `skills/effective-interact/assets/fixtures/`.
 - [x] 2.5 Add schema/fixture tests that prove old minimal inputs still generate without requiring the new optional fields.
 
 ## 3. Generator Behavior
 
-- [x] 3.1 Update `.codex/skills/effective-interact/scripts/create-interaction.mjs` to infer conservative artifact intent when explicit intent is missing.
+- [x] 3.1 Update `skills/effective-interact/scripts/create-interaction.mjs` to infer conservative artifact intent when explicit intent is missing.
 - [x] 3.2 Render artifact intent in the conclusion-first area without pushing evidence, runtime dependencies, or component plumbing ahead of the answer.
 - [x] 3.3 Render claims with traceable evidence links and clear confidence/assumption/known-limit states.
 - [x] 3.4 Implement constrained static chart rendering with table fallback and source metadata; reject or degrade unsupported chart specs.
@@ -38,10 +38,10 @@
 
 ## 6. Skill and Project Documentation
 
-- [x] 6.1 Update `.codex/skills/effective-interact/SKILL.md` with the shortened intent-first workflow and keep heavy rules out of the root skill body.
-- [x] 6.2 Update `.codex/skills/effective-interact/references/interaction-patterns.md` with intent, claims, charts, accessibility, trust model, runtime SRI, and AI acceptance guidance.
+- [x] 6.1 Update `skills/effective-interact/SKILL.md` with the shortened intent-first workflow and keep heavy rules out of the root skill body.
+- [x] 6.2 Update `skills/effective-interact/references/interaction-patterns.md` with intent, claims, charts, accessibility, trust model, runtime SRI, and AI acceptance guidance.
 - [x] 6.3 Update `docs/effective-interact-decision-quality.md` after implementation with the final contract, examples, and validation commands.
-- [x] 6.4 Update `docs/skill-routing.md`, `docs/codex-skill-feature-inventory.md`, or README only if implementation changes user-facing routing or capability summary.
+- [x] 6.4 Update `docs/skill-routing.md`, `docs/skill-feature-inventory.md`, or README only if implementation changes user-facing routing or capability summary.
 
 ## 7. Final Validation and Review
 

@@ -1,117 +1,73 @@
-1. Think Before Coding
-Don't assume. Don't hide confusion. Surface tradeoffs.
+﻿always respond in 中文
 
-LLMs often pick an interpretation silently and run with it. This principle forces explicit reasoning:
+# Skill Hub Instructions
 
-State assumptions explicitly — If uncertain, ask rather than guess
-Present multiple interpretations — Don't pick silently when ambiguity exists
-Push back when warranted — If a simpler approach exists, say so
-Stop when confused — Name what's unclear and ask for clarification
-2. Simplicity First
-Minimum code that solves the problem. Nothing speculative.
+Skill Hub maintains platform-neutral agent skills. Keep every skill in the standard layout under `skills/<skill-name>/SKILL.md` with optional `references/`, `scripts/`, and `assets/` spokes.
 
-Combat the tendency toward overengineering:
+## Core Rules
 
-No features beyond what was asked
-No abstractions for single-use code
-No "flexibility" or "configurability" that wasn't requested
-No error handling for impossible scenarios
-If 200 lines could be 50, rewrite it
-The test: Would a senior engineer say this is overcomplicated? If yes, simplify.
+1. Think before coding.
+   - State assumptions when the request is ambiguous.
+   - Surface tradeoffs instead of silently choosing a risky interpretation.
+   - Ask only when a reasonable implementation assumption would be unsafe.
 
-3. Surgical Changes
-Touch only what you must. Clean up only your own mess.
+2. Simplicity first.
+   - Add the minimum code or documentation needed for the requested behavior.
+   - Avoid speculative abstractions, options, and host-specific branches.
 
-When editing existing code:
+3. Surgical changes.
+   - Touch only files tied to the request.
+   - Preserve unrelated worktree changes.
+   - Match the existing style of the file you edit.
 
-Don't "improve" adjacent code, comments, or formatting
-Don't refactor things that aren't broken
-Match existing style, even if you'd do it differently
-If you notice unrelated dead code, mention it — don't delete it
-When your changes create orphans:
+4. Goal-driven execution.
+   - Define success criteria before broad changes.
+   - Verify with the nearest tests and validation gates before handoff.
 
-Remove imports/variables/functions that YOUR changes made unused
-Don't remove pre-existing dead code unless asked
-The test: Every changed line should trace directly to the user's request.
+## Platform-Neutral Skill Policy
 
-4. Goal-Driven Execution
-Define success criteria. Loop until verified.
-
-Transform imperative tasks into verifiable goals:
-
-Instead of...	Transform to...
-"Add validation"	"Write tests for invalid inputs, then make them pass"
-"Fix the bug"	"Write a test that reproduces it, then make it pass"
-"Refactor X"	"Ensure tests pass before and after"
-For multi-step tasks, state a brief plan:
-
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-Strong success criteria let the LLM loop independently. Weak criteria ("make it work") require constant clarification.
-
-## Everything Claude Code (ECC) Integration
-
-This project has a local ECC checkout at `vendor/everything-claude-code` and a Codex-ready skill surface at `.codex/skills`.
-
-Use ECC skills when they match the task, especially:
-
-- `everything-claude-code` for repository-wide ECC conventions.
-- `coding-standards` for general implementation standards.
-- `tdd-workflow` for feature work and bug fixes.
-- `security-review` for secrets, auth, injection, and unsafe IO.
-- `verification-loop` before declaring work complete.
-- `e2e-testing` for browser or user-flow validation.
-- `documentation-lookup` and `deep-research` when current upstream behavior matters.
-
-Codex-specific configuration lives in `.codex/config.toml` and `.codex/AGENTS.md`.
-Codex agent roles live in `.codex/agents`.
-
-External action boundary: networked tools are read-only by default. Ask before publishing, pushing, merging, posting, spending money, modifying credentials, or changing third-party resources.
+- Do not add host-specific tool names, config paths, UI metadata, or runner assumptions to skill bodies.
+- Do not add `agents/openai.yaml`, `.codex/`, `.claude/skills/`, `.opencode/skills/`, or similar host-local metadata to the source skill tree.
+- Put host packaging outside skills. Claude plugin support belongs in `.claude-plugin/`; the skill content remains standard.
+- If an upstream skill assumes a specific harness, normalize it into host-neutral language before installing.
+- If a capability cannot be normalized without losing its value, keep it as an evaluated source or explicit-only reference.
 
 ## Skill Routing
 
 Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest matching skill:
 
-- React/Next performance: `vercel-react-best-practices`.
-- Component API design: `vercel-composition-patterns`.
-- Visual frontend creation: `frontend-design`.
-- UI/accessibility audits: `web-design-guidelines`.
-- One-off browser debugging: `webapp-testing`.
-- Durable Playwright suites: `e2e-testing`.
-- Deep pre-PR code review: `compound-code-review`; use `security-review` only for focused security checks and `verification-loop` for command gates.
-- Skill creation/update: use Codex's system `skill-creator`, not a project-local copy.
-- Ralph autonomous story loops: use `ralph-prd` to prepare PRDs and `ralph-loop` only when the user explicitly wants Ralph-style repeated execution.
-- Plan/design pressure testing: use `grill-me`; use `brainstorming` for open-ended ideation and `product-capability` for implementation-ready contracts.
-- Runtime bugs/performance regressions: use `diagnose`; use `agent-introspection-debugging` only when the agent/tool harness is failing, and `verification-loop` after the fix.
-- Throwaway design exploration: use `prototype`; use `frontend-design` for production UI, `web-artifacts-builder` for standalone artifacts, and `tdd-workflow` for production implementation.
-- Learning/tutoring sessions: use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
+- Plan/design pressure testing: use `grill-me`.
+- Runtime bugs/performance regressions: use `diagnose`.
+- Agent/tool harness failures: use `agent-introspection-debugging`.
+- Production feature work or confirmed bug fixes with tests: use `tdd-workflow`.
+- Throwaway design exploration: use `prototype`; use `frontend-design` for production UI.
+- Deep pre-PR review: use `compound-code-review`; use `security-review` only for focused security checks.
+- Final command gates and build/test validation: use `verification-loop`.
+- Third-party skill evaluation: use `skill-evaluator`.
+- Skill Hub maintenance: use `update-skill-hub`.
 
 ## Skill Quality Governance
 
-Use `docs/skill-quality-guide.md` as the local quality bar for authoring, importing, reviewing, and maintaining skills.
+Use `docs/skill-quality-guide.md` as the quality bar for authoring, importing, reviewing, and maintaining skills.
 
-- Treat `SKILL.md` `description` as routing logic. Prefer "Load when..." phrasing, target 50 words or fewer, and describe user intent rather than workflow internals.
-- Do not change a skill description without adding or updating positive, negative, and forbidden-load eval coverage, unless the edit is purely mechanical and leaves trigger meaning unchanged.
-- Keep heavy or conditional content out of `SKILL.md`; use `scripts/`, `references/`, and `assets/` for progressive loading.
-- Add gotchas as concrete failure-derived notes. Avoid expanding broad workflow prose when a specific gotcha is enough.
-- Before installing a new default-profile skill, verify that it adds a bounded behavior gap and does not duplicate global `AGENTS.md` instructions.
-- Follow `docs/skill-quality-rollout-plan.md` for staged quality-gate work; inventory and warn before making broad imported-skill checks fail.
+- Treat `SKILL.md` `description` as routing logic.
+- Prefer "Load when..." phrasing, target 50 words or fewer, and describe user intent rather than workflow internals.
+- Keep heavy or conditional content out of `SKILL.md`; use `scripts/`, `references/`, and `assets/`.
+- Do not change a skill description without updating routing/eval coverage unless the edit is purely mechanical.
+- Before adding a default-profile skill, verify it fills a bounded gap and does not duplicate global instructions.
 
 ## CLI Lifecycle
 
-The release-oriented Skill Hub CLI contract is documented in `README.md`, `docs/cli-lifecycle-design.md`, and `docs/capability-map.md`.
-
 Use these verbs for target-repo lifecycle work:
 
-- `skill-hub analyze <target> --json` for read-only capability detection and recommendations.
-- `skill-hub install <target> --profile minimal --agent codex --dry-run` to preview installs.
-- `skill-hub install <target> --profile minimal --agent codex --yes` to copy managed assets and write `.skill-hub/lock.json`.
-- `skill-hub status <target> --json` to report current, missing, modified, update-available, skipped, and unknown components.
-- `skill-hub update <target> --dry-run --json` for first-release update planning only.
-- `skill-hub remove <target> --dry-run --json` to preview deletion and `skill-hub remove <target> --yes` to remove only lock-recorded Skill Hub files.
+- `skill-hub analyze <target> --json`
+- `skill-hub install <target> --profile minimal --target standard --dry-run`
+- `skill-hub install <target> --profile minimal --target standard --yes`
+- `skill-hub status <target> --json`
+- `skill-hub update <target> --dry-run --json`
+- `skill-hub remove <target> --dry-run --json`
 
-Before opening a lifecycle CLI PR, run `bun run validate`, `openspec validate release-cli-capability-lifecycle`, `git diff --check`, `npm pack`, and a disposable target smoke flow for analyze/install/status/remove.
+Before release-oriented CLI changes, run `bun run validate`, `git diff --check`, and the relevant smoke flow.
 
 ## Third-Party Skill Evaluation
 
@@ -120,9 +76,8 @@ Use `skill-evaluator` whenever the user asks to evaluate, install, compare, or i
 For every third-party skill evaluation:
 
 - Read upstream README, skill bodies, plugin metadata, and license before deciding.
-- Compare against `.codex/skills`, root `AGENTS.md`, and `docs/skill-routing.md`.
+- Compare against `skills/`, root `AGENTS.md`, and `docs/skill-routing.md`.
 - Install only when the candidate fills a real gap or provides a materially better bounded workflow.
 - Prefer reject or explicit-only status when the candidate repeats existing behavior or would create trigger noise.
-- Update `docs/source-projects.md` and `docs/skill-routing.md` immediately with the decision, including rejected candidates.
-- Update `README.md`, `docs/codex-skill-feature-inventory.md`, and `.gitignore` when installation, counts, sources, vendor paths, or runtime state change.
-- Run `scripts/validate-skills.ps1 -SkipExternal` before finishing.
+- Update `docs/source-projects.md`, `docs/skill-routing.md`, `README.md`, and inventory docs when installation, counts, sources, vendor paths, or runtime state change.
+- Run `powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExternal` before finishing skill maintenance.

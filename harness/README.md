@@ -7,8 +7,8 @@ instructions, state, verification, scope, and lifecycle.
 Install them into a target repository with:
 
 ```powershell
-npx skill-hub install D:\path\to\target --profile harness --agent codex --dry-run
-npx skill-hub install D:\path\to\target --profile harness --agent codex --yes
+npx skill-hub install D:\path\to\target --profile harness --target standard --dry-run
+npx skill-hub install D:\path\to\target --profile harness --target standard --yes
 ```
 
 The installed target layout is intentionally small:

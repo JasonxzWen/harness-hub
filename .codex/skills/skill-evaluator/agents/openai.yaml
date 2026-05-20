@@ -1,3 +1,0 @@
-display_name: Skill Evaluator
-short_description: Evaluate third-party skills before installing them.
-default_prompt: Evaluate this third-party skill repository against the current Skill Hub. Install only if it fills a real gap; otherwise record the rejection and update docs.

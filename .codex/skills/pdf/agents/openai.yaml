@@ -1,7 +1,0 @@
-interface:
-  display_name: "Pdf"
-  short_description: "Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multipl..."
-  default_prompt: "Use $pdf to help with this task."
-
-policy:
-  allow_implicit_invocation: true

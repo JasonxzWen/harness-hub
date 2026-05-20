@@ -1,7 +1,0 @@
-interface:
-  display_name: "Doc Coauthoring"
-  short_description: "Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision do..."
-  default_prompt: "Use $doc-coauthoring to help with this task."
-
-policy:
-  allow_implicit_invocation: true
