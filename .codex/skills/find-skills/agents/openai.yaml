@@ -1,7 +1,0 @@
-interface:
-  display_name: "Find Skills"
-  short_description: "Discover and install agent skills from the open skills ecosystem."
-  default_prompt: "Use $find-skills to discover installable skills for this task."
-
-policy:
-  allow_implicit_invocation: true

@@ -5,7 +5,7 @@ test('skill quality inventory reports routing metadata without enforcing it', ()
   const inventory = buildSkillQualityInventory(process.cwd());
 
   expect(inventory.summary.qualityGate).toBe('report-only');
-  expect(inventory.roots).toEqual(['.codex/skills']);
+  expect(inventory.roots).toEqual(['skills']);
   expect(inventory.skills.length).toBeGreaterThan(0);
 
   const htmlReport = inventory.skills.find((skill) => skill.name === 'effective-interact');

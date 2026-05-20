@@ -11,7 +11,7 @@ Use [Skill quality guide](skill-quality-guide.md) as the quality bar for decidin
 | Decision | Meaning |
 |---|---|
 | Install | Add the skill because it fills a real capability gap and has clean trigger boundaries. |
-| Adapt | Add a Codex-specific version because upstream assumes another harness. |
+| Adapt | Add a platform-neutral version because upstream assumes a specific harness. |
 | Reject | Do not install because it duplicates existing guidance, lacks license clarity, or adds trigger noise. |
 | Explicit-only | Keep as a documented candidate, but require a direct user request before installing or running it. |
 
@@ -21,7 +21,7 @@ For every candidate:
 
 1. Read upstream README, skill bodies, plugin metadata, and license.
 2. Record source URL, local vendor path, upstream commit or version, and license/status.
-3. Compare against `.codex/skills/`, `.codex/skills/`, `AGENTS.md`, and `docs/skill-routing.md`.
+3. Compare against `skills/`, `skills/`, `AGENTS.md`, and `docs/skill-routing.md`.
 4. Decide whether it adds a distinct capability or only repeats existing behavior.
 5. Check the candidate against the skill quality guide:
    - Does the `description` behave like a routing trigger?
@@ -37,7 +37,7 @@ For every candidate:
 - `docs/source-projects.md`
 - `docs/skill-routing.md`
 - `README.md`
-- `docs/codex-skill-feature-inventory.md`, when counts or capability surface change
+- `docs/skill-feature-inventory.md`, when counts or capability surface change
 - `.gitignore`, when vendor or runtime files are added
 
 ## Default Bias

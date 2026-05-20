@@ -1,3 +1,0 @@
-display_name: Ralph Loop
-short_description: Convert PRDs and run Ralph-style Codex iterations.
-default_prompt: Prepare this PRD for the Ralph loop or run the next Ralph iteration using scripts/ralph/ralph.ps1.

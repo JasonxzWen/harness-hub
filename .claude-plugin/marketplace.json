@@ -1,0 +1,22 @@
+{
+  "name": "skill-hub",
+  "description": "A marketplace for the Skill Hub platform-neutral engineering skill plugin.",
+  "owner": {
+    "name": "JasonxzWen"
+  },
+  "plugins": [
+    {
+      "name": "skill-hub",
+      "displayName": "Skill Hub",
+      "source": "./",
+      "description": "Platform-neutral engineering skills for planning, debugging, testing, review, documentation, and workflow handoff.",
+      "repository": "https://github.com/JasonxzWen/skill-hub",
+      "license": "MIT",
+      "keywords": [
+        "agent-skills",
+        "engineering-workflows",
+        "skills"
+      ]
+    }
+  ]
+}

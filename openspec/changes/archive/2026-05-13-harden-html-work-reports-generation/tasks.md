@@ -7,7 +7,7 @@
 ## 2. Report Input Contract And Generator
 
 - [x] 2.1 Define a small JSON report input schema for title, summary, status, sections, evidence, verification, template, and render mode.
-- [x] 2.2 Add a generator script under `.codex/skills/html-work-reports/scripts/` that accepts structured JSON input and writes `reports/<slug>.html`.
+- [x] 2.2 Add a generator script under `skills/html-work-reports/scripts/` that accepts structured JSON input and writes `reports/<slug>.html`.
 - [x] 2.3 Implement template selection for implementation handoff, review findings, research explainer, and decision matrix scenarios.
 - [x] 2.4 Ensure generated output in default mode inlines critical CSS/JS and keeps primary conclusions/evidence readable without network runtime dependencies.
 

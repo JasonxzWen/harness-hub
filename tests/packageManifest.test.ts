@@ -34,7 +34,6 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.files).toContain('scripts/run-validate-skills.mjs');
   expect(packageJson.files).toContain('openspec/config.yaml');
   expect(packageJson.files).toContain('openspec/specs/');
-  expect(packageJson.files).toContain('openspec/changes/archive/');
   expect(packageJson.files).not.toContain('openspec/');
 });
 

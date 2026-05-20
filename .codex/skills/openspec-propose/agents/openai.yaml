@@ -1,7 +1,0 @@
-interface:
-  display_name: "Openspec Propose"
-  short_description: "Propose a new change with all artifacts generated in one step. Use when the user wants to quickly describe what they want to build and get a complete proposa..."
-  default_prompt: "Use $openspec-propose to help with this task."
-
-policy:
-  allow_implicit_invocation: true

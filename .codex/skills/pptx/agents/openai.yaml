@@ -1,7 +1,0 @@
-interface:
-  display_name: "Pptx"
-  short_description: "Use this skill any time a .pptx file is involved in any way -as input, output, or both. This includes: creating slide decks, pitch decks, or presentations;..."
-  default_prompt: "Use $pptx to help with this task."
-
-policy:
-  allow_implicit_invocation: true

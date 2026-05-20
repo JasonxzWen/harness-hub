@@ -2,6 +2,7 @@
 
 ## 0.1.6 - 2026-05-20
 
+- Move the source skill tree to standard `skills/`, remove host-specific skill metadata, and add Claude plugin manifests.
 - Migrate schema version 2 managed `skill:html-work-reports` lock records to `skill:effective-interact` during `skill-hub update`, after hash checks and while replacing an existing same-name `effective-interact` skill destination.
 
 ## 0.1.5 - 2026-05-18
@@ -11,8 +12,8 @@
 
 ## 0.1.4 - 2026-05-15
 
-- Move project-local skills from `.agents/skills` to Codex-native `.codex/skills`.
-- Route managed skill installs to each selected agent host directory: `.codex/skills`, `.opencode/skills`, or `.claude/skills`.
+- Move project-local skills from `.agents/skills` to `skills`.
+- Route managed skill installs to selected agent host directories.
 
 ## 0.1.3 - 2026-05-15
 
@@ -26,4 +27,4 @@
 
 - Package `skill-hub` as a Node-compatible CLI.
 - Support target-repo `analyze`, `install`, `status`, `update`, `migrate-lock`, and `remove` lifecycle commands.
-- Include curated Codex/OpenCode/Claude Code skill profiles, harness templates, and release validation.
+- Include curated skill profiles, harness templates, and release validation.

@@ -4,17 +4,18 @@
   "defaults": {
     "profile": "minimal",
     "agents": [
-      "codex"
+      "standard"
     ]
   },
   "profiles": {
     "minimal": {
-      "description": "Low-noise daily engineering profile with plan pressure testing, runtime diagnosis, throwaway prototyping, structured code review, HTML interaction artifacts, quality, TDD, verification, security, docs lookup, and self-debugging.",
+      "description": "Low-noise daily engineering profile with plan pressure testing, runtime diagnosis, throwaway prototyping, structured code review, HTML interaction artifacts, session handoff, quality, TDD, verification, security, docs lookup, and self-debugging.",
       "components": [
         "skill:grill-me",
         "skill:diagnose",
         "skill:prototype",
         "skill:effective-interact",
+        "skill:handoff",
         "skill:compound-code-review",
         "skill:coding-standards",
         "skill:tdd-workflow",
@@ -94,9 +95,7 @@
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "medium",
       "recommendation": "Add root AGENTS.md instructions that route agents through the harness startup, scope, verification, and wrap-up workflow."
@@ -118,9 +117,7 @@
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Add a concise guide explaining the installed harness files and status rules."
@@ -142,9 +139,7 @@
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Add a single initialization script that agents can run before feature work."
@@ -167,9 +162,7 @@
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Add a feature list that keeps scope, status, verification steps, and evidence in one machine-readable file."
@@ -191,9 +184,7 @@
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Add a progress log for current verified state, blockers, evidence, and next actions."
@@ -215,9 +206,7 @@
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Add a handoff template so the next session can continue from verified facts instead of chat memory."
@@ -239,9 +228,7 @@
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Add a clean-state checklist that blocks premature completion and unsafe handoff."
@@ -263,9 +250,7 @@
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Add a review rubric for correctness, verification, scope discipline, reliability, maintainability, and handoff readiness."
@@ -287,16 +272,14 @@
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Add a quality snapshot that tracks whether the codebase and harness are getting stronger over time."
     },
     "skill:grill-me": {
       "kind": "skill",
-      "path": ".codex/skills/grill-me",
+      "path": "skills/grill-me",
       "version": "0.1.0",
       "source": "mattpocock-skills-adapted",
       "provides": [
@@ -311,29 +294,19 @@
       "routing": "Use when the user asks to be grilled, challenged, pressure-tested, or wants assumptions surfaced before implementation.",
       "detects": [
         {
-          "path": ".codex/skills/grill-me/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/grill-me/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/grill-me/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/grill-me/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use when the user asks to be grilled, challenged, pressure-tested, or wants assumptions surfaced before implementation."
     },
     "skill:diagnose": {
       "kind": "skill",
-      "path": ".codex/skills/diagnose",
+      "path": "skills/diagnose",
       "version": "0.1.0",
       "source": "mattpocock-skills-adapted",
       "provides": [
@@ -351,29 +324,19 @@
       "routing": "Use for product, code, test, and performance failures; use agent-introspection-debugging for agent/tool failures, webapp-testing for one-off browser inspection, and verification-loop after the fix.",
       "detects": [
         {
-          "path": ".codex/skills/diagnose/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/diagnose/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/diagnose/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/diagnose/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use for product, code, test, and performance failures; use agent-introspection-debugging for agent/tool failures, webapp-testing for one-off browser inspection, and verification-loop after the fix."
     },
     "skill:prototype": {
       "kind": "skill",
-      "path": ".codex/skills/prototype",
+      "path": "skills/prototype",
       "version": "0.1.0",
       "source": "mattpocock-skills-adapted",
       "provides": [
@@ -391,29 +354,19 @@
       "routing": "Use only for clearly marked throwaway prototypes that answer one design question; use frontend-design for production UI, web-artifacts-builder for standalone artifacts, and tdd-workflow for production implementation.",
       "detects": [
         {
-          "path": ".codex/skills/prototype/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/prototype/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/prototype/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/prototype/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use only for clearly marked throwaway prototypes that answer one design question; use frontend-design for production UI, web-artifacts-builder for standalone artifacts, and tdd-workflow for production implementation."
     },
     "skill:effective-interact": {
       "kind": "skill",
-      "path": ".codex/skills/effective-interact",
+      "path": "skills/effective-interact",
       "version": "0.1.0",
       "source": "local",
       "provides": [
@@ -437,29 +390,46 @@
       "routing": "Load broadly for non-trivial sessions when a generated, validated self-contained HTML surface can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider every session and require an HTML report after material repo or skill changes; skip permission pauses, trivial chat, UI apps, decks, and bundled artifacts.",
       "detects": [
         {
-          "path": ".codex/skills/effective-interact/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/effective-interact/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/effective-interact/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/effective-interact/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Create visual self-contained HTML interaction artifacts for non-trivial alignment points, handoffs, option comparisons, reviews, plans, status dashboards, research explainers, architecture walkthroughs, or lightweight export editors."
     },
+    "skill:handoff": {
+      "kind": "skill",
+      "path": "skills/handoff",
+      "version": "0.1.0",
+      "source": "mattpocock-skills-adapted",
+      "provides": [
+        "session-handoff",
+        "restart-notes",
+        "conversation-compaction",
+        "suggested-skills"
+      ],
+      "overlapsWith": [
+        "skill:effective-interact"
+      ],
+      "routing": "Use when the user asks to hand off current work, compact this conversation for another agent/session, or create restart notes; use effective-interact for visual HTML repo reports.",
+      "detects": [
+        {
+          "path": "skills/handoff/SKILL.md",
+          "agent": "standard"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Create concise restart notes in the OS temp directory so another agent or later session can continue from verified facts."
+    },
     "skill:compound-code-review": {
       "kind": "skill",
-      "path": ".codex/skills/compound-code-review",
+      "path": "skills/compound-code-review",
       "version": "0.1.0",
       "source": "compound-engineering-plugin-adapted",
       "provides": [
@@ -477,29 +447,19 @@
       "routing": "Use for deep pre-PR or CE-style code review. Use security-review for focused security checklists, web-design-guidelines for UI/UX audits, and verification-loop for final command gates.",
       "detects": [
         {
-          "path": ".codex/skills/compound-code-review/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/compound-code-review/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/compound-code-review/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/compound-code-review/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use for deep pre-PR or CE-style code review. Use security-review for focused security checklists, web-design-guidelines for UI/UX audits, and verification-loop for final command gates."
     },
     "skill:feynman-learning-coach": {
       "kind": "skill",
-      "path": ".codex/skills/feynman-learning-coach",
+      "path": "skills/feynman-learning-coach",
       "version": "0.1.0",
       "source": "learn-faster-kit-inspired-local",
       "provides": [
@@ -516,29 +476,19 @@
       "routing": "Load when the user explicitly wants to learn, study, master, review, prepare for an exam/interview, build a syllabus, or be coached through a topic; do not route ordinary implementation or factual lookup.",
       "detects": [
         {
-          "path": ".codex/skills/feynman-learning-coach/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/feynman-learning-coach/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/feynman-learning-coach/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/feynman-learning-coach/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use for explicit learning sessions with scoped teaching, Feynman teach-back checks, and durable logs."
     },
     "skill:coding-standards": {
       "kind": "skill",
-      "path": ".codex/skills/coding-standards",
+      "path": "skills/coding-standards",
       "version": "0.1.0",
       "source": "everything-claude-code",
       "provides": [
@@ -548,63 +498,49 @@
       "routing": "General implementation quality.",
       "detects": [
         {
-          "path": ".codex/skills/coding-standards/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/coding-standards/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/coding-standards/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/coding-standards/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "General implementation quality."
     },
     "skill:tdd-workflow": {
       "kind": "skill",
-      "path": ".codex/skills/tdd-workflow",
-      "version": "0.1.0",
-      "source": "everything-claude-code",
+      "path": "skills/tdd-workflow",
+      "version": "0.2.0",
+      "source": "mattpocock-skills-adapted",
       "provides": [
-        "test-driven-development"
+        "test-driven-development",
+        "red-green-refactor",
+        "behavior-tests",
+        "tracer-bullet-slices"
       ],
       "overlapsWith": [
+        "skill:diagnose",
+        "skill:prototype",
+        "skill:verification-loop",
         "skill:openspec-apply-change"
       ],
-      "routing": "Default for feature work and bug fixes.",
+      "routing": "Use for production features, confirmed bug fixes, and refactors that should proceed one behavior at a time through red-green-refactor; use diagnose for unknown root causes and prototype for throwaway exploration.",
       "detects": [
         {
-          "path": ".codex/skills/tdd-workflow/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/tdd-workflow/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/tdd-workflow/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/tdd-workflow/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
-      "recommendation": "Default for feature work and bug fixes."
+      "recommendation": "Drive production changes one behavior at a time through public behavior tests, minimal implementation, and refactor-after-green."
     },
     "skill:verification-loop": {
       "kind": "skill",
-      "path": ".codex/skills/verification-loop",
+      "path": "skills/verification-loop",
       "version": "0.1.0",
       "source": "everything-claude-code",
       "provides": [
@@ -616,29 +552,19 @@
       "routing": "Default before declaring work complete.",
       "detects": [
         {
-          "path": ".codex/skills/verification-loop/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/verification-loop/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/verification-loop/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/verification-loop/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Default before declaring work complete."
     },
     "skill:security-review": {
       "kind": "skill",
-      "path": ".codex/skills/security-review",
+      "path": "skills/security-review",
       "version": "0.1.0",
       "source": "everything-claude-code",
       "provides": [
@@ -648,29 +574,19 @@
       "routing": "Security-sensitive code, auth, secrets, injection, unsafe IO, or payments.",
       "detects": [
         {
-          "path": ".codex/skills/security-review/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/security-review/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/security-review/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/security-review/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Security-sensitive code, auth, secrets, injection, unsafe IO, or payments."
     },
     "skill:documentation-lookup": {
       "kind": "skill",
-      "path": ".codex/skills/documentation-lookup",
+      "path": "skills/documentation-lookup",
       "version": "0.1.0",
       "source": "everything-claude-code",
       "provides": [
@@ -683,29 +599,19 @@
       "routing": "Library, framework, SDK, API, CLI, or cloud-service docs.",
       "detects": [
         {
-          "path": ".codex/skills/documentation-lookup/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/documentation-lookup/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/documentation-lookup/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/documentation-lookup/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Library, framework, SDK, API, CLI, or cloud-service docs."
     },
     "skill:agent-introspection-debugging": {
       "kind": "skill",
-      "path": ".codex/skills/agent-introspection-debugging",
+      "path": "skills/agent-introspection-debugging",
       "version": "0.1.0",
       "source": "everything-claude-code",
       "provides": [
@@ -717,29 +623,19 @@
       "routing": "Repeated agent failures, loops, drift, or recoverable tool failures.",
       "detects": [
         {
-          "path": ".codex/skills/agent-introspection-debugging/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/agent-introspection-debugging/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/agent-introspection-debugging/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/agent-introspection-debugging/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Repeated agent failures, loops, drift, or recoverable tool failures."
     },
     "skill:frontend-design": {
       "kind": "skill",
-      "path": ".codex/skills/frontend-design",
+      "path": "skills/frontend-design",
       "version": "0.1.0",
       "source": "anthropic-builtins-adapted",
       "provides": [
@@ -752,29 +648,19 @@
       "routing": "Use for polished product UI or web pages, not routine interaction artifacts.",
       "detects": [
         {
-          "path": ".codex/skills/frontend-design/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/frontend-design/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/frontend-design/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/frontend-design/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use for polished product UI or web pages, not routine interaction artifacts."
     },
     "skill:web-artifacts-builder": {
       "kind": "skill",
-      "path": ".codex/skills/web-artifacts-builder",
+      "path": "skills/web-artifacts-builder",
       "version": "0.1.0",
       "source": "anthropic-builtins-adapted",
       "provides": [
@@ -788,29 +674,19 @@
       "routing": "Use for complex React/Tailwind/shadcn artifacts.",
       "detects": [
         {
-          "path": ".codex/skills/web-artifacts-builder/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/web-artifacts-builder/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/web-artifacts-builder/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/web-artifacts-builder/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use for complex React/Tailwind/shadcn artifacts."
     },
     "skill:frontend-slides": {
       "kind": "skill",
-      "path": ".codex/skills/frontend-slides",
+      "path": "skills/frontend-slides",
       "version": "0.1.0",
       "source": "everything-claude-code",
       "provides": [
@@ -822,29 +698,19 @@
       "routing": "Use for slide decks and PPT/PPTX-to-web work.",
       "detects": [
         {
-          "path": ".codex/skills/frontend-slides/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/frontend-slides/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/frontend-slides/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/frontend-slides/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use for slide decks and PPT/PPTX-to-web work."
     },
     "skill:frontend-patterns": {
       "kind": "skill",
-      "path": ".codex/skills/frontend-patterns",
+      "path": "skills/frontend-patterns",
       "version": "0.1.0",
       "source": "everything-claude-code",
       "provides": [
@@ -856,29 +722,19 @@
       "routing": "Use for React, state, forms, routing, and accessibility patterns.",
       "detects": [
         {
-          "path": ".codex/skills/frontend-patterns/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/frontend-patterns/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/frontend-patterns/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/frontend-patterns/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use for React, state, forms, routing, and accessibility patterns."
     },
     "skill:webapp-testing": {
       "kind": "skill",
-      "path": ".codex/skills/webapp-testing",
+      "path": "skills/webapp-testing",
       "version": "0.1.0",
       "source": "anthropic-builtins-adapted",
       "provides": [
@@ -890,29 +746,19 @@
       "routing": "One-off local browser inspection.",
       "detects": [
         {
-          "path": ".codex/skills/webapp-testing/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/webapp-testing/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/webapp-testing/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/webapp-testing/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "One-off local browser inspection."
     },
     "skill:web-design-guidelines": {
       "kind": "skill",
-      "path": ".codex/skills/web-design-guidelines",
+      "path": "skills/web-design-guidelines",
       "version": "0.1.0",
       "source": "vercel-agent-skills",
       "provides": [
@@ -924,29 +770,19 @@
       "routing": "UI, UX, and accessibility audits.",
       "detects": [
         {
-          "path": ".codex/skills/web-design-guidelines/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/web-design-guidelines/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/web-design-guidelines/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/web-design-guidelines/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "UI, UX, and accessibility audits."
     },
     "skill:e2e-testing": {
       "kind": "skill",
-      "path": ".codex/skills/e2e-testing",
+      "path": "skills/e2e-testing",
       "version": "0.1.0",
       "source": "everything-claude-code",
       "provides": [
@@ -958,29 +794,19 @@
       "routing": "Durable E2E suites and CI browser tests.",
       "detects": [
         {
-          "path": ".codex/skills/e2e-testing/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/e2e-testing/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/e2e-testing/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/e2e-testing/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Durable E2E suites and CI browser tests."
     },
     "skill:openspec-explore": {
       "kind": "skill",
-      "path": ".codex/skills/openspec-explore",
+      "path": "skills/openspec-explore",
       "version": "1.0.0",
       "source": "openspec",
       "provides": [
@@ -993,29 +819,19 @@
       "routing": "Explicit OpenSpec exploration or formal change lifecycle only.",
       "detects": [
         {
-          "path": ".codex/skills/openspec-explore/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/openspec-explore/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/openspec-explore/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/openspec-explore/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Explicit OpenSpec exploration or formal change lifecycle only."
     },
     "skill:openspec-propose": {
       "kind": "skill",
-      "path": ".codex/skills/openspec-propose",
+      "path": "skills/openspec-propose",
       "version": "1.0.0",
       "source": "openspec",
       "provides": [
@@ -1028,29 +844,19 @@
       "routing": "Explicit OpenSpec proposal generation.",
       "detects": [
         {
-          "path": ".codex/skills/openspec-propose/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/openspec-propose/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/openspec-propose/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/openspec-propose/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Explicit OpenSpec proposal generation."
     },
     "skill:openspec-apply-change": {
       "kind": "skill",
-      "path": ".codex/skills/openspec-apply-change",
+      "path": "skills/openspec-apply-change",
       "version": "1.0.0",
       "source": "openspec",
       "provides": [
@@ -1063,29 +869,19 @@
       "routing": "Implementing an already-created OpenSpec change.",
       "detects": [
         {
-          "path": ".codex/skills/openspec-apply-change/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/openspec-apply-change/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/openspec-apply-change/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/openspec-apply-change/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Implementing an already-created OpenSpec change."
     },
     "skill:openspec-archive-change": {
       "kind": "skill",
-      "path": ".codex/skills/openspec-archive-change",
+      "path": "skills/openspec-archive-change",
       "version": "1.0.0",
       "source": "openspec",
       "provides": [
@@ -1095,29 +891,19 @@
       "routing": "Archiving completed OpenSpec changes.",
       "detects": [
         {
-          "path": ".codex/skills/openspec-archive-change/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/openspec-archive-change/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/openspec-archive-change/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/openspec-archive-change/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Archiving completed OpenSpec changes."
     },
     "skill:ralph-prd": {
       "kind": "skill",
-      "path": ".codex/skills/ralph-prd",
+      "path": "skills/ralph-prd",
       "version": "0.1.0",
       "source": "ralph-adapted",
       "provides": [
@@ -1130,29 +916,19 @@
       "routing": "Use when the user explicitly wants Ralph-ready PRDs.",
       "detects": [
         {
-          "path": ".codex/skills/ralph-prd/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/ralph-prd/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/ralph-prd/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/ralph-prd/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use when the user explicitly wants Ralph-ready PRDs."
     },
     "skill:ralph-loop": {
       "kind": "skill",
-      "path": ".codex/skills/ralph-loop",
+      "path": "skills/ralph-loop",
       "version": "0.1.0",
       "source": "ralph-adapted",
       "provides": [
@@ -1164,22 +940,12 @@
       "routing": "Use only for explicit Ralph-style repeated execution.",
       "detects": [
         {
-          "path": ".codex/skills/ralph-loop/SKILL.md",
-          "agent": "codex"
-        },
-        {
-          "path": ".opencode/skills/ralph-loop/SKILL.md",
-          "agent": "opencode"
-        },
-        {
-          "path": ".claude/skills/ralph-loop/SKILL.md",
-          "agent": "claude-code"
+          "path": "skills/ralph-loop/SKILL.md",
+          "agent": "standard"
         }
       ],
       "agents": [
-        "codex",
-        "opencode",
-        "claude-code"
+        "standard"
       ],
       "risk": "low",
       "recommendation": "Use only for explicit Ralph-style repeated execution."

@@ -1,7 +1,0 @@
-interface:
-  display_name: "Canvas Design"
-  short_description: "Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art..."
-  default_prompt: "Use $canvas-design to help with this task."
-
-policy:
-  allow_implicit_invocation: true

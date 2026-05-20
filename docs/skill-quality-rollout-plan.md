@@ -9,7 +9,7 @@ This plan upgrades Skill Hub from a curated skill collection into a governed ski
 - Make description quality, routing precision, and progressive loading first-class review targets.
 - Add an evaluation path before changing routing-sensitive text.
 - Keep the default profile small and low-noise.
-- Preserve third-party attribution while adapting content to Codex and cross-agent hosts.
+- Preserve third-party attribution while normalizing content into platform-neutral skills.
 - Avoid a mass rewrite of imported skills without evidence.
 
 ## Non-Goals

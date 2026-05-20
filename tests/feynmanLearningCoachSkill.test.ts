@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'bun:test';
 
-const skillDir = '.codex/skills/feynman-learning-coach';
+const skillDir = 'skills/feynman-learning-coach';
 const skill = fs.readFileSync(`${skillDir}/SKILL.md`, 'utf8');
 
 function frontmatterValue(name: string): string {
@@ -102,7 +102,7 @@ test('feynman-learning-coach is installable from the explicit learning profile',
 
   expect(index.profiles.learning.components).toContain('skill:feynman-learning-coach');
   expect(index.profiles.minimal.components).not.toContain('skill:feynman-learning-coach');
-  expect(component.path).toBe('.codex/skills/feynman-learning-coach');
+  expect(component.path).toBe('skills/feynman-learning-coach');
   expect(component.source).toBe('learn-faster-kit-inspired-local');
   expect(component.provides).toContain('teach-back-checks');
 });

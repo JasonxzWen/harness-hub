@@ -1,4 +1,0 @@
-interface:
-  display_name: "Effective Interact"
-  short_description: "Create visual HTML interaction artifacts."
-  default_prompt: "Use $effective-interact for this alignment point, option comparison, review, plan, explainer, dashboard, architecture walkthrough, handoff, or export-editor artifact."

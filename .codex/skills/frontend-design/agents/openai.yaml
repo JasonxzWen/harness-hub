@@ -1,7 +1,0 @@
-interface:
-  display_name: "Frontend Design"
-  short_description: "Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, artifact..."
-  default_prompt: "Use $frontend-design to help with this task."
-
-policy:
-  allow_implicit_invocation: true

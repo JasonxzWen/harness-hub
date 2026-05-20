@@ -1,0 +1,13 @@
+{
+  "name": "skill-hub",
+  "displayName": "Skill Hub",
+  "description": "Platform-neutral engineering skills for planning, debugging, testing, review, documentation, and workflow handoff.",
+  "repository": "https://github.com/JasonxzWen/skill-hub",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "engineering-workflows",
+    "skills",
+    "claude-plugin"
+  ]
+}

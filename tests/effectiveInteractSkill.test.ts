@@ -5,9 +5,9 @@ import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { expect, test } from 'bun:test';
 
-const skillPath = '.codex/skills/effective-interact/SKILL.md';
+const skillPath = 'skills/effective-interact/SKILL.md';
 const skill = fs.readFileSync(skillPath, 'utf8');
-const skillDir = '.codex/skills/effective-interact';
+const skillDir = 'skills/effective-interact';
 const createInteractionScript = `${skillDir}/scripts/create-interaction.mjs`;
 const validateInteractionScript = `${skillDir}/scripts/validate-interaction.mjs`;
 
@@ -330,8 +330,8 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
   const generator = fs.readFileSync(createInteractionScript, 'utf8');
   const skillGitignore = fs.readFileSync(`${skillDir}/.gitignore`, 'utf8');
   expect(generator).toContain('path.join(skillDir, "artifacts")');
-  expect(generator).toContain('Default outDir is .codex/skills/effective-interact/artifacts/');
-  expect(skill).toContain('.codex/skills/effective-interact/artifacts/');
+  expect(generator).toContain('Default outDir is skills/effective-interact/artifacts/');
+  expect(skill).toContain('skills/effective-interact/artifacts/');
   expect(skill).toContain('omit `--out-dir` for ignored skill-local intermediate artifacts');
   expect(skillGitignore).toContain('artifacts/');
 });
@@ -366,7 +366,7 @@ test('effective-interact generator defaults to ignored skill-local outputs', () 
   const payload = JSON.parse(result.stdout);
   const normalizedOutput = payload.outputPath.replaceAll('\\', '/');
 
-  expect(normalizedOutput).toContain('.codex/skills/effective-interact/artifacts/default-output-smoke.html');
+  expect(normalizedOutput).toContain('skills/effective-interact/artifacts/default-output-smoke.html');
   expect(fs.existsSync(payload.outputPath)).toBe(true);
   fs.rmSync(payload.outputPath, { force: true });
 });
@@ -820,7 +820,7 @@ test('effective-interact validator warns when rich rendering opportunities stay 
     </section>
     <section id="evidence" data-section-type="evidence" data-section-group="evidence" data-render-state="ready">
       <h2>Evidence</h2>
-      <article data-evidence data-evidence-kind="file" data-file-path=".codex/skills/effective-interact/SKILL.md" data-line="3">.codex/skills/effective-interact/SKILL.md:3</article>
+      <article data-evidence data-evidence-kind="file" data-file-path="skills/effective-interact/SKILL.md" data-line="3">skills/effective-interact/SKILL.md:3</article>
     </section>
   </main>
 </body>

@@ -18,7 +18,7 @@ The system SHALL provide an opt-in agent-readiness analysis for a target reposit
 The system SHALL report context-budget findings from deterministic repo evidence.
 
 #### Scenario: Detect agent instruction surfaces
-- **WHEN** the target repository contains files or directories such as `AGENTS.md`, `.codex/`, `.agents/`, `.claude/`, or `.opencode/`
+- **WHEN** the target repository contains files or directories such as `AGENTS.md` or `skills/`
 - **THEN** the readiness report includes those paths as context-budget evidence
 
 #### Scenario: Report duplicated always-loaded instruction roots
@@ -82,7 +82,7 @@ The system SHALL recommend learning-capture locations as reviewable guidance onl
 
 #### Scenario: Learning capture is not automatic memory mutation
 - **WHEN** the readiness report recommends learning capture
-- **THEN** the system does not write to Codex memory, Claude memory, target repo files, or `.skill-hub/lock.json`
+- **THEN** the system does not write to host memory, target repo files, or `.skill-hub/lock.json`
 
 ### Requirement: Stable readiness report contract
 The system SHALL provide stable JSON ordering and enough evidence for each readiness finding.

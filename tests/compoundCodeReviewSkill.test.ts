@@ -11,7 +11,7 @@ function frontmatterValue(skill: string, name: string): string {
 }
 
 test('compound-code-review is a narrow Compound Engineering code review adaptation', () => {
-  const skill = read('.codex/skills/compound-code-review/SKILL.md');
+  const skill = read('skills/compound-code-review/SKILL.md');
   const description = frontmatterValue(skill, 'description');
 
   expect(description).toContain('Compound Engineering-inspired code review');
@@ -27,11 +27,10 @@ test('compound-code-review is a narrow Compound Engineering code review adaptati
 });
 
 test('compound-code-review keeps detailed contracts in references', () => {
-  expect(fs.existsSync('.codex/skills/compound-code-review/references/findings-schema.json')).toBe(true);
-  expect(fs.existsSync('.codex/skills/compound-code-review/references/persona-catalog.md')).toBe(true);
-  expect(fs.existsSync('.codex/skills/compound-code-review/references/review-output-template.md')).toBe(true);
-  expect(fs.existsSync('.codex/skills/compound-code-review/agents/openai.yaml')).toBe(true);
-  expect(read('.codex/skills/compound-code-review/SKILL.md').length).toBeLessThan(7500);
+  expect(fs.existsSync('skills/compound-code-review/references/findings-schema.json')).toBe(true);
+  expect(fs.existsSync('skills/compound-code-review/references/persona-catalog.md')).toBe(true);
+  expect(fs.existsSync('skills/compound-code-review/references/review-output-template.md')).toBe(true);
+  expect(read('skills/compound-code-review/SKILL.md').length).toBeLessThan(7500);
 });
 
 test('compound-code-review is installable from the minimal capability profile', () => {
@@ -42,7 +41,7 @@ test('compound-code-review is installable from the minimal capability profile', 
   const component = index.components['skill:compound-code-review'];
 
   expect(index.profiles.minimal.components).toContain('skill:compound-code-review');
-  expect(component.path).toBe('.codex/skills/compound-code-review');
+  expect(component.path).toBe('skills/compound-code-review');
   expect(component.source).toBe('compound-engineering-plugin-adapted');
   expect(component.provides).toContain('structured-code-review');
 });

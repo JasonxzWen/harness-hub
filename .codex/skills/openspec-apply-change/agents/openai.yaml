@@ -1,7 +1,0 @@
-interface:
-  display_name: "Openspec Apply Change"
-  short_description: "Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks."
-  default_prompt: "Use $openspec-apply-change to help with this task."
-
-policy:
-  allow_implicit_invocation: true

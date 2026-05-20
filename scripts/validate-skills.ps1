@@ -5,8 +5,6 @@ param(
 $ErrorActionPreference = "Stop"
 
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$QuickValidate = "C:\Users\Admin\.codex\skills\.system\skill-creator\scripts\quick_validate.py"
-$QuickValidateAvailable = Test-Path $QuickValidate
 $Failures = New-Object System.Collections.Generic.List[string]
 
 function Add-Failure($Message) {
@@ -21,7 +19,7 @@ function Get-SkillName($SkillMdPath) {
 
 Push-Location $Root
 try {
-  $skillRoots = @(".codex\skills")
+  $skillRoots = @("skills")
   $skillDirs = @()
 
   foreach ($root in $skillRoots) {
@@ -31,29 +29,18 @@ try {
   }
 
   if ($skillDirs.Count -eq 0) {
-    Add-Failure "No skills found under .codex/skills"
-  }
-
-  if (-not $QuickValidateAvailable) {
-    Write-Warning "quick_validate.py is not available at $QuickValidate; skipping system skill-creator validation."
+    Add-Failure "No skills found under skills/"
   }
 
   foreach ($skill in $skillDirs) {
     $skillMd = Join-Path $skill.FullName "SKILL.md"
 
-    if ($QuickValidateAvailable) {
-      $output = & python $QuickValidate $skill.FullName 2>&1
-      if ($LASTEXITCODE -ne 0) {
-        Add-Failure "quick_validate failed for $($skill.FullName): $($output -join ' ')"
-      }
+    $head = Get-Content -LiteralPath $skillMd -TotalCount 1
+    if ($head -ne "---") {
+      Add-Failure "Missing YAML frontmatter in $skillMd"
     }
 
-    $agentYaml = Join-Path $skill.FullName "agents\openai.yaml"
-    if (-not (Test-Path $agentYaml)) {
-      Add-Failure "Missing agents/openai.yaml for $($skill.FullName)"
-    }
-
-    foreach ($file in @($skillMd, $agentYaml)) {
+    foreach ($file in @($skillMd)) {
       if (Test-Path $file) {
         $bytes = [System.IO.File]::ReadAllBytes($file)
         if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
@@ -77,7 +64,7 @@ try {
     }
   }
 
-  $claudeOnlyPatterns = @(
+  $platformSpecificPatterns = @(
     "AskUserQuestion",
     "TodoWrite",
     "Task tool",
@@ -86,30 +73,22 @@ try {
     "Edit tool",
     "Bash tool",
     "/opsx",
+    ".codex",
+    "agents/openai.yaml",
+    "openai.yaml",
+    "Codex adaptation",
+    "Codex native",
+    "Codex-specific",
     "claude.ai",
     "Claude.ai",
     "WebFetch"
   )
-  $textFiles = Get-ChildItem -Path ".codex\skills" -Recurse -File -Include *.md,*.yaml,*.yml,*.json,*.txt -ErrorAction SilentlyContinue
+  $textFiles = Get-ChildItem -Path "skills" -Recurse -File -Include *.md,*.yaml,*.yml,*.json,*.txt -ErrorAction SilentlyContinue
   foreach ($file in $textFiles) {
-    $matches = Select-String -LiteralPath $file.FullName -Pattern $claudeOnlyPatterns -SimpleMatch -ErrorAction SilentlyContinue |
-      Where-Object { $_.Line -notmatch "Codex adaptation" }
+    $matches = Select-String -LiteralPath $file.FullName -Pattern $platformSpecificPatterns -SimpleMatch -ErrorAction SilentlyContinue
     foreach ($match in $matches) {
-      Add-Failure "Claude-only reference in $($file.FullName):$($match.LineNumber): $($match.Line.Trim())"
+      Add-Failure "Platform-specific reference in $($file.FullName):$($match.LineNumber): $($match.Line.Trim())"
     }
-  }
-
-  $configPath = ".codex\config.toml"
-  if (Test-Path $configPath) {
-    $tomlOutput = & python -c "import pathlib,tomllib; tomllib.loads(pathlib.Path(r'.codex/config.toml').read_text(encoding='utf-8')); print('config toml ok')" 2>&1
-    if ($LASTEXITCODE -ne 0) {
-      Add-Failure "config.toml failed TOML parse: $($tomlOutput -join ' ')"
-    }
-  }
-
-  $yamlOutput = & python -c "import pathlib,yaml; [yaml.safe_load(p.read_text(encoding='utf-8')) for p in pathlib.Path('.codex/skills').rglob('openai.yaml')]; print('openai yaml ok')" 2>&1
-  if ($LASTEXITCODE -ne 0) {
-    Add-Failure "openai.yaml parse failed: $($yamlOutput -join ' ')"
   }
 
   if (-not $SkipExternal) {

@@ -1,7 +1,0 @@
-interface:
-  display_name: "Theme Factory"
-  short_description: "Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors..."
-  default_prompt: "Use $theme-factory to help with this task."
-
-policy:
-  allow_implicit_invocation: true

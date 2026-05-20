@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const HUB_ROOT = path.resolve(__dirname, '..');
 
-export type AgentName = 'codex' | 'opencode' | 'claude-code';
+export type AgentName = 'standard';
 export type LifecycleRisk = 'low' | 'medium' | 'high';
 export type ReportFormat = 'text' | 'json' | 'html';
 export const AGENT_READINESS_CATEGORIES = [
@@ -92,10 +92,9 @@ export interface RepoSignals {
   pyproject: boolean;
   cargo: boolean;
   goMod: boolean;
-  codex: boolean;
-  claude: boolean;
+  skills: boolean;
+  instructions: boolean;
   agents: boolean;
-  opencode: boolean;
 }
 
 export interface CapabilityFinding {
@@ -367,9 +366,7 @@ class CliError extends Error {
 }
 
 export const AGENT_SKILL_DIRS = Object.freeze({
-  codex: '.codex/skills',
-  opencode: '.opencode/skills',
-  'claude-code': '.claude/skills',
+  standard: 'skills',
 } satisfies Record<AgentName, string>);
 
 const MANAGED_COMPONENT_RENAMES: Readonly<Record<string, ManagedComponentRename>> = Object.freeze({
@@ -524,10 +521,9 @@ export function detectRepoSignals(targetDir: string): RepoSignals {
     pyproject: 'pyproject.toml',
     cargo: 'Cargo.toml',
     goMod: 'go.mod',
-    codex: '.codex',
-    claude: '.claude',
+    skills: 'skills',
+    instructions: 'AGENTS.md',
     agents: '.agents',
-    opencode: '.opencode',
   };
 
   return Object.fromEntries(
@@ -547,7 +543,7 @@ export function resolveProfile(index: CapabilityIndex, profileName: string): Cap
 }
 
 export function resolveAgents(agentNames: AgentName[]): AgentName[] {
-  const agents: AgentName[] = agentNames.length > 0 ? agentNames : ['codex'];
+  const agents: AgentName[] = agentNames.length > 0 ? agentNames : ['standard'];
   for (const agent of agents) {
     if (!AGENT_SKILL_DIRS[agent]) {
       throw new Error(`Unsupported agent '${agent}'. Available: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}`);
@@ -975,18 +971,7 @@ function buildLearningCaptureFinding(evidence: AgentReadinessEvidence[]): AgentR
 function detectContextSurfaceEvidence(targetDir: string): AgentReadinessEvidence[] {
   const evidence: AgentReadinessEvidence[] = [];
   pushPathEvidenceIfExists(targetDir, evidence, 'AGENTS.md');
-
-  for (const root of ['.codex', '.agents', '.claude', '.opencode']) {
-    const instructionFiles = root === '.claude'
-      ? ['.claude/CLAUDE.md', '.claude/AGENTS.md']
-      : [`${root}/AGENTS.md`];
-    const existingInstruction = instructionFiles.find((relativePath) => safeRelativePathExists(targetDir, relativePath));
-    if (existingInstruction) {
-      evidence.push({ kind: 'path', value: existingInstruction });
-    } else {
-      pushPathEvidenceIfExists(targetDir, evidence, root);
-    }
-  }
+  pushPathEvidenceIfExists(targetDir, evidence, 'skills');
 
   return sortEvidence(evidence);
 }
@@ -1036,12 +1021,7 @@ function detectVerificationEvidence(targetDir: string): AgentReadinessEvidence[]
 function detectRoutingEvidence(targetDir: string): AgentReadinessEvidence[] {
   return sortEvidence([
     ...evidenceForExistingPaths(targetDir, [
-      '.agents/AGENTS.md',
-      '.claude/agents',
-      '.claude/skills',
-      '.codex/agents',
-      '.codex/skills',
-      '.opencode/skills',
+      'skills',
       'docs/skill-routing.md',
       'openspec/changes',
       'scripts/ralph',
@@ -1052,9 +1032,7 @@ function detectRoutingEvidence(targetDir: string): AgentReadinessEvidence[] {
 
 function detectLearningCaptureEvidence(targetDir: string): AgentReadinessEvidence[] {
   return evidenceForExistingPaths(targetDir, [
-    '.claude/skills',
-    '.codex/skills',
-    '.opencode/skills',
+    'skills',
     'CHANGELOG.md',
     'changelog.md',
     'docs',
@@ -2297,7 +2275,7 @@ function parseArgs(argv: string[]): CliOptions {
 
   for (let index = 1; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === '--agent' || arg === '-a') {
+    if (arg === '--agent' || arg === '--target' || arg === '-a') {
       options.agents.push(parseAgentName(readOptionValue(argv, ++index, arg)));
     } else if (arg === '--profile' || arg === '-p') {
       options.profile = readOptionValue(argv, ++index, arg);
@@ -2339,7 +2317,7 @@ function readOptionValue(argv: string[], index: number, flag: string): string {
 }
 
 function parseAgentName(value: string): AgentName {
-  if (value === 'codex' || value === 'opencode' || value === 'claude-code') {
+  if (value === 'standard') {
     return value;
   }
   throw new Error(`Unsupported agent '${value}'. Available: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}`);
@@ -2685,7 +2663,7 @@ function emitReport(content: string, options: CliOptions): void {
 function printPlan(plan: InstallPlan): void {
   console.log(`Target: ${plan.targetDir}`);
   console.log(`Profile: ${plan.profileName}`);
-  console.log(`Agents: ${plan.agents.join(', ')}`);
+  console.log(`Install targets: ${plan.agents.join(', ')}`);
   for (const item of plan.items) {
     const relDest = path.relative(plan.targetDir, item.dest).replaceAll(path.sep, '/');
     console.log(`- ${item.componentId} -> ${item.agent}:${relDest}${item.exists ? ' (exists)' : ''}`);
@@ -2696,9 +2674,9 @@ function printHelp() {
   console.log(`skill-hub
 
 Usage:
-  skill-hub analyze [target] [--profile minimal] [--agent codex] [--agent-readiness] [--json|--html] [--output file]
-  skill-hub install [target] [--profile minimal] [--agent codex] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
-  skill-hub init [target] [--profile minimal] [--agent codex] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
+  skill-hub analyze [target] [--profile minimal] [--target standard] [--agent-readiness] [--json|--html] [--output file]
+  skill-hub install [target] [--profile minimal] [--target standard] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
+  skill-hub init [target] [--profile minimal] [--target standard] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
   skill-hub status [target] [--json|--html] [--output file]
   skill-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
   skill-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
@@ -2706,6 +2684,6 @@ Usage:
   skill-hub profiles
   skill-hub components
 
-Supported agents: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
+Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
 `);
 }
