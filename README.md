@@ -23,8 +23,9 @@ Skills must not depend on a specific agent host. Host-specific packaging, such a
 - Workflow routing and SDD: `workflow-router`, owner workflow skills, `product-capability`, embedded `tdd-workflow`, the explicit Ralph goal-loop bridge, and `effective-interact` handoffs.
 - Planning and pressure testing: `grill-me`, OpenSpec helpers.
 - Runtime diagnosis and implementation quality: `diagnose`, `tdd-workflow`, `verification-loop`, `compound-code-review`, `security-review`.
-- Documentation, learning, and handoff: `doc-coauthoring`, `documentation-lookup`, `feynman-learning-coach`, `handoff`.
-- Web and artifact workflows: `effective-interact`, `frontend-design`, `web-artifacts-builder`, `frontend-slides`, browser testing skills.
+- Documentation, communication, learning, and handoff: `doc-coauthoring`, `internal-comms`, `documentation-lookup`, `feynman-learning-coach`, `handoff`.
+- Web and artifact workflows: `effective-interact`, `frontend-design`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, browser testing skills.
+- Platform and extension atoms: `claude-api`, `mcp-builder`, `skill-creator`.
 - Skill maintenance: `hub-maintenance-workflow`, source-project records, capability metadata, and `skill-quality-inventory`.
 
 ## CLI
@@ -37,6 +38,9 @@ npx @jasonwen/skill-hub analyze D:\path\to\target --json
 npx @jasonwen/skill-hub install D:\path\to\target --profile minimal --target standard --dry-run
 npx @jasonwen/skill-hub install D:\path\to\target --profile minimal --target standard --yes
 npx @jasonwen/skill-hub install D:\path\to\target --profile sdd --target standard --dry-run
+npx @jasonwen/skill-hub install D:\path\to\target --profile platform --target standard --dry-run
+npx @jasonwen/skill-hub install D:\path\to\target --profile communications --target standard --dry-run
+npx @jasonwen/skill-hub install D:\path\to\target --profile creative --target standard --dry-run
 npx @jasonwen/skill-hub status D:\path\to\target --json
 npx @jasonwen/skill-hub update D:\path\to\target --dry-run --json
 npx @jasonwen/skill-hub remove D:\path\to\target --dry-run --json

@@ -15,6 +15,12 @@ Use this owner for read-only answers.
 4. Do not edit files, run mutating commands, or start implementation unless the user redirects into `sdd-workflow`.
 5. Default-consider `effective-interact` when a visual comparison, source map, evidence dashboard, or final handoff lowers interaction cost; route pressure testing to `grill-me` or review owner first.
 
+## Helper Atoms
+
+- Use `claude-api` only for read-only Anthropic API or SDK questions that require provider-specific current docs.
+- Use `doc-coauthoring` when the answer should become a durable proposal, RFC, PRD, spec, or decision record.
+- Use `internal-comms` when the output is an internal update, FAQ, incident note, or leadership summary.
+
 ## Output
 
 - Put the direct conclusion first.

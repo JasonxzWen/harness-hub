@@ -16,6 +16,12 @@ Use this owner after work has been accepted or implemented and needs closure.
 5. Produce release notes, handoff, or environment cleanup notes as requested.
 6. Use `effective-interact` for material handoffs with changes, evidence, validation, cleanup, and next actions.
 
+## Helper Atoms
+
+- Use `internal-comms` for accepted internal announcements, status updates, incident follow-ups, or FAQs.
+- Use `doc-coauthoring` for final PRDs, decision records, or handoff docs that need reader testing.
+- Use `theme-factory` only when a delivered artifact needs a final visual theme pass.
+
 ## Boundaries
 
 - Do not start new feature work.

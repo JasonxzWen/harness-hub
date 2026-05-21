@@ -24,6 +24,7 @@ Use this taxonomy only to classify the request. Do not execute the work here.
 ## Non-Owners
 
 - `effective-interact` lowers interaction cost through Chinese-first structure, reports, and visual artifacts. It is an expression and handoff layer, not the pressure-test owner.
+- `doc-coauthoring`, `internal-comms`, `claude-api`, `mcp-builder`, `skill-creator`, `theme-factory`, and `slack-gif-creator` are helper atoms selected by an owner workflow, not top-level owners.
 - TDD is embedded in `sdd-workflow`.
 - Ralph stays an explicit goal/story loop helper inside `sdd-workflow` or the `ralph` profile; it is not a top-level owner and must not start autonomous repeated execution without user approval.
 - OpenSpec stays explicit formal mode.

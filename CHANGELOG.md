@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.8 - 2026-05-21
+
+- Add selective Anthropic-derived atomic skills for Claude API, MCP building, skill authoring, internal communications, theme selection, and Slack GIF creation, plus a local-original `doc-coauthoring` atom.
+- Add `platform`, `communications`, and `creative` capability profiles and wire helper atoms into SDD/web routing without making them top-level workflow owners.
+- Refresh the non-ECC source inventory, capability map, workflow source dossier, routing docs, and the HTML atomic skill selection report with installed/reference/license-blocked decisions.
+
 ## 0.1.7 - 2026-05-21
 
 - Add the explicit `sdd` profile with `workflow-router`, public workflow owner skills, embedded TDD helpers, Effective Interact handoff expectations, and the Ralph goal-loop bridge.

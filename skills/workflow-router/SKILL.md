@@ -41,4 +41,5 @@ This skill owns intent recognition and handoff only. It does not implement, test
 - If the request is trivial chat, no owner is needed.
 - If the request is ambiguous between mutation and review/question, ask or choose the safer non-mutating state.
 - `effective-interact` is a reporting layer, not a workflow owner.
+- Atomic skills such as `doc-coauthoring`, `internal-comms`, `claude-api`, `mcp-builder`, `skill-creator`, `theme-factory`, and `slack-gif-creator` are helper skills. Include them in the handoff only when they match the selected owner's task.
 - Hooks and subagents stay under `references/orchestration-policy.md`; the router never dispatches them.

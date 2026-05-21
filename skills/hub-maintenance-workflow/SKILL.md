@@ -27,6 +27,8 @@ Use repo-local source records and deterministic project files instead of delegat
 - `docs/skill-routing.md` for overlap and trigger decisions.
 - `capabilities/index.json` for the installable component surface.
 - `skill-hub` CLI dry-runs for target-repo analyze/install/status/update/remove behavior.
+- `skill-creator` for standard skill authoring, adaptation, and routing-evaluation details.
+- `doc-coauthoring` for durable proposals or decision records when the maintenance change needs a reviewed document.
 
 For any parallel source review, hook proposal, or lifecycle smoke split, follow `workflow-router/references/orchestration-policy.md`: subagents must have independent scopes, hooks stay advisory by default, and lock-backed lifecycle checks remain deterministic.
 

@@ -21,6 +21,8 @@ Use this owner when the task starts from a failure or regression.
 ## Helpers
 
 - Use `diagnose` for product/runtime failures.
+- Use `claude-api` for Anthropic API or SDK failures after confirming the target is provider-specific.
+- Use `mcp-builder` for MCP server/tool-contract failures.
 - Use `agent-introspection-debugging` for agent, context, or tool-loop failures.
 - Use `webapp-testing` for one-off browser reproduction only when the target also installed the `web` profile or that helper is otherwise available.
 - Use `verification-loop` after the fix.

@@ -45,7 +45,9 @@
         "skill:agent-introspection-debugging",
         "skill:compound-code-review",
         "skill:security-review",
-        "skill:e2e-testing"
+        "skill:e2e-testing",
+        "skill:doc-coauthoring",
+        "skill:skill-creator"
       ]
     },
     "web": {
@@ -59,7 +61,8 @@
         "skill:frontend-patterns",
         "skill:webapp-testing",
         "skill:web-design-guidelines",
-        "skill:e2e-testing"
+        "skill:e2e-testing",
+        "skill:theme-factory"
       ]
     },
     "openspec-formal": {
@@ -96,6 +99,28 @@
         "harness:clean-state-checklist",
         "harness:evaluator-rubric",
         "harness:quality-document"
+      ]
+    },
+    "platform": {
+      "description": "Provider API, MCP server, and skill-authoring atoms for explicit platform extension work.",
+      "components": [
+        "skill:claude-api",
+        "skill:mcp-builder",
+        "skill:skill-creator"
+      ]
+    },
+    "communications": {
+      "description": "Document coauthoring and internal communication atoms for specs, proposals, updates, FAQs, and incident/project notes.",
+      "components": [
+        "skill:doc-coauthoring",
+        "skill:internal-comms"
+      ]
+    },
+    "creative": {
+      "description": "Visual-theme and Slack GIF atoms for explicit creative artifact work.",
+      "components": [
+        "skill:theme-factory",
+        "skill:slack-gif-creator"
       ]
     }
   },
@@ -1154,6 +1179,193 @@
       ],
       "risk": "low",
       "recommendation": "Use only for explicit Ralph-style repeated execution."
+    },
+    "skill:claude-api": {
+      "kind": "skill",
+      "path": "skills/claude-api",
+      "version": "0.1.0",
+      "source": "anthropics-skills-adapted",
+      "provides": [
+        "anthropic-sdk-guidance",
+        "claude-api-implementation",
+        "provider-specific-api-migration"
+      ],
+      "overlapsWith": [
+        "skill:documentation-lookup",
+        "skill:security-review"
+      ],
+      "routing": "Use for Claude API or Anthropic SDK implementation, debugging, tuning, and migration; verify live provider docs before code changes.",
+      "detects": [
+        {
+          "path": "skills/claude-api/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "medium",
+      "recommendation": "Add explicit Anthropic API support without loading volatile API tables into default workflows."
+    },
+    "skill:mcp-builder": {
+      "kind": "skill",
+      "path": "skills/mcp-builder",
+      "version": "0.1.0",
+      "source": "anthropics-skills-adapted",
+      "provides": [
+        "mcp-server-design",
+        "mcp-tool-schema-patterns",
+        "mcp-evaluation-guidance"
+      ],
+      "overlapsWith": [
+        "skill:documentation-lookup",
+        "skill:security-review",
+        "skill:tdd-workflow"
+      ],
+      "routing": "Use for designing, building, reviewing, or testing MCP servers and tool contracts for external services.",
+      "detects": [
+        {
+          "path": "skills/mcp-builder/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "medium",
+      "recommendation": "Add a bounded MCP server builder atom with reference guides and evaluation scripts."
+    },
+    "skill:skill-creator": {
+      "kind": "skill",
+      "path": "skills/skill-creator",
+      "version": "0.1.0",
+      "source": "anthropics-skills-adapted",
+      "provides": [
+        "skill-authoring",
+        "skill-routing-evaluation",
+        "skill-progressive-disclosure"
+      ],
+      "overlapsWith": [
+        "skill:hub-maintenance-workflow",
+        "skill:documentation-lookup"
+      ],
+      "routing": "Use for creating, adapting, updating, or evaluating standard agent skills after the owner workflow has selected the maintenance/change lane.",
+      "detects": [
+        {
+          "path": "skills/skill-creator/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Add a platform-neutral skill authoring atom without host-specific eval runners."
+    },
+    "skill:doc-coauthoring": {
+      "kind": "skill",
+      "path": "skills/doc-coauthoring",
+      "version": "0.1.0",
+      "source": "local-original",
+      "provides": [
+        "collaborative-document-drafting",
+        "reader-testing",
+        "proposal-and-spec-writing"
+      ],
+      "overlapsWith": [
+        "skill:sdd-workflow",
+        "skill:product-capability",
+        "skill:internal-comms",
+        "skill:answer-workflow"
+      ],
+      "routing": "Use for collaboratively drafting, restructuring, and reader-testing PRDs, RFCs, proposals, specs, and decision records.",
+      "detects": [
+        {
+          "path": "skills/doc-coauthoring/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Fill the durable document coauthoring gap with a local original atom; upstream Anthropic text was not copied due missing per-skill license."
+    },
+    "skill:internal-comms": {
+      "kind": "skill",
+      "path": "skills/internal-comms",
+      "version": "0.1.0",
+      "source": "anthropics-skills-adapted",
+      "provides": [
+        "internal-status-updates",
+        "leadership-comms",
+        "incident-and-faq-comms"
+      ],
+      "overlapsWith": [
+        "skill:doc-coauthoring",
+        "skill:effective-interact"
+      ],
+      "routing": "Use for internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, and project updates.",
+      "detects": [
+        {
+          "path": "skills/internal-comms/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Add an internal communications atom with reusable reference formats."
+    },
+    "skill:theme-factory": {
+      "kind": "skill",
+      "path": "skills/theme-factory",
+      "version": "0.1.0",
+      "source": "anthropics-skills-adapted",
+      "provides": [
+        "artifact-theme-selection",
+        "visual-theme-application",
+        "theme-showcase-assets"
+      ],
+      "overlapsWith": [
+        "skill:frontend-design",
+        "skill:web-artifacts-builder",
+        "skill:frontend-slides",
+        "skill:web-design-guidelines"
+      ],
+      "routing": "Use when an existing slide, document, report, HTML artifact, or landing page needs a coherent visual theme.",
+      "detects": [
+        {
+          "path": "skills/theme-factory/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Add a bounded visual theming atom that complements, rather than replaces, production UI design."
+    },
+    "skill:slack-gif-creator": {
+      "kind": "skill",
+      "path": "skills/slack-gif-creator",
+      "version": "0.1.0",
+      "source": "anthropics-skills-adapted",
+      "provides": [
+        "slack-gif-generation",
+        "gif-size-validation",
+        "animated-emoji-workflow"
+      ],
+      "overlapsWith": [
+        "skill:frontend-design",
+        "skill:theme-factory"
+      ],
+      "routing": "Use for creating, optimizing, or validating animated GIFs for Slack emoji or messages.",
+      "detects": [
+        {
+          "path": "skills/slack-gif-creator/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Add a narrow creative atom for Slack-ready GIF generation and validation."
     }
   }
 }

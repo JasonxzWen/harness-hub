@@ -19,9 +19,10 @@ The source root is `skills/`. Host-specific metadata directories are not part of
 | Planning and product shaping | `grill-me`, `product-capability`, OpenSpec skills |
 | Debugging and implementation | `diagnose`, `tdd-workflow`, `verification-loop`, `agent-introspection-debugging` |
 | Review and safety | `compound-code-review`, `security-review`, `coding-standards` |
-| Documentation and learning | `doc-coauthoring`, `documentation-lookup`, `handoff`, `feynman-learning-coach` |
-| Web and artifacts | `effective-interact`, `frontend-design`, `web-artifacts-builder`, `frontend-slides`, `webapp-testing`, `e2e-testing` |
-| Maintenance | `skill-evaluator`, `update-skill-hub`, `agent-sort` |
+| Documentation, communications, and learning | `doc-coauthoring`, `internal-comms`, `documentation-lookup`, `handoff`, `feynman-learning-coach` |
+| Web and artifacts | `effective-interact`, `frontend-design`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, `slack-gif-creator`, `webapp-testing`, `e2e-testing` |
+| Platform and skill extension | `claude-api`, `mcp-builder`, `skill-creator` |
+| Maintenance | `workflow-router`, `hub-maintenance-workflow`, `skill-creator`, source records, capability metadata, and `skill-quality-inventory` |
 
 ## Policy
 
