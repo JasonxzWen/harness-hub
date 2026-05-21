@@ -1,6 +1,6 @@
 ---
 name: frontend-patterns
-description: General frontend implementation patterns for React, Next.js, state management, forms, routing, accessibility, and responsive UI. Use as the broad frontend engineering baseline. For React/Next performance rules prefer vercel-react-best-practices; for reusable component API design prefer vercel-composition-patterns; for visual/aesthetic creation prefer frontend-design; for UI audits prefer web-design-guidelines.
+description: General frontend implementation patterns for React, Next.js, state management, forms, routing, accessibility, and responsive UI. Use as the broad frontend engineering baseline. Use frontend-design for visual/aesthetic creation and web-design-guidelines for UI audits when that helper is installed.
 ---
 
 # Frontend Development Patterns

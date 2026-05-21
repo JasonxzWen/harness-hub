@@ -13,6 +13,13 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 
 | User intent | Preferred skill | Notes |
 |---|---|---|
+| Non-trivial request that needs intent recognition | `workflow-router` | Classify into exactly one state: question, SDD change, diagnosis, review, delivery, or Skill Hub maintenance. |
+| Read-only question, explanation, feasibility check, evidence lookup, or comparison | `answer-workflow` | Answer from evidence; do not mutate files. |
+| Feature, bug fix, refactor, product/spec change, or implementation request | `sdd-workflow` | Align need, source material, spec, acceptance, executable plan, cleanup, implementation, tests, and delivery before coding. |
+| Failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure report | `diagnosis-workflow` | Reproduce or bound the failure before choosing helper skills. |
+| Code, plan, release, UI, or security review | `review-workflow` | Findings first; do not implement fixes unless redirected. |
+| Validation closeout, cleanup, release notes, or handoff | `delivery-workflow` | Run accepted checks and report residual risk. |
+| Skill Hub source, routing, profile, capability, npm lifecycle, or managed cleanup work | `hub-maintenance-workflow` | Use source records and CLI dry-runs instead of removed broad helper skills. |
 | Plan/design pressure testing before implementation | `grill-me` | Ask one hard question at a time and surface assumptions. |
 | Diagnose runtime bug, failing command, flaky behavior, or performance regression | `diagnose` | `diagnose` owns unknown runtime bugs and performance regressions; use `tdd-workflow` after the behavior is understood. |
 | Implement production feature, confirmed bug fix, or refactor through tests | `tdd-workflow` | One public behavior at a time through red-green-refactor. |
@@ -31,6 +38,7 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - Use OpenSpec skills only when the user explicitly wants the formal OpenSpec lifecycle.
 - Use Ralph skills only for explicit Ralph-style PRD/story loops.
 - Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
+- In the `sdd` profile, `sdd-workflow` is the default change lane and `tdd-workflow` is an embedded implementation discipline, not a competing owner.
 
 ## Boundary Sentences
 
@@ -45,6 +53,13 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.
 - `verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis.
 - `feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions.
+- `hub-maintenance-workflow` loads for maintaining this Skill Hub's source records, installed skill components, routing, profiles, npm package boundary, and candidate-source decisions.
+
+## Subagents And Hooks
+
+Subagents are parent-workflow controlled. Use native subagents only for independent source gathering, docs lookup, review, verification, or disjoint write scopes named in the executable plan. The main workflow owner keeps synthesis, integration, validation, and final user-facing conclusions.
+
+Advisory hooks only until a security review, deterministic tests, and explicit rollout approval exist. No automatic subagent dispatch is allowed. No remote writes from hooks are allowed. Hooks must not bypass SDD alignment or mutate credentials, third-party resources, publishing state, or git remotes.
 
 ## Third-Party Candidates
 

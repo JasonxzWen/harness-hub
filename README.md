@@ -20,11 +20,12 @@ Skills must not depend on a specific agent host. Host-specific packaging, such a
 
 ## What Is Included
 
-- Planning and pressure testing: `grill-me`, `product-capability`, OpenSpec helpers.
+- Workflow routing and SDD: `workflow-router`, owner workflow skills, `product-capability`, embedded `tdd-workflow`, and `effective-interact` handoffs.
+- Planning and pressure testing: `grill-me`, OpenSpec helpers.
 - Runtime diagnosis and implementation quality: `diagnose`, `tdd-workflow`, `verification-loop`, `compound-code-review`, `security-review`.
 - Documentation, learning, and handoff: `doc-coauthoring`, `documentation-lookup`, `feynman-learning-coach`, `handoff`.
 - Web and artifact workflows: `effective-interact`, `frontend-design`, `web-artifacts-builder`, `frontend-slides`, browser testing skills.
-- Skill maintenance: `skill-evaluator`, `update-skill-hub`, `skill-quality-inventory`.
+- Skill maintenance: `hub-maintenance-workflow`, source-project records, capability metadata, and `skill-quality-inventory`.
 
 ## CLI
 
@@ -35,6 +36,7 @@ bun run validate
 npx @jasonwen/skill-hub analyze D:\path\to\target --json
 npx @jasonwen/skill-hub install D:\path\to\target --profile minimal --target standard --dry-run
 npx @jasonwen/skill-hub install D:\path\to\target --profile minimal --target standard --yes
+npx @jasonwen/skill-hub install D:\path\to\target --profile sdd --target standard --dry-run
 npx @jasonwen/skill-hub status D:\path\to\target --json
 npx @jasonwen/skill-hub update D:\path\to\target --dry-run --json
 npx @jasonwen/skill-hub remove D:\path\to\target --dry-run --json
@@ -75,6 +77,7 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | `scripts/skill-quality-inventory.ts` | Report-only skill quality inventory |
 | `docs/skill-routing.md` | Overlap and routing rules |
 | `docs/source-projects.md` | Upstream source and decision log |
+| `docs/workflow-source-dossier.md` | Reference dossier for SDD, routing, Effective Interact, OpenSpec, Superpowers, ECC, Matt Pocock skills, Vercel, and Ralph |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy |
 
 ## Validation
