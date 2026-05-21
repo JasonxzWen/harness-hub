@@ -310,7 +310,7 @@
       "skill": "feynman-learning-coach",
       "kind": "negative",
       "prompt": "Research recent vector database trends and turn the findings into a polished article.",
-      "expectedSkill": "deep-research",
+      "expectedSkill": "answer-workflow",
       "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
     },
     {

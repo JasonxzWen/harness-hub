@@ -25,6 +25,29 @@
         "skill:agent-introspection-debugging"
       ]
     },
+    "sdd": {
+      "description": "SDD-first workflow profile with intent routing, public workflow owners, source gathering, embedded TDD, review, validation, delivery handoffs, and an explicit Ralph goal-loop bridge.",
+      "components": [
+        "skill:workflow-router",
+        "skill:answer-workflow",
+        "skill:sdd-workflow",
+        "skill:diagnosis-workflow",
+        "skill:review-workflow",
+        "skill:delivery-workflow",
+        "skill:hub-maintenance-workflow",
+        "skill:effective-interact",
+        "skill:product-capability",
+        "skill:tdd-workflow",
+        "skill:verification-loop",
+        "skill:ralph-prd",
+        "skill:ralph-loop",
+        "skill:diagnose",
+        "skill:agent-introspection-debugging",
+        "skill:compound-code-review",
+        "skill:security-review",
+        "skill:e2e-testing"
+      ]
+    },
     "web": {
       "description": "Frontend, UI prototyping, and browser-validation profile for web UI work.",
       "components": [
@@ -277,6 +300,216 @@
       "risk": "low",
       "recommendation": "Add a quality snapshot that tracks whether the codebase and harness are getting stronger over time."
     },
+    "skill:workflow-router": {
+      "kind": "skill",
+      "path": "skills/workflow-router",
+      "version": "0.1.0",
+      "source": "local",
+      "provides": [
+        "workflow-intent-routing",
+        "single-owner-routing",
+        "workflow-state-handoff"
+      ],
+      "overlapsWith": [
+        "skill:openspec-explore",
+        "skill:sdd-workflow",
+        "skill:tdd-workflow",
+        "skill:verification-loop"
+      ],
+      "routing": "Load when a non-trivial request needs intent recognition before work starts; classify it into exactly one workflow owner or ask a clarification.",
+      "detects": [
+        {
+          "path": "skills/workflow-router/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Add a thin intent router that selects exactly one public workflow owner before work starts."
+    },
+    "skill:answer-workflow": {
+      "kind": "skill",
+      "path": "skills/answer-workflow",
+      "version": "0.1.0",
+      "source": "local",
+      "provides": [
+        "read-only-answer-workflow",
+        "evidence-first-answers"
+      ],
+      "overlapsWith": [
+        "skill:documentation-lookup",
+        "skill:effective-interact"
+      ],
+      "routing": "Use for read-only questions, explanations, evidence lookup, feasibility checks, and comparisons.",
+      "detects": [
+        {
+          "path": "skills/answer-workflow/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Answer read-only questions from evidence without mutating files."
+    },
+    "skill:sdd-workflow": {
+      "kind": "skill",
+      "path": "skills/sdd-workflow",
+      "version": "0.1.0",
+      "source": "local",
+      "provides": [
+        "sdd-first-change-workflow",
+        "embedded-tdd",
+        "pre-implementation-alignment"
+      ],
+      "overlapsWith": [
+        "skill:product-capability",
+        "skill:tdd-workflow",
+        "skill:verification-loop",
+        "skill:openspec-propose",
+        "skill:openspec-apply-change"
+      ],
+      "routing": "Use for feature, bug fix, refactor, product/spec change, or implementation requests that must align spec and acceptance before coding.",
+      "detects": [
+        {
+          "path": "skills/sdd-workflow/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Run the full SDD lifecycle with source gathering, spec, acceptance, executable plan, cleanup, implementation, tests, and handoff."
+    },
+    "skill:diagnosis-workflow": {
+      "kind": "skill",
+      "path": "skills/diagnosis-workflow",
+      "version": "0.1.0",
+      "source": "local",
+      "provides": [
+        "diagnosis-owner-workflow",
+        "failure-reproduction-gate"
+      ],
+      "overlapsWith": [
+        "skill:diagnose",
+        "skill:agent-introspection-debugging",
+        "skill:webapp-testing",
+        "skill:verification-loop"
+      ],
+      "routing": "Use when a task starts from a failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure.",
+      "detects": [
+        {
+          "path": "skills/diagnosis-workflow/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Reproduce or bound a failure before applying the smallest confirmed fix."
+    },
+    "skill:review-workflow": {
+      "kind": "skill",
+      "path": "skills/review-workflow",
+      "version": "0.1.0",
+      "source": "local",
+      "provides": [
+        "review-owner-workflow",
+        "findings-first-review"
+      ],
+      "overlapsWith": [
+        "skill:compound-code-review",
+        "skill:security-review",
+        "skill:web-design-guidelines",
+        "skill:verification-loop"
+      ],
+      "routing": "Use for code, plan, release, UI, or security review when findings should come before implementation.",
+      "detects": [
+        {
+          "path": "skills/review-workflow/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Review with findings first and avoid implementing fixes unless explicitly redirected."
+    },
+    "skill:delivery-workflow": {
+      "kind": "skill",
+      "path": "skills/delivery-workflow",
+      "version": "0.1.0",
+      "source": "local",
+      "provides": [
+        "delivery-owner-workflow",
+        "validation-handoff-cleanup"
+      ],
+      "overlapsWith": [
+        "skill:verification-loop",
+        "skill:effective-interact"
+      ],
+      "routing": "Use when accepted work needs validation closeout, cleanup, handoff, release notes, or local environment reset.",
+      "detects": [
+        {
+          "path": "skills/delivery-workflow/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Close accepted work with validation, cleanup, residual-risk notes, and handoff."
+    },
+    "skill:hub-maintenance-workflow": {
+      "kind": "skill",
+      "path": "skills/hub-maintenance-workflow",
+      "version": "0.1.0",
+      "source": "local",
+      "provides": [
+        "skill-hub-maintenance-workflow",
+        "source-evaluation-workflow",
+        "profile-lifecycle-governance"
+      ],
+      "overlapsWith": [],
+      "routing": "Use for maintaining Skill Hub sources, routing, profiles, capabilities, npm lifecycle, and managed update/remove behavior.",
+      "detects": [
+        {
+          "path": "skills/hub-maintenance-workflow/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Maintain Skill Hub with source evidence, narrow changes, validation, and lock-backed lifecycle boundaries."
+    },
+    "skill:product-capability": {
+      "kind": "skill",
+      "path": "skills/product-capability",
+      "version": "0.1.0",
+      "source": "local",
+      "provides": [
+        "implementation-ready-capability-contracts",
+        "product-constraint-planning",
+        "acceptance-boundary-alignment"
+      ],
+      "overlapsWith": [
+        "skill:sdd-workflow",
+        "skill:openspec-propose"
+      ],
+      "routing": "Use under SDD when product intent needs constraints, invariants, interfaces, unresolved decisions, and acceptance boundaries before implementation.",
+      "detects": [
+        {
+          "path": "skills/product-capability/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Create an implementation-ready capability contract before coding product-facing changes."
+    },
     "skill:grill-me": {
       "kind": "skill",
       "path": "skills/grill-me",
@@ -288,14 +521,12 @@
         "assumption-surfacing"
       ],
       "overlapsWith": [
-        "skill:brainstorming",
         "skill:product-capability"
       ],
       "routing": "Use when the user asks to be grilled, challenged, pressure-tested, or wants assumptions surfaced before implementation.",
       "detects": [
         {
-          "path": "skills/grill-me/SKILL.md",
-          "agent": "standard"
+          "path": "skills/grill-me/SKILL.md"
         }
       ],
       "agents": [
@@ -324,8 +555,7 @@
       "routing": "Use for product, code, test, and performance failures; use agent-introspection-debugging for agent/tool failures, webapp-testing for one-off browser inspection, and verification-loop after the fix.",
       "detects": [
         {
-          "path": "skills/diagnose/SKILL.md",
-          "agent": "standard"
+          "path": "skills/diagnose/SKILL.md"
         }
       ],
       "agents": [
@@ -354,8 +584,7 @@
       "routing": "Use only for clearly marked throwaway prototypes that answer one design question; use frontend-design for production UI, web-artifacts-builder for standalone artifacts, and tdd-workflow for production implementation.",
       "detects": [
         {
-          "path": "skills/prototype/SKILL.md",
-          "agent": "standard"
+          "path": "skills/prototype/SKILL.md"
         }
       ],
       "agents": [
@@ -390,8 +619,7 @@
       "routing": "Load broadly for non-trivial sessions when a generated, validated self-contained HTML surface can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider every session and require an HTML report after material repo or skill changes; skip permission pauses, trivial chat, UI apps, decks, and bundled artifacts.",
       "detects": [
         {
-          "path": "skills/effective-interact/SKILL.md",
-          "agent": "standard"
+          "path": "skills/effective-interact/SKILL.md"
         }
       ],
       "agents": [
@@ -417,8 +645,7 @@
       "routing": "Use when the user asks to hand off current work, compact this conversation for another agent/session, or create restart notes; use effective-interact for visual HTML repo reports.",
       "detects": [
         {
-          "path": "skills/handoff/SKILL.md",
-          "agent": "standard"
+          "path": "skills/handoff/SKILL.md"
         }
       ],
       "agents": [
@@ -447,8 +674,7 @@
       "routing": "Use for deep pre-PR or CE-style code review. Use security-review for focused security checklists, web-design-guidelines for UI/UX audits, and verification-loop for final command gates.",
       "detects": [
         {
-          "path": "skills/compound-code-review/SKILL.md",
-          "agent": "standard"
+          "path": "skills/compound-code-review/SKILL.md"
         }
       ],
       "agents": [
@@ -469,15 +695,13 @@
         "learning-session-logging"
       ],
       "overlapsWith": [
-        "skill:deep-research",
-        "skill:article-writing",
-        "skill:content-engine"
+        "skill:answer-workflow",
+        "skill:documentation-lookup"
       ],
       "routing": "Load when the user explicitly wants to learn, study, master, review, prepare for an exam/interview, build a syllabus, or be coached through a topic; do not route ordinary implementation or factual lookup.",
       "detects": [
         {
-          "path": "skills/feynman-learning-coach/SKILL.md",
-          "agent": "standard"
+          "path": "skills/feynman-learning-coach/SKILL.md"
         }
       ],
       "agents": [
@@ -498,8 +722,7 @@
       "routing": "General implementation quality.",
       "detects": [
         {
-          "path": "skills/coding-standards/SKILL.md",
-          "agent": "standard"
+          "path": "skills/coding-standards/SKILL.md"
         }
       ],
       "agents": [
@@ -528,8 +751,7 @@
       "routing": "Use for production features, confirmed bug fixes, and refactors that should proceed one behavior at a time through red-green-refactor; use diagnose for unknown root causes and prototype for throwaway exploration.",
       "detects": [
         {
-          "path": "skills/tdd-workflow/SKILL.md",
-          "agent": "standard"
+          "path": "skills/tdd-workflow/SKILL.md"
         }
       ],
       "agents": [
@@ -552,8 +774,7 @@
       "routing": "Default before declaring work complete.",
       "detects": [
         {
-          "path": "skills/verification-loop/SKILL.md",
-          "agent": "standard"
+          "path": "skills/verification-loop/SKILL.md"
         }
       ],
       "agents": [
@@ -574,8 +795,7 @@
       "routing": "Security-sensitive code, auth, secrets, injection, unsafe IO, or payments.",
       "detects": [
         {
-          "path": "skills/security-review/SKILL.md",
-          "agent": "standard"
+          "path": "skills/security-review/SKILL.md"
         }
       ],
       "agents": [
@@ -593,14 +813,12 @@
         "current-docs-lookup"
       ],
       "overlapsWith": [
-        "skill:deep-research",
-        "skill:exa-search"
+        "skill:answer-workflow"
       ],
       "routing": "Library, framework, SDK, API, CLI, or cloud-service docs.",
       "detects": [
         {
-          "path": "skills/documentation-lookup/SKILL.md",
-          "agent": "standard"
+          "path": "skills/documentation-lookup/SKILL.md"
         }
       ],
       "agents": [
@@ -623,8 +841,7 @@
       "routing": "Repeated agent failures, loops, drift, or recoverable tool failures.",
       "detects": [
         {
-          "path": "skills/agent-introspection-debugging/SKILL.md",
-          "agent": "standard"
+          "path": "skills/agent-introspection-debugging/SKILL.md"
         }
       ],
       "agents": [
@@ -648,8 +865,7 @@
       "routing": "Use for polished product UI or web pages, not routine interaction artifacts.",
       "detects": [
         {
-          "path": "skills/frontend-design/SKILL.md",
-          "agent": "standard"
+          "path": "skills/frontend-design/SKILL.md"
         }
       ],
       "agents": [
@@ -674,8 +890,7 @@
       "routing": "Use for complex React/Tailwind/shadcn artifacts.",
       "detects": [
         {
-          "path": "skills/web-artifacts-builder/SKILL.md",
-          "agent": "standard"
+          "path": "skills/web-artifacts-builder/SKILL.md"
         }
       ],
       "agents": [
@@ -698,8 +913,7 @@
       "routing": "Use for slide decks and PPT/PPTX-to-web work.",
       "detects": [
         {
-          "path": "skills/frontend-slides/SKILL.md",
-          "agent": "standard"
+          "path": "skills/frontend-slides/SKILL.md"
         }
       ],
       "agents": [
@@ -722,8 +936,7 @@
       "routing": "Use for React, state, forms, routing, and accessibility patterns.",
       "detects": [
         {
-          "path": "skills/frontend-patterns/SKILL.md",
-          "agent": "standard"
+          "path": "skills/frontend-patterns/SKILL.md"
         }
       ],
       "agents": [
@@ -746,8 +959,7 @@
       "routing": "One-off local browser inspection.",
       "detects": [
         {
-          "path": "skills/webapp-testing/SKILL.md",
-          "agent": "standard"
+          "path": "skills/webapp-testing/SKILL.md"
         }
       ],
       "agents": [
@@ -770,8 +982,7 @@
       "routing": "UI, UX, and accessibility audits.",
       "detects": [
         {
-          "path": "skills/web-design-guidelines/SKILL.md",
-          "agent": "standard"
+          "path": "skills/web-design-guidelines/SKILL.md"
         }
       ],
       "agents": [
@@ -794,8 +1005,7 @@
       "routing": "Durable E2E suites and CI browser tests.",
       "detects": [
         {
-          "path": "skills/e2e-testing/SKILL.md",
-          "agent": "standard"
+          "path": "skills/e2e-testing/SKILL.md"
         }
       ],
       "agents": [
@@ -813,14 +1023,12 @@
         "formal-change-exploration"
       ],
       "overlapsWith": [
-        "skill:brainstorming",
         "skill:product-capability"
       ],
       "routing": "Explicit OpenSpec exploration or formal change lifecycle only.",
       "detects": [
         {
-          "path": "skills/openspec-explore/SKILL.md",
-          "agent": "standard"
+          "path": "skills/openspec-explore/SKILL.md"
         }
       ],
       "agents": [
@@ -844,8 +1052,7 @@
       "routing": "Explicit OpenSpec proposal generation.",
       "detects": [
         {
-          "path": "skills/openspec-propose/SKILL.md",
-          "agent": "standard"
+          "path": "skills/openspec-propose/SKILL.md"
         }
       ],
       "agents": [
@@ -869,8 +1076,7 @@
       "routing": "Implementing an already-created OpenSpec change.",
       "detects": [
         {
-          "path": "skills/openspec-apply-change/SKILL.md",
-          "agent": "standard"
+          "path": "skills/openspec-apply-change/SKILL.md"
         }
       ],
       "agents": [
@@ -891,8 +1097,7 @@
       "routing": "Archiving completed OpenSpec changes.",
       "detects": [
         {
-          "path": "skills/openspec-archive-change/SKILL.md",
-          "agent": "standard"
+          "path": "skills/openspec-archive-change/SKILL.md"
         }
       ],
       "agents": [
@@ -916,8 +1121,7 @@
       "routing": "Use when the user explicitly wants Ralph-ready PRDs.",
       "detects": [
         {
-          "path": "skills/ralph-prd/SKILL.md",
-          "agent": "standard"
+          "path": "skills/ralph-prd/SKILL.md"
         }
       ],
       "agents": [
@@ -940,8 +1144,7 @@
       "routing": "Use only for explicit Ralph-style repeated execution.",
       "detects": [
         {
-          "path": "skills/ralph-loop/SKILL.md",
-          "agent": "standard"
+          "path": "skills/ralph-loop/SKILL.md"
         }
       ],
       "agents": [

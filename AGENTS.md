@@ -36,15 +36,31 @@ Skill Hub maintains platform-neutral agent skills. Keep every skill in the stand
 
 Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest matching skill:
 
+- Non-trivial requests: use `workflow-router` first to classify the request into exactly one owner state.
+- Questions and evidence lookup: use `answer-workflow`.
+- SDD change work: use `sdd-workflow`; align core details, target spec, and acceptance criteria before implementation.
+- Runtime bug reports that start from failure evidence: use `diagnosis-workflow`.
+- Code, plan, release, UI, or security review: use `review-workflow`.
+- Delivery, validation closeout, cleanup, or handoff: use `delivery-workflow`.
+- Skill Hub source, routing, profile, capability, npm lifecycle, or cleanup work: use `hub-maintenance-workflow`.
 - Plan/design pressure testing: use `grill-me`.
 - Runtime bugs/performance regressions: use `diagnose`.
 - Agent/tool harness failures: use `agent-introspection-debugging`.
 - Production feature work or confirmed bug fixes with tests: use `tdd-workflow`.
+- Ralph goal/story loops: `sdd` includes `ralph-prd` and `ralph-loop` as a pre-native-goal bridge, but use them only when the user explicitly wants Ralph-style goal/story execution; do not bypass SDD alignment or start autonomous repeated execution without approval.
 - Throwaway design exploration: use `prototype`; use `frontend-design` for production UI.
 - Deep pre-PR review: use `compound-code-review`; use `security-review` only for focused security checks.
 - Final command gates and build/test validation: use `verification-loop`.
-- Third-party skill evaluation: use `skill-evaluator`.
-- Skill Hub maintenance: use `update-skill-hub`.
+
+## Workflow Router Direction
+
+The target architecture is a thin `workflow-router` that classifies each non-trivial request into exactly one workflow state: question, SDD change, diagnosis, review, delivery, or Skill Hub maintenance. Default development should be SDD-first with TDD embedded. Do not start implementation before the user's core details, target spec, and acceptance criteria are aligned.
+
+`effective-interact` is high-priority communication infrastructure. Default-consider it for every non-trivial session, especially after material repo or skill changes. Its job is to reduce human interpretation cost through answer-first structure, visual comparison, evidence, validation, and handoff artifacts; it does not replace production UI, slide, or bundled app skills.
+
+Subagents are an optimization owned by the active workflow, not a default behavior of every skill. Use them only for independent read-only research, review, docs work, verification, or clearly disjoint write scopes; the main agent keeps final decisions, integration, and user-facing conclusions.
+
+Hooks should start as advisory or deterministic local checks only. Do not introduce blocking hooks, remote actions, credential changes, posting, pushing, publishing, or agent dispatch without explicit user approval and security review.
 
 ## Skill Quality Governance
 
@@ -71,7 +87,7 @@ Before release-oriented CLI changes, run `bun run validate`, `git diff --check`,
 
 ## Third-Party Skill Evaluation
 
-Use `skill-evaluator` whenever the user asks to evaluate, install, compare, or import a third-party skill repository.
+Use `hub-maintenance-workflow` whenever the user asks to evaluate, install, compare, or import a third-party skill repository.
 
 For every third-party skill evaluation:
 

@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "lifecycleGates": [
+    "align-user-need",
+    "gather-required-material",
+    "write-spec-and-acceptance",
+    "write-executable-plan-and-align",
+    "clean-unneeded-files",
+    "implement",
+    "test-and-accept",
+    "deliver-report"
+  ],
+  "cases": [
+    {
+      "id": "sdd-change-positive-skill-hub-refactor",
+      "kind": "positive",
+      "prompt": "Refactor Skill Hub into a standard SDD-first workflow after checking the referenced repos, then implement and test it.",
+      "expectedState": "sdd-change",
+      "expectedOwner": "sdd-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "align-user-need",
+        "gather-required-material",
+        "write-spec-and-acceptance",
+        "write-executable-plan-and-align",
+        "clean-unneeded-files",
+        "implement",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "Every non-trivial change request MUST follow this order unless the selected state is explicitly read-only, such as a pure question or review."
+    },
+    {
+      "id": "question-positive-source-lookup",
+      "kind": "no-mutation",
+      "prompt": "Where does this repository reference Matt Pocock skills, and what behavior do those references currently drive?",
+      "expectedState": "question",
+      "expectedOwner": "answer-workflow",
+      "mutationAllowed": false,
+      "requiredGates": [
+        "gather-required-material",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks for explanation, lookup, feasibility, comparison, or evidence."
+    },
+    {
+      "id": "diagnosis-positive-failing-command",
+      "kind": "positive",
+      "prompt": "The workflow-router contract test fails after a docs change; reproduce the failure, identify the cause, fix it, and add coverage.",
+      "expectedState": "diagnosis",
+      "expectedOwner": "diagnosis-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "align-user-need",
+        "gather-required-material",
+        "write-executable-plan-and-align",
+        "implement",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user reports a failing command, runtime bug, flaky behavior, performance issue, or agent/tool failure."
+    },
+    {
+      "id": "review-positive-no-mutation",
+      "kind": "no-mutation",
+      "prompt": "Review this workflow-router plan and tell me what is risky or missing, but do not change files yet.",
+      "expectedState": "review",
+      "expectedOwner": "review-workflow",
+      "mutationAllowed": false,
+      "requiredGates": [
+        "gather-required-material",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks for code review, plan review, release review, security review, or confidence check."
+    },
+    {
+      "id": "delivery-positive-handoff",
+      "kind": "positive",
+      "prompt": "Finish the accepted workflow-router docs work: run validation, clean local artifacts if needed, and produce a final HTML handoff.",
+      "expectedState": "delivery",
+      "expectedOwner": "delivery-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "clean-unneeded-files",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks for acceptance, handoff, cleanup, release notes, validation closeout, or environment reset."
+    },
+    {
+      "id": "hub-maintenance-positive-source-dossier",
+      "kind": "positive",
+      "prompt": "Maintain Skill Hub by evaluating referenced upstream skill repos, updating routing docs, and preserving npm update/remove behavior.",
+      "expectedState": "skill-hub-maintenance",
+      "expectedOwner": "hub-maintenance-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "align-user-need",
+        "gather-required-material",
+        "write-spec-and-acceptance",
+        "write-executable-plan-and-align",
+        "clean-unneeded-files",
+        "implement",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks to maintain this hub, evaluate skill sources, adjust routing, or change install/update/remove policy."
+    },
+    {
+      "id": "ambiguous-clarify-plan-or-implement",
+      "kind": "ambiguous",
+      "prompt": "Let's do the workflow-router thing next.",
+      "expectedState": "clarify",
+      "expectedOwner": null,
+      "mutationAllowed": false,
+      "requiredGates": [
+        "align-user-need"
+      ],
+      "docsBoundary": "If a request is ambiguous between states, the router MUST ask one concise clarification or choose the safer non-mutating state."
+    },
+    {
+      "id": "trivial-chat-no-owner",
+      "kind": "no-owner",
+      "prompt": "Thanks, that makes sense.",
+      "expectedState": "none",
+      "expectedOwner": null,
+      "mutationAllowed": false,
+      "requiredGates": [],
+      "docsBoundary": "Every non-trivial change request MUST follow this order unless the selected state is explicitly read-only, such as a pure question or review."
+    }
+  ]
+}

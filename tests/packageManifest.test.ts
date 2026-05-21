@@ -37,6 +37,26 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.files).not.toContain('openspec/');
 });
 
+test('npm package publishes the platform-neutral skill source tree', () => {
+  const artifactPolicy = JSON.parse(fs.readFileSync('config/artifact-policy.json', 'utf8')) as {
+    npm: { files: string[] };
+  };
+  const capabilityIndex = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
+    components: Record<string, { kind: string; path: string }>;
+  };
+
+  const skillComponentPaths = Object.values(capabilityIndex.components)
+    .filter((component) => component.kind === 'skill')
+    .map((component) => component.path)
+    .sort();
+
+  expect(artifactPolicy.npm.files).toContain('skills/');
+  expect(artifactPolicy.npm.files).toContain('.claude-plugin/');
+  expect(artifactPolicy.npm.files).not.toContain('.codex/skills/');
+  expect(skillComponentPaths).toContain('skills/workflow-router');
+  expect(skillComponentPaths).not.toContain('skills/everything-claude-code');
+});
+
 test('npm publish workflow uses trusted publishing and release tag checks', () => {
   const workflow = fs.readFileSync('.github/workflows/publish-npm.yml', 'utf8');
 

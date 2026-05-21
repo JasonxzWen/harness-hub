@@ -1,6 +1,6 @@
 ---
 name: e2e-testing
-description: "Use when creating, refactoring, or maintaining durable Playwright E2E test suites: test architecture, Page Object Models, fixtures, CI/CD integration, artifact management, and flaky test strategy. Do not use for one-off local UI inspection or ad hoc browser debugging; use webapp-testing for that."
+description: "Use when creating, refactoring, or maintaining durable Playwright E2E test suites: test architecture, Page Object Models, fixtures, CI/CD integration, artifact management, and flaky test strategy. Do not use for one-off local UI inspection or ad hoc browser debugging; use webapp-testing only when that helper is installed."
 ---
 
 # E2E Testing Patterns
