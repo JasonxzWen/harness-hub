@@ -31,6 +31,7 @@ The workflow system must serve this order:
 | Effective Interact | Original local skill. | Chinese-first interaction-cost reduction, answer-first visual handoffs, evidence, option comparison, validation dashboards. | High-priority interaction layer across all non-trivial lifecycle phases. |
 | Skill Hub CLI lifecycle | Implemented and documented locally. | Lock-backed install/status/update/remove and safe cleanup ownership. | Preserve as mandatory distribution and cleanup boundary. |
 | Vercel/Web/React skills | `web-design-guidelines` remains active; other Vercel Web/React skills are source-retained only. | Frontend implementation and UI quality for target repos that need it. | Helper/reference sources only; not top-level lifecycle owners. |
+| Anthropic skills | Selective atoms installed or rewritten: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, `slack-gif-creator`. | Provider API, MCP server, skill authoring, doc/comms, visual theme, and Slack GIF atoms. | Helper atoms under owner workflows; document four-pack remains reference-only due licensing. |
 | Ralph | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` retained. | Autonomous story loop and PRD-to-story execution. | Explicit autonomous execution mode, not default SDD workflow. |
 | Learn Harness / Learn FASTER | Narrow local adaptations. | Harness templates and learning lifecycle ideas. | Keep outside default engineering lifecycle except as explicit profiles. |
 
@@ -63,6 +64,7 @@ The workflow system must serve this order:
 | `product-capability` | SRS-style capability contract and implementation-facing constraints. | Do not scatter ad hoc notes. | Use under `sdd-workflow` before coding. |
 | Matt `grill-with-docs` | Context and ADR-oriented design pressure. | It assumes `CONTEXT.md`/ADR writes that this hub has not standardized. | Reference-only; borrow terminology, scenario, and code/doc contradiction checks without inline doc writes. |
 | CE doc-review / plan confidence | Persona-based plan review and confidence checks. | Unclear persistence model and overlaps existing planning lanes. | Medium-priority future review helper after plan artifact ownership is defined. |
+| Anthropic `doc-coauthoring` pattern | Structured context gathering, drafting, and reader testing. | Upstream directory lacked a per-skill license file in the refreshed snapshot, so do not copy it. | Local-original `doc-coauthoring` fills the durable document lane. |
 | Effective Interact | Spec/acceptance dashboards and decision-first summaries. | Do not hide unsupported claims in polished HTML. | Use for user alignment when the spec has options, risks, or evidence. |
 
 ### 4. Write Executable Plan And Align
@@ -90,6 +92,7 @@ The workflow system must serve this order:
 | `tdd-workflow` | Write failing tests or deterministic gates before implementation. | TDD must not compete with SDD as top-level workflow. | Embed TDD inside accepted SDD spec. |
 | Matt `tdd` | Reinforces test-first habit. | Rejected by local routing due to overlap with installed TDD/Ralph/OpenSpec surfaces. | Reference-only; do not install by default. |
 | ECC coding standards | General code quality and conservative edits. | Avoid duplicating root project instructions inside every skill. | Keep as helper/library behavior. |
+| Anthropic `claude-api`, `mcp-builder`, `skill-creator` | Provider-specific API guidance, MCP server design/eval, and skill authoring patterns. | Avoid copying volatile API tables or host-specific skill-eval runners. | Use explicit helper atoms under SDD or Skill Hub maintenance. |
 | OpenSpec apply | Task-by-task implementation from formal change artifacts. | Explicit formal lifecycle only. | Use when an OpenSpec change already exists. |
 
 ### 7. Test And Accept
@@ -108,6 +111,7 @@ The workflow system must serve this order:
 | Effective Interact | Chinese-first static HTML reports with evidence, validation, risks, and next actions. | Do not use for trivial chat, production UI, decks, bundled apps, credentials, or repo-writing editors. | Mandatory communication layer for material work. |
 | Skill Hub CLI lifecycle docs | Release/checklist handoff with concrete commands. | Do not conflate CLI package self-update with target-repo managed `update`. | Preserve package-vs-target update distinction. |
 | CE code review artifact handoff | Stable finding numbering and artifact-style review output. | Keep only the review lane. | Use for review handoffs when findings matter. |
+| Anthropic `internal-comms`, `theme-factory`, `slack-gif-creator` | Internal updates, artifact theming, and Slack GIF delivery formats. | They are deliverable-specific helpers, not workflow owners. | Use only when the selected owner reaches that output shape. |
 | OpenSpec archive | Formal closeout and spec archive. | Use only for explicit OpenSpec changes. | Reference for lifecycle closure, not default delivery. |
 
 ## Adopt / Adapt / Reference / Reject Summary
@@ -115,8 +119,8 @@ The workflow system must serve this order:
 | Decision | Sources | Local behavior |
 |---|---|---|
 | Adopt | Effective Interact, Skill Hub CLI lifecycle, local AGENTS constraints. | Make them high-priority local infrastructure. |
-| Adapt | Matt `grill-me`/`diagnose`/`prototype`, Compound `ce-code-review`, Ralph PRD/story loop, selected Vercel/Web guidance. | Keep bounded helper lanes with local routing. |
-| Reference-only | Superpowers full pack, ECC broad system, OpenSpec formal lifecycle, Matt `grill-with-docs`, CE doc review, frontend-slides upstream. | Study specific ideas without default installation. |
+| Adapt | Matt `grill-me`/`diagnose`/`prototype`, Compound `ce-code-review`, Ralph PRD/story loop, selected Vercel/Web guidance, selected Anthropic atoms. | Keep bounded helper lanes with local routing. |
+| Reference-only | Superpowers full pack, ECC broad system, OpenSpec formal lifecycle, Matt `grill-with-docs`, CE doc review, frontend-slides upstream, Anthropic document four-pack and creative-heavy examples. | Study specific ideas without default installation. |
 | Reject for default | Full Superpowers, full CE plugin, Matt issue/triage/setup flows, side-effect-heavy PR/publish/credential workflows. | Prevent trigger noise and unsafe external actions. |
 
 ## Required Before Implementation

@@ -19,6 +19,11 @@ Use this owner for review-only work.
 
 - `compound-code-review` for deep pre-PR or CE-style code review.
 - `security-review` for focused security-sensitive review.
+- `claude-api` for Anthropic API or SDK reviews.
+- `mcp-builder` for MCP server or tool-contract reviews.
+- `doc-coauthoring` for document structure and reader-risk review.
+- `internal-comms` for internal update, FAQ, incident, or leadership communication review.
+- `theme-factory` for theme consistency review of existing artifacts.
 - `web-design-guidelines` for UI/UX audits only when the target also installed the `web` profile or that helper is otherwise available.
 - `verification-loop` only for final command gates, not finding analysis.
 

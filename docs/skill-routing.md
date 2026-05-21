@@ -28,13 +28,26 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 | Final build, typecheck, lint, and tests before completion | `verification-loop` | Verification gate, not a diagnosis workflow. |
 | Security-sensitive code, auth, secrets, injection, unsafe IO, or payments | `security-review` | Focused checklist and threat review. |
 | Current library/framework/API behavior | `documentation-lookup` | Use current primary docs before implementing. |
+| Claude API or Anthropic SDK implementation, tuning, debugging, or migration | `claude-api` | Provider-specific atom; verify current official docs before code changes and do not use for provider-neutral work. |
+| MCP server design, implementation, review, or evaluation | `mcp-builder` | Use for MCP tool/resource/prompt contracts and external-service server design; ordinary REST clients route elsewhere. |
+| Creating, adapting, or evaluating standard skills | `skill-creator` | Use under `hub-maintenance-workflow` or `sdd-workflow` after the owner is selected. |
+| Collaborative drafting of PRDs, RFCs, proposals, specs, or decision records | `doc-coauthoring` | Use for durable docs; use `product-capability` for implementation-ready capability contracts. |
+| Internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, or project updates | `internal-comms` | Use for internal communications; public marketing copy routes elsewhere. |
+| Applying a coherent visual theme to slides, reports, docs, HTML artifacts, or landing pages | `theme-factory` | Use for theming existing artifacts; production UI creation remains `frontend-design`. |
+| Creating, optimizing, or validating Slack animated GIFs | `slack-gif-creator` | Use for Slack emoji/message GIF targets only. |
 | Agent/tool harness loop, repeated tool failure, drift, or recoverable self-debugging | `agent-introspection-debugging` | Use after ordinary product debugging is ruled out. |
 | Communication layer for option comparison, material repo or skill change handoffs, architecture walkthroughs, review artifacts, research explainers, or lightweight export editor | `effective-interact` | Default-consider alongside the selected owner workflow when Chinese-first interaction-cost reduction or HTML makes the work easier to understand, decide, verify, or continue. `grill-me` remains the pressure-test owner; `frontend-slides` remains the deck lane. |
 
 ## Overlap Rules
 
 - Use `frontend-design` for production UI; use `web-artifacts-builder` for complex standalone React/Tailwind artifacts; use `effective-interact` for communication/report artifacts.
+- Use `theme-factory` after an artifact exists or when the request is specifically about theme selection; use `frontend-design` when layout, UX, and implementation are the primary task.
+- Use `slack-gif-creator` only for Slack GIFs; use image/video generation or frontend/artifact skills for other visual media.
 - Use `webapp-testing` for one-off local browser inspection; use `e2e-testing` for durable Playwright suites.
+- Use `doc-coauthoring` for durable docs and `internal-comms` for organizational updates; use `answer-workflow` for ordinary explanatory answers.
+- Use `claude-api` only for Anthropic provider work; use `documentation-lookup` for general library/API facts and other providers.
+- Use `mcp-builder` for MCP servers; use `claude-api` for Anthropic API clients and `security-review` when secret/tool-execution risk is central.
+- Use `skill-creator` for standard skill content; `hub-maintenance-workflow` still owns source records, profiles, capability metadata, and Skill Hub lifecycle decisions.
 - Use OpenSpec skills only when the user explicitly wants the formal OpenSpec lifecycle.
 - Use Ralph skills only for explicit Ralph-style PRD/story loops.
 - The `sdd` profile includes `ralph-prd` and `ralph-loop` as an explicit pre-native-goal bridge. They are helper skills only: no SDD bypass and no autonomous repeated execution without user approval.
@@ -55,6 +68,7 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - `verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis.
 - `feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions.
 - `hub-maintenance-workflow` loads for maintaining this Skill Hub's source records, installed skill components, routing, profiles, npm package boundary, and candidate-source decisions.
+- `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator` load as helper atoms under the selected owner workflow, not as public workflow owners.
 
 ## Subagents And Hooks
 

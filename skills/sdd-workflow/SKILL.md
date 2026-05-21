@@ -31,7 +31,13 @@ Do not start implementation until the user-visible gates are aligned.
 Use helpers only under this owner:
 
 - `product-capability` for implementation-ready constraints.
+- `doc-coauthoring` for PRDs, RFCs, proposals, specs, or decision records that need collaborative drafting before implementation.
 - `tdd-workflow` for test-first implementation detail.
+- `claude-api` for Anthropic API or SDK changes; verify current provider docs before writing code.
+- `mcp-builder` for MCP server, tool schema, resource, prompt, or evaluation work.
+- `skill-creator` for standard skill creation or adaptation inside a change.
+- `theme-factory` when an accepted artifact needs visual theming; use `frontend-design` for production UI.
+- `slack-gif-creator` only for explicit Slack GIF deliverables.
 - `e2e-testing` when user-visible flows require durable browser checks.
 - `verification-loop` before delivery.
 - `ralph-prd` and `ralph-loop` only when the user explicitly wants a goal/story loop bridge before native goal support is available; do not start autonomous repeated execution without approval.
