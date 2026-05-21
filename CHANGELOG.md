@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7 - 2026-05-21
+
+- Add the explicit `sdd` profile with `workflow-router`, public workflow owner skills, embedded TDD helpers, Effective Interact handoff expectations, and the Ralph goal-loop bridge.
+- Remove non-component skill directories from the active `skills/` source tree after preserving source decisions, and keep npm packaging aligned to installable platform-neutral skills.
+- Document SDD-first workflow routing, subagent boundaries, advisory hook policy, physical cleanup decisions, and source-project lineage.
+
 ## 0.1.6 - 2026-05-20
 
 - Move the source skill tree to standard `skills/`, remove host-specific skill metadata, and add Claude plugin manifests.
