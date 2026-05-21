@@ -94,7 +94,7 @@ The workflow owner MUST surface implementation details only when they change:
 
 ### WR-5: Effective Interact
 
-`effective-interact` MUST be default-considered for every non-trivial session.
+`effective-interact` MUST be default-considered for every non-trivial session as a Chinese-first expression and handoff layer, not as the substantive workflow owner.
 
 It is REQUIRED when:
 
@@ -103,6 +103,8 @@ It is REQUIRED when:
 - state, routing, architecture, timeline, or call path matters,
 - evidence, validation, or residual risk needs to remain inspectable,
 - an HTML artifact lowers user review cost more than chat.
+
+Question forecasting is required only when the answer can affect the next decision. `grill-me` or the selected review owner handles pressure-testing questions; `effective-interact` structures the result and creates the handoff surface. HTML is required after material repo or skill changes unless explicitly waived; otherwise choose the lightest output rung that lowers understanding, choice, verification, navigation, memory, or rework cost.
 
 It MUST NOT replace production UI, slide decks, bundled apps, credential tools, repo-writing editors, or external writes.
 

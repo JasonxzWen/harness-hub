@@ -28,7 +28,6 @@
       ".github/",
       "src/",
       "tests/",
-      "reports/",
       "openspec/changes/* except archive",
       "package.json",
       "tsconfig.json",
@@ -37,6 +36,7 @@
     "ignoredLocal": [
       "node_modules/",
       "vendor/",
+      "reports/",
       ".skill-hub/reports/",
       ".learning/",
       "scripts/ralph/prd.json",
@@ -105,6 +105,7 @@
       "vendor/forrestchang-andrej-karpathy-skills/",
       "vendor/mattpocock-skills/",
       "vendor/EveryInc-compound-engineering-plugin/",
+      "reports/",
       "scripts/ralph/prd.json",
       "scripts/ralph/progress.txt",
       "scripts/ralph/.last-branch",

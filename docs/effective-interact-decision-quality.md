@@ -41,7 +41,7 @@ New fixture inputs live under `skills/effective-interact/assets/fixtures/`:
 - `trigger-scope-retro-report.json`
 - `decision-brief-self-check-report.json`
 
-Intermediate generated artifacts default to ignored `skills/effective-interact/artifacts/`. Durable fixture artifacts that maintainers intentionally review can still live under `reports/`:
+Intermediate generated artifacts default to ignored `skills/effective-interact/artifacts/`. Generated HTML for local maintainer inspection can use ignored `reports/`, but the JSON fixtures are the durable source of truth and generated HTML must not be committed:
 
 - `effective-interact-concise-handoff.html`
 - `effective-interact-decision-quality.html`
@@ -168,7 +168,7 @@ This implementation should be accepted only when:
 
 ## Validation Commands
 
-Focused fixture generation:
+Focused local fixture generation:
 
 ```powershell
 bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/concise-handoff-report.json --out-dir reports --slug effective-interact-concise-handoff --json
@@ -180,7 +180,7 @@ bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effe
 bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/decision-brief-self-check-report.json --out-dir reports --slug effective-interact-decision-brief-self-check --json
 ```
 
-Focused fixture validation:
+Focused local fixture validation:
 
 ```powershell
 bun skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-concise-handoff.html --json --skip-browser

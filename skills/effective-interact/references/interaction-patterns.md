@@ -3,6 +3,11 @@
 ## Table of Contents
 
 - [Interaction Workflow](#interaction-workflow)
+- [Default Session Routing](#default-session-routing)
+- [Interaction Cost Gate](#interaction-cost-gate)
+- [Output Ladder](#output-ladder)
+- [Intent Routing](#intent-routing)
+- [Skill Authoring Gate](#skill-authoring-gate)
 - [HTML Usefulness Gate](#html-usefulness-gate)
 - [Pattern Selection](#pattern-selection)
 - [Template Catalogue](#template-catalogue)
@@ -20,11 +25,13 @@
 
 Use this workflow every time the skill loads:
 
-1. Treat loading as permission to run an HTML-worthiness check, not as an obligation to emit HTML.
-2. Choose one primary pattern from [Pattern Selection](#pattern-selection). If no pattern fits, answer in chat or Markdown instead.
-3. Start with the generator and the closest template. Use hand-written HTML only when the generator cannot express the required local editor or visualization.
-4. Add rich sections only when the chosen pattern requires them. Do not add charts, Mermaid, code, diff, tabs, filters, claims, or controls just to make the page look richer or silence an advisory warning.
-5. Validate the HTML and hand off the artifact link with validation status and any kept advisory warnings.
+1. Treat loading as permission to run an interaction-cost check, not as an obligation to emit HTML.
+2. Classify the user's interaction intent: idea shaping, pressure testing, explanation/research, implementation/review/delivery, or trivial chat.
+3. Choose the lightest output rung that reduces the user's cost to understand, decide, verify, and continue.
+4. If HTML is justified, choose one primary pattern from [Pattern Selection](#pattern-selection). If no pattern fits, answer in chat or Markdown instead.
+5. Start with the generator and the closest template. Use hand-written HTML only when the generator cannot express the required local editor or visualization.
+6. Add rich sections only when the chosen pattern requires them. Do not add charts, Mermaid, code, diff, tabs, filters, claims, or controls just to make the page look richer or silence an advisory warning.
+7. Validate the HTML and hand off the artifact link with validation status and any kept advisory warnings.
 
 ## Default Session Routing
 
@@ -36,7 +43,59 @@ The skill may load in every non-trivial session. The decision is whether to prod
 | During work | The next useful user input depends on seeing options, blockers, file evidence, validation state, or a process map together. | The user only needs a concise status sentence before work continues. |
 | Final handoff | Material repo or skill behavior changed, validation evidence matters, or the final answer would become a long linear file list. | The work is tiny, self-evident, and has no durable evidence beyond one command result. |
 
-For material repo or skill changes, default to an `implementation-handoff` or `conclusion-dashboard` artifact. It should include the why, changed contract, file evidence, validation, remaining risks, and next action. This rule is meant to catch changes where a plain final answer hides the decision trail.
+For material repo or skill changes, default to an `implementation-handoff` or `conclusion-dashboard` artifact unless the user explicitly waives it. It should include the why, changed contract, file evidence, validation, remaining risks, and next action. This rule is meant to catch changes where a plain final answer hides the decision trail.
+
+## Interaction Cost Gate
+
+Use the gate before deciding whether to ask, answer, draw, or generate:
+
+| Cost | Lower it by | Avoid |
+|---|---|---|
+| Understanding | Answer first, then show the minimum support needed. | Background-first narration. |
+| Choice | Put 2-3 options side by side with tradeoffs and a recommendation. | Asking the user to synthesize scattered pros/cons. |
+| Verification | Tie important claims to evidence, validation, code, or citations. | Unsupported confidence. |
+| Navigation | Add headings, tables, diagrams, filters, or anchors when linear text hides the point. | Decorative structure. |
+| Memory | Preserve decisions, assumptions, open questions, and next action in one place. | Repeating old context without a new decision bit. |
+| Rework | Ask only decision-changing questions before irreversible action. | Multi-question interviews when one assumption decides the path. |
+
+Language organization is advisory: improve it when it lowers one of these costs. Mojibake, broken structure, failed Mermaid, unsafe diagnostics, and missing required evidence are blocking.
+
+## Output Ladder
+
+Pick the lightest rung that solves the interaction problem:
+
+| Rung | Use when | Validation expectation |
+|---|---|---|
+| Concise chat | Short factual answer, permission pause, or one-command status. | No artifact. |
+| Structured Markdown | Explanation, small comparison, or simple handoff. | Clear conclusion and next action. |
+| Rich Markdown | Tables, Mermaid, code/diff snippets, citations, or exact file anchors reduce reasoning effort. | Source anchors remain inspectable. |
+| Self-contained HTML | Options, evidence, validation, flow, architecture, status, or final handoff need local navigation or visual comparison. | `validate-interaction.mjs`; browser required for runtime-cdn handoffs. |
+| Disposable local editor | The user must tune, sort, toggle, export Markdown/JSON/diff, or return structured input. | Visible export path; no network/repo writes or persistence. |
+
+## Intent Routing
+
+Use these intent patterns without importing any upstream workflow wholesale:
+
+| Intent | Signals | Local behavior |
+|---|---|---|
+| Idea shaping | New direction, from-zero design, future roadmap, solution shape before implementation. | Let the selected owner workflow drive the substantive decision; this layer structures assumptions, 2-3 approaches, tradeoffs, recommendation, and only the next decision-changing question. |
+| Pressure testing | Existing plan optimization, reflection, retro, "grill", "challenge", "is this enough". | `grill-me` or `review-workflow` owns the questioning logic. This layer presents decisions, assumptions, contradictions, evidence, and optional HTML handoff. |
+| Explanation or research | Concept explanation, feasibility, architecture, code understanding, comparison. | Answer directly first; add diagrams, citations, examples, or HTML only when they lower reasoning or verification cost. |
+| Implementation/review/delivery | Material repo or skill behavior changed, findings need inspection, validation matters. | Keep progress concise; produce an HTML handoff by default unless waived. |
+
+Do not create ADRs, CONTEXT files, formal specs, commits, issues, or external side effects just because an inspiration source does so. Those belong only to explicitly accepted local workflows.
+
+## Skill Authoring Gate
+
+Use skill-authoring references as quality criteria, not as workflow owners:
+
+| Gate | Requirement |
+|---|---|
+| Description as router | `description` must start with `Load when`, describe the capability, name concrete trigger contexts, and include exclusions for adjacent skills. |
+| Progressive disclosure | Keep `SKILL.md` as the concise control-plane summary; move detailed patterns, schemas, examples, and scripts into one-level resources. |
+| Behavioral coverage | When trigger logic changes, update routing docs plus prompt-style routing fixtures; keyword assertions are not enough. |
+| Concrete examples | Include examples that force the intended owner/layer split, especially `grill-me` as pressure-test owner and `effective-interact` as handoff layer. |
+| Stable language | Keep control instructions in concise English for cross-agent portability; keep user-facing examples and reports Chinese-first. |
 
 ## HTML Usefulness Gate
 
@@ -103,18 +162,18 @@ bun skills/effective-interact/scripts/create-interaction.mjs --input interaction
 bun skills/effective-interact/scripts/validate-interaction.mjs skills/effective-interact/artifacts/my-artifact.html --json
 ```
 
-Omit `--out-dir` for ignored skill-local intermediate artifacts. Add `--out-dir reports` only for durable examples that should be reviewed as repository artifacts.
+Omit `--out-dir` for ignored skill-local intermediate artifacts. Use `--out-dir reports` only for local inspection outputs. All generated HTML should stay ignored and must not be added to git.
 
 Input is JSON and follows `references/interaction-input-schema.json`. The minimum useful shape is content-first and has no required evidence, code, diagram, verification, or action block:
 
 ```json
 {
-  "title": "简洁中文交互产?,
-  "summary": "一句话先给结论?,
+  "title": "简洁中文交互产物",
+  "summary": "一句话先给结论",
   "status": "complete",
   "renderMode": "runtime-cdn",
   "sections": [
-    { "type": "markdown", "title": "结论", "group": "summary", "content": "- 只保留读者需要的内容? }
+    { "type": "markdown", "title": "结论", "group": "summary", "content": "- 只保留读者需要的内容。" }
   ]
 }
 ```
@@ -124,7 +183,7 @@ Add richer sections only when they shorten the explanation:
 ```json
 {
   "sections": [
-    { "type": "mermaid", "title": "调用?, "group": "details", "content": "graph LR\n  A --> B" },
+    { "type": "mermaid", "title": "调用链", "group": "details", "content": "graph LR\n  A --> B" },
     { "type": "code", "title": "关键改动", "group": "details", "language": "typescript", "filePath": "src/file.ts", "startLine": 42, "highlightLines": [42], "content": "export const ok = true;" },
     { "type": "diff", "title": "行为差异", "group": "verification", "filePath": "src/file.ts", "startLine": 42, "content": "- return oldValue;\n+ return newValue;" }
   ],

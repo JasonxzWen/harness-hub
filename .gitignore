@@ -38,6 +38,7 @@ scripts/ralph/.last-branch
 scripts/ralph/archive/
 
 # Skill Hub local CLI runtime reports
+reports/
 .skill-hub/reports/
 
 # Learning-coach runtime state
