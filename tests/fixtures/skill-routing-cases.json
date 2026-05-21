@@ -127,7 +127,7 @@
       "kind": "positive",
       "prompt": "Create a one-file effective interaction for this PR review with collapsible findings and copyable action items.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-completed-conclusion",
@@ -135,7 +135,7 @@
       "kind": "positive",
       "prompt": "The implementation is complete; create a visual handoff with the conclusion, changed files, highlighted code, verification, and next actions.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-material-skill-change-report",
@@ -143,7 +143,7 @@
       "kind": "positive",
       "prompt": "I changed this skill's trigger contract and validation behavior; produce the final HTML report with reasoning, changed areas, file evidence, tests, and remaining risks.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-openspec-acceptance",
@@ -151,7 +151,7 @@
       "kind": "positive",
       "prompt": "The OpenSpec apply change is done; produce an HTML acceptance report with tasks, changed files, generated fixtures, and validation gates.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-option-gallery",
@@ -159,7 +159,15 @@
       "kind": "positive",
       "prompt": "Create a self-contained HTML option gallery comparing these three implementation approaches before I choose one.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-grill-handoff",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "The grill-me pass is done; turn the decisions, remaining assumptions, evidence, and next action into a self-contained HTML handoff.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-intermediate-status",
@@ -167,7 +175,7 @@
       "kind": "positive",
       "prompt": "During this refactor, create a self-contained HTML status board with current options, blockers, file evidence, and copyable next-step choices so we can align before continuing.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-export-editor",
@@ -175,7 +183,7 @@
       "kind": "positive",
       "prompt": "Build a one-file temporary HTML editor so I can toggle these config options and copy the resulting JSON diff back here.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-negative-product-page",
@@ -183,7 +191,7 @@
       "kind": "negative",
       "prompt": "Build a branded product landing page as the first screen of the app.",
       "expectedSkill": "frontend-design",
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-forbidden-short-answer",
@@ -191,7 +199,7 @@
       "kind": "forbidden-load",
       "prompt": "Summarize the command output in two sentences.",
       "expectedSkill": null,
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-forbidden-permission-pause",
@@ -199,7 +207,7 @@
       "kind": "forbidden-load",
       "prompt": "Before pushing this branch, stop and ask me for approval.",
       "expectedSkill": null,
-      "docsBoundary": "`effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "handoff-positive-restart-notes",

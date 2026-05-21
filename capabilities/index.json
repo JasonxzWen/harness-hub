@@ -604,6 +604,7 @@
         "self-contained-html-interaction-artifacts",
         "interactive-work-artifacts",
         "html-change-artifacts",
+        "interaction-handoff-layer",
         "visual-code-evidence-artifacts",
         "generated-interaction-artifacts",
         "validated-interaction-artifacts",
@@ -612,11 +613,12 @@
         "disposable-export-editors"
       ],
       "overlapsWith": [
+        "skill:grill-me",
         "skill:web-artifacts-builder",
         "skill:frontend-slides",
         "skill:frontend-design"
       ],
-      "routing": "Load broadly for non-trivial sessions when a generated, validated self-contained HTML surface can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider every session and require an HTML report after material repo or skill changes; skip permission pauses, trivial chat, UI apps, decks, and bundled artifacts.",
+      "routing": "Load as a Chinese-first expression and HTML handoff layer alongside the selected owner workflow when structured comparison, evidence navigation, validation, architecture, review, research, or material repo/skill change reporting lowers interaction cost; grill-me remains the pressure-test owner; skip permission pauses, trivial chat, UI apps, decks, and bundled artifacts.",
       "detects": [
         {
           "path": "skills/effective-interact/SKILL.md"
@@ -626,7 +628,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Create visual self-contained HTML interaction artifacts for non-trivial alignment points, handoffs, option comparisons, reviews, plans, status dashboards, research explainers, architecture walkthroughs, or lightweight export editors."
+      "recommendation": "Create Chinese-first structured responses or self-contained HTML handoffs for non-trivial alignment points, option comparisons, reviews, status dashboards, research explainers, architecture walkthroughs, and lightweight export editors after the owner workflow drives the substance."
     },
     "skill:handoff": {
       "kind": "skill",

@@ -3,7 +3,9 @@ import fs from 'node:fs';
 
 test('package manifest keeps release validation and source traceability explicit', () => {
   const artifactPolicy = JSON.parse(fs.readFileSync('config/artifact-policy.json', 'utf8')) as {
-    npm: { files: string[] };
+    categories: { gitOnly: string[]; ignoredLocal: string[] };
+    git: { ignored: string[] };
+    npm: { files: string[]; forbidden: string[] };
   };
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8')) as {
     name?: string;
@@ -35,6 +37,10 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.files).toContain('openspec/config.yaml');
   expect(packageJson.files).toContain('openspec/specs/');
   expect(packageJson.files).not.toContain('openspec/');
+  expect(artifactPolicy.categories.gitOnly).not.toContain('reports/');
+  expect(artifactPolicy.categories.ignoredLocal).toContain('reports/');
+  expect(artifactPolicy.git.ignored).toContain('reports/');
+  expect(artifactPolicy.npm.forbidden).toContain('reports/');
 });
 
 test('npm package publishes the platform-neutral skill source tree', () => {

@@ -47,7 +47,7 @@ Implementation status: the router skill, public owner skills, routing fixture te
 | Library demotion | `docs/skill-routing.md`, `capabilities/index.json` | Existing narrow skills become tools under workflow owners instead of top-level lifecycle owners. | Matt/OpenSpec/ECC/Superpowers-derived lanes are not removed unless replaced; overlap is documented. |
 | Packaging | `capabilities/index.json`, `README.md`, `docs/capability-map.md`, `tests/skillHub.test.ts` | Explicit `sdd` profile for the standard skill target, including Ralph as a user-approved goal-loop bridge. | Install/status/update/remove remain lock-backed and hash-aware. |
 | Hooks and subagents | `skills/workflow-router/references/orchestration-policy.md`, optional host packaging guidance | Advisory hooks and host-native subagent mappings only after core routing is stable. | No hook dispatches agents or performs remote writes; subagents are parent-workflow controlled. |
-| Handoff artifacts | `skills/effective-interact/assets/fixtures/`, `reports/` if durable | Example HTML reports for routing choice, SDD alignment, review, and delivery. | Generated artifacts validate with `validate-interaction.mjs --require-browser` when checked in or handed off. |
+| Handoff artifacts | `skills/effective-interact/assets/fixtures/`, ignored local `reports/` outputs | Fixture JSON is the durable source; generated HTML reports are local inspection outputs for routing choice, SDD alignment, review, and delivery. | Generated artifacts validate with `validate-interaction.mjs --require-browser` when handed off, but HTML outputs are not committed. |
 
 ## Milestones
 

@@ -40,7 +40,7 @@ Skill Hub exposes two surfaces:
 - `prototype` owns disposable learning artifacts only.
 - `verification-loop` owns final command gates.
 - `compound-code-review` owns deep review reports.
-- `effective-interact` owns communication artifacts such as option comparisons, material change reports, and lightweight export editors. Treat it as high-priority interaction infrastructure after material repo or skill changes.
+- `effective-interact` owns the Chinese-first expression and HTML handoff layer for option comparisons, material change reports, research explainers, review artifacts, and lightweight export editors. `grill-me` owns pressure testing; treat `effective-interact` as high-priority interaction infrastructure after material repo or skill changes.
 
 ## Metadata Rules
 

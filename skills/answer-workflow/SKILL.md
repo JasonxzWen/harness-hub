@@ -13,7 +13,7 @@ Use this owner for read-only answers.
 2. Gather required material from the repo, docs, cited sources, or current official docs when the fact may have changed.
 3. Answer directly with evidence and concrete dates/paths when relevant.
 4. Do not edit files, run mutating commands, or start implementation unless the user redirects into `sdd-workflow`.
-5. Default-consider `effective-interact` when a visual comparison, source map, or evidence dashboard lowers review cost.
+5. Default-consider `effective-interact` when a visual comparison, source map, evidence dashboard, or final handoff lowers interaction cost; route pressure testing to `grill-me` or review owner first.
 
 ## Output
 

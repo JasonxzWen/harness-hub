@@ -19,25 +19,31 @@ function frontmatterValue(name: string): string {
 test('effective-interact has a broad default-consider trigger description', () => {
   const description = frontmatterValue('description');
 
-  expect(description.startsWith('Load broadly')).toBe(true);
-  expect(description.split(/\s+/).length).toBeLessThanOrEqual(70);
+  expect(description.startsWith('Load when')).toBe(true);
+  expect(description.split(/\s+/).length).toBeLessThanOrEqual(50);
   expect(description).toContain('Chinese-first');
-  expect(description).toContain('non-trivial sessions');
-  expect(description).toContain('implementation/review progress');
+  expect(description).toContain('interaction-cost reduction');
+  expect(description).toContain('selected owner workflow');
+  expect(description).toContain('non-trivial session');
+  expect(description).toContain('planning');
+  expect(description).toContain('design');
   expect(description).toContain('research');
   expect(description).toContain('learning');
+  expect(description).toContain('review');
   expect(description).toContain('validation');
-  expect(description).toContain('self-contained HTML artifact');
-  expect(description).toContain('default-consider every session');
-  expect(description).toContain('final reports after material repo changes');
-  expect(description).toContain('handoff');
-  expect(description).toContain('permission-only pauses');
+  expect(description).toContain('HTML handoff');
+  expect(description).toContain('material repo/skill changes');
+  expect(description).toContain('final reports');
+  expect(description).toContain('permission pauses');
   expect(description).toContain('trivial chat');
   expect(description).toContain('bundled apps');
 });
 
 test('effective-interact documents positive and negative trigger examples', () => {
   expect(skill).toContain('## Trigger Examples');
+  expect(skill).toContain('designing this from zero');
+  expect(skill).toContain('find weak assumptions');
+  expect(skill).toContain('retro');
   expect(skill).toContain('implementation state');
   expect(skill).toContain('changed a skill or repo behavior');
   expect(skill).toContain('choose before you implement');
@@ -54,8 +60,18 @@ test('effective-interact documents positive and negative trigger examples', () =
   expect(skill).toContain('slide decks; use `frontend-slides`');
 });
 
-test('effective-interact can replace Markdown before, during, or after implementation', () => {
+test('effective-interact can lower interaction cost before, during, or after implementation', () => {
   expect(skill).toContain('Default posture: consider this skill in every non-trivial session');
+  expect(skill).toContain('## Interaction Cost Gate');
+  expect(skill).toContain('Understanding cost');
+  expect(skill).toContain('Choice cost');
+  expect(skill).toContain('Verification cost');
+  expect(skill).toContain('Rework cost');
+  expect(skill).toContain('## Output Ladder');
+  expect(skill).toContain('Concise chat');
+  expect(skill).toContain('Structured Markdown');
+  expect(skill).toContain('Self-contained HTML');
+  expect(skill).toContain('Disposable local editor');
   expect(skill).toContain('Use this skill before, during, or after implementation');
   expect(skill).toContain('HTML artifact can replace or supplement a Markdown reply');
   expect(skill).toContain('planning options');
@@ -65,11 +81,52 @@ test('effective-interact can replace Markdown before, during, or after implement
   expect(skill).toContain('The user does not need to say "HTML"');
 });
 
+test('effective-interact codifies owner/layer boundaries without copying source workflows', () => {
+  const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
+  const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
+  const routingDocs = fs.readFileSync('docs/skill-routing.md', 'utf8');
+  const capabilityIndex = fs.readFileSync('capabilities/index.json', 'utf8');
+
+  expect(skill).toContain('## Intent Routing');
+  expect(skill).toContain('let the selected owner workflow drive the substantive decision');
+  expect(skill).toContain('format 2-3 approaches with tradeoffs');
+  expect(skill).toContain('ask only the next decision-changing question');
+  expect(skill).toContain('do not become the pressure-test owner');
+  expect(skill).toContain('Use `grill-me` or the review workflow for the questioning logic');
+  expect(skill).toContain('Do not copy upstream brainstorming, grilling, or skill-writing workflows wholesale');
+  expect(skill).toContain('Do not create ADRs, CONTEXT files, specs, commits, issues, or external side effects');
+  expect(patterns).toContain('Idea shaping');
+  expect(patterns).toContain('Pressure testing');
+  expect(patterns).toContain('`grill-me` or `review-workflow` owns the questioning logic');
+  expect(routingDocs).toContain('`grill-me` remains the pressure-test owner');
+  expect(capabilityIndex).toContain('skill:grill-me');
+  expect(sourceProjects).toContain('brainstorming-style idea-shaping patterns');
+  expect(sourceProjects).toContain('use `effective-interact` only for expression or handoff');
+});
+
+test('effective-interact includes skill authoring gates from skill-creator guidance', () => {
+  const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
+  const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
+
+  expect(skill).toContain('## Skill Authoring Gate');
+  expect(skill).toContain('Treat `description` as routing logic');
+  expect(skill).toContain('update routing docs and prompt-style routing fixtures');
+  expect(skill).toContain('Keep this file as the control-plane summary');
+  expect(skill).toContain('one-level `references/`, `assets/`, or `scripts/` resources');
+  expect(patterns).toContain('Description as router');
+  expect(patterns).toContain('Progressive disclosure');
+  expect(patterns).toContain('Behavioral coverage');
+  expect(patterns).toContain('keyword assertions are not enough');
+  expect(patterns).toContain('Stable language');
+  expect(sourceProjects).toContain('Matt Pocock `write-a-skill`');
+  expect(sourceProjects).toContain('description-as-router');
+});
+
 test('effective-interact defines an HTML usefulness gate', () => {
   const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
 
-  expect(skill).toContain('## Default Load And HTML Usefulness Gate');
-  expect(skill).toContain('HTML-worthiness check at planning, after material work, and before final handoff');
+  expect(skill).toContain('## HTML Usefulness Gate');
+  expect(skill).toContain('interaction-cost check at planning, after material work, and before final handoff');
   expect(skill).toContain('Use HTML when at least one strong signal is present');
   expect(skill).toContain('material repo or skill implementation');
   expect(skill).toContain('2 or more comparable options');
@@ -79,6 +136,10 @@ test('effective-interact defines an HTML usefulness gate', () => {
   expect(skill).toContain('Markdown would hide the main point in long linear text');
   expect(skill).toContain('If no strong signal and no handoff obligation is present, answer in chat or Markdown');
   expect(patterns).toContain('Default Session Routing');
+  expect(patterns).toContain('Interaction Cost Gate');
+  expect(patterns).toContain('Output Ladder');
+  expect(patterns).toContain('Intent Routing');
+  expect(patterns).toContain('Skill Authoring Gate');
   expect(patterns).toContain('HTML Usefulness Gate');
   expect(patterns).toContain('Material repo or skill behavior changed');
   expect(patterns).toContain('Strong signal');
@@ -95,6 +156,7 @@ test('effective-interact codifies decision-first briefing quality', () => {
   expect(skill).toContain('\u4e8b\u5b9e / \u63a8\u65ad / \u5047\u8bbe');
   expect(skill).toContain('CTA');
   expect(skill).toContain('validator warnings as advisory');
+  expect(skill).toContain('mojibake, broken semantic structure, failed Mermaid, unsafe diagnostics, and missing required evidence as blocking');
   expect(patterns).toContain('Decision Briefing Contract');
   expect(patterns).toContain('Pyramid');
   expect(patterns).toContain('SCQA');
@@ -132,8 +194,8 @@ test('effective-interact codifies HTML effectiveness patterns without stealing a
   expect(patterns).toContain('Every editor-like artifact must end with an export path');
   expect(routingDocs).toContain('option comparison');
   expect(routingDocs).toContain('lightweight export editor');
-  expect(routingDocs).toContain('default-considered skill for non-trivial sessions');
-  expect(routingDocs).toContain('material repo or skill change reports');
+  expect(routingDocs).toContain('Default-consider alongside the selected owner workflow');
+  expect(routingDocs).toContain('material repo or skill change handoffs');
   expect(routingDocs).toContain('frontend-slides` remains the deck lane');
 });
 
@@ -152,7 +214,7 @@ test('effective-interact keeps detailed patterns in references', () => {
   expect(patterns).not.toContain('previous versions failed');
   expect(patterns).not.toContain('Related third-party skills');
   expect(patterns).not.toContain('localStorage');
-  expect(skill.length).toBeLessThan(9000);
+  expect(skill.length).toBeLessThan(12000);
 });
 
 test('effective-interact ships reusable template and component assets', () => {
@@ -1262,7 +1324,20 @@ test('effective-interact validator checks structure and reports degraded browser
 });
 
 test('effective-interact showcase remains a rich feature fixture', () => {
-  const showcase = fs.readFileSync('reports/effective-interact-feature-showcase.html', 'utf8');
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-showcase-'));
+  const result = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    `${skillDir}/assets/fixtures/runtime-cdn-stress-report.json`,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'effective-interact-feature-showcase',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  const showcase = fs.readFileSync(JSON.parse(result.stdout).outputPath, 'utf8');
 
   expect(showcase).toContain('data-html-work-report');
   expect(showcase).toContain('data-render-mode="runtime-cdn"');

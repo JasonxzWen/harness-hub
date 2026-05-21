@@ -9,7 +9,7 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 | `mattpocock/skills` | `vendor/mattpocock-skills/` ignored; checked at `d54c497aa94400a496d3f2c38be10fa5f284c5a9`; MIT | Installed `grill-me`, `diagnose`, `prototype`, `tdd-workflow`, and `handoff` after normalizing triggers and removing host-specific assumptions. |
 | `affaan-m/everything-claude-code` | `vendor/everything-claude-code/` ignored | Retained bounded helpers such as coding standards, TDD, verification, security, E2E, frontend patterns, and documentation lookup; rejected the broad workflow surface as a default install. |
 | `open-spec/openspec` | OpenSpec skills and specs remain explicit profile assets | Kept formal change lifecycle helpers as `openspec-formal`; SDD is the default change lane only when installed through `sdd`. |
-| `obra/superpowers` | Reference-only source for broad-trigger workflow activation patterns | Used as routing and activation inspiration only; no wholesale workflow import. |
+| `obra/superpowers` | Reference-only source for broad-trigger workflow activation and brainstorming-style idea-shaping patterns | Used as routing and activation inspiration only; no wholesale workflow import, default spec path, or commit workflow. |
 | `EveryInc/compound-engineering-plugin` | `vendor/EveryInc-compound-engineering-plugin/` ignored; checked at `d090bde0ff1bbc33ec3c3b2049cb4687e9d76532`; MIT | Installed only the `ce-code-review` workflow as `compound-code-review`; rejected wholesale import because it would duplicate many existing workflows. |
 | `vercel-labs/skills` and `vercel-labs/agent-skills` | vendor checkouts ignored | Selected web and React skills are kept when they remain standard skill folders with no host metadata. |
 | `snarktank/ralph` | `scripts/ralph/prd.json.example` plus `ralph-prd` and `ralph-loop` skills | Kept the PRD/story-loop contract; removed bundled platform-specific runner files. |
@@ -20,7 +20,8 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 
 | Candidate | Decision | Reason |
 |---|---|---|
-| Matt Pocock `grill-with-docs` | Explicit-only | Promising, but needs a local decision on project documentation conventions before enabling inline doc writes. |
+| Matt Pocock `write-a-skill` | Reference-only | Useful reminders for description-as-router, progressive disclosure, concrete examples, and review checklists; local Skill Hub quality gates remain authoritative. |
+| Matt Pocock `grill-with-docs` | Explicit-only | Useful for terminology and scenario pressure, but inline `CONTEXT.md`/ADR writes are not standardized locally; keep `grill-me`/review workflows as the pressure-test owner and use `effective-interact` only for expression or handoff. |
 | Matt Pocock `improve-codebase-architecture` and `zoom-out` | Wait | Overlap current architecture and product-planning skills. |
 | Matt Pocock `caveman` | Reject by default | Conflicts with this repo's communication policy unless explicitly requested. |
 | Matt Pocock `to-prd`, `to-issues`, `triage`, `setup-matt-pocock-skills` | Reject by default | Overlap OpenSpec/Ralph/local issue-routing surfaces or introduce external issue-tracker side effects. |

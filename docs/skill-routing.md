@@ -29,7 +29,7 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 | Security-sensitive code, auth, secrets, injection, unsafe IO, or payments | `security-review` | Focused checklist and threat review. |
 | Current library/framework/API behavior | `documentation-lookup` | Use current primary docs before implementing. |
 | Agent/tool harness loop, repeated tool failure, drift, or recoverable self-debugging | `agent-introspection-debugging` | Use after ordinary product debugging is ruled out. |
-| option comparison, material repo or skill change reports, architecture walkthroughs, review artifacts, research explainers, or lightweight export editor | `effective-interact` | A default-considered skill for non-trivial sessions when HTML makes the work easier to inspect. `frontend-slides` remains the deck lane. |
+| Communication layer for option comparison, material repo or skill change handoffs, architecture walkthroughs, review artifacts, research explainers, or lightweight export editor | `effective-interact` | Default-consider alongside the selected owner workflow when Chinese-first interaction-cost reduction or HTML makes the work easier to understand, decide, verify, or continue. `grill-me` remains the pressure-test owner; `frontend-slides` remains the deck lane. |
 
 ## Overlap Rules
 
@@ -48,7 +48,7 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - `prototype` loads for explicitly throwaway experiments that answer one design question.
 - `tdd-workflow` loads for production features, confirmed bug fixes, and refactors with tests; unknown root-cause diagnosis and throwaway exploration route elsewhere.
 - `frontend-design` loads for production-grade visual UI creation, not routine reports or debugging.
-- `effective-interact` loads broadly for non-trivial sessions when a self-contained HTML artifact can make planning, implementation progress, review, research, architecture, validation, status, or handoff clearer than chat; default-consider it every session and require an HTML report after material repo or skill changes; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere.
+- `effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere.
 - `handoff` loads for restart notes or compact agent/session handoff documents; visual HTML reports and context-limit advice route elsewhere.
 - `compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere.
 - `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.

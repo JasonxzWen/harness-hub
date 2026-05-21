@@ -24,11 +24,11 @@ The workflow system must serve this order:
 | Source | Repo-local status | Primary value | Default decision |
 |---|---|---|---|
 | Matt Pocock skills | `grill-me`, `diagnose`, and `prototype` adapted; other skills rejected or explicit-only. | Narrow, memorable phase skills and feedback-loop framing. | Adapt selected phase patterns only. |
-| Superpowers | Referenced, not installed. | Broad disciplined workflow, `using-superpowers`, subagent-driven development, worktree/finish discipline. | Reference for lifecycle and orchestration boundaries; do not install wholesale. |
+| Superpowers | Referenced, not installed. | Broad disciplined workflow, brainstorming-style idea shaping, `using-superpowers`, subagent-driven development, worktree/finish discipline. | Reference for lifecycle and orchestration boundaries; do not install wholesale. |
 | Everything Claude Code | Source checkout and compatibility docs retained; only selected helper skills remain active through `capabilities/index.json`. | Rules, agents, hooks, MCP patterns, verification, broad Claude Code conventions. | Reference surface plus bounded helpers; do not restore the broad local skill library. |
 | OpenSpec | Installed as explicit formal lifecycle. | Proposal/spec/task/archive artifacts and formal change tracking. | Explicit mode only; do not make default planning lane. |
 | Compound Engineering Plugin | `compound-code-review` adapted; rest explicit-only or reference. | Structured review, reviewer lenses, doc-review candidates, side-effect-heavy work loops. | Keep review lane; postpone broader workflows. |
-| Effective Interact | Original local skill. | Answer-first visual handoffs, evidence, option comparison, validation dashboards. | High-priority interaction layer across all non-trivial lifecycle phases. |
+| Effective Interact | Original local skill. | Chinese-first interaction-cost reduction, answer-first visual handoffs, evidence, option comparison, validation dashboards. | High-priority interaction layer across all non-trivial lifecycle phases. |
 | Skill Hub CLI lifecycle | Implemented and documented locally. | Lock-backed install/status/update/remove and safe cleanup ownership. | Preserve as mandatory distribution and cleanup boundary. |
 | Vercel/Web/React skills | `web-design-guidelines` remains active; other Vercel Web/React skills are source-retained only. | Frontend implementation and UI quality for target repos that need it. | Helper/reference sources only; not top-level lifecycle owners. |
 | Ralph | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` retained. | Autonomous story loop and PRD-to-story execution. | Explicit autonomous execution mode, not default SDD workflow. |
@@ -40,10 +40,10 @@ The workflow system must serve this order:
 
 | Source | Useful idea | Reject or constrain | Local decision |
 |---|---|---|---|
-| Matt `grill-me` | One-question-at-a-time pressure testing and recommended answers before implementation. | Do not turn every request into an interview. | Use as helper when assumptions or design tradeoffs are unclear. |
+| Matt `grill-me` | One-question-at-a-time pressure testing and recommended answers before implementation. | Do not turn every request into an interview. | Keep as the pressure-test owner; `effective-interact` may present the resulting decisions and handoff, but should not own the questioning logic. |
 | `product-capability` | Capability restatement, constraints, invariants, interfaces, and open decisions. | Do not invent product truth. | Make it a helper under `sdd-workflow` for implementation-ready contracts. |
 | OpenSpec explore | Read-only exploration and artifact capture without implementation. | Do not make OpenSpec the default planning lane. | Use only when formal OpenSpec lifecycle is requested or already active. |
-| Effective Interact | Visual option comparison and alignment artifacts. | Do not replace simple chat for trivial questions. | Require when comparison, architecture, or evidence lowers user review cost. |
+| Effective Interact | Visual option comparison and alignment artifacts. | Do not replace simple chat for trivial questions or replace `grill-me` as pressure-test owner. | Default-consider as an expression/handoff layer for complex planning, design, research, review, learning, and material change handoffs; require HTML only when it lowers review cost or material changes need a report. |
 
 ### 2. Gather Required Material
 
@@ -61,7 +61,7 @@ The workflow system must serve this order:
 |---|---|---|---|
 | OpenSpec proposal/spec/tasks | Formal proposal, design, spec, task artifact structure. | Too heavy as the default for every change. | Borrow artifact clarity, keep explicit OpenSpec mode. |
 | `product-capability` | SRS-style capability contract and implementation-facing constraints. | Do not scatter ad hoc notes. | Use under `sdd-workflow` before coding. |
-| Matt `grill-with-docs` | Context and ADR-oriented design pressure. | It assumes `CONTEXT.md`/ADR writes that this hub has not standardized. | Reference-only until domain-doc conventions are decided. |
+| Matt `grill-with-docs` | Context and ADR-oriented design pressure. | It assumes `CONTEXT.md`/ADR writes that this hub has not standardized. | Reference-only; borrow terminology, scenario, and code/doc contradiction checks without inline doc writes. |
 | CE doc-review / plan confidence | Persona-based plan review and confidence checks. | Unclear persistence model and overlaps existing planning lanes. | Medium-priority future review helper after plan artifact ownership is defined. |
 | Effective Interact | Spec/acceptance dashboards and decision-first summaries. | Do not hide unsupported claims in polished HTML. | Use for user alignment when the spec has options, risks, or evidence. |
 
