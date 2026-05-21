@@ -1,6 +1,6 @@
 {
   "title": "Runtime CDN visual stress report - Mermaid, code, grouped navigation, and long multilingual content",
-  "summary": "Stress the report generator with rich content, long labels, many sections, wide code, nested JSON, and grouped navigation that must remain readable in local browser rendering.",
+  "summary": "Stress the report generator with rich content, long labels, many sections, wide code, nested JSON, and grouped navigation that must remain readable inside Codex.",
   "status": "review",
   "template": "research-explainer",
   "renderMode": "runtime-cdn",
@@ -24,7 +24,7 @@
         },
         {
           "label": "Acceptance",
-          "value": "browser-visible rendering plus browser validation"
+          "value": "Codex-visible rendering plus browser validation"
         }
       ]
     },
@@ -75,7 +75,7 @@
       "priority": 1,
       "status": "ready",
       "summary": "Flowchart labels must stay contained or scroll inside the diagram panel.",
-      "content": "flowchart LR\n  A[\"OpenSpec change: polish-effective-interact-runtime-quality with a deliberately long node label\"] --> B[\"Generator emits runtime-cdn HTML with grouped navigation and dependency manifest\"]\n  B --> C[\"Runtime renders Mermaid Markdown and highlighted code inside isolated section containers\"]\n  C --> D[\"Validator checks browser-visible browser layout across narrow medium and desktop viewports\"]\n  D --> E[\"Report remains readable with source fallbacks if any library degrades\"]"
+      "content": "flowchart LR\n  A[\"OpenSpec change: polish-effective-interact-runtime-quality with a deliberately long node label\"] --> B[\"Generator emits runtime-cdn HTML with grouped navigation and dependency manifest\"]\n  B --> C[\"Runtime renders Mermaid Markdown and highlighted code inside isolated section containers\"]\n  C --> D[\"Validator checks Codex-visible browser layout across narrow medium and desktop viewports\"]\n  D --> E[\"Report remains readable with source fallbacks if any library degrades\"]"
     },
     {
       "type": "mermaid",
@@ -130,7 +130,7 @@
       "language": "bash",
       "startLine": 72,
       "highlightLines": [73],
-      "content": "bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/runtime-cdn-stress-report.json --out-dir reports --slug effective-interact-runtime-cdn-stress --json\nbun skills/effective-interact/scripts/validate-interaction.mjs reports/effective-interact-runtime-cdn-stress.html --json --require-browser"
+      "content": "bun skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/runtime-cdn-stress-report.json --slug effective-interact-runtime-cdn-stress --json\nbun skills/effective-interact/scripts/validate-interaction.mjs skills/effective-interact/artifacts/effective-interact-runtime-cdn-stress.html --json --require-browser"
     },
     {
       "type": "diff",
@@ -227,7 +227,7 @@
         {
           "name": "runtime-cdn",
           "status": "recommended",
-          "points": ["Best visual fidelity in local browser rendering", "Uses mature libraries", "Requires visible dependency state"]
+          "points": ["Best visual fidelity in Codex", "Uses mature libraries", "Requires visible dependency state"]
         },
         {
           "name": "pre-rendered",
@@ -274,7 +274,7 @@
       "items": [
         "Generate this stress report through create-interaction.mjs.",
         "Run validate-interaction.mjs with --require-browser.",
-        "Open the generated report in local browser rendering and inspect Mermaid, code, and navigation.",
+        "Open the generated report in Codex and inspect Mermaid, code, and navigation.",
         "Keep tasks.md synchronized as implementation groups complete."
       ]
     }
@@ -294,8 +294,8 @@
     },
     {
       "kind": "assumption",
-      "label": "Browser view target",
-      "value": "The report may use CDN runtime libraries because the target is browser-visible static HTML.",
+      "label": "Codex view target",
+      "value": "The report may use CDN runtime libraries because the target is Codex-visible static HTML.",
       "status": "info"
     },
     {
@@ -319,7 +319,7 @@
   ],
   "nextActions": [
     "Use this fixture as the browser validation stress target.",
-    "Keep the generated stress report under reports/ for local inspection.",
+    "Keep the generated stress report under ignored skill-local artifacts for local inspection.",
     "Update showcase output from fixture-backed generation."
   ]
 }

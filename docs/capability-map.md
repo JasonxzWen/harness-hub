@@ -22,7 +22,7 @@ Skill Hub exposes two surfaces:
 
 | Profile | Purpose |
 |---|---|
-| `minimal` | Daily engineering skills for planning, diagnosis, TDD, review, verification, security, docs lookup, handoff, and self-debugging. |
+| `minimal` | Daily engineering skills for planning, diagnosis, TDD, review, verification, security, docs lookup, clear complex communication, handoff, and self-debugging. |
 | `sdd` | Dogfood profile for workflow routing, SDD-first change work, embedded TDD, evidence gathering, review, delivery, Skill Hub maintenance, and the explicit Ralph goal-loop bridge. |
 | `web` | Frontend design, artifacts, slides, web patterns, and browser validation. |
 | `openspec-formal` | Explicit OpenSpec proposal, apply, and archive workflows. |
@@ -88,7 +88,7 @@ Known redundancies:
 - `prototype` owns disposable learning artifacts only.
 - `verification-loop` owns final command gates.
 - `compound-code-review` owns deep review reports.
-- `effective-interact` owns the Chinese-first expression and HTML handoff layer for option comparisons, material change reports, research explainers, review artifacts, and lightweight export editors. `grill-me` owns pressure testing; treat `effective-interact` as high-priority interaction infrastructure after material repo or skill changes.
+- `effective-interact` owns Chinese-first complex communication structure: plain briefs, structured Markdown, visual Markdown, ignored long-task fact ledgers, and HTML artifacts for option approvals, implementation plans, PR writeups, architecture/dependency/milestone maps, structure trees, status/incident dashboards, research explainers, review artifacts, and lightweight export editors. `grill-me` owns pressure testing, `frontend-design` owns production UI, and `frontend-slides` owns decks.
 
 ## Metadata Rules
 

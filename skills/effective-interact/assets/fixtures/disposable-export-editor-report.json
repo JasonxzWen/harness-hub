@@ -113,7 +113,7 @@
       "status": "ready",
       "summary": "Structured export should be copyable and inert.",
       "language": "json",
-      "filePath": "reports/example-export.json",
+      "filePath": "skills/effective-interact/artifacts/example-export.json",
       "startLine": 1,
       "highlightLines": [2, 6],
       "content": "{\n  \"mode\": \"visible-export-only\",\n  \"selected\": [\"option-gallery\", \"disposable-export-editor\"],\n  \"blocked\": [\"network-write\", \"repo-write\", \"credential-edit\"],\n  \"handoff\": {\n    \"format\": \"json\",\n    \"reviewRequired\": true\n  }\n}"
@@ -125,7 +125,7 @@
       "priority": 2,
       "status": "ready",
       "summary": "A diff export keeps the mutation reviewable outside the report.",
-      "filePath": "reports/example-export.diff",
+      "filePath": "skills/effective-interact/artifacts/example-export.diff",
       "startLine": 1,
       "content": "--- before.md\n+++ after.md\n@@ -1,3 +1,5 @@\n ## Next actions\n - Compare options in a generated HTML report.\n+- Tune only the small decision surface in a local disposable editor.\n+- Copy the exported diff before applying any workspace change."
     },

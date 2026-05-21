@@ -9,7 +9,7 @@
   },
   "profiles": {
     "minimal": {
-      "description": "Low-noise daily engineering profile with plan pressure testing, runtime diagnosis, throwaway prototyping, structured code review, HTML interaction artifacts, session handoff, quality, TDD, verification, security, docs lookup, and self-debugging.",
+      "description": "Low-noise daily engineering profile with plan pressure testing, runtime diagnosis, throwaway prototyping, structured code review, clear complex communication, session handoff, quality, TDD, verification, security, docs lookup, and self-debugging.",
       "components": [
         "skill:grill-me",
         "skill:diagnose",
@@ -621,20 +621,25 @@
     "skill:effective-interact": {
       "kind": "skill",
       "path": "skills/effective-interact",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "local",
       "provides": [
-        "completed-task-html-handoffs",
-        "intermediate-html-interaction-artifacts",
+        "complex-communication-briefs",
+        "first-principles-alignment-briefs",
+        "plain-text-handoffs",
+        "structured-markdown-handoffs",
+        "visual-markdown-reports",
+        "completed-task-handoffs",
+        "intermediate-interaction-artifacts",
         "self-contained-html-interaction-artifacts",
         "interactive-work-artifacts",
         "html-change-artifacts",
-        "interaction-handoff-layer",
         "visual-code-evidence-artifacts",
         "generated-interaction-artifacts",
         "validated-interaction-artifacts",
-        "option-comparison-html-artifacts",
-        "explorable-html-explainers",
+        "long-task-session-ledgers",
+        "option-comparison-artifacts",
+        "explorable-explainers",
         "disposable-export-editors"
       ],
       "overlapsWith": [
@@ -643,7 +648,7 @@
         "skill:frontend-slides",
         "skill:frontend-design"
       ],
-      "routing": "Load as a Chinese-first expression and HTML handoff layer alongside the selected owner workflow when structured comparison, evidence navigation, validation, architecture, review, research, or material repo/skill change reporting lowers interaction cost; grill-me remains the pressure-test owner; skip permission pauses, trivial chat, UI apps, decks, and bundled artifacts.",
+      "routing": "Load when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; skip trivial chat, production UI, decks, and bundled artifacts.",
       "detects": [
         {
           "path": "skills/effective-interact/SKILL.md"
@@ -653,7 +658,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Create Chinese-first structured responses or self-contained HTML handoffs for non-trivial alignment points, option comparisons, reviews, status dashboards, research explainers, architecture walkthroughs, and lightweight export editors after the owner workflow drives the substance."
+      "recommendation": "Structure Chinese-first complex communication when alignment points, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, research explainers, design/component approvals, architecture/dependency/milestone maps, structure trees, or lightweight export editors need first-principles organization; escalate to self-contained HTML only when it lowers decision cost."
     },
     "skill:handoff": {
       "kind": "skill",

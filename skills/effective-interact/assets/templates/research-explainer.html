@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Research Explainer Report</title>
   <style>
-    :root { color-scheme:light; --bg:#f7f8fb; --panel:#fff; --ink:#172033; --muted:#667085; --line:#d7dce5; --accent:#2563eb; --info:#0f766e; --warn:#b7791f; --shadow:0 14px 40px rgba(23,32,51,.12); }
+    :root { color-scheme:light; --bg:#FAF9F5; --panel:#fff; --ink:#3D3D3A; --muted:#87867F; --line:#D1CFC5; --accent:#D97757; --info:#3D6E6E; --warn:#A67C52; --shadow:0 14px 40px rgba(61,61,58,.12); }
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.45; }
     .shell { width:min(1180px,calc(100vw - 32px)); margin:0 auto; padding:28px 0 44px; }
@@ -23,14 +23,14 @@
     .card:hover,.source:hover,.card:focus-within,.source:focus-within { border-color:var(--accent); box-shadow:var(--shadow); transform:translateY(-2px); }
     .tabs { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
     button { min-height:36px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); padding:7px 11px; font:inherit; cursor:pointer; transition:background 140ms ease,border-color 140ms ease,transform 140ms ease; }
-    button:hover,button[aria-selected="true"] { border-color:var(--accent); background:#eef4ff; }
+    button:hover,button[aria-selected="true"] { border-color:var(--accent); background:#FBF1EC; }
     button:focus-visible,a:focus-visible { outline:3px solid color-mix(in srgb,var(--accent) 35%,transparent); outline-offset:2px; }
     .diagram svg { width:100%; height:auto; }
     .glossary { display:grid; gap:8px; }
-    .term { border-left:3px solid var(--info); padding:8px 10px; background:#f8fffd; border-radius:6px; }
+    .term { border-left:3px solid var(--info); padding:8px 10px; background:#E8EFEB; border-radius:6px; }
     .sources { display:grid; gap:10px; position:sticky; top:12px; }
     .source a { color:var(--accent); font-weight:700; }
-    .callout { border-left:4px solid var(--warn); background:#fffaf0; padding:10px 12px; border-radius:6px; }
+    .callout { border-left:4px solid var(--warn); background:#FBF1EC; padding:10px 12px; border-radius:6px; }
     [hidden] { display:none!important; }
     @media (max-width:860px) { .shell{width:min(100vw - 20px,1180px); padding-top:14px;} .layout{grid-template-columns:1fr;} .sources{position:static;} }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after{transition:none!important;animation:none!important;} .card:hover,.source:hover{transform:none;} }
@@ -76,15 +76,15 @@
           </ul>
           <figure class="diagram">
             <svg viewBox="0 0 560 230" role="img" aria-label="Rendered architecture diagram">
-              <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#2563eb"/></marker></defs>
-              <rect x="24" y="38" width="140" height="62" rx="8" fill="#eef4ff" stroke="#2563eb"/>
+              <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#D97757"/></marker></defs>
+              <rect x="24" y="38" width="140" height="62" rx="8" fill="#FBF1EC" stroke="#D97757"/>
               <text x="94" y="73" text-anchor="middle" font-size="14">Question</text>
-              <rect x="210" y="38" width="140" height="62" rx="8" fill="#f8fffd" stroke="#0f766e"/>
+              <rect x="210" y="38" width="140" height="62" rx="8" fill="#E8EFEB" stroke="#3D6E6E"/>
               <text x="280" y="73" text-anchor="middle" font-size="14">Evidence</text>
-              <rect x="396" y="38" width="140" height="62" rx="8" fill="#fffaf0" stroke="#b7791f"/>
+              <rect x="396" y="38" width="140" height="62" rx="8" fill="#FBF1EC" stroke="#A67C52"/>
               <text x="466" y="73" text-anchor="middle" font-size="14">Conclusion</text>
-              <path d="M164 69 H210" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow)"/>
-              <path d="M350 69 H396" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow)"/>
+              <path d="M164 69 H210" stroke="#D97757" stroke-width="2" marker-end="url(#arrow)"/>
+              <path d="M350 69 H396" stroke="#D97757" stroke-width="2" marker-end="url(#arrow)"/>
             </svg>
             <figcaption class="muted">Rendered diagram. Keep Mermaid/source fallback below.</figcaption>
           </figure>

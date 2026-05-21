@@ -24,7 +24,7 @@
     },
     "template": {
       "type": "string",
-      "enum": ["implementation-handoff", "conclusion-dashboard", "review-findings", "research-explainer", "decision-matrix"],
+      "enum": ["implementation-handoff", "conclusion-dashboard", "review-findings", "research-explainer", "decision-matrix", "implementation-plan", "visual-exploration", "editor-workbench"],
       "default": "implementation-handoff"
     },
     "renderMode": {

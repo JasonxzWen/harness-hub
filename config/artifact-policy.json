@@ -38,6 +38,8 @@
       "vendor/",
       "reports/",
       ".skill-hub/reports/",
+      "skills/effective-interact/artifacts/",
+      ".codex/skills/effective-interact/artifacts/",
       ".learning/",
       "scripts/ralph/prd.json",
       "scripts/ralph/progress.txt",
@@ -73,6 +75,7 @@
       ".learning/",
       "node_modules/",
       "reports/",
+      "skills/effective-interact/artifacts/",
       "scripts/ralph/prd.json",
       "scripts/ralph/progress.txt",
       "scripts/ralph/.last-branch",
@@ -111,6 +114,8 @@
       "scripts/ralph/.last-branch",
       "scripts/ralph/archive/",
       ".skill-hub/reports/",
+      "skills/effective-interact/artifacts/",
+      ".codex/skills/effective-interact/artifacts/",
       ".learning/"
     ]
   }
