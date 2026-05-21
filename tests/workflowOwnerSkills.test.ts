@@ -68,6 +68,8 @@ test('sdd-workflow enforces the canonical lifecycle before implementation', () =
 
   expect(skill).toContain('Do not start implementation');
   expect(skill).toContain('TDD');
+  expect(skill).toContain('ralph-loop');
+  expect(skill).toContain('without approval');
 });
 
 test('read-only workflow owners block mutation by default', () => {

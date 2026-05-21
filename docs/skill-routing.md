@@ -37,6 +37,7 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - Use `webapp-testing` for one-off local browser inspection; use `e2e-testing` for durable Playwright suites.
 - Use OpenSpec skills only when the user explicitly wants the formal OpenSpec lifecycle.
 - Use Ralph skills only for explicit Ralph-style PRD/story loops.
+- The `sdd` profile includes `ralph-prd` and `ralph-loop` as an explicit pre-native-goal bridge. They are helper skills only: no SDD bypass and no autonomous repeated execution without user approval.
 - Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
 - In the `sdd` profile, `sdd-workflow` is the default change lane and `tdd-workflow` is an embedded implementation discipline, not a competing owner.
 

@@ -8,7 +8,7 @@ Source evaluation belongs in [Workflow source dossier](workflow-source-dossier.m
 
 ## Capability Statement
 
-Skill Hub MUST provide an original workflow system for Codex and Claude Code where each non-trivial user request is classified into one task state, handed to one workflow owner, and completed through explicit alignment, verification, and handoff gates.
+Skill Hub MUST provide an original platform-neutral workflow system where each non-trivial user request is classified into one task state, handed to one workflow owner, and completed through explicit alignment, verification, and handoff gates.
 
 ## Terms
 
@@ -112,10 +112,12 @@ Workflow owners MAY call helper skills for specialized work. Helper skills MUST 
 
 Examples:
 
-- `sdd-workflow` may use `product-capability`, `tdd-workflow`, `e2e-testing`, and `verification-loop`.
+- `sdd-workflow` may use `product-capability`, `tdd-workflow`, `e2e-testing`, `verification-loop`, `ralph-prd`, and `ralph-loop`.
 - `diagnosis-workflow` may use `diagnose`, `agent-introspection-debugging`, and `webapp-testing`.
 - `review-workflow` may use `compound-code-review`, `security-review`, and `web-design-guidelines`.
 - `hub-maintenance-workflow` may use source records, routing docs, capability metadata, lifecycle CLI dry-runs, and targeted repo/source inspection.
+
+`ralph-prd` and `ralph-loop` are allowed only as explicit goal/story loop helpers before native host `/goal` support. They MUST NOT become a top-level workflow owner, bypass SDD alignment, or start autonomous repeated execution without user approval.
 
 ### WR-7: Subagent Orchestration
 
@@ -165,7 +167,7 @@ No remote writes from hooks are allowed. A hook MUST NOT bypass SDD alignment, u
 
 The workflow system MUST preserve existing npm and lock-backed lifecycle guarantees.
 
-- Codex and Claude Code are first-class targets.
+- The standard target is the first-class install shape; host packaging belongs outside skill bodies.
 - New workflow skills SHOULD enter an explicit `sdd` profile before replacing `minimal`.
 - Managed files MUST be removable through lock-backed `remove`.
 - Deleted or renamed managed workflow files MUST be handled by `update` or migration metadata.
@@ -236,7 +238,7 @@ The redesign is accepted when:
 4. Executable plan fixtures include cleanup decisions before implementation.
 5. Review and question fixtures do not mutate files.
 6. Effective Interact handoff fixtures validate in browser mode.
-7. Codex and Claude Code install dry runs include the expected workflow set.
+7. Standard-target install dry runs include the expected workflow set.
 8. Status/update/remove smoke tests preserve managed-file ownership and deleted-file cleanup.
 9. Source dossier entries justify each adopted, adapted, rejected, and reference-only idea.
 
@@ -247,4 +249,4 @@ The redesign is accepted when:
 | First profile | Add `sdd` before changing `minimal`. | Reduces migration risk and lets the workflow dogfood first. |
 | Public owner names | Use explicit public skill names. | The user asked for each stage to have a clear and unique skill. |
 | Hooks timing | Defer blocking hooks. | Advisory checks are enough until routing and SDD gates are proven. |
-| Other agent hosts | Keep as explicit compatibility work. | The user currently cares about Codex and Claude Code first. |
+| Other agent hosts | Keep as explicit compatibility work. | The install graph should stay platform-neutral; host packaging can wrap the standard skill tree separately. |

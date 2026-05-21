@@ -26,7 +26,7 @@
       ]
     },
     "sdd": {
-      "description": "SDD-first workflow profile with intent routing, public workflow owners, source gathering, embedded TDD, review, validation, and delivery handoffs.",
+      "description": "SDD-first workflow profile with intent routing, public workflow owners, source gathering, embedded TDD, review, validation, delivery handoffs, and an explicit Ralph goal-loop bridge.",
       "components": [
         "skill:workflow-router",
         "skill:answer-workflow",
@@ -39,6 +39,8 @@
         "skill:product-capability",
         "skill:tdd-workflow",
         "skill:verification-loop",
+        "skill:ralph-prd",
+        "skill:ralph-loop",
         "skill:diagnose",
         "skill:agent-introspection-debugging",
         "skill:compound-code-review",

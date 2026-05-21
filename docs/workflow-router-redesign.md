@@ -19,7 +19,7 @@ The workflow owner must drive this lifecycle: align user need -> gather required
 
 ## Assumptions
 
-- The first-class hosts are Codex and Claude Code.
+- The first-class install shape is the standard skills/<name> tree; host packaging stays outside skill bodies.
 - npm stays as the versioned install, update, and remove path because direct GitHub pulls do not provide lock-backed cleanup.
 - Existing lifecycle guarantees stay intact: analyze is read-only, install/update/remove are lock-backed, and removed managed files can be deleted by update or remove flows.
 - OpenSpec, ECC, Superpowers, Matt Pocock skills, and other sources are references. Do not import another project's whole workflow as the default.
@@ -110,13 +110,13 @@ Do not add hooks that dispatch agents, publish, push, post, spend money, change 
 
 Keep npm. It is the practical way to preserve:
 
-- one-command install for Codex and Claude Code targets,
+- one-command install for the standard skill target,
 - versioned updates,
 - lock-backed status,
 - safe removal of files the project no longer owns,
 - generated `dist/` packaging.
 
-Reduce first-class target-host scope to Codex and Claude Code. Other agents can stay documented as compatibility references or explicit future work, but they should not drive default workflow design.
+Keep the first-class install target platform-neutral. Host-specific wrappers can stay documented as compatibility references or explicit future work, but they should not drive default workflow design.
 
 ## Non-Goals
 
@@ -134,7 +134,7 @@ See [Workflow router execution plan](workflow-router-execution-plan.md) for the 
 2. Add `workflow-router` as the top-level intent classifier.
 3. Add original workflow-owner skills for question, SDD change, diagnosis, review, delivery, and Skill Hub maintenance.
 4. Make `effective-interact` the default reporting layer in those workflows without making it the state owner.
-5. Add an explicit `sdd` profile for Codex and Claude Code before promoting behavior into `minimal`.
+5. Add an explicit `sdd` profile for the standard target before promoting behavior into `minimal`.
 6. Preserve npm install/update/remove and lock-backed cleanup throughout.
 
 ## Open Questions

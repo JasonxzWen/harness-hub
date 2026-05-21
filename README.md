@@ -20,7 +20,7 @@ Skills must not depend on a specific agent host. Host-specific packaging, such a
 
 ## What Is Included
 
-- Workflow routing and SDD: `workflow-router`, owner workflow skills, `product-capability`, embedded `tdd-workflow`, and `effective-interact` handoffs.
+- Workflow routing and SDD: `workflow-router`, owner workflow skills, `product-capability`, embedded `tdd-workflow`, the explicit Ralph goal-loop bridge, and `effective-interact` handoffs.
 - Planning and pressure testing: `grill-me`, OpenSpec helpers.
 - Runtime diagnosis and implementation quality: `diagnose`, `tdd-workflow`, `verification-loop`, `compound-code-review`, `security-review`.
 - Documentation, learning, and handoff: `doc-coauthoring`, `documentation-lookup`, `feynman-learning-coach`, `handoff`.

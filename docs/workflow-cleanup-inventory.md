@@ -21,7 +21,7 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 | Surface | Keep where | Reason |
 |---|---|---|
 | `minimal` | Default profile | Stable existing low-noise engineering baseline. Do not mix the new workflow router into it until real-task dogfood proves routing quality. |
-| `sdd` | Explicit dogfood profile | Owns the new SDD-first workflow router, public owner skills, embedded TDD helpers, review, validation, and delivery handoff. |
+| `sdd` | Explicit dogfood profile | Owns the new SDD-first workflow router, public owner skills, embedded TDD helpers, explicit Ralph goal-loop bridge, review, validation, and delivery handoff. |
 | `effective-interact` | `minimal` and `sdd` | High-priority interaction layer that reduces user interpretation cost for material alignment and handoff. |
 | Matt Pocock `grill-me`, `diagnose`, `prototype` | `minimal` | Narrow, adapted skills with stable routing; they remain helpers or library lanes under the new workflow. |
 | Everything Claude Code core helpers | `minimal` and `sdd` subset | Keep bounded helpers such as `tdd-workflow`, `verification-loop`, `security-review`, and `agent-introspection-debugging`. |

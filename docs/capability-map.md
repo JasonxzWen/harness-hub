@@ -23,10 +23,10 @@ Skill Hub exposes two surfaces:
 | Profile | Purpose |
 |---|---|
 | `minimal` | Daily engineering skills for planning, diagnosis, TDD, review, verification, security, docs lookup, handoff, and self-debugging. |
-| `sdd` | Dogfood profile for workflow routing, SDD-first change work, embedded TDD, evidence gathering, review, delivery, and Skill Hub maintenance. |
+| `sdd` | Dogfood profile for workflow routing, SDD-first change work, embedded TDD, evidence gathering, review, delivery, Skill Hub maintenance, and the explicit Ralph goal-loop bridge. |
 | `web` | Frontend design, artifacts, slides, web patterns, and browser validation. |
 | `openspec-formal` | Explicit OpenSpec proposal, apply, and archive workflows. |
-| `ralph` | Ralph PRD and story-loop preparation. |
+| `ralph` | Ralph PRD and story-loop preparation. Also included in `sdd` only as an explicit bridge for user-approved goal/story execution. |
 | `learning` | Feynman-style learning coach. |
 | `harness` | Repo-level harness templates. |
 

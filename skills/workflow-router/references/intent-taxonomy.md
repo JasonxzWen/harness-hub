@@ -25,5 +25,6 @@ Use this taxonomy only to classify the request. Do not execute the work here.
 
 - `effective-interact` lowers review cost through reports and visual artifacts.
 - TDD is embedded in `sdd-workflow`.
+- Ralph stays an explicit goal/story loop helper inside `sdd-workflow` or the `ralph` profile; it is not a top-level owner and must not start autonomous repeated execution without user approval.
 - OpenSpec stays explicit formal mode.
 - Superpowers, ECC, and Matt Pocock skills are source references or helper skills, not top-level owners.

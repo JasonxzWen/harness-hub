@@ -32,7 +32,7 @@ CONFIDENCE: high
 REASON: The user asked to implement a workflow refactor.
 OWNER: sdd-workflow
 NEXT GATE: Align user need before spec and plan.
-HELPERS: product-capability, tdd-workflow, verification-loop
+HELPERS: product-capability, tdd-workflow, verification-loop; ralph-prd/ralph-loop only for explicit goal-loop requests
 EFFECTIVE_INTERACT: required
 ```
 

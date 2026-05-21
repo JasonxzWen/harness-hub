@@ -21,6 +21,8 @@ const workflowComponents = [
   'skill:hub-maintenance-workflow',
 ] as const;
 
+const explicitGoalLoopBridgeComponents = ['skill:ralph-prd', 'skill:ralph-loop'] as const;
+
 test('sdd profile exposes public workflow skills for the standard target', () => {
   const index = readCapabilityIndex();
 
@@ -34,6 +36,19 @@ test('sdd profile exposes public workflow skills for the standard target', () =>
   }
 
   expect(index.profiles.minimal.components).not.toContain('skill:workflow-router');
+});
+
+test('sdd profile includes Ralph as an explicit goal-loop bridge only', () => {
+  const index = readCapabilityIndex();
+
+  expect(index.profiles.sdd.description).toContain('Ralph goal-loop bridge');
+
+  for (const componentId of explicitGoalLoopBridgeComponents) {
+    expect(index.profiles.sdd.components).toContain(componentId);
+    expect(index.profiles.ralph.components).toContain(componentId);
+    expect(index.profiles.minimal.components).not.toContain(componentId);
+    expect(index.components[componentId].agents).toEqual(['standard']);
+  }
 });
 
 test('profiles only reference declared components', () => {
@@ -54,6 +69,8 @@ test('sdd profile installs workflow set for the standard target with lock-backed
   expect(plan.profileName).toBe('sdd');
   expect(dests).toContain('skills/workflow-router');
   expect(dests).toContain('skills/sdd-workflow');
+  expect(dests).toContain('skills/ralph-prd');
+  expect(dests).toContain('skills/ralph-loop');
   expect(dests.some((dest) => dest.startsWith('.codex/'))).toBe(false);
   expect(dests.some((dest) => dest.startsWith('.claude/'))).toBe(false);
   expect(dests.some((dest) => dest.startsWith('.opencode/'))).toBe(false);
@@ -61,7 +78,9 @@ test('sdd profile installs workflow set for the standard target with lock-backed
   const result = applyInstall(plan);
   expect(result.installed.length).toBe(plan.items.length);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'sdd-workflow', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'ralph-loop', 'SKILL.md'))).toBe(true);
 
   const status = getStatus({ targetDir, index: readCapabilityIndex() });
   expect(status.current.some((row) => row.id === 'skill:sdd-workflow' && row.agent === 'standard')).toBe(true);
+  expect(status.current.some((row) => row.id === 'skill:ralph-loop' && row.agent === 'standard')).toBe(true);
 });

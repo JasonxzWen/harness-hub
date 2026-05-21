@@ -47,6 +47,7 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - Runtime bugs/performance regressions: use `diagnose`.
 - Agent/tool harness failures: use `agent-introspection-debugging`.
 - Production feature work or confirmed bug fixes with tests: use `tdd-workflow`.
+- Ralph goal/story loops: `sdd` includes `ralph-prd` and `ralph-loop` as a pre-native-goal bridge, but use them only when the user explicitly wants Ralph-style goal/story execution; do not bypass SDD alignment or start autonomous repeated execution without approval.
 - Throwaway design exploration: use `prototype`; use `frontend-design` for production UI.
 - Deep pre-PR review: use `compound-code-review`; use `security-review` only for focused security checks.
 - Final command gates and build/test validation: use `verification-loop`.

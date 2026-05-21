@@ -71,7 +71,7 @@ The workflow system must serve this order:
 |---|---|---|---|
 | Superpowers | Planning discipline and finish/worktree habits. | Full pack would duplicate existing skills. | Adapt only plan discipline and explicit completion gates. |
 | ECC rules | Conservative execution, hooks, agents, and verification practices. | Avoid turning broad conventions into another prompt pack. | Keep broad rules in `AGENTS.md`; conditional details in workflow skills. |
-| Ralph PRD/story loop | Story sizing and autonomous execution boundaries. | Not the default for normal user-supervised SDD. | Explicit mode for repeated autonomous story execution. |
+| Ralph PRD/story loop | Story sizing and autonomous execution boundaries. | Not the default for normal user-supervised SDD. | Include as an explicit `sdd` helper bridge before native goal support; never start repeated execution without approval. |
 | OpenSpec tasks | Implementation task checklist tied to spec artifacts. | Do not require OpenSpec for every change. | Borrow task/acceptance traceability in `sdd-workflow`. |
 
 ### 5. Clean Unneeded Files
