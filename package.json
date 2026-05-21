@@ -1,6 +1,6 @@
 {
   "name": "@jasonwen/skill-hub",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Curated platform-neutral agent skill library and installer with Claude plugin distribution support.",
   "type": "module",
   "main": "dist/skillHub.js",

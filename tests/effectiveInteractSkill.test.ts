@@ -16,151 +16,235 @@ function frontmatterValue(name: string): string {
   return match?.[1] || '';
 }
 
-test('effective-interact has a broad default-consider trigger description', () => {
+test('effective-interact has a low-noise complex communication trigger description', () => {
   const description = frontmatterValue('description');
 
   expect(description.startsWith('Load when')).toBe(true);
-  expect(description.split(/\s+/).length).toBeLessThanOrEqual(50);
+  expect(description.split(/\s+/).length).toBeLessThanOrEqual(70);
   expect(description).toContain('Chinese-first');
-  expect(description).toContain('interaction-cost reduction');
-  expect(description).toContain('selected owner workflow');
-  expect(description).toContain('non-trivial session');
-  expect(description).toContain('planning');
-  expect(description).toContain('design');
-  expect(description).toContain('research');
-  expect(description).toContain('learning');
-  expect(description).toContain('review');
-  expect(description).toContain('validation');
-  expect(description).toContain('HTML handoff');
-  expect(description).toContain('material repo/skill changes');
-  expect(description).toContain('final reports');
-  expect(description).toContain('permission pauses');
+  expect(description).toContain('clear complex communication');
+  expect(description).toContain('alignment');
+  expect(description).toContain('multi-option choice');
+  expect(description).toContain('status/incident reporting');
+  expect(description).toContain('long-task fact ledgers');
+  expect(description).toContain('implementation plans');
+  expect(description).toContain('architecture/dependency/milestone maps');
+  expect(description).toContain('explainer/design/editor artifacts');
+  expect(description).toContain('reviews');
+  expect(description).toContain('handoff');
+  expect(description).toContain('plain text');
+  expect(description).toContain('Markdown');
+  expect(description).toContain('visual Markdown');
+  expect(description).toContain('HTML');
+  expect(description).toContain('decision cost');
+  expect(description).toContain('do not load merely because an answer is long');
   expect(description).toContain('trivial chat');
   expect(description).toContain('bundled apps');
 });
 
 test('effective-interact documents positive and negative trigger examples', () => {
   expect(skill).toContain('## Trigger Examples');
-  expect(skill).toContain('designing this from zero');
-  expect(skill).toContain('find weak assumptions');
-  expect(skill).toContain('retro');
-  expect(skill).toContain('implementation state');
-  expect(skill).toContain('changed a skill or repo behavior');
+  expect(skill).toContain('复杂状态汇报');
+  expect(skill).toContain('200 Chinese characters');
+  expect(skill).toContain('changed skill/repo behavior');
   expect(skill).toContain('choose before you implement');
+  expect(skill).toContain('plain-text handoff');
   expect(skill).toContain('OpenSpec apply');
+  expect(skill).toContain('implementation plan with milestones');
   expect(skill).toContain('validation gates');
-  expect(skill).toContain('HTML');
+  expect(skill).toContain('HTML architecture walkthrough');
+  expect(skill).toContain('design-system reference');
+  expect(skill).toContain('component variant matrix');
+  expect(skill).toContain('incident timeline');
   expect(skill).toContain('review');
   expect(skill).toContain('JSON');
   expect(skill).toContain('side-by-side option gallery');
-  expect(skill).toContain('temporary editor that exports Markdown, JSON, or diff');
+  expect(skill).toContain('temporary triage, feature-flag, or prompt editor that exports Markdown, JSON, or diff');
   expect(skill).toContain('Do not use this skill for:');
   expect(skill).toContain('approval gates such as');
-  expect(skill).toContain('HTML artifact around planning, implementation progress, review, status, material-change reporting, or handoff');
+  expect(skill).toContain('doing code implementation, bug fixes, or test runs');
+  expect(skill).toContain('long but routine explanation');
+  expect(skill).toContain('one-command status');
   expect(skill).toContain('slide decks; use `frontend-slides`');
 });
 
-test('effective-interact can lower interaction cost before, during, or after implementation', () => {
-  expect(skill).toContain('Default posture: consider this skill in every non-trivial session');
-  expect(skill).toContain('## Interaction Cost Gate');
-  expect(skill).toContain('Understanding cost');
-  expect(skill).toContain('Choice cost');
-  expect(skill).toContain('Verification cost');
-  expect(skill).toContain('Rework cost');
-  expect(skill).toContain('## Output Ladder');
-  expect(skill).toContain('Concise chat');
-  expect(skill).toContain('Structured Markdown');
-  expect(skill).toContain('Self-contained HTML');
-  expect(skill).toContain('Disposable local editor');
+test('effective-interact treats complex communication as the core job', () => {
+  expect(skill).toContain('Default: do not load this skill merely because the answer may exceed roughly 200 Chinese characters');
+  expect(skill).toContain('200 Chinese characters and 3 or more independent points are auxiliary signals');
+  expect(skill).toContain('communication-worthiness check');
+  expect(skill).toContain('Reader need');
+  expect(skill).toContain('Decision frame');
+  expect(skill).toContain('plain-brief');
+  expect(skill).toContain('structured-markdown');
+  expect(skill).toContain('visual-markdown');
+  expect(skill).toContain('html-artifact');
+  expect(skill).toContain('HTML is an escalation path, not the default goal');
+});
+
+test('effective-interact can shape communication before, during, or after implementation', () => {
   expect(skill).toContain('Use this skill before, during, or after implementation');
-  expect(skill).toContain('HTML artifact can replace or supplement a Markdown reply');
   expect(skill).toContain('planning options');
+  expect(skill).toContain('PR writeups');
   expect(skill).toContain('prompt/config tuners');
+  expect(skill).toContain('status or incident dashboards');
   expect(skill).toContain('material-change reports');
   expect(skill).toContain('interaction points, not only final handoffs');
   expect(skill).toContain('The user does not need to say "HTML"');
 });
 
-test('effective-interact codifies owner/layer boundaries without copying source workflows', () => {
-  const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
-  const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
-  const routingDocs = fs.readFileSync('docs/skill-routing.md', 'utf8');
-  const capabilityIndex = fs.readFileSync('capabilities/index.json', 'utf8');
-
-  expect(skill).toContain('## Intent Routing');
-  expect(skill).toContain('let the selected owner workflow drive the substantive decision');
-  expect(skill).toContain('format 2-3 approaches with tradeoffs');
-  expect(skill).toContain('ask only the next decision-changing question');
-  expect(skill).toContain('do not become the pressure-test owner');
-  expect(skill).toContain('Use `grill-me` or the review workflow for the questioning logic');
-  expect(skill).toContain('Do not copy upstream brainstorming, grilling, or skill-writing workflows wholesale');
-  expect(skill).toContain('Do not create ADRs, CONTEXT files, specs, commits, issues, or external side effects');
-  expect(patterns).toContain('Idea shaping');
-  expect(patterns).toContain('Pressure testing');
-  expect(patterns).toContain('`grill-me` or `review-workflow` owns the questioning logic');
-  expect(routingDocs).toContain('`grill-me` remains the pressure-test owner');
-  expect(capabilityIndex).toContain('skill:grill-me');
-  expect(sourceProjects).toContain('brainstorming-style idea-shaping patterns');
-  expect(sourceProjects).toContain('use `effective-interact` only for expression or handoff');
-});
-
-test('effective-interact includes skill authoring gates from skill-creator guidance', () => {
-  const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
-  const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
-
-  expect(skill).toContain('## Skill Authoring Gate');
-  expect(skill).toContain('Treat `description` as routing logic');
-  expect(skill).toContain('update routing docs and prompt-style routing fixtures');
-  expect(skill).toContain('Keep this file as the control-plane summary');
-  expect(skill).toContain('one-level `references/`, `assets/`, or `scripts/` resources');
-  expect(patterns).toContain('Description as router');
-  expect(patterns).toContain('Progressive disclosure');
-  expect(patterns).toContain('Behavioral coverage');
-  expect(patterns).toContain('keyword assertions are not enough');
-  expect(patterns).toContain('Stable language');
-  expect(sourceProjects).toContain('Matt Pocock `write-a-skill`');
-  expect(sourceProjects).toContain('description-as-router');
-});
-
-test('effective-interact defines an HTML usefulness gate', () => {
+test('effective-interact defines communication and output-mode gates', () => {
   const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
 
-  expect(skill).toContain('## HTML Usefulness Gate');
-  expect(skill).toContain('interaction-cost check at planning, after material work, and before final handoff');
-  expect(skill).toContain('Use HTML when at least one strong signal is present');
-  expect(skill).toContain('material repo or skill implementation');
+  expect(skill).toContain('## Default Load And Communication Gate');
+  expect(skill).toContain('200 Chinese characters');
+  expect(skill).toContain('auxiliary signal');
+  expect(skill).toContain('3 or more independent points');
+  expect(skill).toContain('primary trigger is the user decision need');
+  expect(skill).toContain('Use the lightest mode that lowers decision cost');
+  expect(skill).toContain('material repo/skill implementation');
   expect(skill).toContain('2 or more comparable options');
   expect(skill).toContain('flow, state, timeline, map, call path, or architecture');
-  expect(skill).toContain('user must choose, tune, sort, filter, copy, or export');
+  expect(skill).toContain('user must choose, tune, sort, filter, copy, export, or inspect');
   expect(skill).toContain('source anchors, code, diff, citations, evidence, or validation');
-  expect(skill).toContain('Markdown would hide the main point in long linear text');
+  expect(skill).toContain('plain text would hide the main point');
   expect(skill).toContain('If no strong signal and no handoff obligation is present, answer in chat or Markdown');
   expect(patterns).toContain('Default Session Routing');
-  expect(patterns).toContain('Interaction Cost Gate');
-  expect(patterns).toContain('Output Ladder');
-  expect(patterns).toContain('Intent Routing');
-  expect(patterns).toContain('Skill Authoring Gate');
-  expect(patterns).toContain('HTML Usefulness Gate');
+  expect(patterns).toContain('Output Mode Gate');
   expect(patterns).toContain('Material repo or skill behavior changed');
   expect(patterns).toContain('Strong signal');
-  expect(patterns).toContain('Markdown default');
-  expect(patterns).toContain('Do not generate HTML just because the topic is important');
+  expect(patterns).toContain('Plain text or Markdown default');
+  expect(patterns).toContain('Length is never sufficient by itself');
+  expect(skill).toContain('never because the topic is important');
+});
+
+test('effective-interact defines hard output-mode escalation criteria', () => {
+  const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
+
+  expect(skill).toContain('## Mode Selection Hard Rules');
+  expect(skill).toContain('Do not load for a long but routine answer');
+  expect(skill).toContain('Use `html-artifact` only when a hard HTML condition is true');
+  expect(skill).toContain('more than 5 source anchors');
+  expect(skill).toContain('user must filter, sort, compare, copy, or export');
+  expect(skill).toContain('architecture, dependency, milestone, module, repo, or skill structure');
+  expect(skill).toContain('visual style, component variant, design-system, illustration, prototype, or multi-option approval needs a browsable gallery');
+  expect(skill).toContain('status/incident/editor surface needs drilldown or visible export');
+  expect(skill).toContain('HTML escalation is forbidden when one compact Markdown table, one Mermaid diagram, or one short file list is enough');
+  expect(patterns).toContain('Hard HTML conditions');
+  expect(patterns).toContain('Use the lower mode when in doubt');
+});
+
+test('effective-interact has reviewable low-noise mode decision cases', () => {
+  const casesPath = `${skillDir}/assets/fixtures/communication-mode-cases.json`;
+  expect(fs.existsSync(casesPath)).toBe(true);
+
+  const cases = JSON.parse(fs.readFileSync(casesPath, 'utf8')) as {
+    cases: Array<{ id: string; shouldLoad: boolean; expectedMode: string | null; reason: string }>;
+  };
+  const ids = new Set(cases.cases.map((entry) => entry.id));
+  const modes = new Set(cases.cases.map((entry) => entry.expectedMode).filter(Boolean));
+
+  expect(cases.cases.some((entry) => entry.id.includes('routine-long') && !entry.shouldLoad)).toBe(true);
+  expect(cases.cases.some((entry) => entry.id.includes('short-decision') && entry.shouldLoad)).toBe(true);
+  expect(modes).toEqual(new Set(['plain-brief', 'structured-markdown', 'visual-markdown', 'html-artifact']));
+
+  for (const entry of cases.cases) {
+    expect(entry.reason.length).toBeGreaterThan(12);
+    if (entry.shouldLoad) {
+      expect(entry.expectedMode).not.toBeNull();
+    } else {
+      expect(entry.expectedMode).toBeNull();
+    }
+  }
+});
+
+test('effective-interact ships skill-local routing evals for trigger and HTML timing', () => {
+  const evalsPath = `${skillDir}/evals/routing-cases.json`;
+  expect(fs.existsSync(evalsPath)).toBe(true);
+
+  const evals = JSON.parse(fs.readFileSync(evalsPath, 'utf8')) as {
+    version: number;
+    cases: Array<{
+      id: string;
+      kind: 'positive' | 'negative' | 'forbidden-load';
+      prompt: string;
+      shouldLoad: boolean;
+      expectedMode: string | null;
+      expectedSkill: string | null;
+      htmlEscalation: boolean;
+      expectedArtifactShape?: string;
+      rationale: string;
+    }>;
+  };
+  const ids = new Set(evals.cases.map((entry) => entry.id));
+  const kinds = new Set(evals.cases.map((entry) => entry.kind));
+  const modes = new Set(evals.cases.map((entry) => entry.expectedMode).filter(Boolean));
+
+  expect(evals.version).toBe(1);
+  expect(kinds).toEqual(new Set(['positive', 'negative', 'forbidden-load']));
+  expect(modes).toEqual(new Set(['plain-brief', 'structured-markdown', 'visual-markdown', 'html-artifact']));
+  expect(ids.has('positive-multi-option-approval-html')).toBe(true);
+  expect(ids.has('positive-visual-style-approval-html')).toBe(true);
+  expect(ids.has('positive-milestone-dependency-html')).toBe(true);
+  expect(ids.has('positive-module-dependency-html')).toBe(true);
+  expect(ids.has('positive-skill-structure-tree-html')).toBe(true);
+  expect(ids.has('positive-code-approach-comparison-html')).toBe(true);
+  expect(ids.has('positive-implementation-plan-html')).toBe(true);
+  expect(ids.has('positive-pr-writeup-html')).toBe(true);
+  expect(ids.has('positive-code-understanding-map-html')).toBe(true);
+  expect(ids.has('positive-design-system-reference-html')).toBe(true);
+  expect(ids.has('positive-component-variant-matrix-html')).toBe(true);
+  expect(ids.has('positive-prototype-animation-approval-html')).toBe(true);
+  expect(ids.has('positive-prototype-interaction-approval-html')).toBe(true);
+  expect(ids.has('positive-illustration-gallery-html')).toBe(true);
+  expect(ids.has('positive-annotated-flowchart-html')).toBe(true);
+  expect(ids.has('positive-research-feature-explainer-html')).toBe(true);
+  expect(ids.has('positive-research-concept-explainer-html')).toBe(true);
+  expect(ids.has('positive-status-dashboard-html')).toBe(true);
+  expect(ids.has('positive-long-task-session-ledger-html')).toBe(true);
+  expect(ids.has('positive-incident-report-html')).toBe(true);
+  expect(ids.has('positive-triage-board-editor-html')).toBe(true);
+  expect(ids.has('positive-feature-flag-editor-html')).toBe(true);
+  expect(ids.has('positive-prompt-tuner-editor-html')).toBe(true);
+  expect(ids.has('negative-production-ui-visual-design')).toBe(true);
+  expect(ids.has('negative-slide-deck-milestones')).toBe(true);
+  expect(ids.has('negative-throwaway-prototype-build')).toBe(true);
+  expect(ids.has('forbidden-routine-long-explanation')).toBe(true);
+  expect(ids.has('forbidden-permission-only-pause')).toBe(true);
+  expect(ids.has('forbidden-short-status-ledger')).toBe(true);
+
+  for (const entry of evals.cases) {
+    expect(entry.prompt.trim().length).toBeGreaterThan(8);
+    expect(entry.rationale.trim().length).toBeGreaterThan(12);
+    if (entry.shouldLoad) {
+      expect(entry.expectedSkill).toBe('effective-interact');
+      expect(entry.expectedMode).not.toBeNull();
+    } else {
+      expect(entry.expectedMode).toBeNull();
+    }
+    if (entry.htmlEscalation) {
+      expect(entry.expectedMode).toBe('html-artifact');
+      expect(entry.expectedArtifactShape).toBeTruthy();
+    }
+  }
 });
 
 test('effective-interact codifies decision-first briefing quality', () => {
   const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
 
+  expect(skill).toContain('First-Principles Communication Contract');
+  expect(skill).toContain('goal, audience, constraints, facts, inferences, assumptions, tradeoffs, and next action');
+  expect(skill).toContain('Handoff obligation exists only when');
   expect(skill).toContain('BLUF');
   expect(skill).toContain('SCQA');
   expect(skill).toContain('Top 3');
   expect(skill).toContain('\u4e8b\u5b9e / \u63a8\u65ad / \u5047\u8bbe');
   expect(skill).toContain('CTA');
   expect(skill).toContain('validator warnings as advisory');
-  expect(skill).toContain('mojibake, broken semantic structure, failed Mermaid, unsafe diagnostics, and missing required evidence as blocking');
   expect(patterns).toContain('Decision Briefing Contract');
   expect(patterns).toContain('Pyramid');
   expect(patterns).toContain('SCQA');
   expect(patterns).toContain('Information Architecture Contract');
+  expect(patterns).toContain('First-principles communication');
   expect(patterns).toContain('PREP');
   expect(patterns).toContain('MECE');
   expect(patterns).toContain('LATCH');
@@ -175,27 +259,71 @@ test('effective-interact codifies decision-first briefing quality', () => {
   expect(patterns).toContain('warning != required fix');
 });
 
-test('effective-interact codifies HTML effectiveness patterns without stealing adjacent skills', () => {
+test('effective-interact codifies long-task session fact ledgers', () => {
+  const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
+  const schemaPath = `${skillDir}/references/session-ledger-schema.json`;
+  const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+  const skillGitignore = fs.readFileSync(`${skillDir}/.gitignore`, 'utf8');
+  const evals = JSON.parse(fs.readFileSync(`${skillDir}/evals/routing-cases.json`, 'utf8')) as {
+    cases: Array<{ id: string }>;
+  };
+  const ids = new Set(evals.cases.map((entry) => entry.id));
+
+  expect(skill).toContain('Long Task Fact Ledger');
+  expect(skill).toContain('artifacts/session-ledgers/<task-slug>.jsonl');
+  expect(skill).toContain('tool-result summaries');
+  expect(skill).toContain('Never record secrets');
+  expect(patterns).toContain('Long Task Session Ledger');
+  expect(patterns).toContain('references/session-ledger-schema.json');
+  expect(patterns).toContain('Do not record secrets');
+  expect(patterns).toContain('Summarize tool output');
+  expect(patterns).toContain('If the skill directory is unavailable or unwritable');
+  expect(schema.additionalProperties).toBe(false);
+  expect(schema.required).toEqual(['ts', 'kind', 'summary']);
+  expect(schema.properties.kind.enum).toEqual(expect.arrayContaining([
+    'checkpoint',
+    'tool-result',
+    'decision',
+    'assumption',
+    'risk',
+    'blocker',
+    'verification',
+    'handoff-source',
+  ]));
+  expect(schema.properties.source.additionalProperties).toBe(false);
+  expect(skillGitignore).toContain('artifacts/');
+  expect(ids.has('positive-long-task-session-ledger-html')).toBe(true);
+  expect(ids.has('forbidden-short-status-ledger')).toBe(true);
+});
+
+test('effective-interact codifies output-mode escalation without stealing adjacent skills', () => {
   const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
   const routingDocs = fs.readFileSync('docs/skill-routing.md', 'utf8');
 
-  expect(skill).toContain('HTML makes a user communication point more effective than Markdown');
-  expect(skill).toContain('compare them side by side');
-  expect(skill).toContain('show spatial structure');
-  expect(skill).toContain('collect a user decision through a local export');
+  expect(skill).toContain('HTML when browser navigation, visualization, or local interaction lowers decision cost');
+  expect(skill).toContain('have tradeoffs');
+  expect(skill).toContain('needs spatial structure');
+  expect(skill).toContain('user must choose, tune, sort, filter, copy, export, or inspect');
   expect(skill).toContain('slide decks; use `frontend-slides`');
+  expect(patterns).toContain('Plain-Text And Markdown Patterns');
   expect(patterns).toContain('Case-Derived Patterns');
-  expect(patterns).toContain('option-gallery');
+  expect(patterns).toContain('approach-comparison');
+  expect(patterns).toContain('visual-style-board');
+  expect(patterns).toContain('implementation-plan');
+  expect(patterns).toContain('review-findings');
   expect(patterns).toContain('module-map');
   expect(patterns).toContain('flow-drilldown');
   expect(patterns).toContain('pr-writeup');
   expect(patterns).toContain('explorable-explainer');
+  expect(patterns).toContain('status-dashboard');
+  expect(patterns).toContain('incident-report');
   expect(patterns).toContain('disposable-export-editor');
   expect(patterns).toContain('Every editor-like artifact must end with an export path');
+  expect(routingDocs).toContain('complex communication and alignment');
   expect(routingDocs).toContain('option comparison');
   expect(routingDocs).toContain('lightweight export editor');
-  expect(routingDocs).toContain('Default-consider alongside the selected owner workflow');
-  expect(routingDocs).toContain('material repo or skill change handoffs');
+  expect(routingDocs).toContain('default-considered skill for non-trivial sessions');
+  expect(routingDocs).toContain('material repo or skill change reports');
   expect(routingDocs).toContain('frontend-slides` remains the deck lane');
 });
 
@@ -203,6 +331,7 @@ test('effective-interact keeps detailed patterns in references', () => {
   const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
 
   expect(skill).toContain('references/interaction-patterns.md');
+  expect(skill).toContain('references/html-effectiveness-patterns.md');
   expect(skill).toContain('UTF-8');
   expect(skill).toContain('\u8fde\u7eed\u95ee\u53f7\u4e71\u7801');
   expect(skill).toContain('\u4e0d\u8981\u5916\u663e Source fallback');
@@ -214,7 +343,47 @@ test('effective-interact keeps detailed patterns in references', () => {
   expect(patterns).not.toContain('previous versions failed');
   expect(patterns).not.toContain('Related third-party skills');
   expect(patterns).not.toContain('localStorage');
-  expect(skill.length).toBeLessThan(12000);
+  expect(skill.length).toBeLessThan(9000);
+});
+
+test('effective-interact generalizes HTML effectiveness source cases without overfitting', () => {
+  const sourcePatternsPath = `${skillDir}/references/html-effectiveness-patterns.md`;
+  expect(fs.existsSync(sourcePatternsPath)).toBe(true);
+
+  const sourcePatterns = fs.readFileSync(sourcePatternsPath, 'utf8');
+  const expectedFamilies = [
+    'Code approach exploration',
+    'Visual direction exploration',
+    'Implementation plan',
+    'PR review',
+    'PR writeup',
+    'Code understanding',
+    'Design system reference',
+    'Component variant matrix',
+    'Prototype animation approval',
+    'Prototype interaction approval',
+    'SVG illustration options',
+    'Annotated flowchart',
+    'Feature research explainer',
+    'Concept research explainer',
+    'Engineering status report',
+    'Incident report',
+    'Triage board editor',
+    'Feature flag editor',
+    'Prompt tuner editor',
+  ];
+
+  for (const family of expectedFamilies) {
+    expect(sourcePatterns).toContain(family);
+  }
+
+  expect(sourcePatterns).toContain('Anti-Overfit Rules');
+  expect(sourcePatterns).toContain('Trigger on reader need');
+  expect(sourcePatterns).toContain('Warm neutral base');
+  expect(sourcePatterns).toContain('Clay accent');
+  expect(sourcePatterns).toContain('Template Mapping');
+  expect(sourcePatterns).toContain('HTML Escalation Checklist');
+  expect(sourcePatterns).toContain('Stay in chat or Markdown');
 });
 
 test('effective-interact ships reusable template and component assets', () => {
@@ -224,6 +393,9 @@ test('effective-interact ships reusable template and component assets', () => {
     'assets/templates/review-findings.html',
     'assets/templates/research-explainer.html',
     'assets/templates/decision-matrix.html',
+    'assets/templates/implementation-plan.html',
+    'assets/templates/visual-exploration.html',
+    'assets/templates/editor-workbench.html',
   ];
 
   for (const template of templates) {
@@ -242,6 +414,10 @@ test('effective-interact ships reusable template and component assets', () => {
   const patterns = fs.readFileSync(`${skillDir}/references/interaction-patterns.md`, 'utf8');
 
   expect(css).toContain('blur');
+  expect(css).toContain('--bg: #faf9f5');
+  expect(css).toContain('--accent: #d97757');
+  expect(css).toContain('--ok: #788c5d');
+  expect(css).toContain('--panel-soft: #f0eee6');
   expect(css).toContain(':focus-visible');
   expect(css).toContain('prefers-reduced-motion');
   expect(css).toContain('report-data-table');
@@ -262,6 +438,8 @@ test('effective-interact ships reusable template and component assets', () => {
   expect(css).toContain('.report-nav a + a');
   expect(css).toContain('.hljs-title.function_');
   expect(css).toContain('.hljs-attribute');
+  expect(css).toContain('.swatch-chip');
+  expect(css).toContain('.mini-metrics');
   expect(js).toContain('data-filter-target');
   expect(js).toContain('data-tab-group');
   expect(js).toContain('data-copy-from');
@@ -301,9 +479,9 @@ test('effective-interact emphasizes source-linked code evidence, diffs, and rend
   expect(patterns).toContain('diff');
   expect(patterns).toContain('Mermaid');
   expect(patterns).toContain('Rich Content Opportunity');
-  expect(skill).toContain('Mermaid must render to SVG before handoff');
+  expect(skill).toContain('must render to SVG before handoff');
   expect(skill).toContain('return-to-overview');
-  expect(skill).toContain('\u5f53\u5185\u5bb9\u5929\u7136\u662f\u6d41\u7a0b\u3001\u8def\u7531\u3001\u8c03\u7528\u94fe\u3001\u547d\u4ee4\u3001\u914d\u7f6e\u3001\u4ee3\u7801\u6216\u8865\u4e01\u8bc1\u636e\u65f6');
+  expect(skill).toContain('\u6d41\u7a0b\u3001\u8def\u7531\u3001\u8c03\u7528\u94fe\u3001\u547d\u4ee4\u3001\u914d\u7f6e\u3001\u4ee3\u7801\u6216\u8865\u4e01\u8bc1\u636e\u4f18\u5148\u7528 Mermaid');
   expect(schema.properties.sections.items.properties.type.enum).toContain('diff');
   expect(css).toContain('evidence-spotlight');
   expect(css).toContain('source-link');
@@ -352,6 +530,8 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
     createInteractionScript,
     validateInteractionScript,
     `${skillDir}/references/interaction-input-schema.json`,
+    `${skillDir}/references/html-effectiveness-patterns.md`,
+    `${skillDir}/references/session-ledger-schema.json`,
     `${skillDir}/.gitignore`,
     `${skillDir}/assets/fixtures/pre-rendered-report.json`,
     `${skillDir}/assets/fixtures/runtime-report.json`,
@@ -359,6 +539,11 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
     `${skillDir}/assets/fixtures/table-component-report.json`,
     `${skillDir}/assets/fixtures/option-gallery-report.json`,
     `${skillDir}/assets/fixtures/disposable-export-editor-report.json`,
+    `${skillDir}/assets/fixtures/communication-mode-cases.json`,
+    `${skillDir}/assets/fixtures/skill-structure-map-report.json`,
+    `${skillDir}/assets/fixtures/html-effectiveness-pattern-library-report.json`,
+    `${skillDir}/assets/fixtures/session-ledger-report.json`,
+    `${skillDir}/evals/routing-cases.json`,
   ];
 
   for (const file of expectedFiles) {
@@ -369,7 +554,7 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
   expect(schema.required).toEqual(['title', 'summary', 'status', 'sections']);
   expect(schema.required).not.toContain('evidence');
   expect(schema.properties.template.enum).toEqual(
-    expect.arrayContaining(['implementation-handoff', 'review-findings', 'research-explainer', 'decision-matrix']),
+    expect.arrayContaining(['implementation-handoff', 'review-findings', 'research-explainer', 'decision-matrix', 'implementation-plan', 'visual-exploration', 'editor-workbench']),
   );
   expect(schema.properties.showRuntimeDependencies.type).toBe('boolean');
   expect(schema.properties.sections.items.properties.type.enum).toContain('diff');
@@ -391,11 +576,17 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
 
   const generator = fs.readFileSync(createInteractionScript, 'utf8');
   const skillGitignore = fs.readFileSync(`${skillDir}/.gitignore`, 'utf8');
+  const rootGitignore = fs.readFileSync('.gitignore', 'utf8');
   expect(generator).toContain('path.join(skillDir, "artifacts")');
-  expect(generator).toContain('Default outDir is skills/effective-interact/artifacts/');
+  expect(generator).toContain('Default outDir is ignored skills/effective-interact/artifacts/');
+  expect(generator).toContain('Use --out-dir only for another gitignored directory');
   expect(skill).toContain('skills/effective-interact/artifacts/');
-  expect(skill).toContain('omit `--out-dir` for ignored skill-local intermediate artifacts');
+  expect(skill).toContain('omit `--out-dir` so HTML lands in ignored skill-local artifacts');
+  expect(skill).toContain('If overriding, choose only a gitignored directory');
+  expect(skill).not.toContain('--out-dir reports');
   expect(skillGitignore).toContain('artifacts/');
+  expect(rootGitignore).toContain('reports/');
+  expect(rootGitignore).toContain('skills/effective-interact/artifacts/');
 });
 
 test('effective-interact reference patterns stay navigable for long documents', () => {
@@ -457,6 +648,117 @@ test('effective-interact option-gallery fixture renders a compare-first report',
   expect(html).toContain('side-by-side');
   expect(html).toContain('data-report-data-table');
   expect(html).toContain('data-copy-from="#next-action-list"');
+
+  const validation = spawnSync(process.execPath, [
+    validateInteractionScript,
+    payload.outputPath,
+    '--json',
+    '--skip-browser',
+  ], { encoding: 'utf8' });
+  expect(validation.status, validation.stderr).toBe(0);
+  expect(JSON.parse(validation.stdout).ok).toBe(true);
+});
+
+test('effective-interact structure fixture renders a navigable tree report', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-structure-map-'));
+  const result = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    `${skillDir}/assets/fixtures/skill-structure-map-report.json`,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'structure-map',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  const payload = JSON.parse(result.stdout);
+  const html = fs.readFileSync(payload.outputPath, 'utf8');
+
+  expect(html).toContain('effective-interact 结构地图');
+  expect(html).toContain('目录树和职责流');
+  expect(html).toContain('data-section-type="mermaid"');
+  expect(html).toContain('data-section-type="data-table"');
+  expect(html).toContain('SKILL.md');
+  expect(html).toContain('evals/routing-cases.json');
+  expect(html).toContain('scripts/create-interaction.mjs');
+  expect(html).toContain('scripts/validate-interaction.mjs');
+
+  const validation = spawnSync(process.execPath, [
+    validateInteractionScript,
+    payload.outputPath,
+    '--json',
+    '--skip-browser',
+  ], { encoding: 'utf8' });
+  expect(validation.status, validation.stderr).toBe(0);
+  expect(JSON.parse(validation.stdout).ok).toBe(true);
+});
+
+test('effective-interact HTML effectiveness fixture renders source-derived patterns', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-html-effectiveness-'));
+  const result = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    `${skillDir}/assets/fixtures/html-effectiveness-pattern-library-report.json`,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'html-effectiveness-patterns',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  const payload = JSON.parse(result.stdout);
+  const html = fs.readFileSync(payload.outputPath, 'utf8');
+
+  expect(html).toContain('data-template="visual-exploration"');
+  expect(html).toContain('HTML effectiveness 范例吸收地图');
+  expect(html).toContain('approach-comparison');
+  expect(html).toContain('visual-style-board');
+  expect(html).toContain('implementation-plan');
+  expect(html).toContain('incident-report');
+  expect(html).toContain('prompt-tuner-editor');
+  expect(html).toContain('swatch-chip');
+  expect(html).toContain('#D97757');
+  expect(html).toContain('data-report-data-table');
+
+  const validation = spawnSync(process.execPath, [
+    validateInteractionScript,
+    payload.outputPath,
+    '--json',
+    '--skip-browser',
+  ], { encoding: 'utf8' });
+  expect(validation.status, validation.stderr).toBe(0);
+  expect(JSON.parse(validation.stdout).ok).toBe(true);
+});
+
+test('effective-interact session ledger fixture renders preserved task facts', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-session-ledger-'));
+  const result = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    `${skillDir}/assets/fixtures/session-ledger-report.json`,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'session-ledger',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  const payload = JSON.parse(result.stdout);
+  const html = fs.readFileSync(payload.outputPath, 'utf8');
+
+  expect(html).toContain('data-template="conclusion-dashboard"');
+  expect(html).toContain('Long-task session ledger');
+  expect(html).toContain('artifacts/session-ledgers');
+  expect(html).toContain('tool-result');
+  expect(html).toContain('checkpoint');
+  expect(html).toContain('Never store secrets');
+  expect(html).toContain('data-section-type="timeline"');
+  expect(html).toContain('data-section-type="data-table"');
+  expect(html).toContain('data-evidence-id="ledger-schema"');
 
   const validation = spawnSync(process.execPath, [
     validateInteractionScript,
@@ -610,7 +912,7 @@ test('effective-interact trigger retrofit report keeps first screen compact and 
   expect(html).toContain('class="hero-decision-grid"');
   expect(html).toContain('class="hero-stat-grid"');
   expect(html).toContain('class="hero-criteria-list"');
-  expect(html).toContain('缺口在触发合同');
+  expect(html).toContain('按决策成本触发');
   expect(html).toContain('class="report-nav-title">速览</div>');
   expect(html).toContain('class="panel supplemental-panel" id="claims"');
   expect(html).toContain('class="claim-card-header"');
@@ -1323,7 +1625,7 @@ test('effective-interact validator checks structure and reports degraded browser
   expect(payload.browser.reason).toContain('skipped');
 });
 
-test('effective-interact showcase remains a rich feature fixture', () => {
+test('effective-interact showcase remains a rich generated fixture without tracked reports', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-showcase-'));
   const result = spawnSync(process.execPath, [
     createInteractionScript,
@@ -1332,7 +1634,7 @@ test('effective-interact showcase remains a rich feature fixture', () => {
     '--out-dir',
     tmpDir,
     '--slug',
-    'effective-interact-feature-showcase',
+    'feature-showcase',
     '--json',
   ], { encoding: 'utf8' });
 

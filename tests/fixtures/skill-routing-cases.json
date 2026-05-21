@@ -127,7 +127,7 @@
       "kind": "positive",
       "prompt": "Create a one-file effective interaction for this PR review with collapsible findings and copyable action items.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-completed-conclusion",
@@ -135,15 +135,15 @@
       "kind": "positive",
       "prompt": "The implementation is complete; create a visual handoff with the conclusion, changed files, highlighted code, verification, and next actions.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-material-skill-change-report",
       "skill": "effective-interact",
       "kind": "positive",
-      "prompt": "I changed this skill's trigger contract and validation behavior; produce the final HTML report with reasoning, changed areas, file evidence, tests, and remaining risks.",
+      "prompt": "I changed this skill's trigger contract and validation behavior; produce the final handoff with reasoning, changed areas, file evidence, tests, and remaining risks.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-openspec-acceptance",
@@ -151,7 +151,7 @@
       "kind": "positive",
       "prompt": "The OpenSpec apply change is done; produce an HTML acceptance report with tasks, changed files, generated fixtures, and validation gates.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-option-gallery",
@@ -159,7 +159,7 @@
       "kind": "positive",
       "prompt": "Create a self-contained HTML option gallery comparing these three implementation approaches before I choose one.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-grill-handoff",
@@ -167,7 +167,7 @@
       "kind": "positive",
       "prompt": "The grill-me pass is done; turn the decisions, remaining assumptions, evidence, and next action into a self-contained HTML handoff.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-intermediate-status",
@@ -175,7 +175,7 @@
       "kind": "positive",
       "prompt": "During this refactor, create a self-contained HTML status board with current options, blockers, file evidence, and copyable next-step choices so we can align before continuing.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-export-editor",
@@ -183,7 +183,7 @@
       "kind": "positive",
       "prompt": "Build a one-file temporary HTML editor so I can toggle these config options and copy the resulting JSON diff back here.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-negative-product-page",
@@ -191,7 +191,7 @@
       "kind": "negative",
       "prompt": "Build a branded product landing page as the first screen of the app.",
       "expectedSkill": "frontend-design",
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-forbidden-short-answer",
@@ -199,7 +199,7 @@
       "kind": "forbidden-load",
       "prompt": "Summarize the command output in two sentences.",
       "expectedSkill": null,
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-forbidden-permission-pause",
@@ -207,7 +207,7 @@
       "kind": "forbidden-load",
       "prompt": "Before pushing this branch, stop and ask me for approval.",
       "expectedSkill": null,
-      "docsBoundary": "`effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "handoff-positive-restart-notes",
@@ -328,6 +328,102 @@
       "prompt": "Implement the queue worker fix with tests and run validation.",
       "expectedSkill": "tdd-workflow",
       "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
+    },
+    {
+      "id": "effective-interact-positive-complex-plain-brief",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "这次状态汇报会超过 200 字，请按第一性原理组织成纯文本结论、依据、风险和下一步。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-complex-choice-markdown",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Compare these three implementation choices and recommend one in structured Markdown; no HTML unless it materially improves alignment.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-multi-option-approval",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "把 6 个技术方案做成审批页，支持按风险、成本、迁移难度筛选，并给推荐路径。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-visual-style-approval",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "给这个后台工具做 4 个视觉风格方向的审批板，比较密度、语气、组件风格和风险，不要直接做产品 UI。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-milestone-map",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "把这个季度 milestones、阻塞关系、验收门槛和负责人做成可浏览的计划图，方便评审。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-structure-tree",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "展示这个 skill 的目录树，每个文件和目录的作用都要概述，让我一眼看懂结构。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-long-task-ledger",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "This long implementation will need stable checkpoints, important tool result summaries, and a final HTML report; keep a skill-local session ledger as the source of facts.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-implementation-plan",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Create an HTML implementation plan with milestones, dependency map, acceptance gates, risks, owners, and open questions.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-design-system-reference",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Build a review artifact for this design system with color tokens, type specimens, spacing, component variants, and approval notes.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-incident-report",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Create an incident report with timeline, impact, root cause evidence, mitigations, follow-up owners, and uncertainty boundaries.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-prompt-tuner",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Create a local prompt tuning workbench with section toggles, preview, quality checklist, and copyable prompt export.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-forbidden-routine-long-explanation",
+      "skill": "effective-interact",
+      "kind": "forbidden-load",
+      "prompt": "请用 300 字解释这个普通概念，不需要方案、风险、证据或下一步。",
+      "expectedSkill": null,
+      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     }
   ]
 }

@@ -33,22 +33,22 @@
   table-layout: fixed;
   border-collapse: collapse;
   overflow: auto;
-  border: 1px solid var(--line, #d0d7e2);
+  border: 1px solid var(--line, #d1cfc5);
   border-radius: 8px;
 }
 
 .rendered-markdown th,
 .rendered-markdown td {
   padding: 8px 10px;
-  border-bottom: 1px solid var(--line, #d0d7e2);
+  border-bottom: 1px solid var(--line, #d1cfc5);
   text-align: left;
   vertical-align: top;
   overflow-wrap: anywhere;
 }
 
 .rendered-markdown th {
-  background: #eef4ff;
-  color: #111827;
+  background: #f0eee6;
+  color: #3d3d3a;
   font-weight: 700;
 }
 
@@ -72,7 +72,7 @@
 .mermaid-rendered[data-render-state="degraded"] {
   display: grid;
   place-items: center;
-  color: var(--warn, #a15c07);
+  color: var(--warn, #a67c52);
   font-weight: 650;
 }
 

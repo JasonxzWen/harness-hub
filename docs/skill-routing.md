@@ -36,7 +36,7 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 | Applying a coherent visual theme to slides, reports, docs, HTML artifacts, or landing pages | `theme-factory` | Use for theming existing artifacts; production UI creation remains `frontend-design`. |
 | Creating, optimizing, or validating Slack animated GIFs | `slack-gif-creator` | Use for Slack emoji/message GIF targets only. |
 | Agent/tool harness loop, repeated tool failure, drift, or recoverable self-debugging | `agent-introspection-debugging` | Use after ordinary product debugging is ruled out. |
-| Communication layer for option comparison, material repo or skill change handoffs, architecture walkthroughs, review artifacts, research explainers, or lightweight export editor | `effective-interact` | Default-consider alongside the selected owner workflow when Chinese-first interaction-cost reduction or HTML makes the work easier to understand, decide, verify, or continue. `grill-me` remains the pressure-test owner; `frontend-slides` remains the deck lane. |
+| Clear complex communication and alignment, long-task fact ledgers, option comparison, multi-option approval, implementation plan, PR writeup, architecture/dependency/milestone map, structure tree, status/incident update, research explainer, visual/design/component approval board, or lightweight export editor | `effective-interact` | Select plain text, Markdown, visual Markdown, or self-contained HTML by decision cost. Do not load merely because an answer is long. `grill-me` remains the pressure-test owner; `frontend-design` owns production UI; `frontend-slides` owns decks. |
 
 ## Overlap Rules
 
@@ -53,6 +53,9 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - The `sdd` profile includes `ralph-prd` and `ralph-loop` as an explicit pre-native-goal bridge. They are helper skills only: no SDD bypass and no autonomous repeated execution without user approval.
 - Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
 - In the `sdd` profile, `sdd-workflow` is the default change lane and `tdd-workflow` is an embedded implementation discipline, not a competing owner.
+- Do not treat `effective-interact` as a default-considered skill for non-trivial sessions merely because a reply may be long; the trigger is a real communication, alignment, verification, approval, handoff, or continuation need.
+- Use `effective-interact` for material repo or skill change reports only when the user needs preserved facts, evidence navigation, validation state, risks, or a continuation handoff.
+- `frontend-slides` remains the deck lane; `effective-interact` may summarize or hand off deck-related findings, but it should not become the slide-generation workflow.
 
 ## Boundary Sentences
 
@@ -61,7 +64,7 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - `prototype` loads for explicitly throwaway experiments that answer one design question.
 - `tdd-workflow` loads for production features, confirmed bug fixes, and refactors with tests; unknown root-cause diagnosis and throwaway exploration route elsewhere.
 - `frontend-design` loads for production-grade visual UI creation, not routine reports or debugging.
-- `effective-interact` loads as an expression and HTML handoff layer when non-trivial sessions need Chinese-first interaction-cost reduction for planning, design, learning, research, review, validation, option comparison, architecture, or material repo/skill changes; `grill-me` owns pressure testing, and HTML is required after material changes unless waived; permission pauses, trivial chat, production UI, bundled apps, and decks route elsewhere.
+- `effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere.
 - `handoff` loads for restart notes or compact agent/session handoff documents; visual HTML reports and context-limit advice route elsewhere.
 - `compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere.
 - `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.

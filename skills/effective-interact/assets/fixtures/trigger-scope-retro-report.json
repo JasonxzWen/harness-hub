@@ -1,17 +1,17 @@
 {
   "title": "HTML 汇报漏触发复盘",
-  "summary": "**结论：缺口在触发合同、owner/layer 边界和 HTML 追踪策略。** 本次把 effective-interact 收敛为表达与 HTML handoff 层：方案拷打归 grill-me 或 review owner，重大 repo/skill 变更仍默认生成 handoff，所有生成 HTML 都保持本地 ignored。",
+  "summary": "**结论：缺口在触发合同、owner/layer 边界和 HTML 追踪策略。** 本次把 effective-interact 收敛为按决策成本触发的复杂沟通层：方案拷打归 grill-me 或 review owner，输出可选纯文本、Markdown、visual Markdown 或 HTML，所有生成 HTML 都保持本地 ignored。",
   "status": "complete",
   "template": "implementation-handoff",
   "renderMode": "runtime-cdn",
   "intent": {
     "audience": "Skill Hub maintainer",
     "primaryQuestion": "为什么这次应有 HTML 汇报却漏掉，后续如何避免 owner 冲突和 HTML 误追踪？",
-    "decision": "每个非平凡会话默认考虑 effective-interact 作为表达层；grill-me/review owns pressure testing；重大 repo/skill 变更默认给 HTML handoff；所有生成 HTML 不进入 git。",
+    "decision": "按决策成本触发 effective-interact：grill-me/review owns pressure testing；输出可选纯文本、Markdown、visual Markdown 或 HTML；所有生成 HTML 不进入 git。",
     "timeBudget": "2 分钟",
     "artifactKind": "handoff",
     "successCriteria": [
-      "默认考虑加载写进 SKILL.md",
+      "默认触发写成决策成本检查，而不是答案长度检查",
       "grill-me/review owner 与 effective-interact handoff layer 边界写清",
       "所有生成 HTML 保持 ignored，不被 git 追踪",
       "乱码和结构问题作为 blocking 验收",
@@ -23,14 +23,44 @@
       "type": "data-table",
       "title": "触发合同修复",
       "group": "changes",
-      "summary": "5 个入口从窄触发改成默认考虑、owner/layer 分离、生成 HTML 不追踪。",
-      "columns": ["入口", "之前", "现在", "结果"],
+      "summary": "5 个入口从窄触发改成按决策成本触发、owner/layer 分离、生成 HTML 不追踪。",
+      "columns": [
+        "入口",
+        "之前",
+        "现在",
+        "结果"
+      ],
       "rows": [
-        ["SKILL description", "依赖显式 HTML 或完成态判断", "非平凡会话需要 interaction-cost reduction 时加载，并绑定 selected owner workflow", "覆盖本次漏判"],
-        ["Interaction Cost Gate", "先问是否值得 HTML", "先判断理解、选择、验证、导航、记忆、返工成本", "HTML 成为输出阶梯之一"],
-        ["Intent Routing", "容易把方案塑形/压测当成自身 owner", "selected owner 决定实质问题；grill-me/review 负责 pressure testing；effective-interact 负责表达和 handoff", "避免 owner 冲突"],
-        ["Routing docs", "只说非平凡交互产物", "写明中文优先、交互成本、owner/layer 边界、重大变更默认 HTML handoff", "与项目路由一致"],
-        ["Artifact policy", "reports durable 例子仍可能被 git 追踪", "所有 generated HTML 都在 ignored output；fixtures 才是 source of truth", "避免临时 HTML 被误追踪"]
+        [
+          "SKILL description",
+          "依赖显式 HTML 或完成态判断",
+          "按决策成本触发复杂沟通层，并显式排除长但常规的回答",
+          "覆盖本次漏判"
+        ],
+        [
+          "Interaction Cost Gate",
+          "先问是否值得 HTML",
+          "先判断理解、选择、验证、导航、记忆、返工成本，再选择输出模式",
+          "HTML 成为输出阶梯之一"
+        ],
+        [
+          "Intent Routing",
+          "容易把方案塑形/压测当成自身 owner",
+          "selected owner 决定实质问题；grill-me/review 负责 pressure testing；effective-interact 负责表达和 handoff",
+          "避免 owner 冲突"
+        ],
+        [
+          "Routing docs",
+          "只说非平凡交互产物",
+          "写明中文优先、决策成本、owner/layer 边界、HTML 升级条件和 ignored 输出",
+          "与项目路由一致"
+        ],
+        [
+          "Artifact policy",
+          "reports durable 例子仍可能被 git 追踪",
+          "所有 generated HTML 都在 ignored output；fixtures 才是 source of truth",
+          "避免临时 HTML 被误追踪"
+        ]
       ]
     },
     {
@@ -50,7 +80,9 @@
       "language": "yaml",
       "filePath": "skills/effective-interact/SKILL.md",
       "startLine": 3,
-      "highlightLines": [3],
+      "highlightLines": [
+        3
+      ],
       "content": "description: Load when a non-trivial session needs Chinese-first interaction-cost reduction through answer structure, evidence navigation, visual comparison, validation, or HTML handoff alongside the selected owner workflow; default-consider planning, design, learning, research, review, material repo/skill changes, and final reports; skip trivial chat, permission pauses, production UI, slides, bundled apps."
     },
     {
@@ -58,11 +90,27 @@
       "title": "验收信号",
       "group": "verification",
       "summary": "红灯锁住漏触发和 owner 冲突，绿灯锁住结构和乱码。",
-      "columns": ["检查", "结果", "信号"],
+      "columns": [
+        "检查",
+        "结果",
+        "信号"
+      ],
       "rows": [
-        ["触发范围断言", "通过", "覆盖 non-trivial session、selected owner workflow、interaction-cost reduction、material repo/skill changes"],
-        ["owner/layer 断言", "通过", "覆盖 grill-me pressure-test owner 与 effective-interact expression/handoff layer"],
-        ["HTML 追踪断言", "通过", "reports/ ignored，git ls-files reports 为空，fixtures 是 source of truth"]
+        [
+          "触发范围断言",
+          "通过",
+          "覆盖 non-trivial session、selected owner workflow、interaction-cost reduction、material repo/skill changes"
+        ],
+        [
+          "owner/layer 断言",
+          "通过",
+          "覆盖 grill-me pressure-test owner 与 effective-interact expression/handoff layer"
+        ],
+        [
+          "HTML 追踪断言",
+          "通过",
+          "reports/ ignored，git ls-files reports 为空，fixtures 是 source of truth"
+        ]
       ]
     },
     {
@@ -78,14 +126,20 @@
       "id": "claim-trigger-root-cause",
       "statement": "漏掉 HTML 汇报的直接原因是触发合同没有把非平凡会话默认考虑、owner/layer 边界和重大 repo/skill 变更汇报写成义务。",
       "kind": "conclusion",
-      "evidenceIds": ["e-skill-description", "e-focused-test"],
+      "evidenceIds": [
+        "e-skill-description",
+        "e-focused-test"
+      ],
       "confidence": "high"
     },
     {
       "id": "claim-boundary-preserved",
       "statement": "修复扩大默认考虑和重大变更汇报，但不替代 grill-me/review 的压力测试 owner，也不改变生产 UI、slide deck、bundled app 的排除边界。",
       "kind": "conclusion",
-      "evidenceIds": ["e-routing-docs", "e-focused-test"],
+      "evidenceIds": [
+        "e-routing-docs",
+        "e-focused-test"
+      ],
       "confidence": "high"
     }
   ],

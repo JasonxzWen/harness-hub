@@ -24,7 +24,7 @@ Skills must not depend on a specific agent host. Host-specific packaging, such a
 - Planning and pressure testing: `grill-me`, OpenSpec helpers.
 - Runtime diagnosis and implementation quality: `diagnose`, `tdd-workflow`, `verification-loop`, `compound-code-review`, `security-review`.
 - Documentation, communication, learning, and handoff: `doc-coauthoring`, `internal-comms`, `documentation-lookup`, `feynman-learning-coach`, `handoff`.
-- Web and artifact workflows: `effective-interact`, `frontend-design`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, browser testing skills.
+- Web and artifact workflows: `effective-interact` for complex communication, option approval, status/incident reports, architecture/milestone maps, ignored long-task ledgers, and HTML handoffs; `frontend-design`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, and browser testing skills cover adjacent UI/artifact lanes.
 - Platform and extension atoms: `claude-api`, `mcp-builder`, `skill-creator`.
 - Skill maintenance: `hub-maintenance-workflow`, source-project records, capability metadata, and `skill-quality-inventory`.
 
@@ -83,6 +83,8 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | `docs/source-projects.md` | Upstream source and decision log |
 | `docs/workflow-source-dossier.md` | Reference dossier for SDD, routing, Effective Interact, OpenSpec, Superpowers, ECC, Matt Pocock skills, Vercel, and Ralph |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy |
+
+Generated reports and intermediate interaction artifacts stay local: `reports/`, `.skill-hub/reports/`, and `skills/effective-interact/artifacts/` are ignored and must not be committed or published.
 
 ## Validation
 

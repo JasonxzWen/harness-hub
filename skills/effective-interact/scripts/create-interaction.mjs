@@ -79,6 +79,18 @@ const templateMeta = {
   "decision-matrix": {
     label: "决策矩阵",
     useCase: "选项比较、建议、取舍、风险和待确认问题"
+  },
+  "implementation-plan": {
+    label: "实施计划",
+    useCase: "里程碑、依赖、验收门槛、风险和开放问题"
+  },
+  "visual-exploration": {
+    label: "视觉探索",
+    useCase: "视觉方向、设计系统、组件变体或插图方案审批"
+  },
+  "editor-workbench": {
+    label: "编辑工作台",
+    useCase: "本地筛选、调参、预览和可见文本导出"
   }
 };
 
@@ -166,7 +178,7 @@ function usage() {
   return [
     "Usage: node skills/effective-interact/scripts/create-interaction.mjs --input report.json [--out-dir <dir>] [--slug name] [--json] [--browser-mermaid]",
     "",
-    "Inputs follow references/interaction-input-schema.json. Default renderMode is runtime-cdn. Default outDir is skills/effective-interact/artifacts/."
+    "Inputs follow references/interaction-input-schema.json. Default renderMode is runtime-cdn. Default outDir is ignored skills/effective-interact/artifacts/. Use --out-dir only for another gitignored directory."
   ].join("\n");
 }
 

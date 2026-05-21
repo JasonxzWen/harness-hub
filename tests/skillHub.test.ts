@@ -486,6 +486,20 @@ test('status reports modified, missing, and update available states', () => {
   expect(status.updates.some((row) => row.id === 'skill:prototype')).toBe(true);
 });
 
+test('effective-interact version bump is discoverable as a managed update', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-effective-interact-update-'));
+  applyInstall(planInstall({ targetDir, profile: 'minimal', agents: ['standard'] }));
+  makeLockComponentStale(targetDir, 'skill:effective-interact', { version: '0.1.0' });
+
+  const status = getStatus({ targetDir });
+  const preview = getUpdatePlan({ targetDir, components: ['skill:effective-interact'] });
+
+  expect(readCapabilityIndex().components['skill:effective-interact'].version).toBe('0.2.0');
+  expect(status.updates.some((row) => row.id === 'skill:effective-interact')).toBe(true);
+  expect(preview.updates.map((row) => row.id)).toEqual(['skill:effective-interact']);
+  expect(preview.blockers).toEqual([]);
+});
+
 test('status reads schema version one locks without crashing', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-status-v1-'));
   const skillDir = path.join(targetDir, 'skills', 'grill-me');

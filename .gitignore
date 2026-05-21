@@ -41,5 +41,9 @@ scripts/ralph/archive/
 reports/
 .skill-hub/reports/
 
+# Local generated HTML reports and skill interaction artifacts
+skills/effective-interact/artifacts/
+.codex/skills/effective-interact/artifacts/
+
 # Learning-coach runtime state
 .learning/

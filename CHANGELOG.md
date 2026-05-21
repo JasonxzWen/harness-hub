@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.9 - 2026-05-21
+
+- Broaden `effective-interact` into a low-noise complex communication skill that selects plain text, Markdown, visual Markdown, or HTML by decision cost instead of answer length alone.
+- Absorb the HTML effectiveness reference cases into trigger evals, pattern references, warm neutral visual tokens, and new implementation-plan, visual-exploration, and editor-workbench templates.
+- Add optional ignored long-task fact ledgers and route generated HTML/intermediate artifacts into ignored local directories instead of tracked `reports/`.
+- Bump `skill:effective-interact` to `0.2.0` so managed installs can detect and apply the strengthened communication contract through `skill-hub update`.
+
 ## 0.1.8 - 2026-05-21
 
 - Add selective Anthropic-derived atomic skills for Claude API, MCP building, skill authoring, internal communications, theme selection, and Slack GIF creation, plus a local-original `doc-coauthoring` atom.

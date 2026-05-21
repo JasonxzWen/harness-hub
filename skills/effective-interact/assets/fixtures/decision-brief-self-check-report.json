@@ -146,7 +146,7 @@
     {
       "label": "报告浏览器验收",
       "status": "pass",
-      "detail": "validate-interaction.mjs reports/effective-interact-decision-brief-self-check.html --require-browser"
+      "detail": "validate-interaction.mjs skills/effective-interact/artifacts/effective-interact-decision-brief-self-check.html --require-browser"
     },
     {
       "label": "空白检查",

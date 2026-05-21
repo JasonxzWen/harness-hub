@@ -25,7 +25,7 @@ Git tracking, Git ignore rules, and npm package contents are coordinated through
 - `publishAndGit`: source assets that must be committed and shipped, such as `skills/effective-interact/`, capability profiles, docs, harness templates, and stable OpenSpec specs.
 - `publishOnlyGenerated`: generated files that ship to npm but stay ignored in Git. Today this is `dist/`, rebuilt by `prepack`.
 - `gitOnly`: maintainer work files that are committed to GitHub but not shipped to npm, such as `.github/`, `src/`, `tests/`, and active `openspec/changes/<name>/` directories.
-- Generated HTML reports belong under ignored local output such as `reports/` or `.skill-hub/reports/`; they must not be committed.
+- Generated HTML reports and interaction intermediates belong under ignored local output such as `reports/`, `.skill-hub/reports/`, or `skills/effective-interact/artifacts/`; they must not be committed.
 - `ignoredLocal`: local runtime or vendor state that should be neither committed nor published.
 
 Run this check before publishing:
