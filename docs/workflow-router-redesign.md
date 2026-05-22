@@ -121,23 +121,23 @@ Keep the first-class install target platform-neutral. Host-specific wrappers can
 ## Non-Goals
 
 - No wholesale import of Superpowers, ECC, Matt Pocock, or OpenSpec workflows.
-- No immediate change to CLI behavior.
+- CLI behavior now uses one standard install set; further lifecycle changes remain out of scope here.
 - No new blocking hooks in this planning step.
 - No automatic subagent dispatch rule in every skill.
-- No broad profile mutation before workflow-router evals exist.
+- No broad install-surface mutation before workflow-router evals exist.
 
 ## Implementation Plan
 
 See [Workflow router execution plan](workflow-router-execution-plan.md) for the actionable rollout. The summary remains:
 
-1. Create source dossier and routing evals before changing default profiles.
+1. Create source dossier and routing evals before changing the install surface.
 2. Add `workflow-router` as the top-level intent classifier.
 3. Add original workflow-owner skills for question, SDD change, diagnosis, review, delivery, and Skill Hub maintenance.
 4. Make `effective-interact` the default reporting layer in those workflows without making it the state owner.
-5. Add an explicit `sdd` profile for the standard target before promoting behavior into `minimal`.
+5. Keep workflow-owner skills in the single standard install set after tests cover routing behavior.
 6. Preserve npm install/update/remove and lock-backed cleanup throughout.
 
 ## Open Questions
 
-- Confirm whether the first installable profile should be named `sdd`.
+- Confirm whether future install-surface additions should remain always-on or stay reference-only.
 - Confirm whether the six workflow owner names should be public skill names.

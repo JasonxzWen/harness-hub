@@ -31,19 +31,13 @@ vendor/forrestchang-andrej-karpathy-skills/
 vendor/mattpocock-skills/
 vendor/EveryInc-compound-engineering-plugin/
 
-# Ralph loop runtime state
-scripts/ralph/prd.json
-scripts/ralph/progress.txt
-scripts/ralph/.last-branch
-scripts/ralph/archive/
-
 # Skill Hub local CLI runtime reports
 reports/
 .skill-hub/reports/
 
 # Local generated HTML reports and skill interaction artifacts
 skills/effective-interact/artifacts/
-.codex/skills/effective-interact/artifacts/
+.codex/skills/
 
 # Learning-coach runtime state
 .learning/

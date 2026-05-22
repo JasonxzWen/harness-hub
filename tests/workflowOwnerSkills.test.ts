@@ -68,7 +68,7 @@ test('sdd-workflow enforces the canonical lifecycle before implementation', () =
 
   expect(skill).toContain('Do not start implementation');
   expect(skill).toContain('TDD');
-  expect(skill).toContain('ralph-loop');
+  expect(skill).toContain('goal/story workflows');
   expect(skill).toContain('without approval');
 });
 
@@ -81,10 +81,10 @@ test('read-only workflow owners block mutation by default', () => {
   expect(review).toContain('Findings first');
 });
 
-test('workflow owners mark web-profile helpers as conditional', () => {
+test('workflow owners mark UI helper skills as conditional', () => {
   const diagnosis = read('skills/diagnosis-workflow/SKILL.md');
   const review = read('skills/review-workflow/SKILL.md');
 
-  expect(diagnosis).toContain('only when the target also installed the `web` profile');
-  expect(review).toContain('only when the target also installed the `web` profile');
+  expect(diagnosis).toContain('only when that helper is relevant and available');
+  expect(review).toContain('only when that helper is relevant and available');
 });

@@ -40,7 +40,7 @@ Use helpers only under this owner:
 - `slack-gif-creator` only for explicit Slack GIF deliverables.
 - `e2e-testing` when user-visible flows require durable browser checks.
 - `verification-loop` before delivery.
-- `ralph-prd` and `ralph-loop` only when the user explicitly wants a goal/story loop bridge before native goal support is available; do not start autonomous repeated execution without approval.
+- Native goal/story workflows only when the user explicitly asks for repeated execution; do not start autonomous repeated execution without approval.
 - `effective-interact` for alignment and handoff artifacts.
 
 ## Subagents

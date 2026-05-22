@@ -8,7 +8,7 @@ This plan upgrades Skill Hub from a curated skill collection into a governed ski
 
 - Make description quality, routing precision, and progressive loading first-class review targets.
 - Add an evaluation path before changing routing-sensitive text.
-- Keep the default profile small and low-noise.
+- Keep the standard install surface curated and low-noise.
 - Preserve third-party attribution while normalizing content into platform-neutral skills.
 - Avoid a mass rewrite of imported skills without evidence.
 
@@ -76,11 +76,11 @@ Current status:
 Deliverables:
 
 - Add a fixture format such as `tests/fixtures/skill-routing-cases.json`.
-- For each default-profile skill, include:
+- For each installed skill, include:
   - positive examples
   - negative adjacent examples
   - forbidden-load examples
-- Add tests that verify every default-profile skill has at least one case in each bucket.
+- Add tests that verify every routing-sensitive installed skill has at least one case in each bucket.
 - Add focused cases for high-overlap skills first: `diagnose`, `agent-introspection-debugging`, `prototype`, `frontend-design`, `effective-interact`, `compound-code-review`, `security-review`, and `verification-loop`.
 
 Verification:
@@ -106,8 +106,8 @@ Order:
 
 1. Local original skills: `effective-interact`, `feynman-learning-coach` (seed conversion complete).
 2. Narrow adaptations: `compound-code-review`, `diagnose`, `prototype`, `grill-me`.
-3. Default-profile ECC skills with high overlap.
-4. Non-default profile skills.
+3. Installed ECC-derived skills with high overlap.
+4. Other installed helper skills.
 5. Built-in document/media skills with long but high-value file-type triggers.
 
 Verification:
@@ -175,7 +175,7 @@ The rollout is complete when:
 
 - The quality guide is the referenced standard for skill authoring and review.
 - New or changed installable skills include routing eval evidence.
-- Default-profile skills have positive, negative, and forbidden routing cases.
+- Installed routing-sensitive skills have positive, negative, and forbidden routing cases.
 - Description changes are treated as routing changes in review.
 - Progressive loading is used for heavy or conditional content.
 - Validation and docs agree on the same source of truth.

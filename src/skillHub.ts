@@ -50,15 +50,9 @@ export interface PathDetectRule {
   agent?: AgentName;
 }
 
-export interface CapabilityProfile {
-  description: string;
-  components: string[];
-}
-
 export interface CapabilityComponent {
   kind: 'skill' | 'config' | 'script' | 'rule' | 'hook' | 'mcp' | string;
   path: string;
-  targetPath?: string;
   version: string;
   source: string;
   provides: string[];
@@ -73,11 +67,6 @@ export interface CapabilityComponent {
 export interface CapabilityIndex {
   version: string;
   generatedAt: string;
-  defaults: {
-    profile: string;
-    agents: AgentName[];
-  };
-  profiles: Record<string, CapabilityProfile>;
   components: Record<string, CapabilityComponent>;
 }
 
@@ -113,7 +102,6 @@ export interface AnalysisResult {
   generatedAt: string;
   hubVersion: string;
   targetDir: string;
-  profile: string;
   agents: AgentName[];
   signals: RepoSignals;
   findings: CapabilityFinding[];
@@ -144,7 +132,6 @@ export interface SkillHubLockV1 {
   schemaVersion: 1;
   generatedAt: string;
   hubVersion: string;
-  profile: string;
   agents: AgentName[];
   components: Array<{
     id: string;
@@ -159,7 +146,6 @@ export interface SkillHubLockV2 {
   schemaVersion: 2;
   generatedAt: string;
   hubVersion: string;
-  profile: string;
   agents: AgentName[];
   components: ManagedComponentRecord[];
 }
@@ -257,7 +243,6 @@ interface AnalyzeTargetOptions {
   hubRoot?: string;
   targetDir?: string;
   index?: CapabilityIndex;
-  profile?: string | null;
   agents?: AgentName[];
   agentReadiness?: boolean;
 }
@@ -279,8 +264,6 @@ export interface SkippedInstallItem extends InstallItem {
 export interface InstallPlan {
   generatedAt: string;
   hubVersion: string;
-  profileName: string;
-  profile: CapabilityProfile;
   agents: AgentName[];
   targetDir: string;
   signals: RepoSignals;
@@ -315,7 +298,6 @@ interface CliOptions {
   command: string;
   targetDir: string | null;
   agents: AgentName[];
-  profile: string | null;
   dryRun: boolean;
   yes: boolean;
   overwrite: boolean;
@@ -331,7 +313,6 @@ interface PlanInstallOptions {
   hubRoot?: string;
   targetDir?: string;
   index?: CapabilityIndex;
-  profile?: string | null;
   agents?: AgentName[];
 }
 
@@ -384,12 +365,14 @@ export function readCapabilityIndex(hubRoot = HUB_ROOT): CapabilityIndex {
   return JSON.parse(fs.readFileSync(indexPath, 'utf8')) as CapabilityIndex;
 }
 
-export function listProfiles(index = readCapabilityIndex()): Array<{ id: string } & CapabilityProfile> {
-  return Object.entries(index.profiles).map(([id, profile]) => ({ id, ...profile }));
-}
-
 export function listComponents(index = readCapabilityIndex()): Array<{ id: string } & CapabilityComponent> {
   return Object.entries(index.components).map(([id, component]) => ({ id, ...component }));
+}
+
+function listInstallableSkillComponents(index: CapabilityIndex): Array<{ id: string } & CapabilityComponent> {
+  return listComponents(index)
+    .filter((component) => component.kind === 'skill')
+    .sort((left, right) => left.id.localeCompare(right.id));
 }
 
 export function validateCapabilityIndex(index: CapabilityIndex): string[] {
@@ -442,36 +425,6 @@ export function validateCapabilityIndex(index: CapabilityIndex): string[] {
       errors.push(`${id}: missing recommendation`);
     }
 
-    if (component.kind === 'harness-template') {
-      if (!component.targetPath || component.targetPath.trim().length === 0) {
-        errors.push(`${id}: missing targetPath`);
-      } else {
-        errors.push(...validateTargetPath(id, component.targetPath));
-      }
-    }
-  }
-
-  return errors;
-}
-
-function validateTargetPath(componentId: string, targetPath: string): string[] {
-  const errors: string[] = [];
-  const normalized = normalizePortablePath(targetPath);
-
-  if (!normalized || normalized === '.') {
-    errors.push(`${componentId}: empty target path`);
-  }
-
-  if (isAbsolutePortablePath(normalized)) {
-    errors.push(`${componentId}: absolute target path '${targetPath}'`);
-  }
-
-  if (normalized.split('/').includes('..')) {
-    errors.push(`${componentId}: traversal target path '${targetPath}'`);
-  }
-
-  if (GLOB_CHARS.test(normalized)) {
-    errors.push(`${componentId}: glob target path '${targetPath}'`);
   }
 
   return errors;
@@ -534,14 +487,6 @@ export function detectRepoSignals(targetDir: string): RepoSignals {
   ) as unknown as RepoSignals;
 }
 
-export function resolveProfile(index: CapabilityIndex, profileName: string): CapabilityProfile {
-  const profile = index.profiles[profileName];
-  if (!profile) {
-    throw new Error(`Unknown profile '${profileName}'. Available: ${Object.keys(index.profiles).join(', ')}`);
-  }
-  return profile;
-}
-
 export function resolveAgents(agentNames: AgentName[]): AgentName[] {
   const agents: AgentName[] = agentNames.length > 0 ? agentNames : ['standard'];
   for (const agent of agents) {
@@ -556,23 +501,12 @@ export function analyzeTarget(options: AnalyzeTargetOptions = {}): AnalysisResul
   const hubRoot = options.hubRoot || HUB_ROOT;
   const targetDir = path.resolve(options.targetDir || process.cwd());
   const index = options.index || readCapabilityIndex(hubRoot);
-  const profileName = options.profile || index.defaults.profile;
-  const profile = resolveProfile(index, profileName);
-  const agents = resolveAgents(options.agents || index.defaults.agents || []);
+  const agents = resolveAgents(options.agents || []);
   const findings: CapabilityFinding[] = [];
 
-  for (const componentId of profile.components) {
-    const component = index.components[componentId];
-    if (!component) {
-      throw new Error(`Profile '${profileName}' references missing component '${componentId}'`);
-    }
-
-    if (!isInstallableComponent(component)) {
-      continue;
-    }
-
+  for (const component of listInstallableSkillComponents(index)) {
     for (const agent of installAgentsForComponent(component, agents)) {
-      findings.push(analyzeComponentForAgent(targetDir, componentId, component, agent));
+      findings.push(analyzeComponentForAgent(targetDir, component.id, component, agent));
     }
   }
 
@@ -588,7 +522,6 @@ export function analyzeTarget(options: AnalyzeTargetOptions = {}): AnalysisResul
     generatedAt: new Date().toISOString(),
     hubVersion: index.version,
     targetDir,
-    profile: profileName,
     agents,
     signals: detectRepoSignals(targetDir),
     findings,
@@ -650,28 +583,11 @@ function analyzeComponentForAgent(
   };
 }
 
-function isInstallableComponent(component: CapabilityComponent): boolean {
-  return component.kind === 'skill' || component.kind === 'harness-template';
-}
-
 function installAgentsForComponent(component: CapabilityComponent, agents: AgentName[]): AgentName[] {
-  const supportedAgents = agents.filter((agent) => component.agents.includes(agent));
-
-  if (component.kind === 'harness-template') {
-    return supportedAgents.slice(0, 1);
-  }
-
-  return supportedAgents;
+  return agents.filter((agent) => component.agents.includes(agent));
 }
 
 function resolveComponentDest(component: CapabilityComponent, agent: AgentName): string {
-  if (component.kind === 'harness-template') {
-    if (!component.targetPath) {
-      throw new Error(`Harness template '${component.path}' is missing targetPath.`);
-    }
-    return normalizePortablePath(component.targetPath);
-  }
-
   const skillName = path.basename(component.path);
   return toPortablePath(path.join(AGENT_SKILL_DIRS[agent], skillName));
 }
@@ -835,7 +751,7 @@ function buildRoutingFinding(evidence: AgentReadinessEvidence[]): AgentReadiness
       category: 'agent_routing',
       state: 'not-detected',
       severity: 'warning',
-      reason: 'No skill routing docs, agent roles, OpenSpec changes, or Ralph stories were detected.',
+      reason: 'No skill routing docs, agent roles, OpenSpec changes, or equivalent routing assets were detected.',
       recommendation: 'Start with one or two narrow agent workflows before broad autonomous execution.',
       evidence,
     });
@@ -985,7 +901,6 @@ function detectOutcomeEvidence(targetDir: string): AgentReadinessEvidence[] {
     'docs/definition-of-done.md',
     'docs/Definition-of-Done.md',
     'docs/release-checklist.md',
-    'scripts/ralph/prd.json',
   ]);
 
   evidence.push(...findRelativeFiles(targetDir, 'openspec/changes')
@@ -1024,8 +939,6 @@ function detectRoutingEvidence(targetDir: string): AgentReadinessEvidence[] {
       'skills',
       'docs/skill-routing.md',
       'openspec/changes',
-      'scripts/ralph',
-      'scripts/ralph/prd.json',
     ]),
   ]);
 }
@@ -1127,24 +1040,12 @@ export function planInstall(options: PlanInstallOptions = {}): InstallPlan {
   const hubRoot = options.hubRoot || HUB_ROOT;
   const targetDir = path.resolve(options.targetDir || process.cwd());
   const index = options.index || readCapabilityIndex(hubRoot);
-  const profileName = options.profile || index.defaults.profile;
-  const profile = resolveProfile(index, profileName);
   const agents = resolveAgents(options.agents || []);
-  const analysis = analyzeTarget({ hubRoot, targetDir, index, profile: profileName, agents });
-  const components = profile.components.map((id) => {
-    const component = index.components[id];
-    if (!component) {
-      throw new Error(`Profile '${profileName}' references missing component '${id}'`);
-    }
-    return { id, ...component };
-  });
+  const analysis = analyzeTarget({ hubRoot, targetDir, index, agents });
+  const components = listInstallableSkillComponents(index);
 
   const items = [];
   for (const component of components) {
-    if (!isInstallableComponent(component)) {
-      continue;
-    }
-
     const source = path.join(hubRoot, component.path);
     if (!fs.existsSync(source)) {
       throw new Error(`Component source does not exist: ${component.path}`);
@@ -1168,8 +1069,6 @@ export function planInstall(options: PlanInstallOptions = {}): InstallPlan {
   return {
     generatedAt: new Date().toISOString(),
     hubVersion: index.version,
-    profileName,
-    profile,
     agents,
     targetDir,
     signals: detectRepoSignals(targetDir),
@@ -1314,7 +1213,6 @@ export function writeLock(
     schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     hubVersion: plan.hubVersion,
-    profile: plan.profileName,
     agents: plan.agents,
     components: [...result.installed, ...result.skipped].map((item) => ({
       id: item.componentId,
@@ -2111,7 +2009,6 @@ export function migrateLock(
     schemaVersion: 2,
     generatedAt: migratedAt,
     hubVersion: index.version,
-    profile: lock.data.profile,
     agents: lock.data.agents,
     components: nextComponents,
   };
@@ -2183,7 +2080,7 @@ export function writeHtmlReport(
 
   fs.writeFileSync(filePath, renderHtml({
     title: 'Skill Hub Install Report',
-    summary: `${result.installed.length} installed, ${result.skipped.length} skipped for profile '${plan.profileName}'.`,
+    summary: `${result.installed.length} installed, ${result.skipped.length} skipped.`,
     rows,
     hubVersion: plan.hubVersion,
   }));
@@ -2260,7 +2157,6 @@ function parseArgs(argv: string[]): CliOptions {
     command: argv[0] || 'help',
     targetDir: null,
     agents: [],
-    profile: null,
     dryRun: false,
     yes: false,
     overwrite: false,
@@ -2277,8 +2173,6 @@ function parseArgs(argv: string[]): CliOptions {
     const arg = argv[index];
     if (arg === '--agent' || arg === '--target' || arg === '-a') {
       options.agents.push(parseAgentName(readOptionValue(argv, ++index, arg)));
-    } else if (arg === '--profile' || arg === '-p') {
-      options.profile = readOptionValue(argv, ++index, arg);
     } else if (arg === '--dry-run') {
       options.dryRun = true;
     } else if (arg === '--yes' || arg === '-y') {
@@ -2332,7 +2226,7 @@ export async function runCli(argv: string[]): Promise<number> {
       return error.exitCode;
     }
     const message = error instanceof Error ? error.message : String(error);
-    const exitCode = /Unknown profile|Unsupported agent|Unknown command|Missing value|Selected component/.test(message) ? 2 : 1;
+    const exitCode = /Unsupported agent|Unknown command|Missing value|Selected component/.test(message) ? 2 : 1;
     console.error(`skill-hub: ${message}`);
     return exitCode;
   }
@@ -2349,13 +2243,6 @@ async function runCliInner(argv: string[]): Promise<number> {
     throw new CliError(`Unsupported option '--agent-readiness' for command '${options.command}'`, 2);
   }
 
-  if (options.command === 'profiles') {
-    for (const profile of listProfiles()) {
-      console.log(`${profile.id}\t${profile.description}`);
-    }
-    return 0;
-  }
-
   if (options.command === 'components') {
     for (const component of listComponents()) {
       console.log(`${component.id}\t${component.kind}\t${component.path}`);
@@ -2366,7 +2253,6 @@ async function runCliInner(argv: string[]): Promise<number> {
   if (options.command === 'analyze') {
     const analysis = analyzeTarget({
       targetDir: options.targetDir || undefined,
-      profile: options.profile || undefined,
       agents: options.agents,
       agentReadiness: options.agentReadiness,
     });
@@ -2381,7 +2267,6 @@ async function runCliInner(argv: string[]): Promise<number> {
     const plan = planInstall({
       ...options,
       targetDir: options.targetDir || undefined,
-      profile: options.profile || undefined,
     });
     if (options.dryRun) {
       if (options.json || options.html || options.output) {
@@ -2662,7 +2547,6 @@ function emitReport(content: string, options: CliOptions): void {
 
 function printPlan(plan: InstallPlan): void {
   console.log(`Target: ${plan.targetDir}`);
-  console.log(`Profile: ${plan.profileName}`);
   console.log(`Install targets: ${plan.agents.join(', ')}`);
   for (const item of plan.items) {
     const relDest = path.relative(plan.targetDir, item.dest).replaceAll(path.sep, '/');
@@ -2674,16 +2558,16 @@ function printHelp() {
   console.log(`skill-hub
 
 Usage:
-  skill-hub analyze [target] [--profile minimal] [--target standard] [--agent-readiness] [--json|--html] [--output file]
-  skill-hub install [target] [--profile minimal] [--target standard] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
-  skill-hub init [target] [--profile minimal] [--target standard] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
+  skill-hub analyze [target] [--target standard] [--agent-readiness] [--json|--html] [--output file]
+  skill-hub install [target] [--target standard] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
+  skill-hub init [target] [--target standard] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
   skill-hub status [target] [--json|--html] [--output file]
   skill-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
   skill-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
   skill-hub remove [target] [--dry-run|--yes] [--force] [--json|--html]
-  skill-hub profiles
   skill-hub components
 
 Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
+Install selects every standard skill component.
 `);
 }

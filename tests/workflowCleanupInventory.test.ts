@@ -12,8 +12,8 @@ test('workflow cleanup inventory documents safe cleanup categories', () => {
   const doc = read(inventoryPath);
 
   for (const heading of [
-    '## Keep In Default Or Dogfood Profiles',
-    '## Keep As Explicit Profiles',
+    '## Keep In Standard Install',
+    '## Keep As Source References',
     '## Keep As Library Skills',
     '## Physical Cleanup Completed',
     '## Future Cleanup Requiring Approval',
@@ -41,8 +41,8 @@ test('workflow cleanup inventory covers the noisy workflow sources', () => {
     'Everything Claude Code',
     'Superpowers',
     'Matt Pocock',
-    'minimal',
-    'sdd',
+    'standard install',
+    'workflow-router',
   ]) {
     expect(doc).toContain(phrase);
   }

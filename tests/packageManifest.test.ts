@@ -32,15 +32,18 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.files).toEqual(artifactPolicy.npm.files);
   expect(packageJson.files).toContain('CHANGELOG.md');
   expect(packageJson.files).toContain('config/');
-  expect(packageJson.files).toContain('harness/');
+  expect(packageJson.files).toContain('scripts/sync-codex-skills.mjs');
   expect(packageJson.files).toContain('scripts/run-validate-skills.mjs');
   expect(packageJson.files).toContain('openspec/config.yaml');
   expect(packageJson.files).toContain('openspec/specs/');
   expect(packageJson.files).not.toContain('openspec/');
   expect(artifactPolicy.categories.gitOnly).not.toContain('reports/');
   expect(artifactPolicy.categories.ignoredLocal).toContain('reports/');
+  expect(artifactPolicy.categories.ignoredLocal).toContain('.codex/skills/');
   expect(artifactPolicy.git.ignored).toContain('reports/');
+  expect(artifactPolicy.git.ignored).toContain('.codex/skills/');
   expect(artifactPolicy.npm.forbidden).toContain('reports/');
+  expect(artifactPolicy.npm.forbidden).toContain('.codex/');
 });
 
 test('npm package publishes the platform-neutral skill source tree', () => {

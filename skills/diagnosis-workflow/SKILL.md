@@ -24,7 +24,7 @@ Use this owner when the task starts from a failure or regression.
 - Use `claude-api` for Anthropic API or SDK failures after confirming the target is provider-specific.
 - Use `mcp-builder` for MCP server/tool-contract failures.
 - Use `agent-introspection-debugging` for agent, context, or tool-loop failures.
-- Use `webapp-testing` for one-off browser reproduction only when the target also installed the `web` profile or that helper is otherwise available.
+- Use `webapp-testing` for one-off browser reproduction only when that helper is relevant and available.
 - Use `verification-loop` after the fix.
 
 For parallel probes, follow `workflow-router/references/orchestration-policy.md`: use subagents only for independent evidence or verification, keep critical-path reproduction local, and never rely on hooks to dispatch agents.

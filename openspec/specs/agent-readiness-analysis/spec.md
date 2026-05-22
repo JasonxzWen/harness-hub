@@ -29,7 +29,7 @@ The system SHALL report context-budget findings from deterministic repo evidence
 The system SHALL report whether the target repository exposes explicit success criteria that agents can work toward.
 
 #### Scenario: Detect outcome-like artifacts
-- **WHEN** the target repository contains acceptance criteria, OpenSpec tasks, Ralph PRDs, PR templates, release checklists, or Definition of Done documents in known paths
+- **WHEN** the target repository contains acceptance criteria, OpenSpec tasks, PR templates, release checklists, or Definition of Done documents in known paths
 - **THEN** the readiness report includes those paths as outcome evidence
 
 #### Scenario: Recommend outcome criteria when absent
@@ -55,7 +55,7 @@ The system SHALL report discoverable verification gates for target repositories.
 The system SHALL report whether target work can be decomposed into narrow agent responsibilities.
 
 #### Scenario: Detect routing assets
-- **WHEN** the target repository contains skill routing docs, agent role configs, OpenSpec changes, Ralph stories, or equivalent known routing files
+- **WHEN** the target repository contains skill routing docs, agent role configs, OpenSpec changes, or equivalent known routing files
 - **THEN** the readiness report includes those paths as agent-routing evidence
 
 #### Scenario: Recommend routing decomposition

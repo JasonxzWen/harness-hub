@@ -114,12 +114,12 @@ Workflow owners MAY call helper skills for specialized work. Helper skills MUST 
 
 Examples:
 
-- `sdd-workflow` may use `product-capability`, `tdd-workflow`, `e2e-testing`, `verification-loop`, `ralph-prd`, and `ralph-loop`.
+- `sdd-workflow` may use `product-capability`, `tdd-workflow`, `e2e-testing`, and `verification-loop`.
 - `diagnosis-workflow` may use `diagnose`, `agent-introspection-debugging`, and `webapp-testing`.
 - `review-workflow` may use `compound-code-review`, `security-review`, and `web-design-guidelines`.
 - `hub-maintenance-workflow` may use source records, routing docs, capability metadata, lifecycle CLI dry-runs, and targeted repo/source inspection.
 
-`ralph-prd` and `ralph-loop` are allowed only as explicit goal/story loop helpers before native host `/goal` support. They MUST NOT become a top-level workflow owner, bypass SDD alignment, or start autonomous repeated execution without user approval.
+Native goal/story loops are outside Skill Hub's distributed skill set. They MUST NOT bypass SDD alignment or start autonomous repeated execution without user approval.
 
 ### WR-7: Subagent Orchestration
 
@@ -170,7 +170,7 @@ No remote writes from hooks are allowed. A hook MUST NOT bypass SDD alignment, u
 The workflow system MUST preserve existing npm and lock-backed lifecycle guarantees.
 
 - The standard target is the first-class install shape; host packaging belongs outside skill bodies.
-- New workflow skills SHOULD enter an explicit `sdd` profile before replacing `minimal`.
+- New workflow skills SHOULD enter the standard install surface only after routing and lifecycle tests cover them.
 - Managed files MUST be removable through lock-backed `remove`.
 - Deleted or renamed managed workflow files MUST be handled by `update` or migration metadata.
 - Direct GitHub pulls MUST NOT replace npm as the release/update/remove path.
@@ -200,7 +200,7 @@ Cleanup MUST:
 - distinguish delete, demote to reference-only, archive, and retain;
 - preserve unrelated user edits;
 - use lock-backed ownership for managed target files;
-- update docs, routing, profiles, or migration metadata when deletion changes public behavior.
+- update docs, routing, capability metadata, or migration metadata when deletion changes public behavior.
 
 Cleanup MUST NOT:
 
@@ -218,7 +218,7 @@ Workflow changes MUST include:
 - docs link consistency,
 - `scripts/validate-skills.ps1 -SkipExternal`,
 - `bun run validate` when TypeScript, tests, capabilities, or CLI behavior change,
-- disposable target smoke tests before profile promotion.
+- disposable target smoke tests before install-surface changes.
 
 ### WR-13: Non-Goals
 
@@ -248,7 +248,7 @@ The redesign is accepted when:
 
 | Decision | Default recommendation | Why |
 |---|---|---|
-| First profile | Add `sdd` before changing `minimal`. | Reduces migration risk and lets the workflow dogfood first. |
+| Install surface | Use one standard install set. | Avoids bundle selection complexity and keeps lifecycle behavior deterministic. |
 | Public owner names | Use explicit public skill names. | The user asked for each stage to have a clear and unique skill. |
 | Hooks timing | Defer blocking hooks. | Advisory checks are enough until routing and SDD gates are proven. |
 | Other agent hosts | Keep as explicit compatibility work. | The install graph should stay platform-neutral; host packaging can wrap the standard skill tree separately. |

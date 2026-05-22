@@ -19,7 +19,7 @@ The system SHALL document the stable lifecycle commands and their side effects.
 
 #### Scenario: Help lists lifecycle commands
 - **WHEN** the user runs `skill-hub --help`
-- **THEN** help output includes `analyze`, `install`, `status`, `update --dry-run`, `update --yes`, `update --force --yes`, `update --component <id>`, `migrate-lock`, `remove`, `profiles`, and `components`
+- **THEN** help output includes `analyze`, `install`, `status`, `update --dry-run`, `update --yes`, `update --force --yes`, `update --component <id>`, `migrate-lock`, `remove`, and `components`
 
 #### Scenario: Documentation distinguishes read-only and mutating commands
 - **WHEN** the user reads README command examples

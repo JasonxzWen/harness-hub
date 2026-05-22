@@ -7,11 +7,10 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 | Source | Local status | Decision |
 |---|---|---|
 | `mattpocock/skills` | Refreshed at `b8be62ffacb0118fa3eaa29a0923c87c8c11985c`; MIT | Installed `grill-me`, `diagnose`, `prototype`, `tdd-workflow`, and `handoff` after normalizing triggers and removing host-specific assumptions. |
-| `Fission-AI/OpenSpec` | Refreshed at `79303b521068c5f525ee61db06b915fc44b098f4`; replaces stale `open-spec/openspec` reference | Kept formal change lifecycle helpers as `openspec-formal`; SDD is the default change lane only when installed through `sdd`. |
+| `Fission-AI/OpenSpec` | Refreshed at `79303b521068c5f525ee61db06b915fc44b098f4`; replaces stale `open-spec/openspec` reference | Kept formal change lifecycle helpers; SDD remains the default change lane unless the user explicitly asks for OpenSpec or existing artifacts require it. |
 | `obra/superpowers` | Refreshed at `f2cbfbefebbfef77321e4c9abc9e949826bea9d7`; reference-only source for broad-trigger workflow activation and brainstorming-style idea-shaping patterns | Used as routing and activation inspiration only; no wholesale workflow import. |
 | `EveryInc/compound-engineering-plugin` | Refreshed at `f61d1b33eaba7be6e75902e31e49e022abdca3a0`; MIT | Installed only the `ce-code-review` workflow as `compound-code-review`; rejected wholesale import because it would duplicate many existing workflows. |
 | `vercel-labs/skills` and `vercel-labs/agent-skills` | Refreshed at `c5ad3a85b4d16666974b161131413d08bfef3f7e` and `c39c4eb8a2981b0455e033882812c9df49bb72c5` | Selected web and React skills are kept when they remain standard skill folders with no host metadata. |
-| `snarktank/ralph` | Refreshed at `6c53cb0b831ebe8739c6a003e22af14902d8b0b5`; `scripts/ralph/prd.json.example` plus `ralph-prd` and `ralph-loop` skills | Kept the PRD/story-loop contract; removed bundled platform-specific runner files. |
 | `hluaguo/learn-faster-kit` | Refreshed at `209db9f6c873e3600a4b387748d82ffd24ddaf6e`; MIT | Adapted the learning lifecycle into `feynman-learning-coach`; did not import the larger runtime. |
 | `zarazhangrui/frontend-slides` | Refreshed at `8dca834fc61abc9dd633cbe6a74ed7be3d82a608`; MIT | Reference source for `frontend-slides`; not merged into `effective-interact`. |
 | `anthropics/skills` | Refreshed at `690f15cac7f7b4c055c5ab109c79ed9259934081`; plugin marketplace has `document-skills`, `example-skills`, and `claude-api` sets | Installed selective atoms: `mcp-builder`, `internal-comms`, `theme-factory`, `slack-gif-creator`; adapted slim atoms: `claude-api`, `skill-creator`; rewrote `doc-coauthoring` locally because the refreshed upstream directory had no per-skill license file. Do not import wholesale; document skills are source-available, not open source. |
@@ -20,18 +19,19 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 
 | Candidate | Decision | Reason |
 |---|---|---|
+| `snarktank/ralph` | Retired from installable distribution | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` were removed on 2026-05-22 because current Codex and Claude Code goal/story workflows cover the lane. Keep the upstream note as historical source evidence only. |
 | Matt Pocock `write-a-skill` | Reference-only | Useful reminders for description-as-router, progressive disclosure, concrete examples, and review checklists; local Skill Hub quality gates remain authoritative. |
 | Matt Pocock `grill-with-docs` | Explicit-only | Useful for terminology and scenario pressure, but inline `CONTEXT.md`/ADR writes are not standardized locally; keep `grill-me`/review workflows as the pressure-test owner and use `effective-interact` only for expression or handoff. |
 | `affaan-m/everything-claude-code` | Excluded from the atomic skill candidate pool | Removed by product direction on 2026-05-21. Keep existing local lineage until installed ECC-derived skills are replaced or rewritten, but do not use ECC as a source for new atom selection. |
 | Matt Pocock `improve-codebase-architecture` and `zoom-out` | Wait | Overlap current architecture and product-planning skills. |
 | Matt Pocock `caveman` | Reject by default | Conflicts with this repo's communication policy unless explicitly requested. |
-| Matt Pocock `to-prd`, `to-issues`, `triage`, `setup-matt-pocock-skills` | Reject by default | Overlap OpenSpec/Ralph/local issue-routing surfaces or introduce external issue-tracker side effects. |
+| Matt Pocock `to-prd`, `to-issues`, `triage`, `setup-matt-pocock-skills` | Reject by default | Overlap OpenSpec/local issue-routing surfaces or introduce external issue-tracker side effects. |
 | Compound Engineering wholesale bundle | Reject by default | Too broad and overlap-heavy; custom agent files and external workflows should not enter the default skill tree. |
 | `michalvavra/agents` `html-tools` | Explicit-only reference | Refreshed at `77473489d5c7b248af51ee7acf072c84a59ba6d4`; useful single-file HTML utility ideas, but overlaps `effective-interact` and `web-artifacts-builder`. |
 | `Cocoon-AI/architecture-diagram-generator` | Explicit-only reference | Refreshed at `4b9087d55268c79a935105439dbcd37b630fc3f3`; useful architecture diagram pattern, but too narrow and CDN-oriented for default install. |
 | Anthropic `docx`, `pdf`, `pptx`, `xlsx` | Reference-only | High-value document/spreadsheet/presentation/PDF source material, but source-available rather than open source in the refreshed snapshot, so not redistributed through Skill Hub. |
 | Anthropic `brand-guidelines` | Reference-only | Apache 2.0, but it encodes Anthropic's own brand rather than a reusable customer brand workflow. |
-| Anthropic `algorithmic-art` and `canvas-design` | Reference-only | Creative and useful as inspiration, but niche, heavier, and partially oriented around host artifact behavior. Keep out of default distribution until a user need justifies a separate creative profile expansion. |
+| Anthropic `algorithmic-art` and `canvas-design` | Reference-only | Creative and useful as inspiration, but niche, heavier, and partially oriented around host artifact behavior. Keep out of distribution until a user need justifies a bounded standard skill. |
 | Anthropic `frontend-design`, `web-artifacts-builder`, `webapp-testing` | Already covered | Existing local Skill Hub versions already cover these surfaces; do not add duplicates. |
 
 ## Current Policy
@@ -40,5 +40,5 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 - Prefer selective adaptation over wholesale import.
 - Keep source attribution in skill metadata or this file.
 - Remove host-specific tool names, config paths, runner scripts, and UI metadata before committing a skill.
-- Update `docs/skill-routing.md`, `capabilities/index.json`, README, and tests when a candidate changes routing or installable profiles.
+- Update `docs/skill-routing.md`, `capabilities/index.json`, README, and tests when a candidate changes routing or the installable skill surface.
 - See `docs/source-skill-inventory.md` for the latest local refresh, scanned skill names, and coverage notes.

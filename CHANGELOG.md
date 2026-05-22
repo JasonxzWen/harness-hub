@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Remove selectable install profiles entirely: `analyze`, `install`, and `init` now operate on the complete standard skill set.
+- Remove harness template components and package contents so the lifecycle CLI manages only platform-neutral `skills/<name>/` directories.
+- Remove retired Ralph PRD/story-loop skills and distribution entries now that native Codex and Claude Code goal/story workflows cover that lane.
+- Drop the Ralph PRD example script from package contents and keep remaining SDD routing focused on platform-neutral workflow owners and helper atoms.
+
 ## 0.1.9 - 2026-05-21
 
 - Broaden `effective-interact` into a low-noise complex communication skill that selects plain text, Markdown, visual Markdown, or HTML by decision cost instead of answer length alone.

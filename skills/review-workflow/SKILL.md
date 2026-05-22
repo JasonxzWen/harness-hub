@@ -24,7 +24,7 @@ Use this owner for review-only work.
 - `doc-coauthoring` for document structure and reader-risk review.
 - `internal-comms` for internal update, FAQ, incident, or leadership communication review.
 - `theme-factory` for theme consistency review of existing artifacts.
-- `web-design-guidelines` for UI/UX audits only when the target also installed the `web` profile or that helper is otherwise available.
+- `web-design-guidelines` for UI/UX audits only when that helper is relevant and available.
 - `verification-loop` only for final command gates, not finding analysis.
 
 For parallel review lenses, follow `workflow-router/references/orchestration-policy.md`: subagents can run independent read-only passes, but the main agent owns severity, synthesis, and final conclusions.

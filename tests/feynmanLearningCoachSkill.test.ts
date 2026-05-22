@@ -93,15 +93,13 @@ test('feynman-learning-coach logger avoids fixed fallback slugs', () => {
   expect(output.topic_slug).not.toBe('learning-topic');
 });
 
-test('feynman-learning-coach is installable from the explicit learning profile', () => {
+test('feynman-learning-coach is part of the standard install surface', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    profiles: Record<string, { components: string[] }>;
-    components: Record<string, { path: string; source: string; provides?: string[] }>;
+    components: Record<string, { kind: string; path: string; source: string; provides?: string[] }>;
   };
   const component = index.components['skill:feynman-learning-coach'];
 
-  expect(index.profiles.learning.components).toContain('skill:feynman-learning-coach');
-  expect(index.profiles.minimal.components).not.toContain('skill:feynman-learning-coach');
+  expect(component.kind).toBe('skill');
   expect(component.path).toBe('skills/feynman-learning-coach');
   expect(component.source).toBe('learn-faster-kit-inspired-local');
   expect(component.provides).toContain('teach-back-checks');

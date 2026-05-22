@@ -7,8 +7,8 @@ Define the lock-backed lifecycle for Skill Hub-managed capabilities, including i
 The system SHALL write `.skill-hub/lock.json` after mutating installation commands and include enough ownership metadata to support status, update, and removal.
 
 #### Scenario: Install records managed files
-- **WHEN** the user runs `skill-hub install <target> --profile minimal --target standard --yes`
-- **THEN** the lock records each installed component id, component version, agent, relative destination, file list, file hashes, source identifier, profile, and install timestamp
+- **WHEN** the user runs `skill-hub install <target> --target standard --yes`
+- **THEN** the lock records each installed component id, component version, agent, relative destination, file list, file hashes, source identifier, and install timestamp
 
 #### Scenario: Lock paths are safe and portable
 - **WHEN** the system writes `.skill-hub/lock.json`
@@ -87,8 +87,8 @@ The system SHALL remove only files and directories recorded in `.skill-hub/lock.
 The system SHALL preserve existing `init` command behavior as an alias for `install` during the migration.
 
 #### Scenario: Init alias installs using install semantics
-- **WHEN** the user runs `skill-hub init <target> --profile minimal --target standard --yes`
-- **THEN** the system executes the same planning, copying, lock writing, and reporting behavior as `skill-hub install <target> --profile minimal --target standard --yes`
+- **WHEN** the user runs `skill-hub init <target> --target standard --yes`
+- **THEN** the system executes the same planning, copying, lock writing, and reporting behavior as `skill-hub install <target> --target standard --yes`
 
 ### Requirement: Update preview remains side-effect free
 The system SHALL keep update preview commands read-only while reporting version differences and blockers from the lock and current capability index.
