@@ -28,14 +28,13 @@ test('handoff writes temp restart notes with safety boundaries', () => {
   expect(skill).toContain('Do not include hidden reasoning');
 });
 
-test('handoff is installable from the minimal profile', () => {
+test('handoff is part of the standard install surface', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    profiles: Record<string, { components: string[] }>;
-    components: Record<string, { path: string; source: string; provides?: string[]; overlapsWith?: string[] }>;
+    components: Record<string, { kind: string; path: string; source: string; provides?: string[]; overlapsWith?: string[] }>;
   };
   const component = index.components['skill:handoff'];
 
-  expect(index.profiles.minimal.components).toContain('skill:handoff');
+  expect(component.kind).toBe('skill');
   expect(component.path).toBe('skills/handoff');
   expect(component.source).toBe('mattpocock-skills-adapted');
   expect(component.provides).toContain('session-handoff');

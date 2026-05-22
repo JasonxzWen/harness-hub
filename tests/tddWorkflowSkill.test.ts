@@ -37,12 +37,11 @@ test('tdd-workflow keeps detailed testing guidance in references', () => {
 
 test('tdd-workflow capability metadata tracks the Matt Pocock replacement', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    profiles: Record<string, { components: string[] }>;
-    components: Record<string, { source: string; version: string; provides?: string[]; overlapsWith?: string[] }>;
+    components: Record<string, { kind: string; source: string; version: string; provides?: string[]; overlapsWith?: string[] }>;
   };
   const component = index.components['skill:tdd-workflow'];
 
-  expect(index.profiles.minimal.components).toContain('skill:tdd-workflow');
+  expect(component.kind).toBe('skill');
   expect(component.source).toBe('mattpocock-skills-adapted');
   expect(component.version).toBe('0.2.0');
   expect(component.provides).toContain('tracer-bullet-slices');

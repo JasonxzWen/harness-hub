@@ -19,8 +19,8 @@ Use this skill to create or improve a standard skill folder with `SKILL.md` plus
 3. Write a concise `description` that starts from user intent, includes the nearest dangerous overlap, and avoids workflow internals.
 4. Keep `SKILL.md` short. Move heavy examples, schemas, API tables, templates, or scripts into spokes.
 5. Record source, license, and upstream commit when adapting third-party material.
-6. Register the skill in the install graph only after path, routing, overlap, profile, and risk are clear.
-7. Validate with the repository's nearest skill validator, routing tests, and install/profile checks.
+6. Register the skill in the install graph only after path, routing, overlap, and risk are clear.
+7. Validate with the repository's nearest skill validator, routing tests, and install checks.
 
 ## Quality Gates
 

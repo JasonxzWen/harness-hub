@@ -26,9 +26,9 @@ This option remains side-effect free: no `.skill-hub/` creation, no file writes 
 | Category | Purpose |
 |---|---|
 | `context_budget` | Detect always-loaded instructions, duplicated agent roots, and other context-hygiene risks. |
-| `outcomes` | Detect explicit success criteria such as OpenSpec tasks, Ralph PRDs, PR templates, release checklists, or Definition of Done docs. |
+| `outcomes` | Detect explicit success criteria such as OpenSpec tasks, PR templates, release checklists, or Definition of Done docs. |
 | `verification` | Detect test, lint, typecheck, build, validation, CI, and release gates. |
-| `agent_routing` | Detect whether work is decomposed through skills, roles, OpenSpec changes, Ralph stories, or routing docs. |
+| `agent_routing` | Detect whether work is decomposed through skills, roles, OpenSpec changes, or routing docs. |
 | `automation_candidates` | Suggest reviewable routine candidates such as CI triage, code-review prep, docs freshness, or nightly validation. |
 | `learning_capture` | Suggest places to capture reviewable lessons, such as docs, skill gotchas, changelogs, retrospectives, or memory-note proposals. |
 

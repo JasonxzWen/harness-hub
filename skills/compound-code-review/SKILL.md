@@ -22,7 +22,7 @@ Do not use it for:
 
 - normal final command gates; use `verification-loop`
 - focused security-only checks; use `security-review`
-- UI/accessibility audits; use `web-design-guidelines` only when the target also installed the `web` profile or that helper is otherwise available
+- UI/accessibility audits; use `web-design-guidelines` only when that helper is relevant and available
 - addressing GitHub review threads; this skill reports findings only
 - committing, pushing, opening PRs, filing issues, or replying on external systems
 

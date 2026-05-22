@@ -23,7 +23,7 @@ Scan scope:
 | `EveryInc/compound-engineering-plugin` | `compound-engineering-plugin` | `f61d1b33eaba7be6e75902e31e49e022abdca3a0` | 38 |
 | `vercel-labs/agent-skills` | `vercel-labs-agent-skills` | `c39c4eb8a2981b0455e033882812c9df49bb72c5` | 8 |
 | `vercel-labs/skills` | `vercel-labs-skills` | `c5ad3a85b4d16666974b161131413d08bfef3f7e` | 1 |
-| `snarktank/ralph` | `snarktank-ralph` | `6c53cb0b831ebe8739c6a003e22af14902d8b0b5` | 2 |
+| `snarktank/ralph` | `snarktank-ralph` | `6c53cb0b831ebe8739c6a003e22af14902d8b0b5` | 2 (retired) |
 | `hluaguo/learn-faster-kit` | `learn-faster-kit` | `209db9f6c873e3600a4b387748d82ffd24ddaf6e` | 0 |
 | `zarazhangrui/frontend-slides` | `frontend-slides` | `8dca834fc61abc9dd633cbe6a74ed7be3d82a608` | 1 |
 | `michalvavra/agents` | `michalvavra-agents` | `77473489d5c7b248af51ee7acf072c84a59ba6d4` | 2 active, 16 archived |
@@ -66,7 +66,7 @@ License/source note: the upstream README states many examples are Apache 2.0, wh
 
 ## Coverage Notes
 
-- After excluding ECC and adding `anthropics/skills`, the candidate pool has 139 surfaces across workflow, SDD, review, debugging, frontend, Vercel, Ralph, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, and creative artifacts.
+- After excluding ECC and adding `anthropics/skills`, the candidate pool has 139 scanned surfaces across workflow, SDD, review, debugging, frontend, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, and creative artifacts. Ralph remains source-recorded but is retired from installable distribution.
 - The first Anthropic atom pass promoted seven installable skills or local rewrites into `capabilities/index.json`: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator`.
 - It is not yet broad enough for a general marketplace. Future source expansion should target cloud providers beyond Vercel, data and ML operations, security operations, enterprise SaaS, and more language/framework niches.
 - The sustainable direction is to keep Skill Hub's local layer as orchestration, routing, lifecycle, provenance, dedupe, and validation; pull atomic skills from upstream only when license, source quality, trigger contract, and platform neutrality pass.

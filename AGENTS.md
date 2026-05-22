@@ -29,7 +29,7 @@ Skill Hub maintains platform-neutral agent skills. Keep every skill in the stand
 - Do not add host-specific tool names, config paths, UI metadata, or runner assumptions to skill bodies.
 - Do not add `agents/openai.yaml`, `.codex/`, `.claude/skills/`, `.opencode/skills/`, or similar host-local metadata to the source skill tree.
 - Put host packaging outside skills. Claude plugin support belongs in `.claude-plugin/`; the skill content remains standard.
-- If an upstream skill assumes a specific harness, normalize it into host-neutral language before installing.
+- If an upstream skill assumes a specific runner, normalize it into host-neutral language before installing.
 - If a capability cannot be normalized without losing its value, keep it as an evaluated source or explicit-only reference.
 
 ## Skill Routing
@@ -42,12 +42,12 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - Runtime bug reports that start from failure evidence: use `diagnosis-workflow`.
 - Code, plan, release, UI, or security review: use `review-workflow`.
 - Delivery, validation closeout, cleanup, or handoff: use `delivery-workflow`.
-- Skill Hub source, routing, profile, capability, npm lifecycle, or cleanup work: use `hub-maintenance-workflow`.
+- Skill Hub source, routing, capability, npm lifecycle, or cleanup work: use `hub-maintenance-workflow`.
 - Plan/design pressure testing: use `grill-me`.
 - Runtime bugs/performance regressions: use `diagnose`.
 - Agent/tool harness failures: use `agent-introspection-debugging`.
 - Production feature work or confirmed bug fixes with tests: use `tdd-workflow`.
-- Ralph goal/story loops: `sdd` includes `ralph-prd` and `ralph-loop` as a pre-native-goal bridge, but use them only when the user explicitly wants Ralph-style goal/story execution; do not bypass SDD alignment or start autonomous repeated execution without approval.
+- Native goal/story loops are now handled by Codex/Claude Code directly; Skill Hub no longer distributes Ralph PRD or loop skills.
 - Throwaway design exploration: use `prototype`; use `frontend-design` for production UI.
 - Deep pre-PR review: use `compound-code-review`; use `security-review` only for focused security checks.
 - Final command gates and build/test validation: use `verification-loop`.
@@ -70,15 +70,15 @@ Use `docs/skill-quality-guide.md` as the quality bar for authoring, importing, r
 - Prefer "Load when..." phrasing, target 50 words or fewer, and describe user intent rather than workflow internals.
 - Keep heavy or conditional content out of `SKILL.md`; use `scripts/`, `references/`, and `assets/`.
 - Do not change a skill description without updating routing/eval coverage unless the edit is purely mechanical.
-- Before adding a default-profile skill, verify it fills a bounded gap and does not duplicate global instructions.
+- Before adding an installable skill, verify it fills a bounded gap and does not duplicate global instructions.
 
 ## CLI Lifecycle
 
 Use these verbs for target-repo lifecycle work:
 
 - `skill-hub analyze <target> --json`
-- `skill-hub install <target> --profile minimal --target standard --dry-run`
-- `skill-hub install <target> --profile minimal --target standard --yes`
+- `skill-hub install <target> --target standard --dry-run`
+- `skill-hub install <target> --target standard --yes`
 - `skill-hub status <target> --json`
 - `skill-hub update <target> --dry-run --json`
 - `skill-hub remove <target> --dry-run --json`

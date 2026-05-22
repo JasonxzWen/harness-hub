@@ -18,22 +18,20 @@ Every non-trivial change request should move through this order. The implementat
 | 2 | Gather required material | Repo-local docs, referenced upstream repos/blogs, existing skills, source decisions, code paths, and constraints. | Important referenced sources are checked or explicitly marked out of scope; adopt/adapt/reject reasoning is recorded. |
 | 3 | Write spec and acceptance | Target behavior, state transitions, boundaries, acceptance criteria, and verification strategy. | The user can validate product-visible behavior without reviewing implementation details. |
 | 4 | Write executable plan and align | File targets, task order, tests, cleanup list, subagent use, validation commands, and rollback/cleanup notes. | The user approves the plan before coding starts. |
-| 5 | Clean unneeded files | Removal or demotion plan for obsolete skills, docs, generated files, profile entries, or managed assets. | Only approved, owned, lock-backed, or clearly obsolete files are removed; unrelated/user-owned files are preserved. |
-| 6 | Implement | Minimal scoped code/docs/profile changes following the accepted plan. | Every changed line traces to the accepted spec, cleanup, or test plan. |
+| 5 | Clean unneeded files | Removal or demotion plan for obsolete skills, docs, generated files, capability entries, or managed assets. | Only approved, owned, lock-backed, or clearly obsolete files are removed; unrelated/user-owned files are preserved. |
+| 6 | Implement | Minimal scoped code, docs, and capability changes following the accepted plan. | Every changed line traces to the accepted spec, cleanup, or test plan. |
 | 7 | Test and accept | Unit/integration/E2E/deterministic checks plus manual acceptance where needed. | The agreed acceptance criteria are satisfied or residual gaps are reported. |
 | 8 | Deliver report | `effective-interact` handoff with changes, evidence, validation, decisions, risks, and next actions. | The user can understand outcome and remaining decisions without reading the whole diff. |
 
 ## Release Strategy
 
-Use a staged rollout:
+Use one standard install set:
 
-1. Add the workflow source dossier and routing/spec evals without changing the default profile.
-2. Introduce a new explicit `sdd` profile for dogfooding.
-3. Promote to the default/minimal profile only after disposable-target install/update/remove smoke tests pass for the standard target.
+1. Keep workflow source dossier and routing/spec evals as the guardrails for install-surface changes.
+2. Install every standard skill component from `capabilities/index.json`.
+3. Run disposable-target install/update/remove smoke tests before publishing lifecycle changes.
 
-This avoids breaking current users while still moving the hub toward one standard workflow.
-
-Implementation status: the router skill, public owner skills, routing fixture tests, and explicit `sdd` profile now exist. Physical cleanup was approved on 2026-05-21 after source records were retained, and non-component `skills` directories were removed. A disposable standard target `sdd` lifecycle smoke passed after cleanup: `install --dry-run`, `install --yes`, `status`, `update --dry-run`, `remove --dry-run`, and `remove --yes` all preserved lock-backed ownership. Promotion to `minimal`, hook automation, and any future cleanup/removal work remain separate approval gates.
+Implementation status: the router skill, public owner skills, routing fixture tests, and standard install set now exist. Physical cleanup was approved on 2026-05-21 after source records were retained, and non-component `skills` directories were removed. A disposable standard target lifecycle smoke passed after cleanup: `install --dry-run`, `install --yes`, `status`, `update --dry-run`, `remove --dry-run`, and `remove --yes` all preserved lock-backed ownership. Hook automation and any future cleanup/removal work remain separate approval gates.
 
 ## Workstreams
 
@@ -45,7 +43,7 @@ Implementation status: the router skill, public owner skills, routing fixture te
 | Router skill | `skills/workflow-router/` | Thin intent classifier and state handoff rules. | `SKILL.md` stays short; detailed taxonomy lives in `references/`; no implementation workflow inside router. |
 | Workflow owners | `skills/answer-workflow/`, `skills/sdd-workflow/`, `skills/diagnosis-workflow/`, `skills/review-workflow/`, `skills/delivery-workflow/`, `skills/hub-maintenance-workflow/` | Original owner skills for each state. | Each owner has one description, non-overlap examples, entry/exit gates, and `effective-interact` handoff guidance. |
 | Library demotion | `docs/skill-routing.md`, `capabilities/index.json` | Existing narrow skills become tools under workflow owners instead of top-level lifecycle owners. | Matt/OpenSpec/ECC/Superpowers-derived lanes are not removed unless replaced; overlap is documented. |
-| Packaging | `capabilities/index.json`, `README.md`, `docs/capability-map.md`, `tests/skillHub.test.ts` | Explicit `sdd` profile for the standard skill target, including Ralph as a user-approved goal-loop bridge. | Install/status/update/remove remain lock-backed and hash-aware. |
+| Packaging | `capabilities/index.json`, `README.md`, `docs/capability-map.md`, `tests/skillHub.test.ts` | Single standard skill install set without retired Ralph goal-loop helpers. | Install/status/update/remove remain lock-backed and hash-aware. |
 | Hooks and subagents | `skills/workflow-router/references/orchestration-policy.md`, optional host packaging guidance | Advisory hooks and host-native subagent mappings only after core routing is stable. | No hook dispatches agents or performs remote writes; subagents are parent-workflow controlled. |
 | Handoff artifacts | `skills/effective-interact/assets/fixtures/`, ignored local `reports/` outputs | Fixture JSON is the durable source; generated HTML reports are local inspection outputs for routing choice, SDD alignment, review, and delivery. | Generated artifacts validate with `validate-interaction.mjs --require-browser` when handed off, but HTML outputs are not committed. |
 
@@ -162,18 +160,18 @@ Acceptance:
 - Existing narrow skills remain usable only as helpers or explicit specialized routes.
 - The user can ignore implementation details after spec and acceptance are aligned.
 
-### Milestone 5: Distribution Profile
+### Milestone 5: Standard Distribution
 
 Tasks:
 
-1. Add an explicit `sdd` profile to `capabilities/index.json`.
+1. Keep only standard skill components in `capabilities/index.json`.
 2. Include only standard skill target support.
 3. Add component metadata for new workflow skills.
 4. Add update/remove smoke coverage for deleted or renamed managed workflow files.
 
 Acceptance:
 
-- `skill-hub install <target> --profile sdd --target standard --dry-run` shows the complete workflow set.
+- `skill-hub install <target> --target standard --dry-run` shows the complete workflow set.
 - `skill-hub status`, `update`, and `remove` preserve lock-backed ownership rules.
 
 ### Milestone 6: Advisory Hooks And Subagents
@@ -203,7 +201,6 @@ Acceptance:
 
 Ask the user before:
 
-- promoting `sdd` into `minimal`,
 - deleting or renaming existing public skills,
 - changing CLI lifecycle semantics,
 - adding blocking hooks,
@@ -221,7 +218,7 @@ Use this order as the default local gate:
 3. new workflow-router contract tests
 4. `powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExternal`
 5. `bun run validate` when TypeScript, tests, capability metadata, or CLI behavior changes
-6. disposable target smoke tests before publishing profile changes
+6. disposable target smoke tests before publishing install-surface changes
 
 ## Completion Definition
 

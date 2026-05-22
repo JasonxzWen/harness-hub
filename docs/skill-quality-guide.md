@@ -30,7 +30,7 @@ Do not create or install a skill when:
 - The content duplicates root `AGENTS.md`, host system instructions, or common project conventions.
 - The content only reimplements host-native UI, orchestration, automation, review, browser, or multi-agent behavior already supplied by the active agent host.
 - The source changes faster than Skill Hub can maintain it.
-- The capability belongs in a named CLI/profile decision rather than automatic routing.
+- The capability belongs in an explicit user-requested workflow rather than automatic routing.
 - The main value is broad advice, not a bounded workflow or durable special case.
 
 ## Skill Directory Standard

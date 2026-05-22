@@ -1,6 +1,6 @@
 ---
 name: hub-maintenance-workflow
-description: "Load when maintaining Skill Hub itself: evaluating skill sources, routing, profiles, capabilities, npm lifecycle, or managed update/remove behavior; preserve local adaptations."
+description: "Load when maintaining Skill Hub itself: evaluating skill sources, routing, capabilities, npm lifecycle, or managed update/remove behavior; preserve local adaptations."
 ---
 
 # Hub Maintenance Workflow
@@ -9,7 +9,7 @@ Use this owner for Skill Hub repository work.
 
 ## Workflow
 
-1. Align the maintenance goal and whether it is docs, skill, profile, CLI lifecycle, or source evaluation work.
+1. Align the maintenance goal and whether it is docs, skill, capability metadata, CLI lifecycle, or source evaluation work.
 2. Gather required material: `docs/source-projects.md`, `docs/workflow-source-dossier.md`, `docs/skill-routing.md`, `capabilities/index.json`, relevant skills, and tests.
 3. Write or update spec and acceptance before mutating installable behavior.
 4. Write an executable plan with cleanup decisions and validation commands.
@@ -23,7 +23,7 @@ Use this owner for Skill Hub repository work.
 Use repo-local source records and deterministic project files instead of delegating to removed library skills:
 
 - `docs/source-projects.md` for upstream URLs, versions, license notes, import decisions, and reference-only candidates.
-- `docs/workflow-source-dossier.md` for lifecycle-stage comparisons across Matt Pocock skills, Superpowers, ECC, OpenSpec, Effective Interact, Vercel, Ralph, and local docs.
+- `docs/workflow-source-dossier.md` for lifecycle-stage comparisons across Matt Pocock skills, Superpowers, ECC, OpenSpec, Effective Interact, Vercel, retired Ralph source notes, and local docs.
 - `docs/skill-routing.md` for overlap and trigger decisions.
 - `capabilities/index.json` for the installable component surface.
 - `skill-hub` CLI dry-runs for target-repo analyze/install/status/update/remove behavior.

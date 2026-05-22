@@ -21,7 +21,7 @@ EFFECTIVE_INTERACT: <required | default-consider | not-needed>
 | diagnosis | Reproduce or bound the symptom before fixing. |
 | review | Gather review evidence and report findings first. |
 | delivery | Verify acceptance and residual risks before declaring done. |
-| skill-hub-maintenance | Gather source/profile/lifecycle evidence before changing Skill Hub. |
+| skill-hub-maintenance | Gather source, capability, and lifecycle evidence before changing Skill Hub. |
 | clarify | Ask one concise question. |
 
 ## Examples
@@ -32,7 +32,7 @@ CONFIDENCE: high
 REASON: The user asked to implement a workflow refactor.
 OWNER: sdd-workflow
 NEXT GATE: Align user need before spec and plan.
-HELPERS: product-capability, tdd-workflow, verification-loop; ralph-prd/ralph-loop only for explicit goal-loop requests
+HELPERS: product-capability, tdd-workflow, verification-loop
 EFFECTIVE_INTERACT: required
 ```
 

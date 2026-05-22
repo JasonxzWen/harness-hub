@@ -19,7 +19,7 @@ The system SHALL analyze a target repository without writing files, creating dir
 - **THEN** the system writes the report to the requested file path and does not install or remove capabilities
 
 ### Requirement: Capability matching from explicit metadata
-The system SHALL derive detected, missing, and recommended capabilities from explicit capability index metadata such as `provides`, `detects`, `agents`, profiles, and component routing.
+The system SHALL derive detected, missing, and recommended capabilities from explicit capability index metadata such as `provides`, `detects`, `agents`, installable skill components, and component routing.
 
 #### Scenario: Path-only detection rule
 - **WHEN** the capability index contains a V1 detect rule
@@ -29,9 +29,9 @@ The system SHALL derive detected, missing, and recommended capabilities from exp
 - **WHEN** the target repository contains a path listed in a component detection rule
 - **THEN** the analysis result marks the matching capability as existing and includes the evidence path
 
-#### Scenario: Missing capability is recommended
-- **WHEN** a profile includes a capability that is not detected in the target repository
-- **THEN** the analysis result marks that capability as recommended and cites the profile or component that caused the recommendation
+#### Scenario: Missing installable capability is recommended
+- **WHEN** an installable skill component is not detected in the target repository
+- **THEN** the analysis result marks that capability as recommended and cites the component that caused the recommendation
 
 ### Requirement: Explainable recommendation output
 The system SHALL include enough reason data for every recommendation, conflict, and skip so users can understand why the CLI reached that result.
@@ -45,7 +45,7 @@ The system SHALL include enough reason data for every recommendation, conflict, 
 - **THEN** the analysis result reports the conflict with the existing path and the action that would be taken by default
 
 ### Requirement: Stable JSON report contract
-The system SHALL provide a JSON report for analysis that is deterministic for the same target files, capability index, profile, and agent options.
+The system SHALL provide a JSON report for analysis that is deterministic for the same target files, capability index, and agent options.
 
 #### Scenario: Repeated analysis is stable
 - **WHEN** the user runs the same `skill-hub analyze <target> --json` command twice without file changes
@@ -53,8 +53,8 @@ The system SHALL provide a JSON report for analysis that is deterministic for th
 
 #### Scenario: JSON includes required fields
 - **WHEN** the user runs `skill-hub analyze <target> --json`
-- **THEN** the JSON result includes schema version, hub version, target directory, profile, agents, repo signals, and sorted findings
+- **THEN** the JSON result includes schema version, hub version, target directory, agents, repo signals, and sorted findings
 
 #### Scenario: Unknown repo type is handled
 - **WHEN** the target repository has no recognized language or agent markers
-- **THEN** the system still reports profile-based recommendations and marks repo signals as absent rather than failing
+- **THEN** the system still reports component-based recommendations and marks repo signals as absent rather than failing

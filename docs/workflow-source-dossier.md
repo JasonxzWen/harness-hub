@@ -26,14 +26,14 @@ The workflow system must serve this order:
 | Matt Pocock skills | `grill-me`, `diagnose`, and `prototype` adapted; other skills rejected or explicit-only. | Narrow, memorable phase skills and feedback-loop framing. | Adapt selected phase patterns only. |
 | Superpowers | Referenced, not installed. | Broad disciplined workflow, brainstorming-style idea shaping, `using-superpowers`, subagent-driven development, worktree/finish discipline. | Reference for lifecycle and orchestration boundaries; do not install wholesale. |
 | Everything Claude Code | Source checkout and compatibility docs retained; only selected helper skills remain active through `capabilities/index.json`. | Rules, agents, hooks, MCP patterns, verification, broad Claude Code conventions. | Reference surface plus bounded helpers; do not restore the broad local skill library. |
-| OpenSpec | Installed as explicit formal lifecycle. | Proposal/spec/task/archive artifacts and formal change tracking. | Explicit mode only; do not make default planning lane. |
+| OpenSpec | Installed as formal lifecycle helpers. | Proposal/spec/task/archive artifacts and formal change tracking. | Use only when the user explicitly asks for OpenSpec or existing artifacts require it. |
 | Compound Engineering Plugin | `compound-code-review` adapted; rest explicit-only or reference. | Structured review, reviewer lenses, doc-review candidates, side-effect-heavy work loops. | Keep review lane; postpone broader workflows. |
 | Effective Interact | Original local skill. | Chinese-first interaction-cost reduction, answer-first visual handoffs, evidence, option comparison, validation dashboards. | High-priority interaction layer across all non-trivial lifecycle phases. |
 | Skill Hub CLI lifecycle | Implemented and documented locally. | Lock-backed install/status/update/remove and safe cleanup ownership. | Preserve as mandatory distribution and cleanup boundary. |
 | Vercel/Web/React skills | `web-design-guidelines` remains active; other Vercel Web/React skills are source-retained only. | Frontend implementation and UI quality for target repos that need it. | Helper/reference sources only; not top-level lifecycle owners. |
 | Anthropic skills | Selective atoms installed or rewritten: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, `slack-gif-creator`. | Provider API, MCP server, skill authoring, doc/comms, visual theme, and Slack GIF atoms. | Helper atoms under owner workflows; document four-pack remains reference-only due licensing. |
-| Ralph | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` retained. | Autonomous story loop and PRD-to-story execution. | Explicit autonomous execution mode, not default SDD workflow. |
-| Learn Harness / Learn FASTER | Narrow local adaptations. | Harness templates and learning lifecycle ideas. | Keep outside default engineering lifecycle except as explicit profiles. |
+| Ralph | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` retired on 2026-05-22. | Historical autonomous story-loop reference. | Source evidence only; native Codex and Claude Code goal/story workflows now cover this lane. |
+| Learn Harness / Learn FASTER | Narrow local adaptations. | Historical harness templates and learning lifecycle ideas. | Keep learning coach only; repo harness templates are removed from distribution. |
 
 ## Phase Dossier
 
@@ -50,7 +50,7 @@ The workflow system must serve this order:
 
 | Source | Useful idea | Reject or constrain | Local decision |
 |---|---|---|---|
-| `hub-maintenance-workflow` | Inventory source projects, compare upstream versions, preserve local adaptations, and maintain profile/package boundaries. | Do not install off-stack or wholesale sources. | Use as the single maintenance owner for this repository. |
+| `hub-maintenance-workflow` | Inventory source projects, compare upstream versions, preserve local adaptations, and maintain package/capability boundaries. | Do not install off-stack or wholesale sources. | Use as the single maintenance owner for this repository. |
 | Former `skill-evaluator` policy | Read upstream README, skill bodies, metadata, license, and compare against local routing before install. | Do not use presence/absence comparison only. | Fold the policy into mandatory source-gathering criteria before workflow adoption. |
 | `docs/source-projects.md` | Existing source URLs, versions, decisions, and imported paths. | It may be stale for live upstream content. | Treat as the repo-local starting point; refresh only when copying/updating upstream content. |
 | Superpowers tool mapping | Host compatibility checklist for porting broad-trigger workflows. | Do not wrap native host tools just to mirror names. | Use as reference for platform-neutral wording and activation boundaries. |
@@ -73,7 +73,7 @@ The workflow system must serve this order:
 |---|---|---|---|
 | Superpowers | Planning discipline and finish/worktree habits. | Full pack would duplicate existing skills. | Adapt only plan discipline and explicit completion gates. |
 | ECC rules | Conservative execution, hooks, agents, and verification practices. | Avoid turning broad conventions into another prompt pack. | Keep broad rules in `AGENTS.md`; conditional details in workflow skills. |
-| Ralph PRD/story loop | Story sizing and autonomous execution boundaries. | Not the default for normal user-supervised SDD. | Include as an explicit `sdd` helper bridge before native goal support; never start repeated execution without approval. |
+| Ralph PRD/story loop | Historical story sizing and autonomous execution boundaries. | Native Codex and Claude Code goal/story workflows now cover this lane. | Retire the distributed Ralph helpers; keep repeated execution behind explicit user approval. |
 | OpenSpec tasks | Implementation task checklist tied to spec artifacts. | Do not require OpenSpec for every change. | Borrow task/acceptance traceability in `sdd-workflow`. |
 
 ### 5. Clean Unneeded Files
@@ -90,7 +90,7 @@ The workflow system must serve this order:
 | Source | Useful idea | Reject or constrain | Local decision |
 |---|---|---|---|
 | `tdd-workflow` | Write failing tests or deterministic gates before implementation. | TDD must not compete with SDD as top-level workflow. | Embed TDD inside accepted SDD spec. |
-| Matt `tdd` | Reinforces test-first habit. | Rejected by local routing due to overlap with installed TDD/Ralph/OpenSpec surfaces. | Reference-only; do not install by default. |
+| Matt `tdd` | Reinforces test-first habit. | Rejected by local routing due to overlap with installed TDD/OpenSpec surfaces. | Reference-only; do not install by default. |
 | ECC coding standards | General code quality and conservative edits. | Avoid duplicating root project instructions inside every skill. | Keep as helper/library behavior. |
 | Anthropic `claude-api`, `mcp-builder`, `skill-creator` | Provider-specific API guidance, MCP server design/eval, and skill authoring patterns. | Avoid copying volatile API tables or host-specific skill-eval runners. | Use explicit helper atoms under SDD or Skill Hub maintenance. |
 | OpenSpec apply | Task-by-task implementation from formal change artifacts. | Explicit formal lifecycle only. | Use when an OpenSpec change already exists. |
@@ -119,7 +119,7 @@ The workflow system must serve this order:
 | Decision | Sources | Local behavior |
 |---|---|---|
 | Adopt | Effective Interact, Skill Hub CLI lifecycle, local AGENTS constraints. | Make them high-priority local infrastructure. |
-| Adapt | Matt `grill-me`/`diagnose`/`prototype`, Compound `ce-code-review`, Ralph PRD/story loop, selected Vercel/Web guidance, selected Anthropic atoms. | Keep bounded helper lanes with local routing. |
+| Adapt | Matt `grill-me`/`diagnose`/`prototype`, Compound `ce-code-review`, selected Vercel/Web guidance, selected Anthropic atoms. | Keep bounded helper lanes with local routing. |
 | Reference-only | Superpowers full pack, ECC broad system, OpenSpec formal lifecycle, Matt `grill-with-docs`, CE doc review, frontend-slides upstream, Anthropic document four-pack and creative-heavy examples. | Study specific ideas without default installation. |
 | Reject for default | Full Superpowers, full CE plugin, Matt issue/triage/setup flows, side-effect-heavy PR/publish/credential workflows. | Prevent trigger noise and unsafe external actions. |
 
@@ -129,7 +129,7 @@ Before implementing workflow-router or workflow owners:
 
 1. Convert this dossier into routing/spec test fixtures.
 2. Keep source refresh separate from local workflow design.
-3. Ask the user before any default-profile promotion, blocking hook, or future broad cleanup.
+3. Ask the user before any install-surface expansion, blocking hook, or future broad cleanup.
 
 Subagent and hook source decision: Superpowers and ECC are useful references for orchestration, but local policy keeps Subagents are parent-workflow controlled, Advisory hooks only, No automatic subagent dispatch, and No remote writes from hooks.
 4. Preserve source notes even when a referenced skill is demoted or rejected.

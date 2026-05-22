@@ -33,14 +33,13 @@ test('compound-code-review keeps detailed contracts in references', () => {
   expect(read('skills/compound-code-review/SKILL.md').length).toBeLessThan(7500);
 });
 
-test('compound-code-review is installable from the minimal capability profile', () => {
+test('compound-code-review is part of the standard install surface', () => {
   const index = JSON.parse(read('capabilities/index.json')) as {
-    profiles: Record<string, { components: string[] }>;
-    components: Record<string, { path: string; source: string; provides?: string[] }>;
+    components: Record<string, { kind: string; path: string; source: string; provides?: string[] }>;
   };
   const component = index.components['skill:compound-code-review'];
 
-  expect(index.profiles.minimal.components).toContain('skill:compound-code-review');
+  expect(component.kind).toBe('skill');
   expect(component.path).toBe('skills/compound-code-review');
   expect(component.source).toBe('compound-engineering-plugin-adapted');
   expect(component.provides).toContain('structured-code-review');

@@ -10,37 +10,26 @@ Skill Hub exposes two surfaces:
 | Command | Mutates target? | Purpose |
 |---|---:|---|
 | `skill-hub analyze <target>` | No | Detect existing standard skills, missing capabilities, conflicts, and recommendations. |
-| `skill-hub install <target> --profile <name> --target standard --dry-run` | No | Preview managed standard-skill installation. |
-| `skill-hub install <target> --profile <name> --target standard --yes` | Yes | Copy managed skills and write `.skill-hub/lock.json`. |
+| `skill-hub install <target> --target standard --dry-run` | No | Preview managed installation of every standard skill. |
+| `skill-hub install <target> --target standard --yes` | Yes | Copy every managed standard skill and write `.skill-hub/lock.json`. |
 | `skill-hub status <target>` | No | Compare lock records with current files and hub versions. |
 | `skill-hub update <target> --dry-run` | No | Plan updates for managed skills. |
 | `skill-hub update <target> --yes` | Yes | Update managed, unmodified files. |
 | `skill-hub remove <target> --dry-run` | No | Preview removal of lock-recorded files. |
 | `skill-hub remove <target> --yes` | Yes | Remove only managed files recorded in `.skill-hub/lock.json`. |
 
-## Profiles
+## Install Surface
 
-| Profile | Purpose |
-|---|---|
-| `minimal` | Daily engineering skills for planning, diagnosis, TDD, review, verification, security, docs lookup, clear complex communication, handoff, and self-debugging. |
-| `sdd` | Dogfood profile for workflow routing, SDD-first change work, embedded TDD, evidence gathering, review, delivery, Skill Hub maintenance, and the explicit Ralph goal-loop bridge. |
-| `web` | Frontend design, artifacts, slides, web patterns, and browser validation. |
-| `openspec-formal` | Explicit OpenSpec proposal, apply, and archive workflows. |
-| `ralph` | Ralph PRD and story-loop preparation. Also included in `sdd` only as an explicit bridge for user-approved goal/story execution. |
-| `learning` | Feynman-style learning coach. |
-| `platform` | Explicit provider API, MCP server, and skill-authoring atoms: `claude-api`, `mcp-builder`, `skill-creator`. |
-| `communications` | Document coauthoring and internal communication atoms: `doc-coauthoring`, `internal-comms`. |
-| `creative` | Visual theme and Slack GIF atoms: `theme-factory`, `slack-gif-creator`. |
-| `harness` | Repo-level harness templates. |
+Skill Hub has no bundle selector. The CLI installs the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json` whose source lives under `skills/<name>/`.
 
 ## Atomic Capability Candidate Map
 
-This map separates current installable capabilities from source-backed atom candidates. It is intentionally not an install graph; promote candidates into `capabilities/index.json` only after source review, trigger normalization, tests, and profile placement.
+This map separates current installable capabilities from source-backed atom candidates. It is intentionally not an install graph; promote candidates into `capabilities/index.json` only after source review, trigger normalization, tests, and lifecycle-risk placement.
 
 | Capability area | Current installable coverage | Source-backed atom candidates | Gap and decision |
 |---|---|---|---|
-| Planning, specs, and product clarification | `workflow-router`, `sdd-workflow`, `product-capability`, `grill-me`, `ralph-prd`, `ralph-loop`, OpenSpec formal skills | User-selected: Matt Pocock `design-an-interface`, `request-refactor-plan`, `ubiquitous-language`, `grill-with-docs`, `to-prd`, `zoom-out`; Superpowers `brainstorming`, `writing-plans`; Ralph `prd`, `ralph` | Strong coverage. Candidate work should dedupe against SDD and OpenSpec rather than add broad triggers. |
-| Implementation workflow and engineering governance | `sdd-workflow`, `tdd-workflow`, `prototype`, `verification-loop`, lifecycle CLI, harness templates | User-selected: Matt Pocock `prototype`, `tdd`, `scaffold-exercises`; Superpowers `executing-plans`, `finishing-a-development-branch`, `using-git-worktrees`, `subagent-driven-development`, `writing-skills`; `vercel-labs/skills` `find-skills` | Strong coverage. Treat Superpowers as source patterns for orchestration policy, not default always-on skills. |
+| Planning, specs, and product clarification | `workflow-router`, `sdd-workflow`, `product-capability`, `grill-me`, OpenSpec formal skills | User-selected: Matt Pocock `design-an-interface`, `request-refactor-plan`, `ubiquitous-language`, `grill-with-docs`, `to-prd`, `zoom-out`; Superpowers `brainstorming`, `writing-plans` | Strong coverage. Candidate work should dedupe against SDD and OpenSpec rather than add broad triggers. Ralph PRD/story-loop skills were retired because native Codex and Claude Code goal/story workflows now cover that lane. |
+| Implementation workflow and engineering governance | `sdd-workflow`, `tdd-workflow`, `prototype`, `verification-loop`, lifecycle CLI | User-selected: Matt Pocock `prototype`, `tdd`, `scaffold-exercises`; Superpowers `executing-plans`, `finishing-a-development-branch`, `using-git-worktrees`, `subagent-driven-development`, `writing-skills`; `vercel-labs/skills` `find-skills` | Strong coverage. Treat Superpowers as source patterns for orchestration policy, not default always-on skills. |
 | Debugging, verification, and review | `diagnosis-workflow`, `diagnose`, `review-workflow`, `compound-code-review`, `security-review`, `verification-loop`, `webapp-testing`, `e2e-testing` | User-selected: Superpowers `systematic-debugging`, `verification-before-completion`, `requesting-code-review`, `receiving-code-review`; Vercel `web-design-guidelines` | Strong coverage. `web-design-guidelines` remains a good UI audit atom candidate. |
 | Frontend and visual artifacts | `frontend-design`, `web-artifacts-builder`, `frontend-slides`, `frontend-patterns`, `effective-interact`, `web-design-guidelines`, `theme-factory`, `slack-gif-creator` | User-selected: `frontend-slides`, Michal Vavra `agent-browser`, `frontend-design`, `html-tools`; Anthropic `algorithmic-art`, `canvas-design`, `frontend-design`, `slack-gif-creator`, `theme-factory`, `web-artifacts-builder`, `webapp-testing` | Added bounded `theme-factory` and `slack-gif-creator`. Keep `algorithmic-art` and `canvas-design` reference-only until creative demand justifies more distribution weight. |
 | Writing, handoff, knowledge, and learning | `doc-coauthoring`, `internal-comms`, `handoff`, `feynman-learning-coach`, `answer-workflow`, `documentation-lookup`, `effective-interact` | User-selected: Matt Pocock `writing-beats`, `writing-fragments`, `writing-shape`, `edit-article`, `handoff`; Anthropic `doc-coauthoring`, `internal-comms`, `brand-guidelines` | Filled collaborative doc and internal comms gaps. Keep Anthropic `brand-guidelines` reference-only because it is Anthropic-brand-specific. |
@@ -72,7 +61,7 @@ Known redundancies:
 
 ## Candidate Intake Rules
 
-- A selected atom is not installable until its source license, trigger contract, side effects, overlaps, and target profile are recorded.
+- A selected atom is not installable until its source license, trigger contract, side effects, overlaps, and lifecycle risk are recorded.
 - Prefer adapting one bounded skill at a time over importing a repo or plugin bundle.
 - Keep host-specific paths, hooks, UI metadata, and credential assumptions outside standard `skills/<name>/SKILL.md`.
 - Document skills from `anthropics/skills` fill a real map gap, but `docx`, `pdf`, `pptx`, and `xlsx` require license review before redistribution.
@@ -99,4 +88,4 @@ Known redundancies:
 - `agents`: currently `["standard"]` for lock compatibility with older schema field names;
 - `risk`: lifecycle risk for install/update/remove decisions.
 
-Do not add host-specific install directories to the capability graph. Packaging for a host belongs in that host's manifest layer, such as `.claude-plugin/`. Subagents and hooks are workflow-owned optimizations: subagents need independent scopes, and hooks stay advisory until reviewed and approved.
+Do not add host-specific install directories to the capability graph. Packaging for a host belongs in that host's manifest layer, such as `.claude-plugin/`. Local Codex dogfooding uses `scripts/sync-codex-skills.mjs` to generate ignored `.codex/skills/` copies from the standard source tree; those copies are not installable capability metadata. Subagents and hooks are workflow-owned optimizations: subagents need independent scopes, and hooks stay advisory until reviewed and approved.

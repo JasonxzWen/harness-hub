@@ -28,7 +28,7 @@ For every candidate:
    - Are adjacent negative and forbidden-load cases clear?
    - Is heavy or conditional content split into spokes?
    - Are gotchas concrete rather than generic advice?
-6. Record positive, negative, and forbidden routing examples for installed/default-profile candidates, or explain why the candidate remains explicit-only/rejected.
+6. Record positive, negative, and forbidden routing examples for installed candidates, or explain why the candidate remains explicit-only/rejected.
 7. Update documentation immediately.
 8. Run `scripts/validate-skills.ps1 -SkipExternal`.
 

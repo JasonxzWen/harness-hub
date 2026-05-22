@@ -93,7 +93,6 @@ function Convert-ToSchemaOneLock {
     schemaVersion = 1
     generatedAt = (Get-Date).ToUniversalTime().ToString("o")
     hubVersion = $lock.hubVersion
-    profile = $lock.profile
     agents = $lock.agents
     components = $schemaOneComponents
   }
@@ -125,7 +124,7 @@ try {
   Invoke-CheckedCommand -FilePath "bun" -Arguments @("run", "build") | Out-Null
 
   $target = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $target, "--profile", "minimal", "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-SkillHub -Arguments @("install", $target, "--target", "standard", "--yes", "--json") | Out-Null
   Set-ComponentStale -TargetDir $target -ComponentIds @("skill:grill-me")
   $status = Invoke-SkillHub -Arguments @("status", $target, "--json") | ConvertFrom-Json
   Assert-HasUpdate -Report $status -ComponentId "skill:grill-me"
@@ -137,7 +136,7 @@ try {
   }
 
   $selectedTarget = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $selectedTarget, "--profile", "minimal", "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-SkillHub -Arguments @("install", $selectedTarget, "--target", "standard", "--yes", "--json") | Out-Null
   Set-ComponentStale -TargetDir $selectedTarget -ComponentIds @("skill:grill-me", "skill:diagnose")
   $selected = Invoke-SkillHub -Arguments @("update", $selectedTarget, "--component", "skill:grill-me", "--yes", "--json") | ConvertFrom-Json
   if (@($selected.updated | Where-Object { $_.id -eq "skill:grill-me" }).Count -ne 1) {
@@ -150,7 +149,7 @@ try {
   }
 
   $forceTarget = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $forceTarget, "--profile", "minimal", "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-SkillHub -Arguments @("install", $forceTarget, "--target", "standard", "--yes", "--json") | Out-Null
   Set-ComponentStale -TargetDir $forceTarget -ComponentIds @("skill:grill-me")
   Add-Content -LiteralPath (Join-Path $forceTarget "skills\grill-me\SKILL.md") -Value "modified"
   Invoke-SkillHub -Arguments @("update", $forceTarget, "--yes", "--json") -ExpectedExitCode 3 | Out-Null
@@ -160,7 +159,7 @@ try {
   }
 
   $migrationTarget = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $migrationTarget, "--profile", "minimal", "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-SkillHub -Arguments @("install", $migrationTarget, "--target", "standard", "--yes", "--json") | Out-Null
   Convert-ToSchemaOneLock -TargetDir $migrationTarget
   $migration = Invoke-SkillHub -Arguments @("migrate-lock", $migrationTarget, "--yes", "--json") | ConvertFrom-Json
   if ($migration.lock.data.schemaVersion -ne 2) {
@@ -169,7 +168,7 @@ try {
   Invoke-SkillHub -Arguments @("remove", $migrationTarget, "--yes", "--json") | Out-Null
 
   $divergentTarget = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $divergentTarget, "--profile", "minimal", "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-SkillHub -Arguments @("install", $divergentTarget, "--target", "standard", "--yes", "--json") | Out-Null
   Convert-ToSchemaOneLock -TargetDir $divergentTarget
   Add-Content -LiteralPath (Join-Path $divergentTarget "skills\grill-me\SKILL.md") -Value "divergent"
   Invoke-SkillHub -Arguments @("migrate-lock", $divergentTarget, "--yes", "--json") -ExpectedExitCode 3 | Out-Null

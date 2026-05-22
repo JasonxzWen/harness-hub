@@ -14,14 +14,16 @@ The Skill Hub CLI manages platform-neutral skills in target repositories.
 
 ```powershell
 skill-hub analyze <target> --json
-skill-hub install <target> --profile minimal --target standard --dry-run
-skill-hub install <target> --profile minimal --target standard --yes
+skill-hub install <target> --target standard --dry-run
+skill-hub install <target> --target standard --yes
 skill-hub status <target> --json
 skill-hub update <target> --dry-run --json
 skill-hub remove <target> --dry-run --json
 ```
 
-`--target standard` is the supported install target. The implementation still stores the selected target in existing `agents` lock fields for schema compatibility, but the value is platform-neutral.
+`--target standard` is the supported install target. `install` always selects the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json`. The implementation still stores the selected target in existing `agents` lock fields for schema continuity, but the value is platform-neutral.
+
+Local Codex dogfooding is intentionally outside the managed target lifecycle: `scripts/sync-codex-skills.mjs` mirrors `skills/` into ignored `.codex/skills/` copies for this checkout, without adding `.codex/skills/` to the capability graph or lock-backed install targets.
 
 ## Data Model
 
@@ -29,7 +31,7 @@ skill-hub remove <target> --dry-run --json
 export type AgentName = 'standard';
 
 export interface CapabilityComponent {
-  kind: 'skill' | 'harness-template' | string;
+  kind: 'skill' | string;
   path: string;
   version: string;
   source: string;
