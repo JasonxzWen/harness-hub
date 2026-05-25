@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 type ArtifactPolicy = {
   version: number;
@@ -11,6 +12,7 @@ type ArtifactPolicy = {
   };
   npm: {
     files: string[];
+    requiredExcludes: string[];
     forbidden: string[];
   };
   git: {
@@ -45,6 +47,13 @@ function hasForbiddenNpmEntry(files: string[], forbidden: string): string | unde
   return files.find((entry) => entry === forbidden);
 }
 
+function pathMatchesEntry(file: string, entry: string): boolean {
+  if (entry.endsWith('/')) {
+    return file.startsWith(entry);
+  }
+  return file === entry;
+}
+
 function assert(condition: boolean, message: string): void {
   if (!condition) {
     errors.push(message);
@@ -70,6 +79,11 @@ for (const entry of policy.categories.publishAndGit) {
 for (const entry of policy.categories.publishOnlyGenerated) {
   assert(policyFiles.includes(entry), `publishOnlyGenerated entry is missing from npm.files: ${entry}`);
   assert(policy.git.ignored.includes(entry), `publishOnlyGenerated entry must be git ignored: ${entry}`);
+}
+
+for (const entry of policy.npm.requiredExcludes) {
+  assert(entry.startsWith('!'), `npm.requiredExcludes entry must be a package files negation: ${entry}`);
+  assert(policyFiles.includes(entry), `npm.files is missing required exclude pattern: ${entry}`);
 }
 
 for (const forbidden of policy.npm.forbidden) {
@@ -100,6 +114,25 @@ const gitignorePatterns = new Set(
 
 for (const ignored of policy.git.ignored) {
   assert(gitignorePatterns.has(ignored), `.gitignore is missing policy ignore pattern: ${ignored}`);
+}
+
+if (fs.existsSync(path.join(root, '.git'))) {
+  const forbiddenTrackedEntries = normalizeList([
+    ...policy.categories.publishOnlyGenerated,
+    ...policy.categories.ignoredLocal,
+  ]);
+  const trackedFiles = execFileSync('git', ['ls-files'], {
+    cwd: root,
+    encoding: 'utf8',
+  })
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((file) => file.replaceAll('\\', '/'));
+
+  for (const file of trackedFiles.filter((trackedFile) => fs.existsSync(path.join(root, trackedFile)))) {
+    const match = forbiddenTrackedEntries.find((entry) => pathMatchesEntry(file, entry));
+    assert(match === undefined, `git must not track ignored/generated artifact path ${file}; matched ${match}.`);
+  }
 }
 
 if (errors.length > 0) {

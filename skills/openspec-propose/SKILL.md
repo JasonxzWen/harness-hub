@@ -1,6 +1,6 @@
 ---
 name: openspec-propose
-description: Propose a new change with all artifacts generated in one step. Use when the user wants to quickly describe what they want to build and get a complete proposal with design, specs, and tasks ready for implementation.
+description: Load when a workflow-router-selected owner workflow needs an explicit OpenSpec proposal with design, spec deltas, and tasks; use product-capability for ordinary implementation contracts.
 license: MIT
 metadata:
   author: openspec
@@ -108,4 +108,3 @@ After completing all artifacts, summarize:
 - If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
 - If a change with that name already exists, ask if user wants to continue it or create a new one
 - Verify each artifact file exists after writing before proceeding to next
-

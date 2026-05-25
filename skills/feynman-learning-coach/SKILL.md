@@ -1,6 +1,7 @@
 ---
 name: feynman-learning-coach
-description: Load when the user explicitly wants to learn, study, master, review, prepare for an exam/interview, build a syllabus, or be coached through a topic with Feynman teach-back checks; do not load for routine implementation or one-off factual answers.
+description: Load when a workflow-router-selected owner workflow needs cases where the user explicitly wants to learn, study, prepare for an exam/interview, build a syllabus, or use Feynman teach-back checks; do not load for routine implementation or one-off facts.
+license: MIT
 ---
 
 # Feynman Learning Coach

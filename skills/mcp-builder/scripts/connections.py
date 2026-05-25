@@ -4,11 +4,6 @@ from abc import ABC, abstractmethod
 from contextlib import AsyncExitStack
 from typing import Any
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.sse import sse_client
-from mcp.client.stdio import stdio_client
-from mcp.client.streamable_http import streamablehttp_client
-
 
 class MCPConnection(ABC):
     """Base class for MCP server connections."""
@@ -23,6 +18,8 @@ class MCPConnection(ABC):
 
     async def __aenter__(self):
         """Initialize MCP server connection."""
+        from mcp import ClientSession
+
         self._stack = AsyncExitStack()
         await self._stack.__aenter__()
 
@@ -80,6 +77,9 @@ class MCPConnectionStdio(MCPConnection):
         self.env = env
 
     def _create_context(self):
+        from mcp import StdioServerParameters
+        from mcp.client.stdio import stdio_client
+
         return stdio_client(
             StdioServerParameters(command=self.command, args=self.args, env=self.env)
         )
@@ -94,6 +94,8 @@ class MCPConnectionSSE(MCPConnection):
         self.headers = headers or {}
 
     def _create_context(self):
+        from mcp.client.sse import sse_client
+
         return sse_client(url=self.url, headers=self.headers)
 
 
@@ -106,6 +108,8 @@ class MCPConnectionHTTP(MCPConnection):
         self.headers = headers or {}
 
     def _create_context(self):
+        from mcp.client.streamable_http import streamablehttp_client
+
         return streamablehttp_client(url=self.url, headers=self.headers)
 
 
@@ -149,3 +153,11 @@ def create_connection(
 
     else:
         raise ValueError(f"Unsupported transport type: {transport}. Use 'stdio', 'sse', or 'http'")
+
+
+if __name__ == "__main__":
+    print(
+        "connections.py is a support module for evaluation.py.\n"
+        "Install dependencies from requirements.txt, then import create_connection() "
+        "or run evaluation.py --help."
+    )

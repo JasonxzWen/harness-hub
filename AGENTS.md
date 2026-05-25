@@ -27,7 +27,8 @@ Skill Hub maintains platform-neutral agent skills. Keep every skill in the stand
 ## Platform-Neutral Skill Policy
 
 - Do not add host-specific tool names, config paths, UI metadata, or runner assumptions to skill bodies.
-- Do not add `agents/openai.yaml`, `.codex/`, `.claude/skills/`, `.opencode/skills/`, or similar host-local metadata to the source skill tree.
+- Do not add `agents/openai.yaml`, `.claude/skills/`, `.opencode/skills/`, or similar host-local metadata to the source skill tree.
+- Keep project-local Codex bootstrap wrappers under ignored `.codex/skills/<skill-name>/`; each wrapper points back to the canonical `skills/<skill-name>/SKILL.md`.
 - Put host packaging outside skills. Claude plugin support belongs in `.claude-plugin/`; the skill content remains standard.
 - If an upstream skill assumes a specific runner, normalize it into host-neutral language before installing.
 - If a capability cannot be normalized without losing its value, keep it as an evaluated source or explicit-only reference.
@@ -36,7 +37,7 @@ Skill Hub maintains platform-neutral agent skills. Keep every skill in the stand
 
 Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest matching skill:
 
-- Non-trivial requests: use `workflow-router` first to classify the request into exactly one owner state.
+- Non-trivial requests: use `workflow-router` first to classify the request into exactly one owner state; when a terminal is available, run or mirror `node skills/workflow-router/scripts/workflow-check.mjs --prompt "<request>" --json` before substantive work.
 - Questions and evidence lookup: use `answer-workflow`.
 - SDD change work: use `sdd-workflow`; align core details, target spec, and acceptance criteria before implementation.
 - Runtime bug reports that start from failure evidence: use `diagnosis-workflow`.
@@ -54,7 +55,7 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 
 ## Workflow Router Direction
 
-The target architecture is a thin `workflow-router` that classifies each non-trivial request into exactly one workflow state: question, SDD change, diagnosis, review, delivery, or Skill Hub maintenance. Default development should be SDD-first with TDD embedded. Do not start implementation before the user's core details, target spec, and acceptance criteria are aligned.
+The target architecture is a thin, executable `workflow-router` that classifies each non-trivial request into exactly one workflow state: question, SDD change, diagnosis, review, delivery, or Skill Hub maintenance. Default development should be SDD-first with TDD embedded. Do not start implementation before the user's core details, target spec, and acceptance criteria are aligned.
 
 `effective-interact` is high-priority communication infrastructure. Default-consider it for every non-trivial session, especially after material repo or skill changes. Its job is to reduce human interpretation cost through answer-first structure, visual comparison, evidence, validation, and handoff artifacts; it does not replace production UI, slide, or bundled app skills.
 

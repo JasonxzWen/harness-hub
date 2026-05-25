@@ -1,6 +1,6 @@
 ---
 name: webapp-testing
-description: "Use for one-off local web application inspection and debugging with Playwright: verifying live frontend behavior, capturing screenshots, reading browser logs, and reproducing UI issues against a running dev server. Do not use for creating durable project E2E test suites, Page Object Models, or CI Playwright infrastructure; use e2e-testing for that."
+description: Load when a workflow-router-selected owner workflow needs one-off local web app inspection with Playwright, screenshots, console logs, or UI issue reproduction against a dev server; use e2e-testing for durable suites.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -18,13 +18,13 @@ To test local web applications, write native Python Playwright scripts.
 
 ```
 User task ->Is it static HTML?
-    鈹溾�?Yes ->Read HTML file directly to identify selectors
-    �?        鈹溾�?Success ->Write Playwright script using selectors
-    �?        鈹斺�?Fails/Incomplete ->Treat as dynamic (below)
-    �?    鈹斺�?No (dynamic webapp) ->Is the server already running?
-        鈹溾�?No ->Run: python scripts/with_server.py --help
-        �?       Then use the helper + write simplified Playwright script
-        �?        鈹斺�?Yes ->Reconnaissance-then-action:
+    +-- Yes -> Read HTML file directly to identify selectors
+    |   +-- Success -> Write Playwright script using selectors
+    |   +-- Fails/Incomplete -> Treat as dynamic (below)
+    +-- No (dynamic webapp) -> Is the server already running?
+        +-- No -> Run: python scripts/with_server.py --help
+        |   Then use the helper + write simplified Playwright script
+        +-- Yes -> Reconnaissance-then-action:
             1. Navigate and wait for networkidle
             2. Take screenshot or inspect DOM
             3. Identify selectors from rendered state
@@ -76,8 +76,8 @@ with sync_playwright() as p:
 
 ## Common Pitfall
 
-Wrong**Don't** inspect the DOM before waiting for `networkidle` on dynamic apps
-Correct**Do** wait for `page.wait_for_load_state('networkidle')` before inspection
+- Don't inspect the DOM before waiting for `networkidle` on dynamic apps.
+- Do wait for `page.wait_for_load_state('networkidle')` before inspection.
 
 ## Best Practices
 

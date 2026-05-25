@@ -1,6 +1,6 @@
 ---
 name: claude-api
-description: "Load when the user asks to build, debug, migrate, or tune Claude API or Anthropic SDK code; do not load for provider-neutral, OpenAI, or non-Anthropic model work."
+description: Load when a workflow-router-selected owner workflow needs Claude API or Anthropic SDK build, debug, migration, or tuning work; skip provider-neutral, OpenAI, or non-Anthropic model work.
 license: Complete terms in LICENSE.txt
 metadata:
   source: "anthropics/skills skills/claude-api"

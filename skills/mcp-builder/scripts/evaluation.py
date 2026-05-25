@@ -3,6 +3,8 @@
 This script evaluates MCP servers by running test questions against them using Claude.
 """
 
+from __future__ import annotations
+
 import argparse
 import asyncio
 import json
@@ -13,8 +15,6 @@ import traceback
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
-
-from anthropic import Anthropic
 
 from connections import create_connection
 
@@ -223,15 +223,20 @@ async def run_evaluation(
     model: str = "claude-3-7-sonnet-20250219",
 ) -> str:
     """Run evaluation with MCP server tools."""
-    print("🚀 Starting Evaluation")
+    try:
+        from anthropic import Anthropic
+    except ModuleNotFoundError as error:
+        raise RuntimeError("Missing dependency 'anthropic'. Install requirements.txt before running evaluations.") from error
+
+    print("Starting evaluation")
 
     client = Anthropic()
 
     tools = await connection.list_tools()
-    print(f"📋 Loaded {len(tools)} tools from MCP server")
+    print(f"Loaded {len(tools)} tools from MCP server")
 
     qa_pairs = parse_evaluation_file(eval_path)
-    print(f"📋 Loaded {len(qa_pairs)} evaluation tasks")
+    print(f"Loaded {len(qa_pairs)} evaluation tasks")
 
     results = []
     for i, qa_pair in enumerate(qa_pairs):
@@ -260,7 +265,7 @@ async def run_evaluation(
             question=qa_pair["question"],
             expected_answer=qa_pair["answer"],
             actual_answer=result["actual"] or "N/A",
-            correct_indicator="✅" if result["score"] else "❌",
+            correct_indicator="yes" if result["score"] else "no",
             total_duration=result["total_duration"],
             tool_calls=json.dumps(result["tool_calls"], indent=2),
             summary=result["summary"] or "N/A",
@@ -356,15 +361,15 @@ Examples:
         print(f"Error: {e}")
         sys.exit(1)
 
-    print(f"🔗 Connecting to MCP server via {args.transport}...")
+    print(f"Connecting to MCP server via {args.transport}...")
 
     async with connection:
-        print("✅ Connected successfully")
+        print("Connected successfully")
         report = await run_evaluation(args.eval_file, connection, args.model)
 
         if args.output:
             args.output.write_text(report)
-            print(f"\n✅ Report saved to {args.output}")
+            print(f"\nReport saved to {args.output}")
         else:
             print("\n" + report)
 

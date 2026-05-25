@@ -38,7 +38,7 @@
       "reports/",
       ".skill-hub/reports/",
       "skills/effective-interact/artifacts/",
-      ".codex/skills/",
+      ".codex/",
       ".learning/"
     ]
   },
@@ -63,6 +63,7 @@
       "scripts/validate-artifact-policy.ts",
       "scripts/validate-skills.ps1"
     ],
+    "requiredExcludes": [],
     "forbidden": [
       ".github/",
       ".skill-hub/",
@@ -102,7 +103,7 @@
       "reports/",
       ".skill-hub/reports/",
       "skills/effective-interact/artifacts/",
-      ".codex/skills/",
+      ".codex/",
       ".learning/"
     ]
   }

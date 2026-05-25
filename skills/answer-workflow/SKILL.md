@@ -1,6 +1,6 @@
 ---
 name: answer-workflow
-description: Load when the user asks a read-only question, explanation, evidence lookup, feasibility check, or comparison; answer from repo/source evidence and do not edit files unless the user redirects into a change workflow.
+description: Load when workflow-router selects the question state for read-only explanation, evidence lookup, feasibility, or comparison; answer from evidence and do not edit files unless rerouted.
 ---
 
 # Answer Workflow

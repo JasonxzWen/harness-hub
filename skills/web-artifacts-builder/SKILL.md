@@ -1,6 +1,6 @@
 ---
 name: web-artifacts-builder
-description: Suite of tools for creating elaborate, multi-component local browser HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.
+description: Load when a workflow-router-selected owner workflow needs complex standalone React/Tailwind/shadcn browser artifacts with state, routing, or bundled components; use effective-interact for reports and frontend-design for production UI.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -31,13 +31,13 @@ cd <project-name>
 ```
 
 This creates a fully configured project with:
-- CorrectReact + TypeScript (via Vite)
-- CorrectTailwind CSS 3.4.1 with shadcn/ui theming system
-- CorrectPath aliases (`@/`) configured
-- Correct40+ shadcn/ui components pre-installed
-- CorrectAll Radix UI dependencies included
-- CorrectParcel configured for bundling (via .parcelrc)
-- CorrectNode 18+ compatibility (auto-detects and pins Vite version)
+- React + TypeScript (via Vite)
+- Tailwind CSS 3.4.1 with shadcn/ui theming system
+- Path aliases (`@/`) configured
+- 40+ shadcn/ui components pre-installed
+- All Radix UI dependencies included
+- Parcel configured for bundling (via .parcelrc)
+- Node 18+ compatibility (auto-detects and pins Vite version)
 
 ### Step 2: Develop Your Artifact
 

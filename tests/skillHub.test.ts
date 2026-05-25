@@ -79,16 +79,19 @@ test('installs skills, writes lock, and reports current status', () => {
   expect(status.current.length).toBeGreaterThan(0);
 });
 
-test('skips existing skills unless overwrite is requested', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-skip-'));
+test('confirmed install overwrites same-name skill directories by default', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-overwrite-default-'));
   const firstPlan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(firstPlan);
+  const localFile = path.join(targetDir, 'skills', 'workflow-router', 'LOCAL.md');
+  fs.writeFileSync(localFile, 'local file that should be replaced\n');
 
   const secondPlan = planInstall({ targetDir, agents: ['standard'] });
   const secondResult = applyInstall(secondPlan);
 
-  expect(secondResult.installed.length).toBe(0);
-  expect(secondResult.skipped.length).toBe(secondPlan.items.length);
+  expect(secondResult.installed.length).toBe(secondPlan.items.length);
+  expect(secondResult.skipped.length).toBe(0);
+  expect(fs.existsSync(localFile)).toBe(false);
 });
 
 test('install planning skips capabilities already detected outside install destination', () => {
@@ -176,7 +179,8 @@ test('analyzes destination conflict separately from detected capability', () => 
   const finding = result.findings.find((item) => item.componentId === 'skill:grill-me');
 
   expect(finding?.state).toBe('conflict');
-  expect(finding?.defaultAction).toBe('skip');
+  expect(finding?.defaultAction).toBe('install');
+  expect(finding?.reason).toContain('will be overwritten by confirmed install');
   expect(finding?.dest).toBe('skills/grill-me');
 });
 

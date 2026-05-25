@@ -53,7 +53,7 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
 - `sdd-workflow` is the default change lane and `tdd-workflow` is an embedded implementation discipline, not a competing owner.
 - Do not treat `effective-interact` as a default-considered skill for non-trivial sessions merely because a reply may be long; the trigger is a real communication, alignment, verification, approval, handoff, or continuation need.
-- Use `effective-interact` for material repo or skill change reports only when the user needs preserved facts, evidence navigation, validation state, risks, or a continuation handoff.
+- Use `effective-interact` as the default reporting layer when the agent is about to pause on relatively complex information, especially for material repo or skill change reports that need preserved facts, evidence navigation, validation state, risks, or a continuation handoff.
 - `frontend-slides` remains the deck lane; `effective-interact` may summarize or hand off deck-related findings, but it should not become the slide-generation workflow.
 
 ## Boundary Sentences
@@ -63,12 +63,33 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - `prototype` loads for explicitly throwaway experiments that answer one design question.
 - `tdd-workflow` loads for production features, confirmed bug fixes, and refactors with tests; unknown root-cause diagnosis and throwaway exploration route elsewhere.
 - `frontend-design` loads for production-grade visual UI creation, not routine reports or debugging.
-- `effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere.
+- `effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere.
 - `handoff` loads for restart notes or compact agent/session handoff documents; visual HTML reports and context-limit advice route elsewhere.
 - `compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere.
 - `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.
 - `verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis.
 - `feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions.
+- `coding-standards` loads for cross-project code quality conventions after an owner workflow has selected scope.
+- `documentation-lookup` loads when current library, framework, SDK, API, CLI, or cloud-service documentation is needed.
+- `web-artifacts-builder` loads for complex standalone React/Tailwind/shadcn browser artifacts.
+- `frontend-slides` loads for HTML presentations, slide decks, talk or pitch slides, and PPT/PPTX-to-web conversion.
+- `frontend-patterns` loads for React or Next.js frontend logic, state, forms, routing, accessibility, or responsive behavior.
+- `webapp-testing` loads for one-off local web app inspection, screenshots, console logs, or UI reproduction.
+- `web-design-guidelines` loads for UI, UX, accessibility, or web interface guideline compliance review.
+- `e2e-testing` loads for durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy.
+- `grill-me` loads when the user says "grill me", asks to be challenged, or wants assumptions surfaced one question at a time.
+- `product-capability` loads for implementation-ready capability plans with constraints, invariants, interfaces, and unresolved decisions.
+- `claude-api` loads for Claude API or Anthropic SDK build, debug, migration, or tuning work.
+- `mcp-builder` loads for MCP server design, build, review, testing, tool schema, resource, or prompt work.
+- `skill-creator` loads for creating, updating, adapting, or evaluating standard agent skills.
+- `doc-coauthoring` loads for collaboratively drafting, restructuring, or reader-testing docs, PRDs, RFCs, proposals, specs, or decision records.
+- `internal-comms` loads for internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, and project updates.
+- `theme-factory` loads for applying or choosing coherent visual themes for slides, docs, reports, HTML artifacts, or landing pages.
+- `slack-gif-creator` loads for creating, optimizing, or validating animated GIFs for Slack emoji or messages.
+- `openspec-explore` loads only for explicit OpenSpec exploration, discovery, or requirement clarification.
+- `openspec-propose` loads only for explicit new OpenSpec proposals with design, spec deltas, and tasks.
+- `openspec-apply-change` loads only for implementing or continuing an existing OpenSpec change.
+- `openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes.
 - `hub-maintenance-workflow` loads for maintaining this Skill Hub's source records, installed skill components, routing, npm package boundary, and candidate-source decisions.
 - `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator` load as helper atoms under the selected owner workflow, not as public workflow owners.
 

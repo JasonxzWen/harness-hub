@@ -55,6 +55,7 @@ Every non-trivial change request MUST follow this order unless the selected stat
 - If a request is ambiguous between states, the router MUST ask one concise clarification or choose the safer non-mutating state.
 - The router MUST expose the selected state, reason, and next gate to the active workflow owner.
 - The router MUST NOT implement, test, review, or deliver work itself.
+- Explicit owner references MUST NOT override contradictory no-mutation, Skill Hub maintenance, or mixed review-and-implementation signals.
 
 ### WR-2: SDD-First Change Flow
 

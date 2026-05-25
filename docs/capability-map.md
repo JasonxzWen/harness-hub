@@ -20,7 +20,7 @@ Skill Hub exposes two surfaces:
 
 ## Install Surface
 
-Skill Hub has no bundle selector. The CLI installs the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json` whose source lives under `skills/<name>/`.
+Skill Hub has one personal install set. No named variants exist. The CLI installs the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json` whose source lives under `skills/<name>/`. Confirmed install overwrites same-name skill directories and records the new managed files in `.skill-hub/lock.json`. No root harness files are installed.
 
 ## Atomic Capability Candidate Map
 
@@ -88,4 +88,4 @@ Known redundancies:
 - `agents`: currently `["standard"]` for lock compatibility with older schema field names;
 - `risk`: lifecycle risk for install/update/remove decisions.
 
-Do not add host-specific install directories to the capability graph. Packaging for a host belongs in that host's manifest layer, such as `.claude-plugin/`. Local Codex dogfooding uses `scripts/sync-codex-skills.mjs` to generate ignored `.codex/skills/` copies from the standard source tree; those copies are not installable capability metadata. Subagents and hooks are workflow-owned optimizations: subagents need independent scopes, and hooks stay advisory until reviewed and approved.
+Do not add host-specific install directories to the capability graph. Packaging for a host belongs in that host's manifest layer, such as `.claude-plugin/`. Local Codex dogfooding uses `scripts/sync-codex-skills.mjs` to generate ignored `.codex/skills/` copies from the standard source tree; `.codex/` stays local and is not installable capability metadata. Subagents and hooks are workflow-owned optimizations: subagents need independent scopes, and hooks stay advisory until reviewed and approved.

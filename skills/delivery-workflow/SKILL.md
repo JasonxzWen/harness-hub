@@ -1,6 +1,6 @@
 ---
 name: delivery-workflow
-description: Load when accepted work needs validation closeout, cleanup, handoff, release notes, environment reset, or an effective-interact delivery report; do not start new scope.
+description: Load when workflow-router selects the delivery state for accepted validation closeout, cleanup, handoff, release notes, environment reset, or reporting; do not start new scope.
 ---
 
 # Delivery Workflow

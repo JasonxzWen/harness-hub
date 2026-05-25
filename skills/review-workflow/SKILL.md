@@ -1,6 +1,6 @@
 ---
 name: review-workflow
-description: Load when the user asks for code, plan, release, UI, or security review; produce findings first and do not implement fixes unless the user explicitly redirects.
+description: Load when workflow-router selects the review state for code, plan, release, UI, or security review; produce findings first and do not implement fixes unless the user explicitly redirects.
 ---
 
 # Review Workflow

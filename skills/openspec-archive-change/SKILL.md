@@ -1,6 +1,6 @@
 ---
 name: openspec-archive-change
-description: Archive a completed change in the experimental workflow. Use when the user wants to finalize and archive a change after implementation is complete.
+description: Load when a workflow-router-selected owner workflow needs to archive a completed OpenSpec change after implementation and spec sync decisions are resolved.
 license: MIT
 metadata:
   author: openspec
@@ -63,7 +63,7 @@ Archive a completed change in the experimental workflow.
    - If changes needed: "Sync now (recommended)", "Archive without syncing"
    - If already synced: "Archive now", "Sync anyway", "Cancel"
 
-   If user chooses sync, use `spawn_agent` tool (subagent_type: "general-purpose", prompt: "Use skill invocation to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
+   If the user chooses sync, perform the sync in the current workflow or ask the active parent workflow to assign a bounded helper scope. Do not invoke host-specific agent tools from this skill. Proceed to archive only after the selected sync path is complete or explicitly skipped.
 
 5. **Perform the archive**
 
@@ -99,7 +99,7 @@ Archive a completed change in the experimental workflow.
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** CorrectSynced to main specs (or "No delta specs" or "Sync skipped")
+**Specs:** Synced to main specs (or "No delta specs" or "Sync skipped")
 
 All artifacts complete. All tasks complete.
 ```
@@ -112,4 +112,3 @@ All artifacts complete. All tasks complete.
 - Show clear summary of what happened
 - If sync is requested, use openspec-sync-specs approach (agent-driven)
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting
-

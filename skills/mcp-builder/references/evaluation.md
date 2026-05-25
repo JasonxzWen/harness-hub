@@ -178,8 +178,8 @@ Create 10 human-readable questions requiring ONLY READ-ONLY, INDEPENDENT, NON-DE
 Read the documentation of the target API to understand:
 - Available endpoints and functionality
 - If ambiguity exists, fetch additional information from the web
-- Parallelize this step AS MUCH AS POSSIBLE
-- Ensure each subagent is ONLY examining documentation from the file system or on the web
+- Use parallel source gathering only when the active workflow plan explicitly permits independent read-only scopes under `workflow-router/references/orchestration-policy.md`.
+- Without that approved orchestration line, inspect documentation sequentially.
 
 ### Step 2: Tool Inspection
 
@@ -204,8 +204,8 @@ After understanding the API and tools, USE the MCP server tools:
 - Goal: identify specific content (e.g., users, channels, messages, projects, tasks) for creating realistic questions
 - Should NOT call any tools that modify state
 - Will NOT read the code of the MCP server implementation itself
-- Parallelize this step with individual sub-agents pursuing independent explorations
-- Ensure each subagent is only performing READ-ONLY, NON-DESTRUCTIVE, and IDEMPOTENT operations
+- Use parallel exploration only when the active workflow plan names independent read-only scopes and the main agent keeps synthesis.
+- Every exploration scope must remain READ-ONLY, NON-DESTRUCTIVE, and IDEMPOTENT.
 - BE CAREFUL: SOME TOOLS may return LOTS OF DATA which would cause you to run out of CONTEXT
 - Make INCREMENTAL, SMALL, AND TARGETED tool calls for exploration
 - In all tool call requests, use the `limit` parameter to limit results (<10)
@@ -356,17 +356,17 @@ This question is poor because:
 After creating evaluations:
 
 1. **Examine the XML file** to understand the schema
-2. **Load each task instruction** and in parallel using the MCP server and tools, identify the correct answer by attempting to solve the task YOURSELF
+2. **Load each task instruction** and identify the correct answer by attempting to solve the task YOURSELF with the MCP server and tools. If the active workflow plan permits parallel verification, split only independent read-only tasks and keep final answer updates in the main agent.
 3. **Flag any operations** that require WRITE or DESTRUCTIVE operations
 4. **Accumulate all CORRECT answers** and replace any incorrect answers in the document
 5. **Remove any `<qa_pair>`** that require WRITE or DESTRUCTIVE operations
 
-Remember to parallelize solving tasks to avoid running out of context, then accumulate all answers and make changes to the file at the end.
+When approved parallel verification is used, accumulate all answers in the main agent before changing the file. Otherwise solve tasks sequentially with small, bounded tool calls.
 
 ## Tips for Creating Quality Evaluations
 
 1. **Think Hard and Plan Ahead** before generating tasks
-2. **Parallelize Where Opportunity Arises** to speed up the process and manage context
+2. **Use Bounded Parallelism Only When Approved** by the active workflow's orchestration line; otherwise keep evaluation work local and sequential
 3. **Focus on Realistic Use Cases** that humans would actually want to accomplish
 4. **Create Challenging Questions** that test the limits of the MCP server's capabilities
 5. **Ensure Stability** by using historical data and closed concepts

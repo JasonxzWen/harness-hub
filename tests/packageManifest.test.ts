@@ -39,9 +39,9 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.files).not.toContain('openspec/');
   expect(artifactPolicy.categories.gitOnly).not.toContain('reports/');
   expect(artifactPolicy.categories.ignoredLocal).toContain('reports/');
-  expect(artifactPolicy.categories.ignoredLocal).toContain('.codex/skills/');
+  expect(artifactPolicy.categories.ignoredLocal).toContain('.codex/');
   expect(artifactPolicy.git.ignored).toContain('reports/');
-  expect(artifactPolicy.git.ignored).toContain('.codex/skills/');
+  expect(artifactPolicy.git.ignored).toContain('.codex/');
   expect(artifactPolicy.npm.forbidden).toContain('reports/');
   expect(artifactPolicy.npm.forbidden).toContain('.codex/');
 });
@@ -61,6 +61,7 @@ test('npm package publishes the platform-neutral skill source tree', () => {
 
   expect(artifactPolicy.npm.files).toContain('skills/');
   expect(artifactPolicy.npm.files).toContain('.claude-plugin/');
+  expect(artifactPolicy.npm.files).not.toContain('.codex/');
   expect(artifactPolicy.npm.files).not.toContain('.codex/skills/');
   expect(skillComponentPaths).toContain('skills/workflow-router');
   expect(skillComponentPaths).not.toContain('skills/everything-claude-code');
