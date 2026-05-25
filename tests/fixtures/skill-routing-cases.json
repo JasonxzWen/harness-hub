@@ -127,7 +127,15 @@
       "kind": "positive",
       "prompt": "Create a one-file effective interaction for this PR review with collapsible findings and copyable action items.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-complex-pause-report",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Agent pauses to report: this Skill Hub routing change touches .codex, trigger boundaries, test results, and risks; the information is relatively complex, so use structured Chinese.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-completed-conclusion",
@@ -135,7 +143,7 @@
       "kind": "positive",
       "prompt": "The implementation is complete; create a visual handoff with the conclusion, changed files, highlighted code, verification, and next actions.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-material-skill-change-report",
@@ -143,7 +151,7 @@
       "kind": "positive",
       "prompt": "I changed this skill's trigger contract and validation behavior; produce the final handoff with reasoning, changed areas, file evidence, tests, and remaining risks.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-openspec-acceptance",
@@ -151,7 +159,7 @@
       "kind": "positive",
       "prompt": "The OpenSpec apply change is done; produce an HTML acceptance report with tasks, changed files, generated fixtures, and validation gates.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-option-gallery",
@@ -159,7 +167,7 @@
       "kind": "positive",
       "prompt": "Create a self-contained HTML option gallery comparing these three implementation approaches before I choose one.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-grill-handoff",
@@ -167,7 +175,7 @@
       "kind": "positive",
       "prompt": "The grill-me pass is done; turn the decisions, remaining assumptions, evidence, and next action into a self-contained HTML handoff.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-intermediate-status",
@@ -175,7 +183,7 @@
       "kind": "positive",
       "prompt": "During this refactor, create a self-contained HTML status board with current options, blockers, file evidence, and copyable next-step choices so we can align before continuing.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-export-editor",
@@ -183,7 +191,7 @@
       "kind": "positive",
       "prompt": "Build a one-file temporary HTML editor so I can toggle these config options and copy the resulting JSON diff back here.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-negative-product-page",
@@ -191,7 +199,7 @@
       "kind": "negative",
       "prompt": "Build a branded product landing page as the first screen of the app.",
       "expectedSkill": "frontend-design",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-forbidden-short-answer",
@@ -199,7 +207,7 @@
       "kind": "forbidden-load",
       "prompt": "Summarize the command output in two sentences.",
       "expectedSkill": null,
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-forbidden-permission-pause",
@@ -207,7 +215,7 @@
       "kind": "forbidden-load",
       "prompt": "Before pushing this branch, stop and ask me for approval.",
       "expectedSkill": null,
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "handoff-positive-restart-notes",
@@ -318,7 +326,7 @@
       "skill": "feynman-learning-coach",
       "kind": "negative",
       "prompt": "Research recent vector database trends and turn the findings into a polished article.",
-      "expectedSkill": "answer-workflow",
+      "expectedSkill": null,
       "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
     },
     {
@@ -330,12 +338,180 @@
       "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
     },
     {
+      "id": "coding-standards-positive-quality-conventions",
+      "skill": "coding-standards",
+      "kind": "positive",
+      "prompt": "Review this module against our cross-project code quality conventions after the owner workflow has selected the implementation scope.",
+      "expectedSkill": "coding-standards",
+      "docsBoundary": "`coding-standards` loads for cross-project code quality conventions after an owner workflow has selected scope."
+    },
+    {
+      "id": "documentation-lookup-positive-current-docs",
+      "skill": "documentation-lookup",
+      "kind": "positive",
+      "prompt": "Fetch the latest official Next.js App Router docs before answering this API behavior question.",
+      "expectedSkill": "documentation-lookup",
+      "docsBoundary": "`documentation-lookup` loads when current library, framework, SDK, API, CLI, or cloud-service documentation is needed."
+    },
+    {
+      "id": "web-artifacts-builder-positive-standalone-react",
+      "skill": "web-artifacts-builder",
+      "kind": "positive",
+      "prompt": "Build a standalone React/Tailwind browser artifact with stateful filters and bundled components.",
+      "expectedSkill": "web-artifacts-builder",
+      "docsBoundary": "`web-artifacts-builder` loads for complex standalone React/Tailwind/shadcn browser artifacts."
+    },
+    {
+      "id": "frontend-slides-positive-html-deck",
+      "skill": "frontend-slides",
+      "kind": "positive",
+      "prompt": "Create an HTML presentation slide deck for this product demo.",
+      "expectedSkill": "frontend-slides",
+      "docsBoundary": "`frontend-slides` loads for HTML presentations, slide decks, talk or pitch slides, and PPT/PPTX-to-web conversion."
+    },
+    {
+      "id": "frontend-patterns-positive-react-logic",
+      "skill": "frontend-patterns",
+      "kind": "positive",
+      "prompt": "Implement React form state and responsive behavior for this settings panel.",
+      "expectedSkill": "frontend-patterns",
+      "docsBoundary": "`frontend-patterns` loads for React or Next.js frontend logic, state, forms, routing, accessibility, or responsive behavior."
+    },
+    {
+      "id": "webapp-testing-positive-one-off-browser",
+      "skill": "webapp-testing",
+      "kind": "positive",
+      "prompt": "Do a one-off browser inspection of the running dev server and capture screenshots and console logs.",
+      "expectedSkill": "webapp-testing",
+      "docsBoundary": "`webapp-testing` loads for one-off local web app inspection, screenshots, console logs, or UI reproduction."
+    },
+    {
+      "id": "web-design-guidelines-positive-ui-audit",
+      "skill": "web-design-guidelines",
+      "kind": "positive",
+      "prompt": "Run a UI and accessibility audit against web interface guidelines.",
+      "expectedSkill": "web-design-guidelines",
+      "docsBoundary": "`web-design-guidelines` loads for UI, UX, accessibility, or web interface guideline compliance review."
+    },
+    {
+      "id": "e2e-testing-positive-durable-suite",
+      "skill": "e2e-testing",
+      "kind": "positive",
+      "prompt": "Create a durable Playwright E2E suite with Page Object models for the checkout flow.",
+      "expectedSkill": "e2e-testing",
+      "docsBoundary": "`e2e-testing` loads for durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy."
+    },
+    {
+      "id": "grill-me-positive-pressure-test",
+      "skill": "grill-me",
+      "kind": "positive",
+      "prompt": "Grill me one question at a time and pressure-test this rollout plan before implementation.",
+      "expectedSkill": "grill-me",
+      "docsBoundary": "`grill-me` loads when the user says \"grill me\", asks to be challenged, or wants assumptions surfaced one question at a time."
+    },
+    {
+      "id": "product-capability-positive-capability-plan",
+      "skill": "product-capability",
+      "kind": "positive",
+      "prompt": "Turn this roadmap item into an implementation-ready capability plan with constraints, invariants, interfaces, and acceptance boundaries.",
+      "expectedSkill": "product-capability",
+      "docsBoundary": "`product-capability` loads for implementation-ready capability plans with constraints, invariants, interfaces, and unresolved decisions."
+    },
+    {
+      "id": "claude-api-positive-anthropic-sdk",
+      "skill": "claude-api",
+      "kind": "positive",
+      "prompt": "Debug this Claude API request using the Anthropic SDK.",
+      "expectedSkill": "claude-api",
+      "docsBoundary": "`claude-api` loads for Claude API or Anthropic SDK build, debug, migration, or tuning work."
+    },
+    {
+      "id": "mcp-builder-positive-server",
+      "skill": "mcp-builder",
+      "kind": "positive",
+      "prompt": "Design and test an MCP server with tool schemas and resources for this external API.",
+      "expectedSkill": "mcp-builder",
+      "docsBoundary": "`mcp-builder` loads for MCP server design, build, review, testing, tool schema, resource, or prompt work."
+    },
+    {
+      "id": "skill-creator-positive-new-skill",
+      "skill": "skill-creator",
+      "kind": "positive",
+      "prompt": "Create a skill for recurring database migration review behavior.",
+      "expectedSkill": "skill-creator",
+      "docsBoundary": "`skill-creator` loads for creating, updating, adapting, or evaluating standard agent skills."
+    },
+    {
+      "id": "doc-coauthoring-positive-prd",
+      "skill": "doc-coauthoring",
+      "kind": "positive",
+      "prompt": "Collaboratively draft and reader-test this PRD before implementation.",
+      "expectedSkill": "doc-coauthoring",
+      "docsBoundary": "`doc-coauthoring` loads for collaboratively drafting, restructuring, or reader-testing docs, PRDs, RFCs, proposals, specs, or decision records."
+    },
+    {
+      "id": "internal-comms-positive-leadership-update",
+      "skill": "internal-comms",
+      "kind": "positive",
+      "prompt": "Draft a leadership update and FAQ for the team about this incident.",
+      "expectedSkill": "internal-comms",
+      "docsBoundary": "`internal-comms` loads for internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, and project updates."
+    },
+    {
+      "id": "theme-factory-positive-visual-theme",
+      "skill": "theme-factory",
+      "kind": "positive",
+      "prompt": "Choose a coherent visual theme for this report deck.",
+      "expectedSkill": "theme-factory",
+      "docsBoundary": "`theme-factory` loads for applying or choosing coherent visual themes for slides, docs, reports, HTML artifacts, or landing pages."
+    },
+    {
+      "id": "slack-gif-creator-positive-emoji",
+      "skill": "slack-gif-creator",
+      "kind": "positive",
+      "prompt": "Create an animated GIF for Slack emoji and validate the size.",
+      "expectedSkill": "slack-gif-creator",
+      "docsBoundary": "`slack-gif-creator` loads for creating, optimizing, or validating animated GIFs for Slack emoji or messages."
+    },
+    {
+      "id": "openspec-explore-positive-discovery",
+      "skill": "openspec-explore",
+      "kind": "positive",
+      "prompt": "Run OpenSpec exploration and discovery before we decide the formal requirement change.",
+      "expectedSkill": "openspec-explore",
+      "docsBoundary": "`openspec-explore` loads only for explicit OpenSpec exploration, discovery, or requirement clarification."
+    },
+    {
+      "id": "openspec-propose-positive-proposal",
+      "skill": "openspec-propose",
+      "kind": "positive",
+      "prompt": "Create a new OpenSpec proposal with design notes, spec deltas, and tasks.",
+      "expectedSkill": "openspec-propose",
+      "docsBoundary": "`openspec-propose` loads only for explicit new OpenSpec proposals with design, spec deltas, and tasks."
+    },
+    {
+      "id": "openspec-apply-positive-existing-change",
+      "skill": "openspec-apply-change",
+      "kind": "positive",
+      "prompt": "Implement the existing OpenSpec change and continue its task checklist.",
+      "expectedSkill": "openspec-apply-change",
+      "docsBoundary": "`openspec-apply-change` loads only for implementing or continuing an existing OpenSpec change."
+    },
+    {
+      "id": "openspec-archive-positive-finalize",
+      "skill": "openspec-archive-change",
+      "kind": "positive",
+      "prompt": "Finalize and archive the completed OpenSpec change after spec sync decisions are resolved.",
+      "expectedSkill": "openspec-archive-change",
+      "docsBoundary": "`openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes."
+    },
+    {
       "id": "effective-interact-positive-complex-plain-brief",
       "skill": "effective-interact",
       "kind": "positive",
-      "prompt": "这次状态汇报会超过 200 字，请按第一性原理组织成纯文本结论、依据、风险和下一步。",
+      "prompt": "请用中文在 200 字内把当前状态、关键风险和下一步说清楚。",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-complex-choice-markdown",
@@ -343,39 +519,39 @@
       "kind": "positive",
       "prompt": "Compare these three implementation choices and recommend one in structured Markdown; no HTML unless it materially improves alignment.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-multi-option-approval",
       "skill": "effective-interact",
       "kind": "positive",
-      "prompt": "把 6 个技术方案做成审批页，支持按风险、成本、迁移难度筛选，并给推荐路径。",
+      "prompt": "列 6 个方案，用审批表比较范围、风险、验证和取舍。",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-visual-style-approval",
       "skill": "effective-interact",
       "kind": "positive",
-      "prompt": "给这个后台工具做 4 个视觉风格方向的审批板，比较密度、语气、组件风格和风险，不要直接做产品 UI。",
+      "prompt": "给这个项目做 4 个视觉风格方向，用审批板对比哪些更适合 UI。",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-milestone-map",
       "skill": "effective-interact",
       "kind": "positive",
-      "prompt": "把这个季度 milestones、阻塞关系、验收门槛和负责人做成可浏览的计划图，方便评审。",
+      "prompt": "请把这些 milestones 做成阶段地图，标出依赖、风险和验收点。",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-structure-tree",
       "skill": "effective-interact",
       "kind": "positive",
-      "prompt": "展示这个 skill 的目录树，每个文件和目录的作用都要概述，让我一眼看懂结构。",
+      "prompt": "把这个 skill 说明整理成目录树，突出触发边界和例外。",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-long-task-ledger",
@@ -383,7 +559,7 @@
       "kind": "positive",
       "prompt": "This long implementation will need stable checkpoints, important tool result summaries, and a final HTML report; keep a skill-local session ledger as the source of facts.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-implementation-plan",
@@ -391,7 +567,7 @@
       "kind": "positive",
       "prompt": "Create an HTML implementation plan with milestones, dependency map, acceptance gates, risks, owners, and open questions.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-design-system-reference",
@@ -399,7 +575,7 @@
       "kind": "positive",
       "prompt": "Build a review artifact for this design system with color tokens, type specimens, spacing, component variants, and approval notes.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-incident-report",
@@ -407,7 +583,7 @@
       "kind": "positive",
       "prompt": "Create an incident report with timeline, impact, root cause evidence, mitigations, follow-up owners, and uncertainty boundaries.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-positive-prompt-tuner",
@@ -415,15 +591,183 @@
       "kind": "positive",
       "prompt": "Create a local prompt tuning workbench with section toggles, preview, quality checklist, and copyable prompt export.",
       "expectedSkill": "effective-interact",
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
       "id": "effective-interact-forbidden-routine-long-explanation",
       "skill": "effective-interact",
       "kind": "forbidden-load",
-      "prompt": "请用 300 字解释这个普通概念，不需要方案、风险、证据或下一步。",
+      "prompt": "请用 300 字解释这个普通概念。",
       "expectedSkill": null,
-      "docsBoundary": "`effective-interact` loads when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "coding-standards-forbidden-security-review",
+      "skill": "coding-standards",
+      "kind": "forbidden-load",
+      "prompt": "Review this auth endpoint only for secrets, injection, and unsafe input handling.",
+      "expectedSkill": "security-review",
+      "docsBoundary": "`coding-standards` loads for cross-project code quality conventions after an owner workflow has selected scope."
+    },
+    {
+      "id": "documentation-lookup-forbidden-repo-evidence",
+      "skill": "documentation-lookup",
+      "kind": "forbidden-load",
+      "prompt": "Where does this repository define routing behavior? Answer from local files only.",
+      "expectedSkill": null,
+      "docsBoundary": "`documentation-lookup` loads when current library, framework, SDK, API, CLI, or cloud-service documentation is needed."
+    },
+    {
+      "id": "web-artifacts-builder-forbidden-production-ui",
+      "skill": "web-artifacts-builder",
+      "kind": "forbidden-load",
+      "prompt": "Build the production dashboard page with polished responsive styling.",
+      "expectedSkill": "frontend-design",
+      "docsBoundary": "`web-artifacts-builder` loads for complex standalone React/Tailwind/shadcn browser artifacts."
+    },
+    {
+      "id": "frontend-slides-forbidden-html-report",
+      "skill": "frontend-slides",
+      "kind": "forbidden-load",
+      "prompt": "Create a visual HTML handoff report for this skill change with evidence, validation, and next actions.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`frontend-slides` loads for HTML presentations, slide decks, talk or pitch slides, and PPT/PPTX-to-web conversion."
+    },
+    {
+      "id": "frontend-patterns-forbidden-product-ui",
+      "skill": "frontend-patterns",
+      "kind": "forbidden-load",
+      "prompt": "Design and build a polished SaaS dashboard page with production-grade visual hierarchy.",
+      "expectedSkill": "frontend-design",
+      "docsBoundary": "`frontend-patterns` loads for React or Next.js frontend logic, state, forms, routing, accessibility, or responsive behavior."
+    },
+    {
+      "id": "webapp-testing-forbidden-durable-suite",
+      "skill": "webapp-testing",
+      "kind": "forbidden-load",
+      "prompt": "Create a durable Playwright E2E suite with Page Object models for the checkout flow.",
+      "expectedSkill": "e2e-testing",
+      "docsBoundary": "`webapp-testing` loads for one-off local web app inspection, screenshots, console logs, or UI reproduction."
+    },
+    {
+      "id": "web-design-guidelines-forbidden-production-ui",
+      "skill": "web-design-guidelines",
+      "kind": "forbidden-load",
+      "prompt": "Build a branded product landing page as the first screen of the app.",
+      "expectedSkill": "frontend-design",
+      "docsBoundary": "`web-design-guidelines` loads for UI, UX, accessibility, or web interface guideline compliance review."
+    },
+    {
+      "id": "e2e-testing-forbidden-one-off-browser",
+      "skill": "e2e-testing",
+      "kind": "forbidden-load",
+      "prompt": "Do a one-off browser inspection of the running dev server and capture screenshots and console logs.",
+      "expectedSkill": "webapp-testing",
+      "docsBoundary": "`e2e-testing` loads for durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy."
+    },
+    {
+      "id": "grill-me-forbidden-implementation",
+      "skill": "grill-me",
+      "kind": "forbidden-load",
+      "prompt": "Implement the accepted rollout plan one behavior at a time with tests.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`grill-me` loads when the user says \"grill me\", asks to be challenged, or wants assumptions surfaced one question at a time."
+    },
+    {
+      "id": "product-capability-forbidden-durable-doc",
+      "skill": "product-capability",
+      "kind": "forbidden-load",
+      "prompt": "Collaboratively draft and reader-test this PRD before implementation.",
+      "expectedSkill": "doc-coauthoring",
+      "docsBoundary": "`product-capability` loads for implementation-ready capability plans with constraints, invariants, interfaces, and unresolved decisions."
+    },
+    {
+      "id": "claude-api-forbidden-provider-neutral-docs",
+      "skill": "claude-api",
+      "kind": "forbidden-load",
+      "prompt": "Fetch the latest official OpenAI API docs before answering this model behavior question.",
+      "expectedSkill": "documentation-lookup",
+      "docsBoundary": "`claude-api` loads for Claude API or Anthropic SDK build, debug, migration, or tuning work."
+    },
+    {
+      "id": "mcp-builder-forbidden-rest-client",
+      "skill": "mcp-builder",
+      "kind": "forbidden-load",
+      "prompt": "Implement an ordinary REST API client with tests.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`mcp-builder` loads for MCP server design, build, review, testing, tool schema, resource, or prompt work."
+    },
+    {
+      "id": "skill-creator-forbidden-hub-maintenance",
+      "skill": "skill-creator",
+      "kind": "forbidden-load",
+      "prompt": "Continue maintaining Skill Hub routing and capability metadata; inspect the current repo evidence first.",
+      "expectedSkill": null,
+      "docsBoundary": "`skill-creator` loads for creating, updating, adapting, or evaluating standard agent skills."
+    },
+    {
+      "id": "doc-coauthoring-forbidden-implementation",
+      "skill": "doc-coauthoring",
+      "kind": "forbidden-load",
+      "prompt": "Implement the approved PRD behavior with acceptance tests.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`doc-coauthoring` loads for collaboratively drafting, restructuring, or reader-testing docs, PRDs, RFCs, proposals, specs, or decision records."
+    },
+    {
+      "id": "internal-comms-forbidden-rich-incident-report",
+      "skill": "internal-comms",
+      "kind": "forbidden-load",
+      "prompt": "Create an incident report with timeline, impact, root cause evidence, mitigations, follow-up owners, and uncertainty boundaries.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`internal-comms` loads for internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, and project updates."
+    },
+    {
+      "id": "theme-factory-forbidden-production-ui",
+      "skill": "theme-factory",
+      "kind": "forbidden-load",
+      "prompt": "Build the production dashboard page with polished responsive styling.",
+      "expectedSkill": "frontend-design",
+      "docsBoundary": "`theme-factory` loads for applying or choosing coherent visual themes for slides, docs, reports, HTML artifacts, or landing pages."
+    },
+    {
+      "id": "slack-gif-creator-forbidden-non-slack-image",
+      "skill": "slack-gif-creator",
+      "kind": "forbidden-load",
+      "prompt": "Create a product illustration for the website hero.",
+      "expectedSkill": null,
+      "docsBoundary": "`slack-gif-creator` loads for creating, optimizing, or validating animated GIFs for Slack emoji or messages."
+    },
+    {
+      "id": "openspec-explore-forbidden-ordinary-change",
+      "skill": "openspec-explore",
+      "kind": "forbidden-load",
+      "prompt": "Implement the accepted settings validation change with tests.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`openspec-explore` loads only for explicit OpenSpec exploration, discovery, or requirement clarification."
+    },
+    {
+      "id": "openspec-propose-forbidden-exploration",
+      "skill": "openspec-propose",
+      "kind": "forbidden-load",
+      "prompt": "Run OpenSpec exploration and discovery before we decide the formal requirement change.",
+      "expectedSkill": "openspec-explore",
+      "docsBoundary": "`openspec-propose` loads only for explicit new OpenSpec proposals with design, spec deltas, and tasks."
+    },
+    {
+      "id": "openspec-apply-forbidden-new-proposal",
+      "skill": "openspec-apply-change",
+      "kind": "forbidden-load",
+      "prompt": "Create a new OpenSpec proposal with design notes, spec deltas, and tasks.",
+      "expectedSkill": "openspec-propose",
+      "docsBoundary": "`openspec-apply-change` loads only for implementing or continuing an existing OpenSpec change."
+    },
+    {
+      "id": "openspec-archive-forbidden-apply-change",
+      "skill": "openspec-archive-change",
+      "kind": "forbidden-load",
+      "prompt": "Implement the existing OpenSpec change and continue its task checklist.",
+      "expectedSkill": "openspec-apply-change",
+      "docsBoundary": "`openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes."
     }
   ]
 }

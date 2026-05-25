@@ -5,12 +5,23 @@
     "skill:workflow-router": {
       "kind": "skill",
       "path": "skills/workflow-router",
-      "version": "0.1.0",
+      "version": "0.12.0",
       "source": "local",
       "provides": [
         "workflow-intent-routing",
         "single-owner-routing",
-        "workflow-state-handoff"
+        "workflow-state-handoff",
+        "executable-intent-classifier",
+        "workflow-gate-preflight",
+        "executable-skill-activation-smoke",
+        "skill-activation-case-evaluation",
+        "helper-activation-coverage-report",
+        "helper-activation-boundary-coverage",
+        "owner-helper-activation-separation",
+        "helper-side-effect-contract",
+        "explicit-read-only-mutation-guard",
+        "owner-workflow-structure-contract",
+        "executable-owner-contract-smoke"
       ],
       "overlapsWith": [
         "skill:openspec-explore",
@@ -22,13 +33,28 @@
       "detects": [
         {
           "path": "skills/workflow-router/SKILL.md"
+        },
+        {
+          "path": "skills/workflow-router/scripts/route-intent.mjs"
+        },
+        {
+          "path": "skills/workflow-router/scripts/workflow-check.mjs"
+        },
+        {
+          "path": "skills/workflow-router/scripts/skill-activation-check.mjs"
+        },
+        {
+          "path": "skills/workflow-router/scripts/owner-contract-check.mjs"
+        },
+        {
+          "path": "skills/workflow-router/scripts/helper-contract-check.mjs"
         }
       ],
       "agents": [
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Add a thin intent router that selects exactly one public workflow owner before work starts."
+      "recommendation": "Add a thin executable intent router that selects exactly one public workflow owner, runs side-effect-free preflight checks, and audits helper activation boundaries before work starts."
     },
     "skill:answer-workflow": {
       "kind": "skill",
@@ -325,7 +351,7 @@
         "skill:frontend-slides",
         "skill:frontend-design"
       ],
-      "routing": "Load when Chinese-first clear complex communication, alignment, multi-option choice, status/incident reporting, long-task fact ledgers, implementation plans, reviews, architecture/dependency/milestone maps, explainer/design/editor artifacts, or handoff needs first-principles structure; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because an answer is long; skip trivial chat, production UI, decks, and bundled artifacts.",
+      "routing": "Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text/Markdown/visual Markdown/HTML by decision cost; do not load merely because answer is long; skip trivial chat/bundled apps.",
       "detects": [
         {
           "path": "skills/effective-interact/SKILL.md"
@@ -335,7 +361,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Structure Chinese-first complex communication when alignment points, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, research explainers, design/component approvals, architecture/dependency/milestone maps, structure trees, or lightweight export editors need first-principles organization; escalate to self-contained HTML only when it lowers decision cost."
+      "recommendation": "Structure Chinese-first complex pause reports when material alignment, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, evidence, risks, validation, or continuation notes need first-principles organization; escalate to self-contained HTML only when it lowers decision cost."
     },
     "skill:handoff": {
       "kind": "skill",
@@ -428,7 +454,7 @@
         "code-quality-baseline"
       ],
       "overlapsWith": [],
-      "routing": "General implementation quality.",
+      "routing": "Use when a workflow-router-selected owner workflow needs cross-project code quality conventions after scope is selected; do not use as a top-level owner.",
       "detects": [
         {
           "path": "skills/coding-standards/SKILL.md"
@@ -480,7 +506,7 @@
       "overlapsWith": [
         "skill:openspec-apply-change"
       ],
-      "routing": "Default before declaring work complete.",
+      "routing": "Use for final build, typecheck, lint, test, diff, smoke, and artifact validation gates after work is done; use diagnosis/review owners before root-cause analysis.",
       "detects": [
         {
           "path": "skills/verification-loop/SKILL.md"
@@ -501,7 +527,7 @@
         "security-review"
       ],
       "overlapsWith": [],
-      "routing": "Security-sensitive code, auth, secrets, injection, unsafe IO, or payments.",
+      "routing": "Use for focused review of security-sensitive code, auth, secrets, injection, unsafe IO, payments, or privacy risk; do not use for general review.",
       "detects": [
         {
           "path": "skills/security-review/SKILL.md"
@@ -524,7 +550,7 @@
       "overlapsWith": [
         "skill:answer-workflow"
       ],
-      "routing": "Library, framework, SDK, API, CLI, or cloud-service docs.",
+      "routing": "Use when current library, framework, SDK, API, CLI, or cloud-service documentation is needed; use answer-workflow for ordinary repo-local explanation.",
       "detects": [
         {
           "path": "skills/documentation-lookup/SKILL.md"
@@ -547,7 +573,7 @@
       "overlapsWith": [
         "skill:verification-loop"
       ],
-      "routing": "Repeated agent failures, loops, drift, or recoverable tool failures.",
+      "routing": "Use when a workflow-router-selected owner workflow needs agent run, tool loop, context drift, or recoverable harness/tool failure debugging after product bugs are ruled out.",
       "detects": [
         {
           "path": "skills/agent-introspection-debugging/SKILL.md"
@@ -596,7 +622,7 @@
         "skill:effective-interact",
         "skill:frontend-design"
       ],
-      "routing": "Use for complex React/Tailwind/shadcn artifacts.",
+      "routing": "Use for complex standalone React/Tailwind/shadcn browser artifacts; use frontend-design for production UI and effective-interact for communication reports.",
       "detects": [
         {
           "path": "skills/web-artifacts-builder/SKILL.md"
@@ -619,7 +645,7 @@
       "overlapsWith": [
         "skill:effective-interact"
       ],
-      "routing": "Use for slide decks and PPT/PPTX-to-web work.",
+      "routing": "Use for HTML presentations, slide decks, talk or pitch slides, and PPT/PPTX-to-web conversion; use effective-interact only for deck summaries or handoff.",
       "detects": [
         {
           "path": "skills/frontend-slides/SKILL.md"
@@ -642,7 +668,7 @@
       "overlapsWith": [
         "skill:frontend-design"
       ],
-      "routing": "Use for React, state, forms, routing, and accessibility patterns.",
+      "routing": "Use for React or Next.js frontend logic, state, forms, routing, accessibility, or responsive behavior; use frontend-design for visual production UI.",
       "detects": [
         {
           "path": "skills/frontend-patterns/SKILL.md"
@@ -665,7 +691,7 @@
       "overlapsWith": [
         "skill:e2e-testing"
       ],
-      "routing": "One-off local browser inspection.",
+      "routing": "Use for one-off local web app inspection, screenshots, console logs, or UI reproduction; use e2e-testing for durable Playwright suites.",
       "detects": [
         {
           "path": "skills/webapp-testing/SKILL.md"
@@ -688,7 +714,7 @@
       "overlapsWith": [
         "skill:frontend-design"
       ],
-      "routing": "UI, UX, and accessibility audits.",
+      "routing": "Use for UI, UX, accessibility, or web interface guideline compliance review; use frontend-design when creating or changing production UI.",
       "detects": [
         {
           "path": "skills/web-design-guidelines/SKILL.md"
@@ -711,7 +737,7 @@
       "overlapsWith": [
         "skill:webapp-testing"
       ],
-      "routing": "Durable E2E suites and CI browser tests.",
+      "routing": "Use for durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy; use webapp-testing for one-off inspection.",
       "detects": [
         {
           "path": "skills/e2e-testing/SKILL.md"
@@ -734,7 +760,7 @@
       "overlapsWith": [
         "skill:product-capability"
       ],
-      "routing": "Explicit OpenSpec exploration or formal change lifecycle only.",
+      "routing": "Use only for explicit OpenSpec exploration, discovery, or requirement clarification; ordinary SDD/product planning should use product-capability or sdd-workflow.",
       "detects": [
         {
           "path": "skills/openspec-explore/SKILL.md"
@@ -757,7 +783,7 @@
       "overlapsWith": [
         "skill:product-capability"
       ],
-      "routing": "Explicit OpenSpec proposal generation.",
+      "routing": "Use only for explicit new OpenSpec proposals with design, spec deltas, and tasks; ordinary capability plans should use product-capability or sdd-workflow.",
       "detects": [
         {
           "path": "skills/openspec-propose/SKILL.md"
@@ -781,7 +807,7 @@
         "skill:tdd-workflow",
         "skill:verification-loop"
       ],
-      "routing": "Implementing an already-created OpenSpec change.",
+      "routing": "Use only for implementing or continuing an existing OpenSpec change; use tdd-workflow or verification-loop for non-OpenSpec implementation and checks.",
       "detects": [
         {
           "path": "skills/openspec-apply-change/SKILL.md"
@@ -802,7 +828,7 @@
         "formal-change-archiving"
       ],
       "overlapsWith": [],
-      "routing": "Archiving completed OpenSpec changes.",
+      "routing": "Use only for finalizing and archiving completed OpenSpec changes after implementation and spec sync decisions are resolved.",
       "detects": [
         {
           "path": "skills/openspec-archive-change/SKILL.md"

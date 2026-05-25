@@ -1,6 +1,7 @@
 ---
 name: documentation-lookup
-description: Use up-to-date library and framework docs via Context7 MCP instead of training data. Activates for setup questions, API references, code examples, or when the user names a framework (e.g. React, Next.js, Prisma).
+description: Load when a workflow-router-selected owner workflow needs current library, framework, SDK, API, CLI, or cloud-service documentation; fetch docs instead of relying on training data or ordinary repo evidence.
+license: MIT
 ---
 
 # Documentation Lookup (Context7)

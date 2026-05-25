@@ -43,7 +43,7 @@ npx @jasonwen/skill-hub update D:\path\to\target --dry-run --json
 npx @jasonwen/skill-hub remove D:\path\to\target --dry-run --json
 ```
 
-`install` installs every standard Skill Hub skill into `skills/<name>/` in the target repository. Legacy host-specific directories are not the distribution shape.
+There are no named install variants. `install` installs every standard Skill Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. Legacy host-specific directories are not the distribution shape.
 
 ## Codex Self-Bootstrap
 
@@ -53,7 +53,7 @@ For local Codex dogfooding, generate a host-local copy of the standard skills:
 bun run bootstrap:codex-skills
 ```
 
-This mirrors `skills/<name>/` into `.codex/skills/<name>/` and writes a `.skill-hub-managed` marker in each generated copy. `.codex/skills/` is ignored by Git and is not published; edit the source skill under `skills/` and rerun the bootstrap command.
+This mirrors `skills/<name>/` into `.codex/skills/<name>/` and writes a `.skill-hub-managed` marker in each generated copy. `.codex/` is ignored by Git and is not published; edit the source skill under `skills/` and rerun the bootstrap command. For host activation smoke, use `workflow-router` with executable `workflow-check.mjs` before owner workflows.
 
 ## Claude Plugin Publishing
 
@@ -82,7 +82,7 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 |---|---|
 | `skills/` | Platform-neutral skill source of truth |
 | `.claude-plugin/` | Claude plugin and marketplace manifests |
-| `capabilities/index.json` | Installable skill component metadata |
+| `capabilities/index.json` | Skill install graph and source-retained component metadata |
 | `src/skillHub.ts` | CLI implementation |
 | `scripts/validate-skills.ps1` | Standard skill validation gate |
 | `scripts/skill-quality-inventory.ts` | Report-only skill quality inventory |
@@ -91,7 +91,7 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | `docs/workflow-source-dossier.md` | Reference dossier for SDD, routing, Effective Interact, OpenSpec, Superpowers, ECC, Matt Pocock skills, Vercel, and retired Ralph source notes |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy |
 
-Generated reports, intermediate interaction artifacts, and Codex dogfood copies stay local: `reports/`, `.skill-hub/reports/`, `skills/effective-interact/artifacts/`, and `.codex/skills/` are ignored and must not be committed or published.
+Generated reports, intermediate interaction artifacts, and Codex dogfood copies stay local: `reports/`, `.skill-hub/reports/`, `skills/effective-interact/artifacts/`, and `.codex/` are ignored and must not be committed or published.
 
 ## Validation
 

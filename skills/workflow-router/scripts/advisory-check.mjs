@@ -26,7 +26,12 @@ function parseArgs(argv) {
     hasAcceptance: false,
     hasPlan: false,
     hasHandoff: false,
+    hasScope: false,
+    hasEvidence: false,
+    hasReproduction: false,
+    hasValidation: false,
     materialChanges: false,
+    willMutate: false,
     json: false,
   };
 
@@ -44,8 +49,18 @@ function parseArgs(argv) {
       options.hasPlan = true;
     } else if (arg === '--has-handoff') {
       options.hasHandoff = true;
+    } else if (arg === '--has-scope') {
+      options.hasScope = true;
+    } else if (arg === '--has-evidence') {
+      options.hasEvidence = true;
+    } else if (arg === '--has-reproduction') {
+      options.hasReproduction = true;
+    } else if (arg === '--has-validation') {
+      options.hasValidation = true;
     } else if (arg === '--material-changes') {
       options.materialChanges = true;
+    } else if (arg === '--will-mutate') {
+      options.willMutate = true;
     } else if (arg === '--json') {
       options.json = true;
     } else if (arg === '--help' || arg === '-h') {
@@ -76,25 +91,74 @@ function readValue(argv, index, flag) {
 export function evaluateAdvisory(options) {
   const warnings = [];
 
-  if (options.state === 'sdd-change' && options.phase === 'pre-implementation') {
+  if (options.state === 'delivery' && options.phase !== 'pre-delivery') {
+    warnings.push({
+      id: 'phase-state-mismatch',
+      message: 'Delivery closeout checks should run in pre-delivery phase, not pre-implementation.',
+    });
+  }
+
+  if (options.phase === 'pre-delivery' && options.state !== 'delivery') {
+    warnings.push({
+      id: 'phase-state-mismatch',
+      message: `${options.state} is not the delivery owner; route closeout checks through delivery-workflow.`,
+    });
+  }
+
+  if ((options.state === 'question' || options.state === 'review') && options.willMutate) {
+    warnings.push({
+      id: 'read-only-owner-mutation',
+      message: `${options.state} is a read-only owner; redirect into sdd-workflow before implementation or file edits.`,
+    });
+  }
+
+  if ((options.state === 'sdd-change' || options.state === 'skill-hub-maintenance') && options.phase === 'pre-implementation') {
+    if (!options.hasScope) {
+      warnings.push({
+        id: 'missing-scope',
+        message: `${options.state} implementation should not start before the user need, scope, constraints, and non-goals are aligned.`,
+      });
+    }
     if (!options.hasSpec) {
       warnings.push({
         id: 'missing-spec',
-        message: 'SDD implementation should not start before the target spec is aligned.',
+        message: `${options.state} implementation should not start before the target spec is aligned.`,
       });
     }
     if (!options.hasAcceptance) {
       warnings.push({
         id: 'missing-acceptance',
-        message: 'SDD implementation should not start before acceptance criteria are aligned.',
+        message: `${options.state} implementation should not start before acceptance criteria are aligned.`,
       });
     }
     if (!options.hasPlan) {
       warnings.push({
         id: 'missing-plan',
-        message: 'SDD implementation should not start before an executable plan is aligned.',
+        message: `${options.state} implementation should not start before an executable plan is aligned.`,
       });
     }
+  }
+
+  if (options.state === 'diagnosis' && options.phase === 'pre-implementation') {
+    if (!options.hasReproduction) {
+      warnings.push({
+        id: 'missing-reproduction',
+        message: 'Diagnosis fixes should not start before the symptom is reproduced or bounded.',
+      });
+    }
+    if (!options.hasEvidence) {
+      warnings.push({
+        id: 'missing-evidence',
+        message: 'Diagnosis fixes should not start before the relevant logs, command output, or code path evidence is gathered.',
+      });
+    }
+  }
+
+  if (options.state === 'delivery' && options.phase === 'pre-delivery' && !options.hasValidation) {
+    warnings.push({
+      id: 'missing-validation',
+      message: 'Delivery should not close out before accepted validation commands or checks are run or explicitly skipped.',
+    });
   }
 
   if (options.phase === 'pre-delivery' && options.materialChanges && !options.hasHandoff) {
@@ -122,7 +186,12 @@ Flags:
   --has-acceptance
   --has-plan
   --has-handoff
+  --has-scope
+  --has-evidence
+  --has-reproduction
+  --has-validation
   --material-changes
+  --will-mutate
 
 This command is advisory and side-effect free. It never dispatches agents or mutates local or remote state.`);
 }
@@ -138,7 +207,7 @@ function printText(result) {
   }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     const options = parseArgs(process.argv.slice(2));
     if (options.help) {

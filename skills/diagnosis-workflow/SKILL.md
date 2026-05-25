@@ -1,6 +1,6 @@
 ---
 name: diagnosis-workflow
-description: Load when the user reports a failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure; reproduce or bound the symptom before fixing.
+description: Load when workflow-router selects the diagnosis state for a failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure; reproduce or bound the symptom before fixing.
 ---
 
 # Diagnosis Workflow

@@ -1,6 +1,6 @@
 ---
 name: openspec-apply-change
-description: Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks.
+description: Load when a workflow-router-selected owner workflow needs to implement or continue an existing OpenSpec change; use sdd-workflow for default non-OpenSpec implementation.
 license: MIT
 metadata:
   author: openspec
@@ -94,11 +94,11 @@ Implement tasks from an OpenSpec change.
 
 Working on task 3/7: <task description>
 [...implementation happening...]
-CorrectTask complete
+Task complete
 
 Working on task 4/7: <task description>
 [...implementation happening...]
-CorrectTask complete
+Task complete
 ```
 
 **Output On Completion**
@@ -108,7 +108,7 @@ CorrectTask complete
 
 **Change:** <change-name>
 **Schema:** <schema-name>
-**Progress:** 7/7 tasks complete Correct
+**Progress:** 7/7 tasks complete
 ### Completed This Session
 - [x] Task 1
 - [x] Task 2
@@ -153,4 +153,3 @@ This skill supports the "actions on a change" model:
 
 - **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
 - **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly
-

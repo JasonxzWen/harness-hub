@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Load when the user asks to hand off current work, compact this conversation for another agent/session, or create restart notes; do not load for visual HTML repo reports or context-limit timing advice.
+description: Load when a workflow-router-selected owner workflow needs to hand off current work, compact a conversation for another agent/session, or create restart notes; do not load for visual HTML repo reports.
 license: MIT
 metadata:
   source: "mattpocock/skills skills/productivity/handoff"

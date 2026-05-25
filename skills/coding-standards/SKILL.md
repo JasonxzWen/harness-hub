@@ -1,6 +1,7 @@
 ---
 name: coding-standards
-description: Baseline cross-project coding conventions for naming, readability, immutability, and code-quality review. Use detailed frontend or backend skills for framework-specific patterns.
+description: Load when a workflow-router-selected owner workflow needs cross-project code quality conventions; use frontend-patterns or security-review for narrower framework or risk guidance.
+license: MIT
 ---
 
 # Coding Standards & Best Practices

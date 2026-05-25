@@ -1,6 +1,6 @@
 ---
 name: tdd-workflow
-description: Load when implementing features, fixing confirmed bugs, or refactoring production code with tests; drive one behavior at a time through red-green-refactor. Use diagnose first for unknown root causes and prototype for throwaway exploration.
+description: Load when a workflow-router-selected owner workflow needs implementing features, fixing confirmed bugs, or refactoring production code with tests through red-green-refactor; diagnose first for unknown root causes and prototype for throwaway exploration.
 license: MIT
 metadata:
   source: "mattpocock/skills skills/engineering/tdd"

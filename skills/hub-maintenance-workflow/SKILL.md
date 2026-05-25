@@ -1,6 +1,6 @@
 ---
 name: hub-maintenance-workflow
-description: "Load when maintaining Skill Hub itself: evaluating skill sources, routing, capabilities, npm lifecycle, or managed update/remove behavior; preserve local adaptations."
+description: Load when workflow-router selects the skill-hub-maintenance state for Skill Hub source evaluation, routing, capabilities, npm lifecycle, or managed update/remove behavior; preserve local adaptations.
 ---
 
 # Hub Maintenance Workflow

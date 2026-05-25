@@ -27,22 +27,6 @@ function readSkillNames(skillsRoot) {
     .sort();
 }
 
-function meaningfulEntries(dir) {
-  if (!fs.existsSync(dir)) {
-    return [];
-  }
-
-  return fs
-    .readdirSync(dir, { withFileTypes: true })
-    .filter((entry) => entry.name !== MARKER_FILE && !PRESERVED_LOCAL_DIRS.has(entry.name))
-    .map((entry) => entry.name)
-    .sort();
-}
-
-function isManagedCodexSkill(dir) {
-  return fs.existsSync(path.join(dir, MARKER_FILE));
-}
-
 function removeManagedEntries(dir) {
   if (!fs.existsSync(dir)) {
     return;
@@ -103,26 +87,8 @@ export function planCodexSkillSync(options = {}) {
     ? fs.readdirSync(codexSkillsRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory())
     : [];
 
-  const blocked = existingTargetEntries
-    .filter((entry) => !sourceSkillSet.has(entry.name))
-    .filter((entry) => !isManagedCodexSkill(path.join(codexSkillsRoot, entry.name)))
-    .map((entry) => `.codex/skills/${entry.name}`);
-
-  for (const skillName of sourceSkillNames) {
-    const targetDir = path.join(codexSkillsRoot, skillName);
-    if (!fs.existsSync(targetDir) || isManagedCodexSkill(targetDir)) {
-      continue;
-    }
-
-    const entries = meaningfulEntries(targetDir);
-    if (entries.length > 0) {
-      blocked.push(`.codex/skills/${skillName}`);
-    }
-  }
-
   const staleManaged = existingTargetEntries
     .filter((entry) => !sourceSkillSet.has(entry.name))
-    .filter((entry) => isManagedCodexSkill(path.join(codexSkillsRoot, entry.name)))
     .map((entry) => entry.name)
     .sort();
 
@@ -132,23 +98,13 @@ export function planCodexSkillSync(options = {}) {
     codexSkillsRoot,
     sourceSkillNames,
     staleManaged,
-    blocked: blocked.sort(),
+    blocked: [],
   };
 }
 
 export function syncCodexSkills(options = {}) {
   const dryRun = options.dryRun === true;
   const plan = planCodexSkillSync(options);
-
-  if (plan.blocked.length > 0) {
-    throw new Error(
-      [
-        'Refusing to overwrite unmanaged Codex skill directories:',
-        ...plan.blocked.map((entry) => `- ${entry}`),
-        'Remove them manually or add a .skill-hub-managed marker if they are generated copies.',
-      ].join('\n'),
-    );
-  }
 
   if (!dryRun) {
     fs.mkdirSync(plan.codexSkillsRoot, { recursive: true });
@@ -208,7 +164,7 @@ function printSummary(result) {
   const action = result.dryRun ? 'Would sync' : 'Synced';
   console.log(`${action} ${result.copied} skills into ${toPortable(path.relative(result.root, result.codexSkillsRoot))}/`);
   if (result.staleRemoved > 0) {
-    console.log(`${result.dryRun ? 'Would remove' : 'Removed'} ${result.staleRemoved} stale managed skill directories.`);
+    console.log(`${result.dryRun ? 'Would remove' : 'Removed'} ${result.staleRemoved} stale skill directories.`);
   }
 }
 

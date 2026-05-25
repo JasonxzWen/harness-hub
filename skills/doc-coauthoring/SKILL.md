@@ -1,6 +1,6 @@
 ---
 name: doc-coauthoring
-description: "Load when the user wants to collaboratively draft, restructure, or reader-test docs, PRDs, RFCs, proposals, specs, or decision records; do not load for implementation itself."
+description: Load when a workflow-router-selected owner workflow needs to collaboratively draft, restructure, or reader-test docs, PRDs, RFCs, proposals, specs, or decision records; skip implementation itself.
 license: MIT
 metadata:
   source: "local-original; Anthropic doc-coauthoring was reviewed but not copied because the refreshed upstream directory had no per-skill license file."

@@ -1,6 +1,6 @@
 ---
 name: sdd-workflow
-description: Load when the user requests a feature, bug fix, refactor, product/spec change, or implementation; run SDD-first lifecycle with embedded TDD and user-aligned spec/acceptance before coding.
+description: Load when workflow-router selects the sdd-change state for feature, bug fix, refactor, product/spec change, or implementation work; run SDD-first lifecycle with embedded TDD.
 ---
 
 # SDD Workflow

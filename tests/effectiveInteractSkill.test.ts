@@ -21,15 +21,19 @@ test('effective-interact has a low-noise complex communication trigger descripti
 
   expect(description.startsWith('Load when')).toBe(true);
   expect(description.split(/\s+/).length).toBeLessThanOrEqual(70);
+  expect(description).toContain('agent pauses to report relatively complex information');
   expect(description).toContain('Chinese-first');
   expect(description).toContain('clear complex communication');
   expect(description).toContain('alignment');
   expect(description).toContain('multi-option choice');
-  expect(description).toContain('status/incident reporting');
+  expect(description).toContain('status/incident');
   expect(description).toContain('long-task fact ledgers');
   expect(description).toContain('implementation plans');
-  expect(description).toContain('architecture/dependency/milestone maps');
-  expect(description).toContain('explainer/design/editor artifacts');
+  expect(description).toContain('maps');
+  expect(description).toContain('explainers');
+  expect(description).toContain('evidence');
+  expect(description).toContain('risks');
+  expect(description).toContain('validation');
   expect(description).toContain('reviews');
   expect(description).toContain('handoff');
   expect(description).toContain('plain text');
@@ -37,7 +41,7 @@ test('effective-interact has a low-noise complex communication trigger descripti
   expect(description).toContain('visual Markdown');
   expect(description).toContain('HTML');
   expect(description).toContain('decision cost');
-  expect(description).toContain('do not load merely because an answer is long');
+  expect(description).toContain('do not load merely because answer is long');
   expect(description).toContain('trivial chat');
   expect(description).toContain('bundled apps');
 });
@@ -69,7 +73,10 @@ test('effective-interact documents positive and negative trigger examples', () =
 });
 
 test('effective-interact treats complex communication as the core job', () => {
-  expect(skill).toContain('Default: do not load this skill merely because the answer may exceed roughly 200 Chinese characters');
+  expect(skill).toContain('Default: load this skill whenever the agent is about to pause and report relatively complex information');
+  expect(skill).toContain('does not have to wait for an owner workflow to select it');
+  expect(skill).toContain('does not replace the owner workflow or decide substantive scope');
+  expect(skill).toContain('Do not load merely because the answer may exceed roughly 200 Chinese characters');
   expect(skill).toContain('200 Chinese characters and 3 or more independent points are auxiliary signals');
   expect(skill).toContain('communication-worthiness check');
   expect(skill).toContain('Reader need');
@@ -322,7 +329,7 @@ test('effective-interact codifies output-mode escalation without stealing adjace
   expect(routingDocs).toContain('complex communication and alignment');
   expect(routingDocs).toContain('option comparison');
   expect(routingDocs).toContain('lightweight export editor');
-  expect(routingDocs).toContain('default-considered skill for non-trivial sessions');
+  expect(routingDocs).toContain('default reporting layer when the agent is about to pause on relatively complex information');
   expect(routingDocs).toContain('material repo or skill change reports');
   expect(routingDocs).toContain('frontend-slides` remains the deck lane');
 });

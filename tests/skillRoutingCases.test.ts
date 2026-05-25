@@ -22,8 +22,40 @@ const requiredHighOverlapSkills = [
   'security-review',
   'verification-loop',
 ];
-const optionalDemoSkills = ['feynman-learning-coach'];
+const optionalDemoSkills = [
+  'feynman-learning-coach',
+  'coding-standards',
+  'documentation-lookup',
+  'web-artifacts-builder',
+  'frontend-slides',
+  'frontend-patterns',
+  'webapp-testing',
+  'web-design-guidelines',
+  'e2e-testing',
+  'grill-me',
+  'product-capability',
+  'claude-api',
+  'mcp-builder',
+  'skill-creator',
+  'doc-coauthoring',
+  'internal-comms',
+  'theme-factory',
+  'slack-gif-creator',
+  'openspec-explore',
+  'openspec-propose',
+  'openspec-apply-change',
+  'openspec-archive-change',
+];
 const allowedFixtureSkills = [...requiredHighOverlapSkills, ...optionalDemoSkills];
+const topLevelWorkflowSkills = new Set([
+  'workflow-router',
+  'answer-workflow',
+  'sdd-workflow',
+  'diagnosis-workflow',
+  'review-workflow',
+  'delivery-workflow',
+  'hub-maintenance-workflow',
+]);
 
 function readFixture(): { version: number; cases: RoutingCase[] } {
   return JSON.parse(fs.readFileSync('tests/fixtures/skill-routing-cases.json', 'utf8'));
@@ -50,6 +82,7 @@ test('routing fixture has a strict schema and unique case ids', () => {
     } else {
       expect(entry.expectedSkill).not.toBe(entry.skill);
     }
+    expect(topLevelWorkflowSkills.has(entry.expectedSkill || '')).toBe(false);
   }
 });
 
@@ -62,6 +95,28 @@ test('routing fixture covers each required high-overlap skill with all case kind
     expect(kinds.has('positive')).toBe(true);
     expect(kinds.has('negative')).toBe(true);
     expect(kinds.has('forbidden-load')).toBe(true);
+  }
+});
+
+test('routing fixture covers every helper skill with positive and boundary cases', () => {
+  const fixture = readFixture();
+  const capabilityIndex = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
+    components: Record<string, { kind: string }>;
+  };
+  const helperSkills = Object.entries(capabilityIndex.components)
+    .filter(([id, component]) => component.kind === 'skill' && !topLevelWorkflowSkills.has(id.replace('skill:', '')))
+    .map(([id]) => id.replace('skill:', ''))
+    .sort();
+
+  for (const skill of helperSkills) {
+    const skillCases = fixture.cases.filter((entry) => entry.skill === skill);
+    const kinds = new Set(skillCases.map((entry) => entry.kind));
+
+    expect(kinds.has('positive'), `${skill} missing positive activation case`).toBe(true);
+    expect(
+      kinds.has('negative') || kinds.has('forbidden-load'),
+      `${skill} missing boundary activation case`,
+    ).toBe(true);
   }
 });
 

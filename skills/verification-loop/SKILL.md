@@ -1,6 +1,7 @@
 ---
 name: verification-loop
-description: "A comprehensive verification system for agent sessions."
+description: Load when a workflow-router-selected owner workflow needs final build, typecheck, lint, test, diff, smoke, and artifact checks before declaring completion; use diagnose while root cause is unknown.
+license: MIT
 ---
 
 # Verification Loop Skill

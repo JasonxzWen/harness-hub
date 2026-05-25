@@ -264,6 +264,7 @@ export interface SkippedInstallItem extends InstallItem {
 export interface InstallPlan {
   generatedAt: string;
   hubVersion: string;
+  installSetName: 'all-skills';
   agents: AgentName[];
   targetDir: string;
   signals: RepoSignals;
@@ -565,8 +566,8 @@ function analyzeComponentForAgent(
       agent,
       state: 'conflict',
       evidence: [dest],
-      reason: `Destination already exists and will be skipped by default: ${dest}`,
-      defaultAction: 'skip',
+      reason: `Destination already exists and will be overwritten by confirmed install: ${dest}`,
+      defaultAction: 'install',
       dest,
     };
   }
@@ -1069,6 +1070,7 @@ export function planInstall(options: PlanInstallOptions = {}): InstallPlan {
   return {
     generatedAt: new Date().toISOString(),
     hubVersion: index.version,
+    installSetName: 'all-skills',
     agents,
     targetDir,
     signals: detectRepoSignals(targetDir),
@@ -1177,7 +1179,7 @@ function safeRelativePathExists(targetDir: string, relativePath: string): boolea
 }
 
 export function applyInstall(plan: InstallPlan, options: { overwrite?: boolean } = {}): InstallResult {
-  const overwrite = Boolean(options.overwrite);
+  const overwrite = options.overwrite ?? true;
   const installed: InstallItem[] = [];
   const skipped: SkippedInstallItem[] = [];
 
@@ -2159,7 +2161,7 @@ function parseArgs(argv: string[]): CliOptions {
     agents: [],
     dryRun: false,
     yes: false,
-    overwrite: false,
+    overwrite: true,
     html: false,
     json: false,
     output: null,
@@ -2559,8 +2561,8 @@ function printHelp() {
 
 Usage:
   skill-hub analyze [target] [--target standard] [--agent-readiness] [--json|--html] [--output file]
-  skill-hub install [target] [--target standard] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
-  skill-hub init [target] [--target standard] [--dry-run|--yes] [--overwrite] [--json|--html] [--output file]
+  skill-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
+  skill-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   skill-hub status [target] [--json|--html] [--output file]
   skill-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
   skill-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
@@ -2568,6 +2570,6 @@ Usage:
   skill-hub components
 
 Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
-Install selects every standard skill component.
+Install selects every standard skill component and overwrites same-name skill directories by default.
 `);
 }

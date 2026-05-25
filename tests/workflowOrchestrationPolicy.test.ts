@@ -31,6 +31,8 @@ test('workflow orchestration policy keeps hooks advisory before security review'
     'No hook performs remote writes',
     'No hook bypasses SDD alignment',
     'blocking hook requires security review',
+    'diagnosis without reproduction/evidence',
+    'delivery without validation or handoff',
   ]) {
     expect(policy).toContain(phrase);
   }
@@ -47,6 +49,35 @@ test('workflow owner skills point to the shared orchestration policy', () => {
   ]) {
     expect(read(`skills/${name}/SKILL.md`)).toContain('references/orchestration-policy.md');
   }
+});
+
+test('active skill bodies do not invoke host-specific subagent tools', () => {
+  for (const name of fs.readdirSync('skills')) {
+    const skillPath = `skills/${name}/SKILL.md`;
+    if (!fs.existsSync(skillPath)) {
+      continue;
+    }
+
+    const skill = read(skillPath);
+    expect(skill, `${name} must not invoke spawn_agent directly`).not.toContain('spawn_agent');
+    expect(skill, `${name} must not hard-code subagent_type payloads`).not.toContain('subagent_type');
+  }
+});
+
+test('active skill references do not keep upstream unconditional subagent instructions', () => {
+  const reference = read('skills/mcp-builder/references/evaluation.md');
+
+  for (const phrase of [
+    'Parallelize this step AS MUCH AS POSSIBLE',
+    'individual sub-agents',
+    'Remember to parallelize solving tasks',
+  ]) {
+    expect(reference).not.toContain(phrase);
+  }
+
+  expect(reference).toContain('workflow-router/references/orchestration-policy.md');
+  expect(reference).toContain('active workflow plan explicitly permits independent read-only scopes');
+  expect(reference).toContain('main agent keeps synthesis');
 });
 
 test('workflow docs record hook and subagent source decisions', () => {

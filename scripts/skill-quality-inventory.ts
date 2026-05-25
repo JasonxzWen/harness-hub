@@ -13,7 +13,7 @@ export type SkillQualityInventory = {
     largeBodyBytes: number;
   };
   summary: {
-    qualityGate: 'report-only';
+    qualityGate: 'strict';
     scannedSkillCount: number;
     descriptionOverTargetCount: number;
     descriptionMissingLoadWhenCount: number;
@@ -21,7 +21,7 @@ export type SkillQualityInventory = {
     largeBodyWithoutSpokesCount: number;
     importedOrAdaptedCount: number;
     importedOrAdaptedMissingMetadataCount: number;
-    reportOnlyWarningCount: number;
+    warningCount: number;
   };
   skills: SkillQualityEntry[];
 };
@@ -59,6 +59,12 @@ type CapabilityComponent = {
 type ParsedSkill = {
   frontmatter: string;
   body: string;
+};
+
+type InventoryCliOptions = {
+  rootDir: string;
+  json: boolean;
+  help: boolean;
 };
 
 export function buildSkillQualityInventory(rootDir: string): SkillQualityInventory {
@@ -146,7 +152,7 @@ export function buildSkillQualityInventory(rootDir: string): SkillQualityInvento
       largeBodyBytes: LARGE_BODY_BYTES,
     },
     summary: {
-      qualityGate: 'report-only',
+      qualityGate: 'strict',
       scannedSkillCount: skills.length,
       descriptionOverTargetCount: skills.filter(
         (skill) => skill.descriptionWordCount > TARGET_DESCRIPTION_WORDS,
@@ -161,7 +167,7 @@ export function buildSkillQualityInventory(rootDir: string): SkillQualityInvento
           (warning) => warning === 'missing-frontmatter-license' || warning === 'missing-source-metadata',
         ),
       ).length,
-      reportOnlyWarningCount: skills.reduce((total, skill) => total + skill.warnings.length, 0),
+      warningCount: skills.reduce((total, skill) => total + skill.warnings.length, 0),
     },
     skills,
   };
@@ -282,7 +288,73 @@ function normalizePath(value: string): string {
   return value.replace(/\\/g, '/');
 }
 
+export function parseInventoryCliArgs(argv: string[], cwd = process.cwd()): InventoryCliOptions {
+  let rootDir: string | null = null;
+  let json = false;
+  let help = false;
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+
+    if (arg === '--json') {
+      json = true;
+    } else if (arg === '--help' || arg === '-h') {
+      help = true;
+    } else if (arg === '--root') {
+      const value = argv[++index];
+      if (!value) {
+        throw new Error('Missing value for --root');
+      }
+      if (rootDir) {
+        throw new Error('Root directory was provided more than once');
+      }
+      rootDir = value;
+    } else if (arg.startsWith('-')) {
+      throw new Error(`Unsupported option '${arg}'`);
+    } else {
+      if (rootDir) {
+        throw new Error('Root directory was provided more than once');
+      }
+      rootDir = arg;
+    }
+  }
+
+  return {
+    rootDir: path.resolve(cwd, rootDir || '.'),
+    json,
+    help,
+  };
+}
+
+function printHelp(): void {
+  console.log(`Usage: skill-quality-inventory [root] [--root root] [--json]
+
+Scans standard skills under the target root, writes a JSON report to stdout, and exits nonzero when quality warnings exist.
+The --json flag is accepted for script consistency; JSON is the only output format.`);
+}
+
 if (import.meta.main) {
-  const rootDir = process.argv[2] ? path.resolve(process.argv[2]) : process.cwd();
-  process.stdout.write(`${JSON.stringify(buildSkillQualityInventory(rootDir), null, 2)}\n`);
+  try {
+    const options = parseInventoryCliArgs(process.argv.slice(2));
+
+    if (options.help) {
+      printHelp();
+      process.exitCode = 0;
+    } else if (!fs.existsSync(options.rootDir) || !fs.statSync(options.rootDir).isDirectory()) {
+      throw new Error(`Root directory does not exist: ${options.rootDir}`);
+    } else {
+      const inventory = buildSkillQualityInventory(options.rootDir);
+      process.stdout.write(`${JSON.stringify(inventory, null, 2)}\n`);
+      if (inventory.summary.warningCount > 0) {
+        console.error(`skill-quality-inventory: ${inventory.summary.warningCount} quality warning(s) found.`);
+        process.exitCode = 1;
+      } else {
+        process.exitCode = 0;
+      }
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`skill-quality-inventory: ${message}`);
+    process.exitCode = 2;
+  }
 }

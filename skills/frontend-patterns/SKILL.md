@@ -1,6 +1,7 @@
 ---
 name: frontend-patterns
-description: General frontend implementation patterns for React, Next.js, state management, forms, routing, accessibility, and responsive UI. Use as the broad frontend engineering baseline. Use frontend-design for visual/aesthetic creation and web-design-guidelines for UI audits when that helper is installed.
+description: Load when a workflow-router-selected owner workflow needs React or Next.js frontend logic, component patterns, state, forms, routing, accessibility, or responsive behavior; use frontend-design for visual direction.
+license: MIT
 ---
 
 # Frontend Development Patterns

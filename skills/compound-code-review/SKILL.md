@@ -1,6 +1,6 @@
 ---
 name: compound-code-review
-description: "Run a Compound Engineering-inspired code review with structured findings, reviewer lenses, anchored confidence, and fix routing. Use for deep pre-PR review, CE-style review, multi-perspective review, or when a normal verification pass is too shallow."
+description: "Load when a workflow-router-selected owner workflow needs Compound Engineering-inspired code review for deep pre-PR, CE-style, or multi-perspective review with structured findings, lenses, confidence, and fix routing; skip ordinary verification."
 license: MIT
 metadata:
   source: "EveryInc/compound-engineering-plugin plugins/compound-engineering/skills/ce-code-review"

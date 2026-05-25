@@ -40,7 +40,7 @@ Total non-ECC canonical/reference skill surfaces scanned: 139.
 
 ## Selection Artifact
 
-Use `reports/atomic-skill-selection.html` as the review surface for choosing candidate atom skills. It groups the non-ECC candidates by purpose, then source repo, then individual skill with a short Chinese purpose summary.
+Candidate selection reports are local generated artifacts and must stay under ignored output such as `reports/`. Do not commit generated HTML reports; keep durable source decisions in this inventory instead.
 
 ## `anthropics/skills` Candidate Skills
 

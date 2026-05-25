@@ -26,16 +26,16 @@ The system SHALL write `.skill-hub/lock.json` after mutating installation comman
 - **WHEN** the user runs `skill-hub install <target>` without `--dry-run` or `--yes`
 - **THEN** the system does not mutate files, explains that `--yes` is required for non-interactive mutation, and exits with code 2
 
-### Requirement: Conservative destination conflict handling
-The system SHALL skip existing destination paths by default unless the user explicitly requests overwrite behavior.
+### Requirement: Full standard installation
+The system SHALL install the complete standard skill set and SHALL overwrite same-name skill destination paths during confirmed installs.
 
-#### Scenario: Existing destination is skipped
-- **WHEN** an install item destination already exists and `--overwrite` is not provided
-- **THEN** the system skips that item, records the skip reason in the report, and does not modify the existing destination
+#### Scenario: Existing same-name skill is overwritten
+- **WHEN** an install item destination already exists and the user confirms `skill-hub install <target> --target standard --yes`
+- **THEN** the system replaces that destination and records the newly written files as Skill Hub-managed files
 
-#### Scenario: Overwrite is explicit
-- **WHEN** an install item destination already exists and `--overwrite --yes` is provided
-- **THEN** the system replaces the destination and records the newly written files as Skill Hub-managed files
+#### Scenario: Standard install has no named variants
+- **WHEN** the user runs `skill-hub install <target> --target standard --dry-run`
+- **THEN** the plan includes every standard `kind: "skill"` component and does not require a named install variant or bundle selector
 
 ### Requirement: Status detects drift
 The system SHALL classify managed components as current, missing, modified, update-available, skipped, or unknown based on the lock and current capability index.

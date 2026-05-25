@@ -1,6 +1,7 @@
 ---
 name: e2e-testing
-description: "Use when creating, refactoring, or maintaining durable Playwright E2E test suites: test architecture, Page Object Models, fixtures, CI/CD integration, artifact management, and flaky test strategy. Do not use for one-off local UI inspection or ad hoc browser debugging; use webapp-testing only when that helper is installed."
+description: Load when a workflow-router-selected owner workflow needs durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy; use webapp-testing for one-off local inspection.
+license: MIT
 ---
 
 # E2E Testing Patterns
@@ -223,6 +224,8 @@ use: {
 
 ## CI/CD Integration
 
+CI/CD examples are templates only. Do not add or change CI workflows unless the accepted parent workflow plan explicitly includes CI changes.
+
 ```yaml
 # .github/workflows/e2e.yml
 name: E2E Tests
@@ -299,6 +302,8 @@ test('wallet connection', async ({ page, context }) => {
 ```
 
 ## Financial / Critical Flow Testing
+
+Do not run critical, payment, wallet, or production flows against real money or production accounts.
 
 ```typescript
 test('trade execution', async ({ page }) => {

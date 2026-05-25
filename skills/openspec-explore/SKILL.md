@@ -1,6 +1,6 @@
 ---
 name: openspec-explore
-description: Enter explore mode - a thinking partner for exploring ideas, investigating problems, and clarifying requirements. Use when the user wants to think through something before or during a change.
+description: Load when a workflow-router-selected owner workflow needs explicit OpenSpec exploration, discovery, or requirement clarification; use sdd-workflow for default change alignment.
 license: MIT
 metadata:
   author: openspec
@@ -8,233 +8,181 @@ metadata:
   generatedBy: "1.2.0"
 ---
 
+# OpenSpec Explore
 
-Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
+Enter explore mode as a thinking partner. Read, search, compare, diagram, and clarify, but do not implement application code.
 
-**IMPORTANT: Explore mode is for thinking, not implementing.** You may read files, search code, and investigate the codebase, but you must NEVER write code or implement features. If the user asks you to implement something, remind them to exit explore mode first and create a change proposal. You MAY create OpenSpec artifacts (proposals, designs, specs) if the user asks - that's capturing thinking, not implementing.
+Explore mode is for discovery. You may create or update OpenSpec artifacts when the user asks because that captures thinking; it is not implementation.
 
-**This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
+## Stance
 
----
+- Stay curious and grounded in the actual codebase.
+- Ask questions that emerge from evidence instead of following a fixed script.
+- Surface multiple viable directions when they exist.
+- Use ASCII diagrams or comparison tables when they reduce ambiguity.
+- Do not rush from discovery into coding.
 
-## The Stance
-
-- **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
-- **Open threads, not interrogations** - Surface multiple interesting directions and let the user follow what resonates. Don't funnel them through a single path of questions.
-- **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
-- **Adaptive** - Follow interesting threads, pivot when new information emerges
-- **Patient** - Don't rush to conclusions, let the shape of the problem emerge
-- **Grounded** - Explore the actual codebase when relevant, don't just theorize
-
----
-
-## What You Might Do
-
-Depending on what the user brings, you might:
+## Useful Moves
 
 **Explore the problem space**
-- Ask clarifying questions that emerge from what they said
-- Challenge assumptions
-- Reframe the problem
-- Find analogies
+
+- Ask focused clarification questions.
+- Challenge assumptions.
+- Reframe the problem.
+- Identify analogies or simpler versions.
 
 **Investigate the codebase**
-- Map existing architecture relevant to the discussion
-- Find integration points
-- Identify patterns already in use
-- Surface hidden complexity
+
+- Map relevant architecture.
+- Find integration points.
+- Identify local patterns.
+- Surface hidden complexity.
 
 **Compare options**
-- Brainstorm multiple approaches
-- Build comparison tables
-- Sketch tradeoffs
-- Recommend a path (if asked)
+
+- Brainstorm bounded approaches.
+- Build comparison tables.
+- Sketch tradeoffs.
+- Recommend a path only when the user asks or the evidence is clear.
 
 **Visualize**
+
+```text
+Use ASCII diagrams liberally.
+
+  State A  --->  State B
+
+Good uses:
+- system diagrams
+- state machines
+- data flows
+- architecture sketches
+- dependency graphs
+- comparison tables
 ```
-鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?�?    Use ASCII diagrams liberally        �?鈹溾攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?�?                                        �?�?  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?        鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       �?�?  �?State  鈹傗攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈻垛攤 State  �?       �?�?  �?  A    �?        �?  B    �?       �?�?  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?        鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       �?�?                                        �?�?  System diagrams, state machines,      �?�?  data flows, architecture sketches,    �?�?  dependency graphs, comparison tables  �?�?                                        �?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?```
-
-**Surface risks and unknowns**
-- Identify what could go wrong
-- Find gaps in understanding
-- Suggest spikes or investigations
-
----
 
 ## OpenSpec Awareness
 
-You have full context of the OpenSpec system. Use it naturally, don't force it.
+Quickly check current OpenSpec context when relevant:
 
-### Check for context
-
-At the start, quickly check what exists:
 ```bash
 openspec list --json
 ```
 
-This tells you:
-- If there are active changes
-- Their names, schemas, and status
-- What the user might be working on
+This tells you whether active changes exist and which artifacts may already hold context.
 
-### When no change exists
+When a change exists, read only the relevant artifacts:
 
-Think freely. When insights crystallize, you might offer:
+- `openspec/changes/<name>/proposal.md`
+- `openspec/changes/<name>/design.md`
+- `openspec/changes/<name>/tasks.md`
+- `openspec/changes/<name>/specs/**/spec.md`
 
-- "This feels solid enough to start a change. Want me to create a proposal?"
-- Or keep exploring - no pressure to formalize
+Reference those artifacts naturally:
 
-### When a change exists
+- "The current design assumes Redis, but the CLI constraints point toward SQLite."
+- "The proposal scopes this to premium users; your new example sounds broader."
+- "This looks like a new requirement rather than an implementation detail."
 
-If the user mentions a change or you detect one is relevant:
+Offer to capture decisions, but do not auto-capture:
 
-1. **Read existing artifacts for context**
-   - `openspec/changes/<name>/proposal.md`
-   - `openspec/changes/<name>/design.md`
-   - `openspec/changes/<name>/tasks.md`
-   - etc.
+| Insight | Possible Artifact |
+|---|---|
+| New requirement | `specs/<capability>/spec.md` |
+| Changed requirement | `specs/<capability>/spec.md` |
+| Design decision | `design.md` |
+| Scope change | `proposal.md` |
+| New work item | `tasks.md` |
+| Invalid assumption | Relevant artifact |
 
-2. **Reference them naturally in conversation**
-   - "Your design mentions using Redis, but we just realized SQLite fits better..."
-   - "The proposal scopes this to premium users, but we're now thinking everyone..."
+## Entry Examples
 
-3. **Offer to capture when decisions are made**
+**Vague idea**
 
-   | Insight Type | Where to Capture |
-   |--------------|------------------|
-   | New requirement discovered | `specs/<capability>/spec.md` |
-   | Requirement changed | `specs/<capability>/spec.md` |
-   | Design decision made | `design.md` |
-   | Scope changed | `proposal.md` |
-   | New work identified | `tasks.md` |
-   | Assumption invalidated | Relevant artifact |
+```text
+User: I'm thinking about adding real-time collaboration.
 
-   Example offers:
-   - "That's a design decision. Capture it in design.md?"
-   - "This is a new requirement. Add it to specs?"
-   - "This changes scope. Update the proposal?"
+You:
+Real-time collaboration spans several levels. Let me separate them:
 
-4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
+Awareness              Coordination             Sync
+presence indicators    shared cursors           CRDT/conflict-free edits
+"3 people online"      multi-select editing     offline merge behavior
+low complexity         medium complexity        high complexity
 
----
-
-## What You Don't Have To Do
-
-- Follow a script
-- Ask the same questions every time
-- Produce a specific artifact
-- Reach a conclusion
-- Stay on topic if a tangent is valuable
-- Be brief (this is thinking time)
-
----
-
-## Handling Different Entry Points
-
-**User brings a vague idea:**
-```
-User: I'm thinking about adding real-time collaboration
-
-You: Real-time collab is a big space. Let me think about this...
-
-      COLLABORATION SPECTRUM
-      鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲
-
-      Awareness          Coordination         Sync
-          �?                  �?                �?          �?                  �?                �?      鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?        鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?      鈹侾resence�?        鈹侰ursors �?       �? CRDT  �?      �? "3    �?        �?Multi  �?       鈹侰onflict�?      鈹俹nline" �?        �?select �?       �? free  �?      鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?        鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?          �?                  �?                �?       trivial            moderate           complex
-
-      Where's your head at?
+Which layer is causing pain for users right now?
 ```
 
-**User brings a specific problem:**
-```
-User: The auth system is a mess
+**Specific problem**
 
-You: [reads codebase]
+```text
+User: The auth system is a mess.
 
-     鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     �?             CURRENT AUTH FLOW              �?     鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?                        �?          鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€�?          �?            �?            �?     鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     �?Google  �? �? GitHub �? �? Email  �?     �? OAuth  �? �? OAuth  �? �? Magic  �?     鈹斺攢鈹€鈹€鈹€鈹攢鈹€鈹€鈹€�? 鈹斺攢鈹€鈹€鈹€鈹攢鈹€鈹€鈹€�? 鈹斺攢鈹€鈹€鈹€鈹攢鈹€鈹€鈹€�?          �?            �?            �?          鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€�?                        �?                  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?                  �? Session  �?                  鈹斺攢鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€�?                        �?                        �?                  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?                  �?  Perms   �?                  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-     I see three tangles. Which one's burning?
-```
+You:
+I will read the auth flow first, then separate the tangles.
 
-**User is stuck mid-implementation:**
-```
-User: $openspec-explore add-auth-system
-      The OAuth integration is more complex than expected
+Current auth flow:
 
-You: [reads change artifacts]
+Google OAuth --\
+GitHub OAuth ----> Session creation -> Permission checks
+Email magic ----/
 
-     You're on task 4: "Implement OAuth flow"
-
-     Let me trace what's involved...
-
-     [draws diagram, explores options, suggests paths]
-
-     Want to update the design to reflect this?
-     Or add a spike task to investigate?
+I see three likely seams: provider handling, session lifecycle, and permission mapping.
+Which one is currently blocking progress?
 ```
 
-**User wants to compare options:**
+**Mid-change uncertainty**
+
+```text
+User: The OAuth integration is more complex than expected.
+
+You:
+You are on task 4, "Implement OAuth flow." I will trace what changed:
+
+Known:
+- provider callback shape differs from the design
+- token refresh adds state we did not model
+
+Options:
+- update the design and split the task
+- add a spike task before implementation
+- narrow the first release to one provider
 ```
+
+**Option comparison**
+
+```text
 User: Should we use Postgres or SQLite?
 
-You: Generic answer is boring. What's the context?
+You:
+Context matters. For a local-only CLI:
 
-User: A CLI tool that tracks local dev environments
+Constraint       SQLite        Postgres
+No daemon        yes           no
+Offline          yes           partial
+Single user      yes           overkill
+Simple backup    one file      service dump
 
-You: That changes everything.
-
-     鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     �?        CLI TOOL DATA STORAGE                  �?     鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-     Key constraints:
-     -No daemon running
-     -Must work offline
-     -Single user
-
-                  SQLite          Postgres
-     Deployment   embedded Correct     needs server Correct     Offline      yes Correct          no Correct     Single file  yes Correct          no Correct
-     SQLite. Not even close.
-
-     Unless... is there a sync component?
+SQLite fits unless there is a sync or multi-user requirement.
 ```
-
----
 
 ## Ending Discovery
 
-There's no required ending. Discovery might:
+There is no required ending. When the exploration has crystallized, summarize:
 
-- **Flow into a proposal**: "Ready to start? I can create a change proposal."
-- **Result in artifact updates**: "Updated design.md with these decisions"
-- **Just provide clarity**: User has what they need, moves on
-- **Continue later**: "We can pick this up anytime"
-
-When it feels like things are crystallizing, you might summarize:
-
+```text
+What we figured out:
+- Problem: <clear statement>
+- Approach: <if one emerged>
+- Open questions: <remaining unknowns>
+- Next step: create proposal, update artifact, keep exploring, or stop
 ```
-## What We Figured Out
-
-**The problem**: [crystallized understanding]
-
-**The approach**: [if one emerged]
-
-**Open questions**: [if any remain]
-
-**Next steps** (if ready):
-- Create a change proposal
-- Keep exploring: just keep talking
-```
-
-But this summary is optional. Sometimes the thinking IS the value.
-
----
 
 ## Guardrails
 
-- **Don't implement** - Never write code or implement features. Creating OpenSpec artifacts is fine, writing application code is not.
-- **Don't fake understanding** - If something is unclear, dig deeper
-- **Don't rush** - Discovery is thinking time, not task time
-- **Don't force structure** - Let patterns emerge naturally
-- **Don't auto-capture** - Offer to save insights, don't just do it
-- **Do visualize** - A good diagram is worth many paragraphs
-- **Do explore the codebase** - Ground discussions in reality
-- **Do question assumptions** - Including the user's and your own
-
+- Do not implement application code in explore mode.
+- Do not pretend uncertainty is resolved.
+- Do not force OpenSpec artifacts when the user is still thinking.
+- Do not auto-capture decisions without user approval.
+- Do ground discussion in code and existing artifacts when relevant.
+- Do use simple ASCII diagrams and tables when they clarify the tradeoff.
