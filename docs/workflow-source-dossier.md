@@ -2,9 +2,9 @@
 
 Date: 2026-05-21
 
-This dossier reorganizes the source projects already referenced by this repository around the canonical work lifecycle. It records what to study, what to adapt, what to reject, and what must remain reference-only before implementing the workflow-router redesign.
+This dossier reorganizes the source projects already referenced by this repository around the canonical work lifecycle. It records what to study, what to keep as imported style, what to adapt, what to reject, and what must remain reference-only before maintaining the workflow-router overlay.
 
-This is based on repo-local source records in [Source projects and candidates](source-projects.md), [Skill routing and de-duplication](skill-routing.md), [Capability map](capability-map.md), and installed skill docs. Refresh exact upstream commits and licenses before copying or updating any upstream content.
+This is based on repo-local source records in [Source projects and candidates](source-projects.md), [Skill routing and de-duplication](skill-routing.md), [Capability map](capability-map.md), and installed skill docs. Refresh exact upstream commits and licenses before copying, updating, or locally adapting any upstream content.
 
 ## Lifecycle Lens
 
@@ -31,7 +31,7 @@ The workflow system must serve this order:
 | Effective Interact | Original local skill. | Chinese-first interaction-cost reduction, answer-first visual handoffs, evidence, option comparison, validation dashboards. | High-priority interaction layer across all non-trivial lifecycle phases. |
 | Skill Hub CLI lifecycle | Implemented and documented locally. | Lock-backed install/status/update/remove and safe cleanup ownership. | Preserve as mandatory distribution and cleanup boundary. |
 | Vercel/Web/React skills | `web-design-guidelines` remains active; other Vercel Web/React skills are source-retained only. | Frontend implementation and UI quality for target repos that need it. | Helper/reference sources only; not top-level lifecycle owners. |
-| Anthropic skills | Selective atoms installed or rewritten: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, `slack-gif-creator`. | Provider API, MCP server, skill authoring, doc/comms, visual theme, and Slack GIF atoms. | Helper atoms under owner workflows; document four-pack remains reference-only due licensing. |
+| Anthropic skills | Selective atoms installed or locally wrapped: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, `slack-gif-creator`. | Provider API, MCP server, skill authoring, doc/comms, visual theme, and Slack GIF atoms. | Helper atoms under owner workflows; document four-pack remains reference-only due licensing. |
 | Ralph | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` retired on 2026-05-22. | Historical autonomous story-loop reference. | Source evidence only; native Codex and Claude Code goal/story workflows now cover this lane. |
 | Learn Harness / Learn FASTER | Narrow local adaptations. | Historical harness templates and learning lifecycle ideas. | Keep learning coach only; repo harness templates are removed from distribution. |
 
@@ -50,10 +50,10 @@ The workflow system must serve this order:
 
 | Source | Useful idea | Reject or constrain | Local decision |
 |---|---|---|---|
-| `hub-maintenance-workflow` | Inventory source projects, compare upstream versions, preserve local adaptations, and maintain package/capability boundaries. | Do not install off-stack or wholesale sources. | Use as the single maintenance owner for this repository. |
+| `hub-maintenance-workflow` | Inventory source projects, compare upstream versions, preserve upstream bodies by default, and maintain package/capability boundaries. | Do not install off-stack or wholesale sources. | Use as the single maintenance owner for this repository. |
 | Former `skill-evaluator` policy | Read upstream README, skill bodies, metadata, license, and compare against local routing before install. | Do not use presence/absence comparison only. | Fold the policy into mandatory source-gathering criteria before workflow adoption. |
 | `docs/source-projects.md` | Existing source URLs, versions, decisions, and imported paths. | It may be stale for live upstream content. | Treat as the repo-local starting point; refresh only when copying/updating upstream content. |
-| Superpowers tool mapping | Host compatibility checklist for porting broad-trigger workflows. | Do not wrap native host tools just to mirror names. | Use as reference for platform-neutral wording and activation boundaries. |
+| Superpowers tool mapping | Host compatibility checklist for porting broad-trigger workflows. | Do not wrap native host tools just to mirror names. | Use as reference for routing and activation boundaries. |
 | ECC local setup | Existing agents/hooks/config and imported skill surface. | Do not let ECC become the default workflow authority. | Use as source evidence and compatibility layer, not final paradigm. |
 
 ### 3. Write Spec And Acceptance

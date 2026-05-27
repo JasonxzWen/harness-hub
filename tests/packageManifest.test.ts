@@ -46,7 +46,7 @@ test('package manifest keeps release validation and source traceability explicit
   expect(artifactPolicy.npm.forbidden).toContain('.codex/');
 });
 
-test('npm package publishes the platform-neutral skill source tree', () => {
+test('npm package publishes the personal distributed skill source tree', () => {
   const artifactPolicy = JSON.parse(fs.readFileSync('config/artifact-policy.json', 'utf8')) as {
     npm: { files: string[] };
   };

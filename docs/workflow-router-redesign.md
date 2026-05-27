@@ -4,6 +4,8 @@ Date: 2026-05-20
 
 This document records the accepted direction for the next Skill Hub workflow redesign. It is a planning contract, not an implementation claim.
 
+Current direction note: Skill Hub is now treated as a personal workflow distribution repo. The workflow router is the personal routing overlay over imported and local skills; it does not require imported skill bodies to be rewritten into one house style.
+
 ## Document Set
 
 - [Workflow source dossier](workflow-source-dossier.md) owns phase-by-phase source evaluation for the repos, blogs, and local decisions this hub already references.
@@ -13,16 +15,16 @@ This document records the accepted direction for the next Skill Hub workflow red
 
 ## Decision
 
-Use Option A: build one thin `workflow-router` that identifies the user's task state, then hands the session to exactly one workflow owner. The hub should stop acting like a pile of imported skill packs and instead expose a small original workflow system inspired by, but not copied from, upstream projects.
+Use Option A: build one thin `workflow-router` that identifies the user's task state, then hands the session to exactly one workflow owner. The hub should stop acting like an undifferentiated pile of imported skill packs and instead expose a small personal routing overlay inspired by, but not copied from, upstream projects.
 
 The workflow owner must drive this lifecycle: align user need -> gather required material -> write spec and acceptance -> write executable plan and align -> clean unneeded files -> implement -> test -> deliver report.
 
 ## Assumptions
 
-- The first-class install shape is the standard skills/<name> tree; host packaging stays outside skill bodies.
+- The first-class install shape is the standard skills/<name> tree; host packaging stays outside the local overlay and distribution metadata.
 - npm stays as the versioned install, update, and remove path because direct GitHub pulls do not provide lock-backed cleanup.
 - Existing lifecycle guarantees stay intact: analyze is read-only, install/update/remove are lock-backed, and removed managed files can be deleted by update or remove flows.
-- OpenSpec, ECC, Superpowers, Matt Pocock skills, and other sources are references. Do not import another project's whole workflow as the default.
+- OpenSpec, ECC, Superpowers, Matt Pocock skills, and other sources are references or imported skills. Do not import another project's whole workflow as the personal default without routing placement.
 - The default engineering habit is SDD-first with embedded TDD.
 
 ## Target Workflow States
@@ -116,7 +118,7 @@ Keep npm. It is the practical way to preserve:
 - safe removal of files the project no longer owns,
 - generated `dist/` packaging.
 
-Keep the first-class install target platform-neutral. Host-specific wrappers can stay documented as compatibility references or explicit future work, but they should not drive default workflow design.
+Keep the first-class install target simple and reusable across the user's projects. Host-specific wrappers can stay documented as compatibility references or explicit future work, but they should not drive default workflow design.
 
 ## Non-Goals
 
@@ -139,5 +141,4 @@ See [Workflow router execution plan](workflow-router-execution-plan.md) for the 
 
 ## Open Questions
 
-- Confirm whether future install-surface additions should remain always-on or stay reference-only.
-- Confirm whether the six workflow owner names should be public skill names.
+- Confirm future install-surface additions only when a recurring personal project need appears.

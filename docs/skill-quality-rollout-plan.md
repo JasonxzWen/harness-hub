@@ -4,17 +4,19 @@ Date: 2026-05-12
 
 This plan upgrades Skill Hub from a curated skill collection into a governed skill-quality system. The work is intentionally staged so existing imported skills remain usable while local quality gates tighten over time.
 
+Current direction note: Skill Hub now optimizes for personal workflow distribution with a routing overlay. Quality work should preserve upstream skill bodies by default and treat inventory findings as report-only unless they reveal a real routing, safety, source, or distribution problem.
+
 ## Goals
 
-- Make description quality, routing precision, and progressive loading first-class review targets.
+- Make routing precision and distribution safety first-class review targets.
 - Add an evaluation path before changing routing-sensitive text.
 - Keep the standard install surface curated and low-noise.
-- Preserve third-party attribution while normalizing content into platform-neutral skills.
-- Avoid a mass rewrite of imported skills without evidence.
+- Preserve third-party attribution while avoiding local style rewrites of imported skill bodies.
+- Avoid rewriting imported skills without a concrete routing, safety, source, or distribution reason.
 
 ## Non-Goals
 
-- Do not rewrite all 66 current skills in one change.
+- Do not rewrite imported skills for style consistency.
 - Do not make every warning a failing gate immediately.
 - Do not add a new broad "skill quality" skill just to repeat this document.
 - Do not copy volatile tool docs into skills.
@@ -93,22 +95,21 @@ Current status:
 - `tests/fixtures/skill-routing-cases.json` covers the initial high-overlap set and `feynman-learning-coach`.
 - `tests/skillRoutingCases.test.ts` validates schema, required case coverage, docs boundaries, and capability overlap relationships.
 
-## Phase 4: Description Refactor
+## Phase 4: Routing Description Cleanup
 
 Deliverables:
 
-- Convert local/adapted skill descriptions to the preferred `Load when` form.
-- Keep descriptions under 50 words unless a documented exception is needed.
+- Convert local routing and workflow-owner descriptions to the preferred `Load when` form when it improves routing.
+- Keep local routing descriptions under 50 words unless a documented exception is needed.
+- Leave imported skill descriptions unchanged unless they are causing a real routing conflict.
 - Update tests that assert old wording to assert routing intent instead of implementation wording.
 - Align `capabilities/index.json` `routing` and `recommendation` text with the revised triggers.
 
 Order:
 
-1. Local original skills: `effective-interact`, `feynman-learning-coach` (seed conversion complete).
-2. Narrow adaptations: `compound-code-review`, `diagnose`, `prototype`, `grill-me`.
-3. Installed ECC-derived skills with high overlap.
-4. Other installed helper skills.
-5. Built-in document/media skills with long but high-value file-type triggers.
+1. Local owner and routing overlay skills.
+2. Capability metadata and routing docs for recurring conflicts.
+3. Imported skill descriptions only when a conflict cannot be solved in the overlay.
 
 Verification:
 
@@ -175,7 +176,7 @@ The rollout is complete when:
 
 - The quality guide is the referenced standard for skill authoring and review.
 - New or changed installable skills include routing eval evidence.
-- Installed routing-sensitive skills have positive, negative, and forbidden routing cases.
-- Description changes are treated as routing changes in review.
-- Progressive loading is used for heavy or conditional content.
+- Installed routing-sensitive local overlay skills have positive, negative, and forbidden routing cases.
+- Description changes in local routing/workflow-owner skills are treated as routing changes in review.
+- Progressive loading is used for heavy or conditional local content when it reduces context cost.
 - Validation and docs agree on the same source of truth.

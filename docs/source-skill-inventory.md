@@ -2,7 +2,7 @@
 
 Date: 2026-05-21
 
-This inventory records the local refresh of Skill Hub's referenced source repositories after removing `affaan-m/everything-claude-code` from the atomic skill candidate pool. Existing local skill lineage is not rewritten here; this file is only the candidate-source inventory for future atom selection.
+This inventory records the local refresh of Skill Hub's referenced source repositories after removing `affaan-m/everything-claude-code` from the atomic skill candidate pool. Existing local skill lineage is not rewritten here; this file is only the candidate-source inventory for future atom selection and routing placement.
 
 The refresh cache is outside the repo at `C:\Users\Admin\.codex\source-cache\skill-hub` so source inspection does not mutate installable skills.
 
@@ -68,5 +68,5 @@ License/source note: the upstream README states many examples are Apache 2.0, wh
 
 - After excluding ECC and adding `anthropics/skills`, the candidate pool has 139 scanned surfaces across workflow, SDD, review, debugging, frontend, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, and creative artifacts. Ralph remains source-recorded but is retired from installable distribution.
 - The first Anthropic atom pass promoted seven installable skills or local rewrites into `capabilities/index.json`: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator`.
-- It is not yet broad enough for a general marketplace. Future source expansion should target cloud providers beyond Vercel, data and ML operations, security operations, enterprise SaaS, and more language/framework niches.
-- The sustainable direction is to keep Skill Hub's local layer as orchestration, routing, lifecycle, provenance, dedupe, and validation; pull atomic skills from upstream only when license, source quality, trigger contract, and platform neutrality pass.
+- It does not need to become a general marketplace. Future source expansion should follow recurring personal project needs first.
+- The sustainable direction is to keep Skill Hub's local layer as personal orchestration, routing, lifecycle, provenance, dedupe, and validation; pull atomic skills from upstream only when license, source quality, trigger contract, and personal usefulness pass.

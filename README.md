@@ -1,6 +1,8 @@
 # Skill Hub
 
-Skill Hub is a curated, platform-neutral library of agent skills and lifecycle tooling.
+Skill Hub is a personal workflow distribution repository for reusing the same agent tools across multiple projects.
+
+Most skills can come from upstream sources and keep their upstream style. This repository adds the personal routing overlay, source records, and lifecycle tooling needed to install, update, status-check, and remove the same toolkit in target projects.
 
 The repository source of truth is the standard skill layout:
 
@@ -16,7 +18,9 @@ skills/
   marketplace.json
 ```
 
-Skills must not depend on a specific agent host. Host-specific packaging, such as Claude plugin distribution, lives outside the skill bodies.
+Skills should stay usable across agent hosts when practical, but imported skill bodies are not rewritten just for local style. Host-specific packaging, such as Claude plugin distribution, lives outside the skill bodies.
+
+See [Personal Workflow Distribution](docs/personal-workflow-distribution.md) for the lightweight maintenance rules, TODOs, and acceptance criteria.
 
 ## What Is Included
 
@@ -87,6 +91,7 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | `scripts/validate-skills.ps1` | Standard skill validation gate |
 | `scripts/skill-quality-inventory.ts` | Report-only skill quality inventory |
 | `docs/skill-routing.md` | Overlap and routing rules |
+| `docs/personal-workflow-distribution.md` | Personal distribution rules, TODOs, and acceptance criteria |
 | `docs/source-projects.md` | Upstream source and decision log |
 | `docs/workflow-source-dossier.md` | Reference dossier for SDD, routing, Effective Interact, OpenSpec, Superpowers, ECC, Matt Pocock skills, Vercel, and retired Ralph source notes |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy |

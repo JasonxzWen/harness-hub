@@ -1,6 +1,6 @@
 # Source Projects
 
-This file records upstream projects reviewed for Skill Hub. The install rule is platform-neutral normalization: source ideas may come from any host ecosystem, but committed skills must stay in the standard `skills/<name>/SKILL.md` shape.
+This file records upstream projects reviewed for Skill Hub. The install rule is personal distribution with a routing overlay: source ideas may come from any host ecosystem, imported skill bodies should keep upstream style by default, and committed distributed skills must stay in the standard `skills/<name>/SKILL.md` shape.
 
 ## Active Sources
 
@@ -37,8 +37,9 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 ## Current Policy
 
 - Read upstream README, skill files, plugin metadata, and license before deciding.
-- Prefer selective adaptation over wholesale import.
+- Prefer preserving upstream skill bodies over local style rewrites.
+- Use selective adaptation only when an upstream skill is unsafe, unusable, legally unclear, or directly conflicts with the routing overlay.
 - Keep source attribution in skill metadata or this file.
-- Remove host-specific tool names, config paths, runner scripts, and UI metadata before committing a skill.
+- Keep host-specific tool names, config paths, runner scripts, and UI metadata out of local routing/workflow layers; do not rewrite imported bodies solely for this unless it blocks safe personal distribution.
 - Update `docs/skill-routing.md`, `capabilities/index.json`, README, and tests when a candidate changes routing or the installable skill surface.
 - See `docs/source-skill-inventory.md` for the latest local refresh, scanned skill names, and coverage notes.

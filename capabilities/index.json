@@ -54,7 +54,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Add a thin executable intent router that selects exactly one public workflow owner, runs side-effect-free preflight checks, and audits helper activation boundaries before work starts."
+      "recommendation": "Add a thin executable intent router that selects exactly one workflow owner, runs side-effect-free preflight checks, and audits helper activation boundaries before work starts."
     },
     "skill:answer-workflow": {
       "kind": "skill",
@@ -917,7 +917,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Add a platform-neutral skill authoring atom without host-specific eval runners."
+      "recommendation": "Add a skill authoring atom for local skills and routing evaluation without host-specific eval runners."
     },
     "skill:doc-coauthoring": {
       "kind": "skill",

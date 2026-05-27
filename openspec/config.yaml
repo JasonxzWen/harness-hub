@@ -2,12 +2,12 @@ schema: spec-driven
 
 context: |
   Project: skill-hub
-  Purpose: Curate and adapt famous agent skills into platform-neutral standard skill folders.
+  Purpose: Distribute a personal agent workflow toolkit with source records, routing overlay, and lock-backed lifecycle tooling.
   Primary language: Chinese documentation, with source URLs and technical names preserved in English.
-  Initial focus: high-signal platform-neutral coding skill packs.
+  Initial focus: high-signal personal workflow reuse across multiple projects.
   Constraints:
     - Prefer source attribution over unattributed prompt copying.
-    - Normalize host-specific tool assumptions into platform-neutral workflows.
+    - Preserve upstream skill bodies by default; keep local routing and safety decisions in the overlay.
     - Keep skills focused, composable, and testable.
     - Review licenses and security posture before importing third-party content.
 

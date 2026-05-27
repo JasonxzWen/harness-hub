@@ -2,7 +2,7 @@
 
 Date: 2026-05-22
 
-This inventory is a cleanup planning artifact for the workflow-router and lifecycle installer. It classifies what remains in the standard install, what stays as source evidence, and what requires explicit approval before deletion or demotion.
+This inventory is a cleanup planning artifact for the personal workflow routing overlay and lifecycle installer. It classifies what remains in the standard install, what stays as source evidence, and what requires explicit approval before deletion or demotion.
 
 Physical deletion was approved by the user on 2026-05-21 after source records were confirmed in `docs/source-projects.md` and `docs/workflow-source-dossier.md`; source records were retained. Profile-based installation was removed on 2026-05-22.
 
@@ -13,7 +13,7 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 | Install bundles | 0 | The CLI no longer supports selectable install bundles. |
 | Installable components | 39 | All active components are standard skills under `skills/<name>/`. |
 | Local `skills` directories | 39 | Matches installable skill component directories after Ralph retirement. |
-| Packaged `skills` directories | 39 | npm publishes the platform-neutral skill source tree. |
+| Packaged `skills` directories | 39 | npm publishes the personal distributed skill source tree. |
 | First-class workflow target | 1 | `standard` installs into `skills/<name>/`; host packaging stays outside skill bodies. |
 
 ## Keep In Standard Install
@@ -42,7 +42,7 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 | Surface | Status | Cleanup posture |
 |---|---|---|
 | Documents, spreadsheets, slides, and PDFs | External app/plugin skills only | Do not redistribute until source licensing and target lifecycle are clear. |
-| Host-specific browser or cloud skills | External app/plugin skills only | Keep out of platform-neutral Skill Hub unless normalized and reviewed. |
+| Host-specific browser or cloud skills | External app/plugin skills only | Keep out of the default personal distribution unless explicitly useful and reviewed. |
 | Future imported skill directories | Source docs until registered | npm package contents must exclude non-component skill directories until they are represented in `capabilities/index.json`. |
 
 ## Physical Cleanup Completed

@@ -2,7 +2,7 @@
 
 Skill Hub exposes two surfaces:
 
-- a platform-neutral skill library under `skills/`;
+- a personal distributed skill set under `skills/`;
 - a lifecycle CLI that can analyze, install, update, status-check, and remove managed skills from target repositories.
 
 ## CLI Commands
@@ -24,7 +24,7 @@ Skill Hub has one personal install set. No named variants exist. The CLI install
 
 ## Atomic Capability Candidate Map
 
-This map separates current installable capabilities from source-backed atom candidates. It is intentionally not an install graph; promote candidates into `capabilities/index.json` only after source review, trigger normalization, tests, and lifecycle-risk placement.
+This map separates current installable capabilities from source-backed atom candidates. It is intentionally not an install graph; promote candidates into `capabilities/index.json` only after source review, routing placement, and lifecycle-risk placement.
 
 | Capability area | Current installable coverage | Source-backed atom candidates | Gap and decision |
 |---|---|---|---|
@@ -62,8 +62,9 @@ Known redundancies:
 ## Candidate Intake Rules
 
 - A selected atom is not installable until its source license, trigger contract, side effects, overlaps, and lifecycle risk are recorded.
-- Prefer adapting one bounded skill at a time over importing a repo or plugin bundle.
-- Keep host-specific paths, hooks, UI metadata, and credential assumptions outside standard `skills/<name>/SKILL.md`.
+- Prefer importing or adapting one bounded skill at a time over importing a repo or plugin bundle.
+- Preserve upstream skill bodies by default; put local routing and safety decisions in the overlay unless the upstream body blocks safe personal distribution.
+- Keep host-specific paths, hooks, UI metadata, and credential assumptions outside local routing/workflow layers.
 - Document skills from `anthropics/skills` fill a real map gap, but `docx`, `pdf`, `pptx`, and `xlsx` require license review before redistribution.
 
 ## Routing Anchors
