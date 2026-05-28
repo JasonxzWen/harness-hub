@@ -11,11 +11,11 @@ import {
   runCli,
   validateInsightSite,
   type InsightPostInput,
-} from '../src/skillHub';
+} from '../src/harnessHub';
 
 function sampleInsightInput(): InsightPostInput {
   return {
-    title: 'Codex self-improving loop and Skill Hub',
+    title: 'Codex self-improving loop and Harness Hub',
     date: '2026-05-28',
     summary: 'Codex self-improvement is useful only when external material becomes project-specific iteration evidence.',
     sources: [
@@ -45,7 +45,7 @@ function sampleInsightInput(): InsightPostInput {
       },
     ],
     integration: [
-      'Skill Hub should keep source metadata, extracted viewpoints, project mapping, and acceptance evidence together.',
+      'Harness Hub should keep source metadata, extracted viewpoints, project mapping, and acceptance evidence together.',
     ],
     projectMapping: [
       {
@@ -72,17 +72,17 @@ function sampleInsightInput(): InsightPostInput {
 }
 
 test('insight post generation writes JSON source, source ledger, effective-interact input, and public HTML', () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-insight-post-'));
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-post-'));
 
   const result = createInsightPost(sampleInsightInput(), { repoRoot });
 
-  expect(result.slug).toBe('2026-05-28-codex-self-improving-loop-and-skill-hub');
+  expect(result.slug).toBe('2026-05-28-codex-self-improving-loop-and-harness-hub');
   expect(result.validation.exitCode).toBe(0);
   expect(fs.existsSync(result.postJsonPath)).toBe(true);
   expect(fs.existsSync(result.sourceLedgerPath)).toBe(true);
   expect(fs.existsSync(result.effectiveInteractInputPath)).toBe(true);
   expect(fs.existsSync(result.htmlPath)).toBe(true);
-  expect(result.htmlPath.replaceAll(path.sep, '/')).toContain('site/insights/posts/2026-05-28-codex-self-improving-loop-and-skill-hub/index.html');
+  expect(result.htmlPath.replaceAll(path.sep, '/')).toContain('site/insights/posts/2026-05-28-codex-self-improving-loop-and-harness-hub/index.html');
 
   const post = JSON.parse(fs.readFileSync(result.postJsonPath, 'utf8')) as InsightPostInput;
   expect(post.sourceClaims[0]?.kind).toBe('fact');
@@ -109,7 +109,7 @@ test('insight post generation writes JSON source, source ledger, effective-inter
 });
 
 test('insight validation blocks missing fact/inference separation, unsafe links, and oversized source excerpts', () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-insight-invalid-'));
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-invalid-'));
   const invalid = {
     ...sampleInsightInput(),
     sources: [
@@ -133,7 +133,7 @@ test('insight validation blocks missing fact/inference separation, unsafe links,
 });
 
 test('insight site build writes public index files and validation keeps local artifacts separate', () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-insight-site-'));
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-site-'));
   createInsightPost(sampleInsightInput(), { repoRoot });
 
   const build = buildInsightSite({ repoRoot });
@@ -145,11 +145,11 @@ test('insight site build writes public index files and validation keeps local ar
   expect(fs.existsSync(path.join(repoRoot, 'site', 'insights', 'index.json'))).toBe(true);
   expect(validation.exitCode).toBe(0);
   expect(validation.checks.every((check) => check.state === 'pass')).toBe(true);
-  expect(snapshotPaths(path.join(repoRoot, 'site')).some((entry) => entry.includes('.skill-hub/reports'))).toBe(false);
+  expect(snapshotPaths(path.join(repoRoot, 'site')).some((entry) => entry.includes('.harness-hub/reports'))).toBe(false);
 });
 
 test('publish preflight checks workflow, Pages output, source metadata, links, and worktree state', () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-insight-preflight-'));
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-preflight-'));
   fs.mkdirSync(path.join(repoRoot, '.github', 'workflows'), { recursive: true });
   fs.copyFileSync(
     path.join(process.cwd(), '.github', 'workflows', 'publish-insights.yml'),
@@ -174,7 +174,7 @@ test('publish preflight checks workflow, Pages output, source metadata, links, a
 });
 
 test('publish preflight blocks non-git targets even when Pages output exists', () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-insight-nogit-'));
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-nogit-'));
   fs.mkdirSync(path.join(repoRoot, '.github', 'workflows'), { recursive: true });
   fs.copyFileSync(
     path.join(process.cwd(), '.github', 'workflows', 'publish-insights.yml'),
@@ -189,7 +189,7 @@ test('publish preflight blocks non-git targets even when Pages output exists', (
 });
 
 test('insight generation returns structured validation for malformed array fields', () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-insight-malformed-array-'));
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-malformed-array-'));
   const malformed = {
     ...sampleInsightInput(),
     sources: {},
@@ -203,18 +203,18 @@ test('insight generation returns structured validation for malformed array field
 });
 
 test('insight CLI accepts UTF-8 BOM JSON input', async () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-insight-bom-'));
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-bom-'));
   const inputPath = path.join(repoRoot, 'input.json');
   fs.writeFileSync(inputPath, `\uFEFF${JSON.stringify(sampleInsightInput(), null, 2)}`, 'utf8');
 
   const generated = await captureCli(['insight-generate', repoRoot, '--input', inputPath, '--json']);
 
   expect(generated.code).toBe(0);
-  expect(JSON.parse(generated.stdout).slug).toBe('2026-05-28-codex-self-improving-loop-and-skill-hub');
+  expect(JSON.parse(generated.stdout).slug).toBe('2026-05-28-codex-self-improving-loop-and-harness-hub');
 });
 
 test('insight site build reports malformed post JSON through validation', () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-insight-bad-post-'));
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-bad-post-'));
   const postDir = path.join(repoRoot, 'site', 'insights', 'posts', 'bad-post');
   fs.mkdirSync(postDir, { recursive: true });
   fs.writeFileSync(path.join(postDir, 'post.json'), '{ bad json', 'utf8');
@@ -230,7 +230,7 @@ test('insight site build reports malformed post JSON through validation', () => 
 });
 
 test('insight CLI supports generate, build, validate, and publish dry-run json output', async () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-insight-cli-'));
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-cli-'));
   fs.mkdirSync(path.join(repoRoot, '.github', 'workflows'), { recursive: true });
   fs.copyFileSync(
     path.join(process.cwd(), '.github', 'workflows', 'publish-insights.yml'),
@@ -250,7 +250,7 @@ test('insight CLI supports generate, build, validate, and publish dry-run json o
   const preflight = await captureCli(['insight-publish', repoRoot, '--dry-run', '--allow-dirty', '--json']);
 
   expect(generated.code).toBe(0);
-  expect(JSON.parse(generated.stdout).slug).toBe('2026-05-28-codex-self-improving-loop-and-skill-hub');
+  expect(JSON.parse(generated.stdout).slug).toBe('2026-05-28-codex-self-improving-loop-and-harness-hub');
   expect(built.code).toBe(0);
   expect(validated.code).toBe(0);
   expect(preflight.code).toBe(0);

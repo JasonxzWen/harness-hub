@@ -20,11 +20,11 @@ import {
   readLock,
   removeManaged,
   runCli,
-  type SkillHubLock,
+  type HarnessHubLock,
   updateManaged,
   validateHarness,
   validateCapabilityIndex,
-} from '../src/skillHub';
+} from '../src/harnessHub';
 
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const AGENT_READINESS_FIXTURES = path.join(TEST_DIR, 'fixtures', 'agent-readiness');
@@ -41,7 +41,7 @@ const REQUIRED_HARNESS_FILES = [
 ] as const;
 
 test('plans default install into standard skill directory', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-plan-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-plan-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
 
   expect(plan.items.some((item) => item.componentId === 'skill:effective-interact')).toBe(true);
@@ -54,7 +54,7 @@ test('plans default install into standard skill directory', () => {
 });
 
 test('plans skills into the selected standard skill directory', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-agent-dirs-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-dirs-'));
   const plan = planInstall({
     targetDir,
     agents: ['standard'],
@@ -68,7 +68,7 @@ test('plans skills into the selected standard skill directory', () => {
 });
 
 test('installs skills, writes lock, and reports current status', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-install-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   const result = applyInstall(plan);
 
@@ -77,7 +77,7 @@ test('installs skills, writes lock, and reports current status', () => {
   expect(fs.existsSync(path.join(targetDir, 'skills', 'grill-me', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'diagnose', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'prototype', 'SKILL.md'))).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(true);
   expect(fs.existsSync(result.report)).toBe(true);
   expect(result.lock.data.schemaVersion).toBe(2);
   if (result.lock.data.schemaVersion !== 2) {
@@ -93,7 +93,7 @@ test('installs skills, writes lock, and reports current status', () => {
 });
 
 test('confirmed install overwrites same-name skill directories by default', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-overwrite-default-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-overwrite-default-'));
   const firstPlan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(firstPlan);
   const localFile = path.join(targetDir, 'skills', 'workflow-router', 'LOCAL.md');
@@ -108,7 +108,7 @@ test('confirmed install overwrites same-name skill directories by default', () =
 });
 
 test('install planning skips capabilities already detected outside install destination', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-plan-detected-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-plan-detected-'));
   const skillDir = path.join(targetDir, 'skills', 'verification-loop');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '---\nname: verification-loop\n---\n');
@@ -155,8 +155,8 @@ test('capability index validation rejects unsafe detect paths', () => {
   expect(errors.some((error) => error.includes('glob detect path'))).toBe(true);
 });
 
-test('analyzes empty target repo without writing Skill Hub state', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-empty-'));
+test('analyzes empty target repo without writing Harness Hub state', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-analyze-empty-'));
   const result = analyzeTarget({ targetDir, agents: ['standard'] });
 
   expect(result.schemaVersion).toBe(1);
@@ -165,11 +165,11 @@ test('analyzes empty target repo without writing Skill Hub state', () => {
   expect(result.findings.length).toBeGreaterThan(0);
   expect(result.findings.every((finding) => finding.state === 'recommended')).toBe(true);
   expect(result.findings.every((finding) => finding.reason.length > 0)).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub'))).toBe(false);
 });
 
 test('analyzes existing detected capability path', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-detected-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-analyze-detected-'));
   const skillDir = path.join(targetDir, 'skills', 'verification-loop');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '---\nname: verification-loop\n---\n');
@@ -183,7 +183,7 @@ test('analyzes existing detected capability path', () => {
 });
 
 test('analyzes destination conflict separately from detected capability', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-conflict-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-analyze-conflict-'));
   const skillDir = path.join(targetDir, 'skills', 'grill-me');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'README.md'), 'local placeholder');
@@ -198,7 +198,7 @@ test('analyzes destination conflict separately from detected capability', () => 
 });
 
 test('analysis findings are deterministic after normalizing generated timestamp', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-stable-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-analyze-stable-'));
 
   const first = analyzeTarget({ targetDir, agents: ['standard'] });
   const second = analyzeTarget({ targetDir, agents: ['standard'] });
@@ -207,14 +207,14 @@ test('analysis findings are deterministic after normalizing generated timestamp'
 });
 
 test('default analysis omits agent readiness data unless requested', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-default-shape-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-analyze-default-shape-'));
   const result = analyzeTarget({ targetDir, agents: ['standard'] });
 
   expect('agentReadiness' in result).toBe(false);
 });
 
 test('harness analysis is opt-in and side-effect-free', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-analysis-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-analysis-'));
   const defaultResult = analyzeTarget({ targetDir, agents: ['standard'] });
   const result = await captureCli(['analyze', targetDir, '--harness', '--json']);
 
@@ -224,11 +224,11 @@ test('harness analysis is opt-in and side-effect-free', async () => {
   expect(report.harness.componentId).toBe('harness:minimal');
   expect(report.harness.requiredFiles).toContain('AGENTS.md');
   expect(report.harness.findings.some((finding: { state: string }) => finding.state === 'missing')).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub'))).toBe(false);
 });
 
 test('harness init dry-run reports exact plan without writing files', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-dry-run-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-dry-run-'));
   const result = await captureCli(['init-harness', targetDir, '--dry-run', '--json']);
 
   expect(result.code).toBe(0);
@@ -238,11 +238,11 @@ test('harness init dry-run reports exact plan without writing files', async () =
     .toEqual([...REQUIRED_HARNESS_FILES].sort());
   expect(plan.harnessFiles.every((item: { exists: boolean }) => item.exists === false)).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('confirmed harness init writes lock-managed files and validates', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-init-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-init-'));
   const result = await captureCli(['init-harness', targetDir, '--yes', '--json']);
 
   expect(result.code).toBe(0);
@@ -274,7 +274,7 @@ test('confirmed harness init writes lock-managed files and validates', async () 
 });
 
 test('harness init skips existing root files unless forced', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-skip-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-skip-'));
   fs.writeFileSync(path.join(targetDir, 'AGENTS.md'), 'user-owned instructions\n');
 
   const plan = planHarnessInit({ targetDir });
@@ -287,9 +287,9 @@ test('harness init skips existing root files unless forced', () => {
 });
 
 test('harness init blocks schema version one locks before writing files', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-v1-preflight-'));
-  fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
-  fs.writeFileSync(path.join(targetDir, '.skill-hub', 'lock.json'), `${JSON.stringify({
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-v1-preflight-'));
+  fs.mkdirSync(path.join(targetDir, '.harness-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), `${JSON.stringify({
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.0',
@@ -306,7 +306,7 @@ test('harness init blocks schema version one locks before writing files', () => 
 });
 
 test('harness managed files report modified and missing states', () => {
-  const modifiedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-modified-'));
+  const modifiedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-modified-'));
   applyHarnessInit(planHarnessInit({ targetDir: modifiedTarget }));
   fs.appendFileSync(path.join(modifiedTarget, 'AGENTS.md'), '\nlocal edit\n');
   const modifiedStatus = getStatus({ targetDir: modifiedTarget, index: readCapabilityIndex() });
@@ -316,7 +316,7 @@ test('harness managed files report modified and missing states', () => {
   expect(removeResult.exitCode).toBe(3);
   expect(fs.existsSync(path.join(modifiedTarget, 'AGENTS.md'))).toBe(true);
 
-  const missingTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-missing-'));
+  const missingTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-missing-'));
   applyHarnessInit(planHarnessInit({ targetDir: missingTarget }));
   fs.rmSync(path.join(missingTarget, 'progress.md'));
   const missingStatus = getStatus({ targetDir: missingTarget, index: readCapabilityIndex() });
@@ -325,7 +325,7 @@ test('harness managed files report modified and missing states', () => {
 });
 
 test('harness component supports selected update planning', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-update-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-update-'));
   applyHarnessInit(planHarnessInit({ targetDir }));
   makeLockComponentStale(targetDir, 'harness:minimal', { version: '0.0.0' });
 
@@ -340,7 +340,7 @@ test('harness component supports selected update planning', () => {
 });
 
 test('standard install preserves existing harness lock records', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-install-preserve-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-install-preserve-'));
   applyHarnessInit(planHarnessInit({ targetDir }));
 
   applyInstall(planInstall({ targetDir, agents: ['standard'] }));
@@ -355,7 +355,7 @@ test('standard install preserves existing harness lock records', () => {
 });
 
 test('harness update only refreshes lock-owned files', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-update-owned-only-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-update-owned-only-'));
   fs.writeFileSync(path.join(targetDir, 'AGENTS.md'), 'user-owned instructions\n');
   applyHarnessInit(planHarnessInit({ targetDir }));
   makeLockComponentStale(targetDir, 'harness:minimal', { version: '0.0.0' });
@@ -493,7 +493,7 @@ test('readiness analysis gates automation candidates when verification is missin
 });
 
 test('readiness analysis has no target side effects', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-readiness-side-effects-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-readiness-side-effects-'));
   fs.writeFileSync(path.join(targetDir, 'AGENTS.md'), 'read-only instructions\n');
   fs.mkdirSync(path.join(targetDir, '.git'), { recursive: true });
   fs.writeFileSync(path.join(targetDir, '.git', 'HEAD'), 'ref: refs/heads/main\n');
@@ -503,7 +503,7 @@ test('readiness analysis has no target side effects', () => {
   const after = snapshotDirectory(targetDir);
 
   expect(result.agentReadiness?.categories).toEqual(READINESS_CATEGORIES);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub'))).toBe(false);
   expect(after).toEqual(before);
 });
 
@@ -533,7 +533,7 @@ test('readiness text and html reports are opt-in and scoreless', async () => {
 });
 
 test('readiness option is rejected outside analyze', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-readiness-invalid-option-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-readiness-invalid-option-'));
   const result = await captureCli(['install', targetDir, '--agent-readiness', '--dry-run']);
 
   expect(result.code).toBe(2);
@@ -541,26 +541,26 @@ test('readiness option is rejected outside analyze', async () => {
 });
 
 test('install dry run does not copy files or write a lock', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-dry-run-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-install-dry-run-'));
   const exitCode = await captureCli(['install', targetDir, '--target', 'standard', '--dry-run']);
 
   expect(exitCode.code).toBe(0);
   expect(fs.existsSync(path.join(targetDir, '.agents'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('install dry run supports json output without side effects', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-dry-run-json-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-install-dry-run-json-'));
   const result = await captureCli(['install', targetDir, '--target', 'standard', '--dry-run', '--json']);
 
   expect(result.code).toBe(0);
   const report = JSON.parse(result.stdout);
   expect(report.items.length).toBeGreaterThan(0);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('install supports json output after mutation', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-json-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-install-json-'));
   const result = await captureCli(['install', targetDir, '--target', 'standard', '--yes', '--json']);
 
   expect(result.code).toBe(0);
@@ -571,17 +571,17 @@ test('install supports json output after mutation', async () => {
 });
 
 test('install html output includes component versions', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-html-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-install-html-'));
   const result = await captureCli(['install', targetDir, '--target', 'standard', '--dry-run', '--html']);
 
   expect(result.code).toBe(0);
-  expect(result.stdout).toContain('Skill Hub Install Plan');
+  expect(result.stdout).toContain('Harness Hub Install Plan');
   expect(result.stdout).toContain('<td>0.1.0</td>');
 });
 
 test('install and init produce equivalent plans', async () => {
-  const installTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-plan-'));
-  const initTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-init-plan-'));
+  const installTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-install-plan-'));
+  const initTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-init-plan-'));
 
   const install = await captureCli(['install', installTarget, '--target', 'standard', '--dry-run']);
   const init = await captureCli(['init', initTarget, '--target', 'standard', '--dry-run']);
@@ -592,16 +592,16 @@ test('install and init produce equivalent plans', async () => {
 });
 
 test('mutating install requires explicit yes', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-install-confirm-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-install-confirm-'));
   const result = await captureCli(['install', targetDir, '--target', 'standard']);
 
   expect(result.code).toBe(2);
   expect(result.stderr).toContain('--yes');
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub'))).toBe(false);
 });
 
 test('status reports modified, missing, and update available states', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-status-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-status-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
 
@@ -627,7 +627,7 @@ test('status reports modified, missing, and update available states', () => {
 });
 
 test('effective-interact version bump is discoverable as a managed update', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-effective-interact-update-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-effective-interact-update-'));
   applyInstall(planInstall({ targetDir, agents: ['standard'] }));
   makeLockComponentStale(targetDir, 'skill:effective-interact', { version: '0.1.0' });
 
@@ -641,12 +641,12 @@ test('effective-interact version bump is discoverable as a managed update', () =
 });
 
 test('status reads schema version one locks without crashing', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-status-v1-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-status-v1-'));
   const skillDir = path.join(targetDir, 'skills', 'grill-me');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), 'local');
-  fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
-  fs.writeFileSync(path.join(targetDir, '.skill-hub', 'lock.json'), `${JSON.stringify({
+  fs.mkdirSync(path.join(targetDir, '.harness-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), `${JSON.stringify({
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.0',
@@ -669,7 +669,7 @@ test('status reads schema version one locks without crashing', () => {
 });
 
 test('remove dry run uses lock records without deleting files', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-dry-run-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-remove-dry-run-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
 
@@ -681,7 +681,7 @@ test('remove dry run uses lock records without deleting files', () => {
 });
 
 test('remove deletes managed files and preserves unmanaged same-name files', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-remove-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
   const unmanagedFile = path.join(targetDir, 'skills', 'grill-me', 'LOCAL.md');
@@ -692,11 +692,11 @@ test('remove deletes managed files and preserves unmanaged same-name files', () 
   expect(result.exitCode).toBe(0);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'grill-me', 'SKILL.md'))).toBe(false);
   expect(fs.existsSync(unmanagedFile)).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('remove blocks modified files unless force is used', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-modified-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-remove-modified-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
   const file = path.join(targetDir, 'skills', 'grill-me', 'SKILL.md');
@@ -709,24 +709,24 @@ test('remove blocks modified files unless force is used', () => {
   const forced = removeManaged(targetDir, { yes: true, force: true });
   expect(forced.exitCode).toBe(0);
   expect(fs.existsSync(file)).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('remove treats missing lock as idempotent no-op with confirmation', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-no-lock-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-remove-no-lock-'));
   const result = removeManaged(targetDir, { yes: true });
 
   expect(result.exitCode).toBe(0);
-  expect(result.reason).toContain('No Skill Hub lock');
+  expect(result.reason).toContain('No Harness Hub lock');
 });
 
 test('remove blocks schema version one hashless locks even with force', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-v1-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-remove-v1-'));
   const skillDir = path.join(targetDir, 'skills', 'grill-me');
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), 'local');
-  fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
-  fs.writeFileSync(path.join(targetDir, '.skill-hub', 'lock.json'), `${JSON.stringify({
+  fs.mkdirSync(path.join(targetDir, '.harness-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), `${JSON.stringify({
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.0',
@@ -749,9 +749,9 @@ test('remove blocks schema version one hashless locks even with force', () => {
 });
 
 test('remove blocks unsafe schema version two lock paths', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-unsafe-'));
-  fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
-  fs.writeFileSync(path.join(targetDir, '.skill-hub', 'lock.json'), `${JSON.stringify({
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-remove-unsafe-'));
+  fs.mkdirSync(path.join(targetDir, '.harness-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), `${JSON.stringify({
     schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.0',
@@ -783,11 +783,11 @@ test('remove blocks unsafe schema version two lock paths', () => {
   expect(status.modified[0]?.reason).toContain('unsafe managed path');
   expect(result.exitCode).toBe(3);
   expect(result.blocked[0]?.reason).toContain('unsafe managed path');
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(true);
 });
 
 test('update dry run reports version differences and modified blockers', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
   fs.appendFileSync(path.join(targetDir, 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
@@ -810,7 +810,7 @@ test('update dry run reports version differences and modified blockers', () => {
 });
 
 test('update applies unmodified managed components and refreshes lock metadata', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-apply-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-apply-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
   const unmanagedFile = path.join(targetDir, 'skills', 'grill-me', 'LOCAL.md');
@@ -848,7 +848,7 @@ test('update applies unmodified managed components and refreshes lock metadata',
 });
 
 test('update migrates legacy html-work-reports locks to effective-interact', () => {
-  const targetDir = createLegacyHtmlWorkReportsTarget('skill-hub-update-legacy-html-');
+  const targetDir = createLegacyHtmlWorkReportsTarget('harness-hub-update-legacy-html-');
 
   const status = getStatus({ targetDir });
   const preview = getUpdatePlan({ targetDir, components: ['skill:effective-interact'] });
@@ -873,7 +873,7 @@ test('update migrates legacy html-work-reports locks to effective-interact', () 
 });
 
 test('legacy html-work-reports migration overwrites same-name replacement destinations', () => {
-  const targetDir = createLegacyHtmlWorkReportsTarget('skill-hub-update-legacy-html-overwrite-');
+  const targetDir = createLegacyHtmlWorkReportsTarget('harness-hub-update-legacy-html-overwrite-');
   const replacementDir = path.join(targetDir, 'skills', 'effective-interact');
   fs.mkdirSync(replacementDir, { recursive: true });
   fs.writeFileSync(path.join(replacementDir, 'LOCAL.md'), 'local effective-interact copy\n');
@@ -890,7 +890,7 @@ test('legacy html-work-reports migration overwrites same-name replacement destin
 });
 
 test('update can be scoped to selected components', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-selected-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-selected-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
   makeLockComponentStale(targetDir, 'skill:grill-me');
@@ -913,17 +913,17 @@ test('update can be scoped to selected components', () => {
 });
 
 test('normal update blocks modified, missing, unsafe, schema v1, skipped, and unknown records', () => {
-  const modifiedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-modified-'));
+  const modifiedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-modified-'));
   applyInstall(planInstall({ targetDir: modifiedTarget, agents: ['standard'] }));
   makeLockComponentStale(modifiedTarget, 'skill:grill-me');
   fs.appendFileSync(path.join(modifiedTarget, 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
 
-  const missingTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-missing-'));
+  const missingTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-missing-'));
   applyInstall(planInstall({ targetDir: missingTarget, agents: ['standard'] }));
   makeLockComponentStale(missingTarget, 'skill:grill-me');
   fs.rmSync(path.join(missingTarget, 'skills', 'grill-me', 'SKILL.md'));
 
-  const unsafeTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-unsafe-'));
+  const unsafeTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-unsafe-'));
   applyInstall(planInstall({ targetDir: unsafeTarget, agents: ['standard'] }));
   mutateLock(unsafeTarget, (lock) => {
     if (lock.schemaVersion !== 2) throw new Error('expected v2');
@@ -933,12 +933,12 @@ test('normal update blocks modified, missing, unsafe, schema v1, skipped, and un
     component.files = [{ path: '../outside.txt', sha256: '0'.repeat(64), size: 1 }];
   });
 
-  const v1Target = createV1Target('skill-hub-update-v1-', { exact: true });
+  const v1Target = createV1Target('harness-hub-update-v1-', { exact: true });
   mutateLock(v1Target, (lock) => {
     lock.components[0]!.version = '0.0.0';
   });
 
-  const skippedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-skipped-'));
+  const skippedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-skipped-'));
   applyInstall(planInstall({ targetDir: skippedTarget, agents: ['standard'] }));
   mutateLock(skippedTarget, (lock) => {
     if (lock.schemaVersion !== 2) throw new Error('expected v2');
@@ -949,7 +949,7 @@ test('normal update blocks modified, missing, unsafe, schema v1, skipped, and un
     component.files = [];
   });
 
-  const unknownTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-unknown-'));
+  const unknownTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-unknown-'));
   applyInstall(planInstall({ targetDir: unknownTarget, agents: ['standard'] }));
   mutateLock(unknownTarget, (lock) => {
     if (lock.schemaVersion !== 2) throw new Error('expected v2');
@@ -959,16 +959,16 @@ test('normal update blocks modified, missing, unsafe, schema v1, skipped, and un
   });
 
   for (const target of [modifiedTarget, missingTarget, unsafeTarget, v1Target, skippedTarget, unknownTarget]) {
-    const before = fs.readFileSync(path.join(target, '.skill-hub', 'lock.json'), 'utf8');
+    const before = fs.readFileSync(path.join(target, '.harness-hub', 'lock.json'), 'utf8');
     const result = updateManaged(target, { yes: true });
     expect(result.exitCode).toBe(3);
     expect(result.blockers.length).toBeGreaterThan(0);
-    expect(fs.readFileSync(path.join(target, '.skill-hub', 'lock.json'), 'utf8')).toBe(before);
+    expect(fs.readFileSync(path.join(target, '.harness-hub', 'lock.json'), 'utf8')).toBe(before);
   }
 });
 
 test('force update overwrites modified and missing schema version two managed files only', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-force-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-force-'));
   applyInstall(planInstall({ targetDir, agents: ['standard'] }));
   makeLockComponentStale(targetDir, 'skill:grill-me');
   makeLockComponentStale(targetDir, 'skill:diagnose');
@@ -991,7 +991,7 @@ test('force update overwrites modified and missing schema version two managed fi
 });
 
 test('migrate-lock converts exact schema version one records and blocks divergent records', () => {
-  const exactTarget = createV1Target('skill-hub-migrate-v1-exact-', { exact: true });
+  const exactTarget = createV1Target('harness-hub-migrate-v1-exact-', { exact: true });
   const dryRun = migrateLock(exactTarget, { dryRun: true });
   const migrated = migrateLock(exactTarget, { yes: true });
 
@@ -1007,22 +1007,22 @@ test('migrate-lock converts exact schema version one records and blocks divergen
   expect(updateManaged(exactTarget, { yes: true }).exitCode).toBe(0);
   expect(removeManaged(exactTarget, { yes: true }).exitCode).toBe(0);
 
-  const divergentTarget = createV1Target('skill-hub-migrate-v1-divergent-', { exact: false });
-  const before = fs.readFileSync(path.join(divergentTarget, '.skill-hub', 'lock.json'), 'utf8');
+  const divergentTarget = createV1Target('harness-hub-migrate-v1-divergent-', { exact: false });
+  const before = fs.readFileSync(path.join(divergentTarget, '.harness-hub', 'lock.json'), 'utf8');
   const blocked = migrateLock(divergentTarget, { yes: true });
 
   expect(blocked.exitCode).toBe(3);
   expect(blocked.blockers.some((row) => row.id === 'skill:grill-me')).toBe(true);
-  expect(fs.readFileSync(path.join(divergentTarget, '.skill-hub', 'lock.json'), 'utf8')).toBe(before);
+  expect(fs.readFileSync(path.join(divergentTarget, '.harness-hub', 'lock.json'), 'utf8')).toBe(before);
 });
 
 test('update and migrate-lock CLI paths support confirmation, selection, force, and json output', async () => {
-  const confirmTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-confirm-'));
+  const confirmTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-confirm-'));
   const missingConfirmation = await captureCli(['update', confirmTarget]);
   expect(missingConfirmation.code).toBe(2);
   expect(missingConfirmation.stdout).toContain('--yes');
 
-  const selectedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-cli-selected-'));
+  const selectedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-cli-selected-'));
   applyInstall(planInstall({ targetDir: selectedTarget, agents: ['standard'] }));
   makeLockComponentStale(selectedTarget, 'skill:grill-me');
   makeLockComponentStale(selectedTarget, 'skill:diagnose');
@@ -1034,7 +1034,7 @@ test('update and migrate-lock CLI paths support confirmation, selection, force, 
   expect(selected.code).toBe(0);
   expect(JSON.parse(selected.stdout).updated.map((row: { id: string }) => row.id)).toEqual(['skill:grill-me']);
 
-  const forceTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-cli-force-'));
+  const forceTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-cli-force-'));
   applyInstall(planInstall({ targetDir: forceTarget, agents: ['standard'] }));
   makeLockComponentStale(forceTarget, 'skill:grill-me');
   fs.appendFileSync(path.join(forceTarget, 'skills', 'grill-me', 'SKILL.md'), '\nmodified');
@@ -1042,7 +1042,7 @@ test('update and migrate-lock CLI paths support confirmation, selection, force, 
   expect(force.code).toBe(0);
   expect(JSON.parse(force.stdout).forced.some((row: { id: string }) => row.id === 'skill:grill-me')).toBe(true);
 
-  const migrateTarget = createV1Target('skill-hub-migrate-cli-', { exact: true });
+  const migrateTarget = createV1Target('harness-hub-migrate-cli-', { exact: true });
   const migrateDryRun = await captureCli(['migrate-lock', migrateTarget, '--dry-run', '--json']);
   const migrateConfirmed = await captureCli(['migrate-lock', migrateTarget, '--yes', '--json']);
   expect(migrateDryRun.code).toBe(0);
@@ -1052,17 +1052,17 @@ test('update and migrate-lock CLI paths support confirmation, selection, force, 
 });
 
 test('analyze html without output writes to stdout only', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-html-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-analyze-html-'));
   const result = await captureCli(['analyze', targetDir, '--html']);
 
   expect(result.code).toBe(0);
   expect(result.stdout).toContain('<!doctype html>');
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub'))).toBe(false);
 });
 
 test('analyze output writes explicit report path', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-output-'));
-  const output = path.join(os.tmpdir(), `skill-hub-analysis-${Date.now()}.html`);
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-analyze-output-'));
+  const output = path.join(os.tmpdir(), `harness-hub-analysis-${Date.now()}.html`);
   const result = await captureCli(['analyze', targetDir, '--html', '--output', output]);
 
   expect(result.code).toBe(0);
@@ -1071,7 +1071,7 @@ test('analyze output writes explicit report path', async () => {
 });
 
 test('analyze rejects unsupported profile option as a usage error', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-analyze-errors-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-analyze-errors-'));
 
   const invalidOption = await captureCli(['analyze', targetDir, '--bogus']);
   const profileOption = await captureCli(['analyze', targetDir, '--profile', 'nope']);
@@ -1083,10 +1083,10 @@ test('analyze rejects unsupported profile option as a usage error', async () => 
 });
 
 test('status supports json, html stdout, and explicit output', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-status-cli-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-status-cli-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
-  const output = path.join(os.tmpdir(), `skill-hub-status-${Date.now()}.html`);
+  const output = path.join(os.tmpdir(), `harness-hub-status-${Date.now()}.html`);
 
   const json = await captureCli(['status', targetDir, '--json']);
   const html = await captureCli(['status', targetDir, '--html']);
@@ -1101,7 +1101,7 @@ test('status supports json, html stdout, and explicit output', async () => {
 });
 
 test('remove command requires confirmation for mutation', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-remove-confirm-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-remove-confirm-'));
   const result = await captureCli(['remove', targetDir]);
 
   expect(result.code).toBe(2);
@@ -1109,7 +1109,7 @@ test('remove command requires confirmation for mutation', async () => {
 });
 
 test('update command supports dry-run json output', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-update-cli-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-update-cli-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
 
@@ -1172,9 +1172,9 @@ function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
-function mutateLock(targetDir: string, mutate: (lock: SkillHubLock) => void): void {
-  const lockPath = path.join(targetDir, '.skill-hub', 'lock.json');
-  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8')) as SkillHubLock;
+function mutateLock(targetDir: string, mutate: (lock: HarnessHubLock) => void): void {
+  const lockPath = path.join(targetDir, '.harness-hub', 'lock.json');
+  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8')) as HarnessHubLock;
   mutate(lock);
   fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
 }
@@ -1223,8 +1223,8 @@ function createLegacyHtmlWorkReportsTarget(prefix: string): string {
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), legacyContent);
   fs.writeFileSync(path.join(skillDir, 'asset.txt'), legacyAsset);
-  fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
-  fs.writeFileSync(path.join(targetDir, '.skill-hub', 'lock.json'), `${JSON.stringify({
+  fs.mkdirSync(path.join(targetDir, '.harness-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), `${JSON.stringify({
     schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.4',
@@ -1265,8 +1265,8 @@ function createV1Target(prefix: string, options: { exact: boolean }): string {
   if (!options.exact) {
     fs.appendFileSync(path.join(dest, 'SKILL.md'), '\ndivergent');
   }
-  fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
-  fs.writeFileSync(path.join(targetDir, '.skill-hub', 'lock.json'), `${JSON.stringify({
+  fs.mkdirSync(path.join(targetDir, '.harness-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), `${JSON.stringify({
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     hubVersion: '0.1.0',

@@ -1,6 +1,6 @@
 # Source Projects
 
-This file records upstream projects reviewed for Skill Hub. The install rule is personal distribution with a routing overlay: source ideas may come from any host ecosystem, imported skill bodies should keep upstream style by default, and committed distributed skills must stay in the standard `skills/<name>/SKILL.md` shape.
+This file records upstream projects reviewed for Harness Hub. The install rule is personal distribution with a routing overlay: source ideas may come from any host ecosystem, imported skill bodies should keep upstream style by default, and committed distributed skills must stay in the standard `skills/<name>/SKILL.md` shape.
 
 ## Active Sources
 
@@ -23,7 +23,7 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 | Candidate | Decision | Reason |
 |---|---|---|
 | `snarktank/ralph` | Retired from installable distribution | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` were removed on 2026-05-22 because current Codex and Claude Code goal/story workflows cover the lane. Keep the upstream note as historical source evidence only. |
-| Matt Pocock `write-a-skill` | Reference-only | Useful reminders for description-as-router, progressive disclosure, concrete examples, and review checklists; local Skill Hub quality gates remain authoritative. |
+| Matt Pocock `write-a-skill` | Reference-only | Useful reminders for description-as-router, progressive disclosure, concrete examples, and review checklists; local Harness Hub quality gates remain authoritative. |
 | Matt Pocock `grill-with-docs` | Explicit-only | Useful for terminology and scenario pressure, but inline `CONTEXT.md`/ADR writes are not standardized locally; keep `grill-me`/review workflows as the pressure-test owner and use `effective-interact` only for expression or handoff. |
 | `affaan-m/everything-claude-code` | Excluded from the atomic skill candidate pool | Removed by product direction on 2026-05-21. Keep existing local lineage until installed ECC-derived skills are replaced or rewritten, but do not use ECC as a source for new atom selection. |
 | Matt Pocock `improve-codebase-architecture` and `zoom-out` | Wait | Overlap current architecture and product-planning skills. |
@@ -32,10 +32,10 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 | Compound Engineering wholesale bundle | Reject by default | Too broad and overlap-heavy; custom agent files and external workflows should not enter the default skill tree. |
 | `michalvavra/agents` `html-tools` | Explicit-only reference | Refreshed at `77473489d5c7b248af51ee7acf072c84a59ba6d4`; useful single-file HTML utility ideas, but overlaps `effective-interact` and `web-artifacts-builder`. |
 | `Cocoon-AI/architecture-diagram-generator` | Explicit-only reference | Refreshed at `4b9087d55268c79a935105439dbcd37b630fc3f3`; useful architecture diagram pattern, but too narrow and CDN-oriented for default install. |
-| Anthropic `docx`, `pdf`, `pptx`, `xlsx` | Reference-only | High-value document/spreadsheet/presentation/PDF source material, but source-available rather than open source in the refreshed snapshot, so not redistributed through Skill Hub. |
+| Anthropic `docx`, `pdf`, `pptx`, `xlsx` | Reference-only | High-value document/spreadsheet/presentation/PDF source material, but source-available rather than open source in the refreshed snapshot, so not redistributed through Harness Hub. |
 | Anthropic `brand-guidelines` | Reference-only | Apache 2.0, but it encodes Anthropic's own brand rather than a reusable customer brand workflow. |
 | Anthropic `algorithmic-art` and `canvas-design` | Reference-only | Creative and useful as inspiration, but niche, heavier, and partially oriented around host artifact behavior. Keep out of distribution until a user need justifies a bounded standard skill. |
-| Anthropic `frontend-design`, `web-artifacts-builder`, `webapp-testing` | Already covered | Existing local Skill Hub versions already cover these surfaces; do not add duplicates. |
+| Anthropic `frontend-design`, `web-artifacts-builder`, `webapp-testing` | Already covered | Existing local Harness Hub versions already cover these surfaces; do not add duplicates. |
 
 ## Current Policy
 

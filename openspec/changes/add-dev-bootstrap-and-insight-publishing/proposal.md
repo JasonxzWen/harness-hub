@@ -1,6 +1,6 @@
 ## Why
 
-Skill Hub should become the user's personal agent work system, not only a skill folder distributor.
+Harness Hub should become the user's personal agent work system, not only a skill folder distributor.
 
 The desired product shape has two atomic capabilities:
 
@@ -25,7 +25,7 @@ This change is Codex-only for the initial implementation target. It should use C
 
 - Do not implement code in this change.
 - Do not add non-Codex platform instruction files or host-specific metadata to initialized targets.
-- Do not silently change `skill-hub install` to write root harness files.
+- Do not silently change `harness-hub install` to write root harness files.
 - Do not automatically publish, push, post, or mutate remote systems without an explicit publish command and passing preflight.
 - Do not copy Learn Harness Engineering templates wholesale without source, license, and local adaptation review.
 - Do not turn generated posts into summaries or rewritten source articles. Posts must include viewpoint extraction, integration, project-state mapping, and iteration records.
@@ -35,7 +35,7 @@ This change is Codex-only for the initial implementation target. It should use C
 
 - Learn Harness Engineering: `https://walkinglabs.github.io/learn-harness-engineering/zh/`
 - Learn Harness Engineering template guide: `https://walkinglabs.github.io/learn-harness-engineering/zh/resources/templates/`
-- Existing Skill Hub lifecycle docs and lock-backed install/update/remove behavior.
+- Existing Harness Hub lifecycle docs and lock-backed install/update/remove behavior.
 - Existing `effective-interact` generation and validation surface.
 
 ## Impact

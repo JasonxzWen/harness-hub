@@ -7,7 +7,7 @@ import path from 'node:path';
 const syncScript = path.resolve('scripts/sync-codex-skills.mjs');
 
 function makeTempRoot(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-codex-bootstrap-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-codex-bootstrap-'));
 }
 
 function writeSkill(root: string, name: string, body = '---\nname: test\n---\n\n# Test\n'): void {
@@ -22,7 +22,7 @@ test('Codex bootstrap sync mirrors standard skills and preserves local artifacts
   fs.mkdirSync(path.join(root, '.codex', 'skills', 'alpha', 'artifacts'), { recursive: true });
   fs.writeFileSync(path.join(root, '.codex', 'skills', 'alpha', 'artifacts', 'local.html'), '<html></html>');
   fs.mkdirSync(path.join(root, '.codex', 'skills', 'stale'), { recursive: true });
-  fs.writeFileSync(path.join(root, '.codex', 'skills', 'stale', '.skill-hub-managed'), 'generated\n');
+  fs.writeFileSync(path.join(root, '.codex', 'skills', 'stale', '.harness-hub-managed'), 'generated\n');
   fs.writeFileSync(path.join(root, '.codex', 'skills', 'stale', 'SKILL.md'), '# stale\n');
 
   const result = spawnSync('node', [syncScript, '--root', root], { encoding: 'utf8' });
@@ -31,7 +31,7 @@ test('Codex bootstrap sync mirrors standard skills and preserves local artifacts
   expect(result.stdout).toContain('Synced 1 skills into .codex/skills/');
   expect(result.stdout).toContain('Removed 1 stale skill directories.');
   expect(fs.existsSync(path.join(root, '.codex', 'skills', 'alpha', 'SKILL.md'))).toBe(true);
-  expect(fs.existsSync(path.join(root, '.codex', 'skills', 'alpha', '.skill-hub-managed'))).toBe(true);
+  expect(fs.existsSync(path.join(root, '.codex', 'skills', 'alpha', '.harness-hub-managed'))).toBe(true);
   expect(fs.existsSync(path.join(root, '.codex', 'skills', 'alpha', 'artifacts', 'local.html'))).toBe(true);
   expect(fs.existsSync(path.join(root, '.codex', 'skills', 'stale', 'SKILL.md'))).toBe(false);
 });
@@ -48,7 +48,7 @@ test('Codex bootstrap sync overwrites same-name Codex skill directories', () => 
   expect(result.status).toBe(0);
   expect(fs.readFileSync(path.join(root, '.codex', 'skills', 'alpha', 'SKILL.md'), 'utf8')).toContain('name: alpha');
   expect(fs.existsSync(path.join(root, '.codex', 'skills', 'alpha', 'LOCAL.md'))).toBe(false);
-  expect(fs.existsSync(path.join(root, '.codex', 'skills', 'alpha', '.skill-hub-managed'))).toBe(true);
+  expect(fs.existsSync(path.join(root, '.codex', 'skills', 'alpha', '.harness-hub-managed'))).toBe(true);
 });
 
 test('Codex bootstrap output stays ignored local state', () => {

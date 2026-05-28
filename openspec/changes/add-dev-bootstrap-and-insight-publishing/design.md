@@ -82,7 +82,7 @@ Required post content:
 - source claims: what the source material says,
 - viewpoint extraction: the transferable ideas,
 - integration: how those ideas combine with previous project direction,
-- project mapping: what the ideas mean for Skill Hub's current architecture and gaps,
+- project mapping: what the ideas mean for Harness Hub's current architecture and gaps,
 - iteration record: what small project judgment changed or was confirmed,
 - action boundary: what to do now, what to observe, and what not to do,
 - source attribution and fact/inference separation.

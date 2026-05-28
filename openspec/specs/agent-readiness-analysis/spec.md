@@ -1,14 +1,14 @@
 # agent-readiness-analysis Specification
 
 ## Purpose
-Define the read-only `skill-hub analyze <target> --agent-readiness` contract for deterministic, evidence-backed assessment of target repositories before higher-autonomy agent work.
+Define the read-only `harness-hub analyze <target> --agent-readiness` contract for deterministic, evidence-backed assessment of target repositories before higher-autonomy agent work.
 ## Requirements
 ### Requirement: Read-only agent readiness analysis
 The system SHALL provide an opt-in agent-readiness analysis for a target repository without writing files, creating directories, changing git state, or modifying external resources.
 
 #### Scenario: Run readiness analysis without side effects
-- **WHEN** the user runs `skill-hub analyze <target> --agent-readiness --json`
-- **THEN** the system reports agent-readiness findings without creating `.skill-hub/`, writing reports by default, changing target files, or changing git state
+- **WHEN** the user runs `harness-hub analyze <target> --agent-readiness --json`
+- **THEN** the system reports agent-readiness findings without creating `.harness-hub/`, writing reports by default, changing target files, or changing git state
 
 #### Scenario: Unknown target signals do not fail analysis
 - **WHEN** the target repository lacks recognized agent, test, or documentation markers
@@ -82,13 +82,13 @@ The system SHALL recommend learning-capture locations as reviewable guidance onl
 
 #### Scenario: Learning capture is not automatic memory mutation
 - **WHEN** the readiness report recommends learning capture
-- **THEN** the system does not write to host memory, target repo files, or `.skill-hub/lock.json`
+- **THEN** the system does not write to host memory, target repo files, or `.harness-hub/lock.json`
 
 ### Requirement: Stable readiness report contract
 The system SHALL provide stable JSON ordering and enough evidence for each readiness finding.
 
 #### Scenario: Repeated readiness output is stable
-- **WHEN** the same `skill-hub analyze <target> --agent-readiness --json` command runs twice without target file changes
+- **WHEN** the same `harness-hub analyze <target> --agent-readiness --json` command runs twice without target file changes
 - **THEN** categories, finding ids, states, recommendations, and evidence paths appear in the same order after normalizing timestamps
 
 #### Scenario: Finding includes required fields
@@ -110,9 +110,9 @@ The system SHALL keep project documentation linked to the agent-readiness planni
 The system SHALL allow read-only agent-readiness signals to inform harness recommendations without changing the side-effect-free readiness contract.
 
 #### Scenario: Harness recommendations reference readiness evidence
-- **WHEN** `skill-hub analyze <target> --agent-readiness --harness --json` detects verification, outcome, routing, or learning-capture gaps
+- **WHEN** `harness-hub analyze <target> --agent-readiness --harness --json` detects verification, outcome, routing, or learning-capture gaps
 - **THEN** harness findings may cite those gaps as evidence for root harness initialization recommendations
 
 #### Scenario: Readiness remains non-mutating
 - **WHEN** readiness and harness analysis run together
-- **THEN** the system does not create `.skill-hub/`, target files, schedules, webhooks, commits, pushes, or external resources
+- **THEN** the system does not create `.harness-hub/`, target files, schedules, webhooks, commits, pushes, or external resources

@@ -6,16 +6,16 @@ Define the read-only target repository analysis contract for deterministic capab
 ### Requirement: Read-only target inventory
 The system SHALL analyze a target repository without writing files, creating directories, changing git state, or modifying external resources.
 
-#### Scenario: Analyze a repository with no Skill Hub state
-- **WHEN** the user runs `skill-hub analyze <target>`
-- **THEN** the system reports detected repo signals and capability findings without creating `.skill-hub/`
+#### Scenario: Analyze a repository with no Harness Hub state
+- **WHEN** the user runs `harness-hub analyze <target>`
+- **THEN** the system reports detected repo signals and capability findings without creating `.harness-hub/`
 
 #### Scenario: Analyze with HTML output
-- **WHEN** the user runs `skill-hub analyze <target> --html`
-- **THEN** the system prints HTML to stdout without creating `.skill-hub/`
+- **WHEN** the user runs `harness-hub analyze <target> --html`
+- **THEN** the system prints HTML to stdout without creating `.harness-hub/`
 
 #### Scenario: Analyze with explicit output path
-- **WHEN** the user runs `skill-hub analyze <target> --html --output <file>`
+- **WHEN** the user runs `harness-hub analyze <target> --html --output <file>`
 - **THEN** the system writes the report to the requested file path and does not install or remove capabilities
 
 ### Requirement: Capability matching from explicit metadata
@@ -41,18 +41,18 @@ The system SHALL include enough reason data for every recommendation, conflict, 
 - **THEN** the JSON result includes the capability id, component id, target agent, destination path, and human-readable reason
 
 #### Scenario: Conflict has evidence
-- **WHEN** the target repository already has a destination path that Skill Hub would install into
+- **WHEN** the target repository already has a destination path that Harness Hub would install into
 - **THEN** the analysis result reports the conflict with the existing path and the action that would be taken by default
 
 ### Requirement: Stable JSON report contract
 The system SHALL provide a JSON report for analysis that is deterministic for the same target files, capability index, and agent options.
 
 #### Scenario: Repeated analysis is stable
-- **WHEN** the user runs the same `skill-hub analyze <target> --json` command twice without file changes
+- **WHEN** the user runs the same `harness-hub analyze <target> --json` command twice without file changes
 - **THEN** the capability ids, recommendation ids, conflict ids, and evidence paths appear in the same order
 
 #### Scenario: JSON includes required fields
-- **WHEN** the user runs `skill-hub analyze <target> --json`
+- **WHEN** the user runs `harness-hub analyze <target> --json`
 - **THEN** the JSON result includes schema version, hub version, target directory, agents, repo signals, and sorted findings
 
 #### Scenario: Unknown repo type is handled
@@ -63,9 +63,9 @@ The system SHALL provide a JSON report for analysis that is deterministic for th
 The system SHALL expose harness gap analysis as an opt-in extension of repository analysis.
 
 #### Scenario: Harness analysis appears only when requested
-- **WHEN** the user runs `skill-hub analyze <target> --json`
+- **WHEN** the user runs `harness-hub analyze <target> --json`
 - **THEN** the analysis output omits harness gap findings unless `--harness` is provided
 
 #### Scenario: Harness analysis can compose with agent readiness
-- **WHEN** the user runs `skill-hub analyze <target> --agent-readiness --harness --json`
+- **WHEN** the user runs `harness-hub analyze <target> --agent-readiness --harness --json`
 - **THEN** the output includes both agent-readiness findings and harness gap findings while preserving deterministic ordering

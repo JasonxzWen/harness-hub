@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { runCli } from '../dist/skillHub.js';
+import { runCli } from '../dist/harnessHub.js';
 
 runCli(process.argv.slice(2)).then((code) => {
   process.exitCode = code;

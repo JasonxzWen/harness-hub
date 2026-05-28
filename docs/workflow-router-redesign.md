@@ -2,9 +2,9 @@
 
 Date: 2026-05-20
 
-This document records the accepted direction for the next Skill Hub workflow redesign. It is a planning contract, not an implementation claim.
+This document records the accepted direction for the next Harness Hub workflow redesign. It is a planning contract, not an implementation claim.
 
-Current direction note: Skill Hub is now treated as a personal workflow distribution repo. The workflow router is the personal routing overlay over imported and local skills; it does not require imported skill bodies to be rewritten into one house style.
+Current direction note: Harness Hub is now treated as a personal workflow distribution repo. The workflow router is the personal routing overlay over imported and local skills; it does not require imported skill bodies to be rewritten into one house style.
 
 ## Document Set
 
@@ -36,7 +36,7 @@ The workflow owner must drive this lifecycle: align user need -> gather required
 | Diagnosis | `diagnosis-workflow` | Failing command, runtime bug, flaky behavior, performance issue, or agent/tool failure. | Reproduce or bound the symptom before fixing. |
 | Review | `review-workflow` | Code review, plan review, release review, security review, or confidence check. | Findings first, evidence anchored, no implementation unless requested. |
 | Delivery | `delivery-workflow` | Acceptance, handoff, release notes, cleanup, validation closeout, or local environment reset. | Verification and residual risk are explicit before declaring done. |
-| Skill Hub maintenance | `hub-maintenance-workflow` | Skill Hub repo maintenance, third-party source evaluation, routing cleanup, npm lifecycle work, or target-repo install policy. | Preserve local originality and lock-backed lifecycle behavior. |
+| Harness Hub maintenance | `hub-maintenance-workflow` | Harness Hub repo maintenance, third-party source evaluation, routing cleanup, npm lifecycle work, or target-repo install policy. | Preserve local originality and lock-backed lifecycle behavior. |
 
 Only one owner should drive a task state. Narrow technical skills may be used underneath that owner, but they should not compete for the top-level workflow.
 
@@ -83,7 +83,7 @@ Use subagents when the work is independent and mergeable:
 
 Avoid subagents when the result is on the critical path, tightly coupled to the next local edit, or likely to create conflicting writes. The main agent owns final synthesis, user-facing conclusions, and integration.
 
-Codex already has project-local agent roles in `.codex/agents` and host-level subagent support. Claude Code has native subagents. Skill Hub should map workflow intent to these host capabilities instead of inventing a second orchestration layer.
+Codex already has project-local agent roles in `.codex/agents` and host-level subagent support. Claude Code has native subagents. Harness Hub should map workflow intent to these host capabilities instead of inventing a second orchestration layer.
 
 ## Hook Policy
 
@@ -134,7 +134,7 @@ See [Workflow router execution plan](workflow-router-execution-plan.md) for the 
 
 1. Create source dossier and routing evals before changing the install surface.
 2. Add `workflow-router` as the top-level intent classifier.
-3. Add original workflow-owner skills for question, SDD change, diagnosis, review, delivery, and Skill Hub maintenance.
+3. Add original workflow-owner skills for question, SDD change, diagnosis, review, delivery, and Harness Hub maintenance.
 4. Make `effective-interact` the default reporting layer in those workflows without making it the state owner.
 5. Keep workflow-owner skills in the single standard install set after tests cover routing behavior.
 6. Preserve npm install/update/remove and lock-backed cleanup throughout.

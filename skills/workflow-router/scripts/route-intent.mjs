@@ -62,11 +62,11 @@ const STATE_CONFIG = Object.freeze({
     helpers: ['verification-loop', 'effective-interact', 'handoff'],
     effectiveInteract: 'required',
   },
-  'skill-hub-maintenance': {
+  'harness-hub-maintenance': {
     owner: 'hub-maintenance-workflow',
     mutationAllowed: true,
     requiredGates: LIFECYCLE_GATES,
-    nextGate: 'Gather source, capability, and lifecycle evidence before changing Skill Hub.',
+    nextGate: 'Gather source, capability, and lifecycle evidence before changing Harness Hub.',
     helpers: ['skill-creator', 'documentation-lookup', 'verification-loop'],
     effectiveInteract: 'required',
   },
@@ -94,7 +94,7 @@ const OWNER_STATE = Object.freeze({
   'diagnosis-workflow': 'diagnosis',
   'review-workflow': 'review',
   'delivery-workflow': 'delivery',
-  'hub-maintenance-workflow': 'skill-hub-maintenance',
+  'hub-maintenance-workflow': 'harness-hub-maintenance',
 });
 
 const SIGNALS = Object.freeze({
@@ -259,7 +259,7 @@ const SIGNALS = Object.freeze({
     '\u603b\u7ed3',
   ],
   hubMaintenance: [
-    'skill hub',
+    'harness hub',
     'skills',
     'skill',
     'capability',
@@ -274,7 +274,7 @@ const SIGNALS = Object.freeze({
     'profiles',
     'install set',
     'activation smoke',
-    'skill-hub',
+    'harness-hub',
     'skill activation',
     '\u6280\u80fd',
     '\u80fd\u529b',
@@ -436,7 +436,7 @@ export function classifyIntent(prompt) {
   }
 
   if (hubSignal && hubActionSignal) {
-    return makeResult('skill-hub-maintenance', 'high', 'The request targets Skill Hub capability, routing, source, packaging, or lifecycle maintenance.');
+    return makeResult('harness-hub-maintenance', 'high', 'The request targets Harness Hub capability, routing, source, packaging, or lifecycle maintenance.');
   }
 
   if (reviewSignal && changeSignal && !noMutation) {
@@ -470,7 +470,7 @@ export function classifyIntent(prompt) {
   }
 
   if (hubSignal) {
-    return makeResult('skill-hub-maintenance', 'medium', 'The request references Skill Hub routing or capabilities, but the action is not fully explicit.');
+    return makeResult('harness-hub-maintenance', 'medium', 'The request references Harness Hub routing or capabilities, but the action is not fully explicit.');
   }
 
   return makeResult('none', 'low', 'No non-trivial workflow owner signal was detected.');

@@ -1,7 +1,7 @@
 schema: spec-driven
 
 context: |
-  Project: skill-hub
+  Project: harness-hub
   Purpose: Distribute a personal agent workflow toolkit with source records, routing overlay, and lock-backed lifecycle tooling.
   Primary language: Chinese documentation, with source URLs and technical names preserved in English.
   Initial focus: high-signal personal workflow reuse across multiple projects.

@@ -5,7 +5,7 @@
   "template": "implementation-handoff",
   "renderMode": "runtime-cdn",
   "intent": {
-    "audience": "Skill Hub maintainer",
+    "audience": "Harness Hub maintainer",
     "primaryQuestion": "这次是否避免了为清空 warning 过度使用富文本？",
     "decision": "接受；后续 HTML 汇报先判断 warning 是否降低决策成本，再决定修复或保留。",
     "timeBudget": "2 分钟",

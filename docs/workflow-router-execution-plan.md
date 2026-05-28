@@ -43,7 +43,7 @@ Implementation status: the router skill, owner skills, routing fixture tests, an
 | Router skill | `skills/workflow-router/` | Thin intent classifier and state handoff rules. | `SKILL.md` stays short; detailed taxonomy lives in `references/`; no implementation workflow inside router. |
 | Workflow owners | `skills/answer-workflow/`, `skills/sdd-workflow/`, `skills/diagnosis-workflow/`, `skills/review-workflow/`, `skills/delivery-workflow/`, `skills/hub-maintenance-workflow/` | Original owner skills for each state. | Each owner has one description, non-overlap examples, entry/exit gates, and `effective-interact` handoff guidance. |
 | Library demotion | `docs/skill-routing.md`, `capabilities/index.json` | Existing narrow skills become tools under workflow owners instead of top-level lifecycle owners. | Matt/OpenSpec/ECC/Superpowers-derived lanes are not removed unless replaced; overlap is documented. |
-| Packaging | `capabilities/index.json`, `README.md`, `docs/capability-map.md`, `tests/skillHub.test.ts` | Single standard skill install set without retired Ralph goal-loop helpers. | Install/status/update/remove remain lock-backed and hash-aware. |
+| Packaging | `capabilities/index.json`, `README.md`, `docs/capability-map.md`, `tests/harnessHub.test.ts` | Single standard skill install set without retired Ralph goal-loop helpers. | Install/status/update/remove remain lock-backed and hash-aware. |
 | Hooks and subagents | `skills/workflow-router/references/orchestration-policy.md`, optional host packaging guidance | Advisory hooks and host-native subagent mappings only after core routing is stable. | No hook dispatches agents or performs remote writes; subagents are parent-workflow controlled. |
 | Handoff artifacts | `skills/effective-interact/assets/fixtures/`, ignored local `reports/` outputs | Fixture JSON is the durable source; generated HTML reports are local inspection outputs for routing choice, SDD alignment, review, and delivery. | Generated artifacts validate with `validate-interaction.mjs --require-browser` when handed off, but HTML outputs are not committed. |
 
@@ -82,7 +82,7 @@ Tasks:
    - cleanup and update/remove lifecycle,
    - subagent orchestration,
    - hooks and automation.
-3. Record source status for Matt Pocock skills, Superpowers, ECC, OpenSpec, Effective Interact, and local Skill Hub docs.
+3. Record source status for Matt Pocock skills, Superpowers, ECC, OpenSpec, Effective Interact, and local Harness Hub docs.
 4. Mark each idea as `adopt`, `adapt`, `reference-only`, or `reject`.
 
 Acceptance:
@@ -171,8 +171,8 @@ Tasks:
 
 Acceptance:
 
-- `skill-hub install <target> --target standard --dry-run` shows the complete workflow set.
-- `skill-hub status`, `update`, and `remove` preserve lock-backed ownership rules.
+- `harness-hub install <target> --target standard --dry-run` shows the complete workflow set.
+- `harness-hub status`, `update`, and `remove` preserve lock-backed ownership rules.
 
 ### Milestone 6: Advisory Hooks And Subagents
 
