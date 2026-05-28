@@ -8,7 +8,7 @@ const VALID_STATES = new Set([
   'diagnosis',
   'review',
   'delivery',
-  'skill-hub-maintenance',
+  'harness-hub-maintenance',
   'clarify',
   'none',
 ]);
@@ -112,7 +112,7 @@ export function evaluateAdvisory(options) {
     });
   }
 
-  if ((options.state === 'sdd-change' || options.state === 'skill-hub-maintenance') && options.phase === 'pre-implementation') {
+  if ((options.state === 'sdd-change' || options.state === 'harness-hub-maintenance') && options.phase === 'pre-implementation') {
     if (!options.hasScope) {
       warnings.push({
         id: 'missing-scope',

@@ -150,7 +150,7 @@ export interface ManagedComponentRecord {
   status: 'installed' | 'skipped';
 }
 
-export interface SkillHubLockV1 {
+export interface HarnessHubLockV1 {
   schemaVersion: 1;
   generatedAt: string;
   hubVersion: string;
@@ -164,7 +164,7 @@ export interface SkillHubLockV1 {
   }>;
 }
 
-export interface SkillHubLockV2 {
+export interface HarnessHubLockV2 {
   schemaVersion: 2;
   generatedAt: string;
   hubVersion: string;
@@ -172,7 +172,7 @@ export interface SkillHubLockV2 {
   components: ManagedComponentRecord[];
 }
 
-export type SkillHubLock = SkillHubLockV1 | SkillHubLockV2;
+export type HarnessHubLock = HarnessHubLockV1 | HarnessHubLockV2;
 
 export type StatusState =
   | 'current'
@@ -296,7 +296,7 @@ export interface InstallPlan {
 
 export interface LockReadResult {
   path: string;
-  data: SkillHubLock;
+  data: HarnessHubLock;
 }
 
 export interface InstallResult {
@@ -588,7 +588,7 @@ export interface InsightPreflightResult {
   reason: string;
 }
 
-export interface SkillHubStatus {
+export interface HarnessHubStatus {
   targetDir: string;
   lock: LockReadResult | null;
   current: StatusRow[];
@@ -1550,7 +1550,7 @@ function writeHarnessLock(plan: HarnessInitPlan, installed: HarnessPlanItem[]): 
     installedAt,
     status: 'installed',
   };
-  const lock: SkillHubLockV2 = {
+  const lock: HarnessHubLockV2 = {
     schemaVersion: 2,
     generatedAt: installedAt,
     hubVersion: plan.hubVersion,
@@ -1862,7 +1862,7 @@ export function applyDevBootstrap(
     installedAt,
     status: 'installed',
   };
-  const nextLock: SkillHubLockV2 = {
+  const nextLock: HarnessHubLockV2 = {
     ...lock.data,
     generatedAt: installedAt,
     hubVersion: refreshedPlan.hubVersion,
@@ -2937,8 +2937,8 @@ function adaptInsightToEffectiveInteract(input: InsightPostInput, slug: string, 
     template: 'research-explainer',
     renderMode: 'fallback-only',
     intent: {
-      audience: 'Skill Hub maintainer',
-      primaryQuestion: 'How should external material change Skill Hub iteration?',
+      audience: 'Harness Hub maintainer',
+      primaryQuestion: 'How should external material change Harness Hub iteration?',
       decision: 'Publish source-backed project insight and iteration records.',
       artifactKind: 'research',
       successCriteria: [
@@ -3109,7 +3109,7 @@ function renderInsightsIndexHtml(posts: InsightBuildResult['posts']): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Skill Hub Insights</title>
+  <title>Harness Hub Insights</title>
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; color: #172033; background: #f7f8fb; }
     main { max-width: 880px; margin: 0 auto; padding: 32px 20px; }
@@ -3123,7 +3123,7 @@ function renderInsightsIndexHtml(posts: InsightBuildResult['posts']): string {
 </head>
 <body>
   <main>
-    <h1>Skill Hub Insights</h1>
+    <h1>Harness Hub Insights</h1>
     <p>Source-backed project thinking and iteration notes.</p>
     <ul>
       ${postItems}
@@ -3144,7 +3144,7 @@ function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Skill Hub</title>
+  <title>Harness Hub</title>
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; color: #172033; background: #ffffff; }
     main { max-width: 760px; margin: 0 auto; padding: 40px 20px; }
@@ -3153,7 +3153,7 @@ function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
 </head>
 <body>
   <main>
-    <h1>Skill Hub</h1>
+    <h1>Harness Hub</h1>
     <p><a href="insights/">Insights</a></p>
     ${latestHtml}
   </main>
@@ -3168,7 +3168,7 @@ function validatePublicArtifactBoundary(repoRoot: string): InsightValidationChec
     ? listFilesRecursive(siteDir)
       .map((file) => toPortablePath(path.relative(repoRoot, file)))
       .filter((relativePath) => (
-        relativePath.includes('.skill-hub/reports/')
+        relativePath.includes('.harness-hub/reports/')
         || relativePath.includes('skills/effective-interact/artifacts/')
         || relativePath.startsWith('reports/')
       ))
@@ -3403,9 +3403,9 @@ export function writeLock(
   plan: InstallPlan,
   result: Pick<InstallResult, 'installed' | 'skipped'>,
 ): LockReadResult {
-  const skillHubDir = path.join(plan.targetDir, '.skill-hub');
-  fs.mkdirSync(skillHubDir, { recursive: true });
-  const lockPath = path.join(skillHubDir, 'lock.json');
+  const harnessHubDir = path.join(plan.targetDir, '.harness-hub');
+  fs.mkdirSync(harnessHubDir, { recursive: true });
+  const lockPath = path.join(harnessHubDir, 'lock.json');
   const installedAt = new Date().toISOString();
   const incomingIds = new Set([...result.installed, ...result.skipped].map((item) => item.componentId));
   const currentLock = readLock(plan.targetDir);
@@ -3423,7 +3423,7 @@ export function writeLock(
     installedAt,
     status: 'reason' in item ? 'skipped' : 'installed',
   }));
-  const lock: SkillHubLockV2 = {
+  const lock: HarnessHubLockV2 = {
     schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     hubVersion: plan.hubVersion,
@@ -3437,25 +3437,25 @@ export function writeLock(
 }
 
 export function readLock(targetDir: string): LockReadResult | null {
-  const lockPath = path.join(path.resolve(targetDir), '.skill-hub', 'lock.json');
+  const lockPath = path.join(path.resolve(targetDir), '.harness-hub', 'lock.json');
   if (!fs.existsSync(lockPath)) {
     return null;
   }
   return {
     path: lockPath,
-    data: JSON.parse(fs.readFileSync(lockPath, 'utf8')) as SkillHubLock,
+    data: JSON.parse(fs.readFileSync(lockPath, 'utf8')) as HarnessHubLock,
   };
 }
 
-function writeLockData(targetDir: string, lock: SkillHubLock): LockReadResult {
-  const skillHubDir = path.join(path.resolve(targetDir), '.skill-hub');
-  fs.mkdirSync(skillHubDir, { recursive: true });
-  const lockPath = path.join(skillHubDir, 'lock.json');
+function writeLockData(targetDir: string, lock: HarnessHubLock): LockReadResult {
+  const harnessHubDir = path.join(path.resolve(targetDir), '.harness-hub');
+  fs.mkdirSync(harnessHubDir, { recursive: true });
+  const lockPath = path.join(harnessHubDir, 'lock.json');
   fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
   return { path: lockPath, data: lock };
 }
 
-export function getStatus(options: StatusOptions = {}): SkillHubStatus {
+export function getStatus(options: StatusOptions = {}): HarnessHubStatus {
   const targetDir = path.resolve(options.targetDir || process.cwd());
   const index = options.index || readCapabilityIndex(options.hubRoot || HUB_ROOT);
   const lock = readLock(targetDir);
@@ -3555,7 +3555,7 @@ export function getRemovePlan(targetDirInput: string, options: { force?: boolean
       removed: [],
       skipped: [],
       blocked: [],
-      reason: 'No Skill Hub lock found.',
+      reason: 'No Harness Hub lock found.',
     };
   }
 
@@ -3657,7 +3657,7 @@ export function removeManaged(
     }
   }
 
-  const lockPath = path.join(targetDir, '.skill-hub', 'lock.json');
+  const lockPath = path.join(targetDir, '.harness-hub', 'lock.json');
   if (fs.existsSync(lockPath)) {
     fs.rmSync(lockPath);
     pruneEmptyParents(targetDir, path.dirname(lockPath));
@@ -3694,7 +3694,7 @@ function validateSelectedComponents(lock: LockReadResult | null, selectedCompone
     return;
   }
   if (!lock) {
-    throw new Error(`Selected component '${selectedComponents[0]}' is not managed because no Skill Hub lock was found.`);
+    throw new Error(`Selected component '${selectedComponents[0]}' is not managed because no Harness Hub lock was found.`);
   }
   const managed = new Set(lock.data.components.flatMap((component) => managedSelectionIds(component.id)));
   for (const componentId of selectedComponents) {
@@ -3710,7 +3710,7 @@ function componentSourcePath(hubRoot: string, component: CapabilityComponent): s
 
 function makeStatusRow(
   targetDir: string,
-  component: SkillHubLock['components'][number],
+  component: HarnessHubLock['components'][number],
   latest: CapabilityComponent | undefined,
   state: StatusState,
   reason: string,
@@ -3732,7 +3732,7 @@ function makeStatusRow(
 
 function resolveManagedComponentLatest(
   index: CapabilityIndex,
-  component: SkillHubLock['components'][number],
+  component: HarnessHubLock['components'][number],
 ): { id: string; component?: CapabilityComponent; rename?: ManagedComponentRename } {
   const current = index.components[component.id];
   if (current) {
@@ -3756,7 +3756,7 @@ function managedSelectionIds(componentId: string): string[] {
 }
 
 function shouldIncludeManagedComponent(
-  component: SkillHubLock['components'][number],
+  component: HarnessHubLock['components'][number],
   selectedComponents: string[],
 ): boolean {
   if (selectedComponents.length === 0) {
@@ -3946,7 +3946,7 @@ export function updateManaged(
       updated: [],
       forced: [],
       lock,
-      reason: plan.blockers.length > 0 ? 'Update blocked by safety checks.' : 'No Skill Hub lock found.',
+      reason: plan.blockers.length > 0 ? 'Update blocked by safety checks.' : 'No Harness Hub lock found.',
     };
   }
 
@@ -3975,8 +3975,8 @@ export function updateManaged(
   const updatedAt = new Date().toISOString();
   const updateIds = new Set(plan.updates.map((row) => row.id));
   const forcedIds = new Set(plan.forceOverridable.map((row) => row.id));
-  const nextLock: SkillHubLockV2 = {
-    ...JSON.parse(JSON.stringify(lock.data)) as SkillHubLockV2,
+  const nextLock: HarnessHubLockV2 = {
+    ...JSON.parse(JSON.stringify(lock.data)) as HarnessHubLockV2,
     generatedAt: updatedAt,
     hubVersion: index.version,
     components: (JSON.parse(JSON.stringify(lock.data.components)) as ManagedComponentRecord[]).map((component) => ({ ...component })),
@@ -4089,17 +4089,17 @@ function compareSourceAndDestination(source: string, dest: string): { matches: b
     return {
       matches: false,
       evidence: [...new Set([...sourceKeys, ...destKeys])].sort(),
-      reason: 'Destination file list differs from current Skill Hub component assets.',
+      reason: 'Destination file list differs from current Harness Hub component assets.',
     };
   }
 
   for (const key of sourceKeys) {
     if (sourceFiles.get(key)?.sha256 !== destFiles.get(key)?.sha256) {
-      return { matches: false, evidence: [key], reason: 'Destination file content differs from current Skill Hub component assets.' };
+      return { matches: false, evidence: [key], reason: 'Destination file content differs from current Harness Hub component assets.' };
     }
   }
 
-  return { matches: true, evidence: sourceKeys, reason: 'Destination exactly matches current Skill Hub component assets.' };
+  return { matches: true, evidence: sourceKeys, reason: 'Destination exactly matches current Harness Hub component assets.' };
 }
 
 export function migrateLock(
@@ -4135,7 +4135,7 @@ export function migrateLock(
       blockers,
       skipped,
       lock: null,
-      reason: 'No Skill Hub lock found.',
+      reason: 'No Harness Hub lock found.',
     };
   }
 
@@ -4215,7 +4215,7 @@ export function migrateLock(
     };
   }
 
-  const nextLock: SkillHubLockV2 = {
+  const nextLock: HarnessHubLockV2 = {
     schemaVersion: 2,
     generatedAt: migratedAt,
     hubVersion: index.version,
@@ -4247,15 +4247,15 @@ export function migrateLock(
   };
 }
 
-export function writeStatusReport(status: SkillHubStatus, hubVersion: string): string {
-  const reportDir = path.join(status.targetDir, '.skill-hub', 'reports');
+export function writeStatusReport(status: HarnessHubStatus, hubVersion: string): string {
+  const reportDir = path.join(status.targetDir, '.harness-hub', 'reports');
   fs.mkdirSync(reportDir, { recursive: true });
   const filePath = path.join(reportDir, `status-${timestampForFile()}.html`);
   fs.writeFileSync(filePath, renderHtml({
-    title: 'Skill Hub Status Report',
+    title: 'Harness Hub Status Report',
     summary: status.lock
       ? `${status.current.length} current, ${status.updates.length} updates, ${status.missing.length} missing.`
-      : 'No Skill Hub lock file found.',
+      : 'No Harness Hub lock file found.',
     rows: [
       ...status.current.map((row) => ({ ...row, state: 'current' })),
       ...status.updates.map((row) => ({ ...row, state: 'update available' })),
@@ -4270,7 +4270,7 @@ export function writeHtmlReport(
   plan: InstallPlan,
   result: Pick<InstallResult, 'installed' | 'skipped'>,
 ): string {
-  const reportDir = path.join(plan.targetDir, '.skill-hub', 'reports');
+  const reportDir = path.join(plan.targetDir, '.harness-hub', 'reports');
   fs.mkdirSync(reportDir, { recursive: true });
   const filePath = path.join(reportDir, `install-${timestampForFile()}.html`);
   const rows = [
@@ -4289,7 +4289,7 @@ export function writeHtmlReport(
   ];
 
   fs.writeFileSync(filePath, renderHtml({
-    title: 'Skill Hub Install Report',
+    title: 'Harness Hub Install Report',
     summary: `${result.installed.length} installed, ${result.skipped.length} skipped.`,
     rows,
     hubVersion: plan.hubVersion,
@@ -4448,12 +4448,12 @@ export async function runCli(argv: string[]): Promise<number> {
     return await runCliInner(argv);
   } catch (error) {
     if (error instanceof CliError) {
-      console.error(`skill-hub: ${error.message}`);
+      console.error(`harness-hub: ${error.message}`);
       return error.exitCode;
     }
     const message = error instanceof Error ? error.message : String(error);
     const exitCode = /Unsupported agent|Unknown command|Missing value|Selected component/.test(message) ? 2 : 1;
-    console.error(`skill-hub: ${message}`);
+    console.error(`harness-hub: ${message}`);
     return exitCode;
   }
 }
@@ -4499,7 +4499,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       targetDir: options.targetDir || undefined,
     });
     if (options.dryRun) {
-      emitReport(renderLifecycleReport('Skill Hub Dev Bootstrap Plan', plan, options), options);
+      emitReport(renderLifecycleReport('Harness Hub Dev Bootstrap Plan', plan, options), options);
       return 0;
     }
     const result = applyDevBootstrap(plan, {
@@ -4507,13 +4507,13 @@ async function runCliInner(argv: string[]): Promise<number> {
       force: options.force,
       overwrite: options.overwrite,
     });
-    emitReport(renderLifecycleReport('Skill Hub Dev Bootstrap Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Dev Bootstrap Report', result, options), options);
     return result.exitCode;
   }
 
   if (options.command === 'validate-harness') {
     const result = validateHarness(options.targetDir || process.cwd());
-    emitReport(renderLifecycleReport('Skill Hub Harness Validation Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Harness Validation Report', result, options), options);
     return result.exitCode;
   }
 
@@ -4527,19 +4527,19 @@ async function runCliInner(argv: string[]): Promise<number> {
       repoRoot: options.targetDir || undefined,
       slug: options.slug || undefined,
     });
-    emitReport(renderLifecycleReport('Skill Hub Insight Generation Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Insight Generation Report', result, options), options);
     return result.validation.exitCode;
   }
 
   if (options.command === 'insight-build') {
     const result = buildInsightSite({ repoRoot: options.targetDir || undefined });
-    emitReport(renderLifecycleReport('Skill Hub Insight Build Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Insight Build Report', result, options), options);
     return result.exitCode;
   }
 
   if (options.command === 'insight-validate') {
     const result = validateInsightSite({ repoRoot: options.targetDir || undefined });
-    emitReport(renderLifecycleReport('Skill Hub Insight Validation Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Insight Validation Report', result, options), options);
     return result.exitCode;
   }
 
@@ -4552,7 +4552,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       dryRun: true,
       allowDirty: options.allowDirty,
     });
-    emitReport(renderLifecycleReport('Skill Hub Insight Publish Preflight Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Insight Publish Preflight Report', result, options), options);
     return result.exitCode;
   }
 
@@ -4566,7 +4566,7 @@ async function runCliInner(argv: string[]): Promise<number> {
     });
     if (options.dryRun) {
       if (options.json || options.html || options.output) {
-        emitReport(renderLifecycleReport('Skill Hub Install Plan', plan, options), options);
+        emitReport(renderLifecycleReport('Harness Hub Install Plan', plan, options), options);
       } else {
         printPlan(plan);
       }
@@ -4574,7 +4574,7 @@ async function runCliInner(argv: string[]): Promise<number> {
     }
     const result = applyInstall(plan, options);
     if (options.json || options.html || options.output) {
-      emitReport(renderLifecycleReport('Skill Hub Install Report', result, options), options);
+      emitReport(renderLifecycleReport('Harness Hub Install Report', result, options), options);
     } else {
       console.log(`Installed: ${result.installed.length}`);
       console.log(`Skipped: ${result.skipped.length}`);
@@ -4587,7 +4587,7 @@ async function runCliInner(argv: string[]): Promise<number> {
   if (options.command === 'status') {
     const index = readCapabilityIndex();
     const status = getStatus({ targetDir: options.targetDir || undefined, index });
-    emitReport(renderLifecycleReport('Skill Hub Status Report', status, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Status Report', status, options), options);
     return 0;
   }
 
@@ -4597,7 +4597,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       yes: options.yes,
       force: options.force,
     });
-    emitReport(renderLifecycleReport('Skill Hub Remove Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Remove Report', result, options), options);
     return result.exitCode;
   }
 
@@ -4610,7 +4610,7 @@ async function runCliInner(argv: string[]): Promise<number> {
         components: options.componentIds,
         force: options.force,
       });
-      emitReport(renderLifecycleReport('Skill Hub Update Report', updatePlan, options), options);
+      emitReport(renderLifecycleReport('Harness Hub Update Report', updatePlan, options), options);
       return 0;
     }
     const updateResult = updateManaged(options.targetDir || process.cwd(), {
@@ -4618,7 +4618,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       force: options.force,
       components: options.componentIds,
     });
-    emitReport(renderLifecycleReport('Skill Hub Update Report', updateResult, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Update Report', updateResult, options), options);
     return updateResult.exitCode;
   }
 
@@ -4627,7 +4627,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       dryRun: options.dryRun,
       yes: options.yes,
     });
-    emitReport(renderLifecycleReport('Skill Hub Lock Migration Report', migration, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Lock Migration Report', migration, options), options);
     return migration.exitCode;
   }
 
@@ -4636,7 +4636,7 @@ async function runCliInner(argv: string[]): Promise<number> {
 
 function renderLifecycleReport(
   title: string,
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
   options: CliOptions,
 ): string {
   if (options.json) {
@@ -4657,7 +4657,7 @@ function renderLifecycleReport(
 }
 
 function rowsForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): HtmlRow[] {
   if ('checks' in data && 'assessment' in data) {
     return [
@@ -4902,7 +4902,7 @@ function rowsForLifecycleData(
 }
 
 function summaryForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): string {
   if ('checks' in data && 'assessment' in data) {
     const failed = data.checks.filter((check) => check.state === 'fail').length;
@@ -4967,7 +4967,7 @@ function summaryForLifecycleData(
   if ('rows' in data) {
     return data.lock
       ? `${data.current.length} current, ${data.updates.length} updates, ${data.modified.length} modified, ${data.missing.length} missing.`
-      : 'No Skill Hub lock found.';
+      : 'No Harness Hub lock found.';
   }
 
   if ('removed' in data) {
@@ -5030,8 +5030,6 @@ function printPlan(plan: InstallPlan): void {
 function printHelp() {
   console.log(`Harness Hub
 
-Compatible commands: harness-hub, skill-hub
-
 Usage:
   harness-hub analyze [target] [--target standard] [--agent-readiness] [--harness] [--json|--html] [--output file]
   harness-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
@@ -5043,24 +5041,6 @@ Usage:
   harness-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
   harness-hub remove [target] [--dry-run|--yes] [--force] [--json|--html]
   harness-hub components
-
-Skill Hub compatibility examples:
-  skill-hub analyze [target] [--target standard] [--agent-readiness] [--harness] [--json|--html] [--output file]
-  skill-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
-  skill-hub validate-harness [target] [--json|--html] [--output file]
-  skill-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
-  skill-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
-  skill-hub init-harness [target] [--target standard] [--dry-run|--yes] [--force] [--json|--html]
-  skill-hub validate-harness [target] [--json|--html]
-  skill-hub insight-generate [target] --input file [--slug slug] [--json|--html]
-  skill-hub insight-build [target] [--json|--html]
-  skill-hub insight-validate [target] [--json|--html]
-  skill-hub insight-publish [target] --dry-run [--allow-dirty] [--json|--html]
-  skill-hub status [target] [--json|--html] [--output file]
-  skill-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
-  skill-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
-  skill-hub remove [target] [--dry-run|--yes] [--force] [--json|--html]
-  skill-hub components
 
 Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
 Install selects every standard skill component and overwrites same-name skill directories by default.

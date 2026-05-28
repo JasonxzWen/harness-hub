@@ -16,7 +16,7 @@ The system SHALL provide an explicit one-command development setup capability th
 - **WHEN** the user runs the dev bootstrap command in dry-run mode for a target repository
 - **THEN** the system reports the planned standard skill installation
 - **AND** the system reports the planned root harness files
-- **AND** the system does not write files or modify `.skill-hub/lock.json`
+- **AND** the system does not write files or modify `.harness-hub/lock.json`
 
 #### Scenario: Confirm dev bootstrap
 - **WHEN** the user runs the dev bootstrap command with explicit confirmation
@@ -41,7 +41,7 @@ The system SHALL treat session handoff, clean-state checks, evaluator guidance, 
 The system SHALL keep low-level skill installation separate from the higher-level dev bootstrap workflow.
 
 #### Scenario: Run low-level install
-- **WHEN** the user runs `skill-hub install <target> --target standard --yes`
+- **WHEN** the user runs `harness-hub install <target> --target standard --yes`
 - **THEN** the command installs the standard skill components
 - **AND** the command does not implicitly write root harness files
 
@@ -55,7 +55,7 @@ The system SHALL initialize harness files from locally reviewed templates that p
 #### Scenario: Initialize minimal harness
 - **WHEN** the dev bootstrap workflow initializes a minimal harness
 - **THEN** the target contains root instructions, feature state, progress or session state, handoff guidance, and validation entry points
-- **AND** each file is adapted to Skill Hub's local lifecycle and source policy
+- **AND** each file is adapted to Harness Hub's local lifecycle and source policy
 
 #### Scenario: Validate harness continuity
 - **WHEN** harness validation runs against a bootstrapped target

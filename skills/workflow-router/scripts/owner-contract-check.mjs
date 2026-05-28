@@ -106,7 +106,7 @@ const OWNER_CONTRACTS = Object.freeze({
       'effective-interact',
     ],
   },
-  'skill-hub-maintenance': {
+  'harness-hub-maintenance': {
     owner: 'hub-maintenance-workflow',
     headings: ['Workflow', 'Source And Evaluation Inputs'],
     ordered: [

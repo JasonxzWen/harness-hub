@@ -19,7 +19,7 @@ The system SHALL document evaluated harness sources before redistributing advanc
 The system SHALL keep advanced harness packs out of default standard skill installation.
 
 #### Scenario: Standard install excludes advanced pack
-- **WHEN** the user runs `skill-hub install <target> --target standard --yes`
+- **WHEN** the user runs `harness-hub install <target> --target standard --yes`
 - **THEN** no advanced harness pack files are written to the target repository
 
 #### Scenario: Advanced pack is discoverable as source metadata

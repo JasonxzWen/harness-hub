@@ -1,6 +1,6 @@
 # Skill Feature Inventory
 
-This inventory summarizes the active personal Skill Hub distribution surface.
+This inventory summarizes the active personal Harness Hub distribution surface.
 
 ## Counts
 

@@ -12,9 +12,9 @@
   ],
   "cases": [
     {
-      "id": "sdd-change-positive-skill-hub-refactor",
+      "id": "sdd-change-positive-harness-hub-refactor",
       "kind": "positive",
-      "prompt": "Refactor Skill Hub into a standard SDD-first workflow after checking the referenced repos, then implement and test it.",
+      "prompt": "Refactor Harness Hub into a standard SDD-first workflow after checking the referenced repos, then implement and test it.",
       "expectedState": "sdd-change",
       "expectedOwner": "sdd-workflow",
       "mutationAllowed": true,
@@ -90,8 +90,8 @@
     {
       "id": "hub-maintenance-positive-source-dossier",
       "kind": "positive",
-      "prompt": "Maintain Skill Hub by evaluating referenced upstream skill repos, updating routing docs, and preserving npm update/remove behavior.",
-      "expectedState": "skill-hub-maintenance",
+      "prompt": "Maintain Harness Hub by evaluating referenced upstream skill repos, updating routing docs, and preserving npm update/remove behavior.",
+      "expectedState": "harness-hub-maintenance",
       "expectedOwner": "hub-maintenance-workflow",
       "mutationAllowed": true,
       "requiredGates": [
@@ -129,13 +129,13 @@
         "gather-required-material",
         "deliver-report"
       ],
-      "docsBoundary": "Explicit owner references MUST NOT override contradictory no-mutation, Skill Hub maintenance, or mixed review-and-implementation signals."
+      "docsBoundary": "Explicit owner references MUST NOT override contradictory no-mutation, Harness Hub maintenance, or mixed review-and-implementation signals."
     },
     {
-      "id": "explicit-owner-skill-hub-conflict",
+      "id": "explicit-owner-harness-hub-conflict",
       "kind": "positive",
-      "prompt": "Use sdd-workflow to remove Skill Hub install profiles and keep default full install only.",
-      "expectedState": "skill-hub-maintenance",
+      "prompt": "Use sdd-workflow to remove Harness Hub install profiles and keep default full install only.",
+      "expectedState": "harness-hub-maintenance",
       "expectedOwner": "hub-maintenance-workflow",
       "mutationAllowed": true,
       "requiredGates": [
@@ -148,7 +148,7 @@
         "test-and-accept",
         "deliver-report"
       ],
-      "docsBoundary": "Explicit owner references MUST NOT override contradictory no-mutation, Skill Hub maintenance, or mixed review-and-implementation signals."
+      "docsBoundary": "Explicit owner references MUST NOT override contradictory no-mutation, Harness Hub maintenance, or mixed review-and-implementation signals."
     },
     {
       "id": "explicit-owner-mixed-review-implementation",
@@ -160,7 +160,7 @@
       "requiredGates": [
         "align-user-need"
       ],
-      "docsBoundary": "Explicit owner references MUST NOT override contradictory no-mutation, Skill Hub maintenance, or mixed review-and-implementation signals."
+      "docsBoundary": "Explicit owner references MUST NOT override contradictory no-mutation, Harness Hub maintenance, or mixed review-and-implementation signals."
     },
     {
       "id": "trivial-chat-no-owner",
@@ -189,7 +189,7 @@
       "id": "hub-maintenance-positive-real-chinese-install-policy",
       "kind": "positive",
       "prompt": "\u628a\u5b89\u88c5\u9009\u9879\u53bb\u6389\uff0c\u9ed8\u8ba4\u5168\u91cf\u5b89\u88c5\u5e76\u8986\u76d6\u540c\u540d\u6280\u80fd\u3002",
-      "expectedState": "skill-hub-maintenance",
+      "expectedState": "harness-hub-maintenance",
       "expectedOwner": "hub-maintenance-workflow",
       "mutationAllowed": true,
       "requiredGates": [

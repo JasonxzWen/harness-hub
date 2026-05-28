@@ -1,19 +1,18 @@
 {
-  "name": "@jasonwen/skill-hub",
+  "name": "@jasonwen/harness-hub",
   "version": "0.1.9",
-  "description": "Personal repo harness toolkit with compatible skill distribution and lock-backed lifecycle commands.",
+  "description": "Personal repo harness toolkit with lock-backed lifecycle commands.",
   "type": "module",
-  "main": "dist/skillHub.js",
+  "main": "dist/harnessHub.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JasonxzWen/skill-hub.git"
+    "url": "git+https://github.com/JasonxzWen/harness-hub.git"
   },
-  "homepage": "https://github.com/JasonxzWen/skill-hub#readme",
+  "homepage": "https://github.com/JasonxzWen/harness-hub#readme",
   "bugs": {
-    "url": "https://github.com/JasonxzWen/skill-hub/issues"
+    "url": "https://github.com/JasonxzWen/harness-hub/issues"
   },
   "bin": {
-    "skill-hub": "bin/skill-hub.mjs",
     "harness-hub": "bin/harness-hub.mjs"
   },
   "publishConfig": {
@@ -30,7 +29,6 @@
     "harness/",
     "dist/",
     "docs/",
-    "harness/",
     "openspec/config.yaml",
     "openspec/specs/",
     ".claude-plugin/",
@@ -43,7 +41,7 @@
     "scripts/validate-skills.ps1"
   ],
   "scripts": {
-    "build": "bun build ./src/skillHub.ts --target=node --outdir=dist",
+    "build": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\" && bun build ./src/harnessHub.ts --target=node --outdir=dist",
     "prepack": "bun run build",
     "test": "bun test ./tests",
     "skill:quality-inventory": "bun ./scripts/skill-quality-inventory.ts",
@@ -54,7 +52,7 @@
     "validate:artifact-policy": "bun ./scripts/validate-artifact-policy.ts",
     "validate:skills": "node ./scripts/run-validate-skills.mjs -SkipExternal",
     "validate": "bun run typecheck && bun test ./tests && bun run validate:artifact-policy && bun run validate:skills",
-    "validate:release": "bun run validate && bun run build && node bin/skill-hub.mjs --help && node bin/harness-hub.mjs --help && npm pack --dry-run"
+    "validate:release": "bun run validate && bun run build && node bin/harness-hub.mjs --help && npm pack --dry-run"
   },
   "keywords": [
     "agent-harness",

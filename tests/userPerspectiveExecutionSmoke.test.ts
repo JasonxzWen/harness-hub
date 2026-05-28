@@ -7,7 +7,7 @@ import { expect, test } from 'bun:test';
 import {
   applyInstall,
   planInstall,
-} from '../src/skillHub';
+} from '../src/harnessHub';
 
 type WorkflowCheckResult = {
   route: {
@@ -117,7 +117,7 @@ function tryRunActivationCases(scriptPath: string, casesFile: string): Activatio
 }
 
 test('installed workflow router routes a user-perspective intent matrix without mutation or subagent dispatch', () => {
-  const targetDir = installIntoTemp('skill-hub-user-workflow-smoke-');
+  const targetDir = installIntoTemp('harness-hub-user-workflow-smoke-');
   const workflowCheckScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'workflow-check.mjs');
   const cases = [
     {
@@ -127,8 +127,8 @@ test('installed workflow router routes a user-perspective intent matrix without 
       warnings: [],
     },
     {
-      prompt: 'Continue converging Skill Hub skill quality and trigger boundaries; add executable smoke coverage.',
-      state: 'skill-hub-maintenance',
+      prompt: 'Continue converging Harness Hub skill quality and trigger boundaries; add executable smoke coverage.',
+      state: 'harness-hub-maintenance',
       owner: 'hub-maintenance-workflow',
       warnings: ['missing-scope', 'missing-spec', 'missing-acceptance', 'missing-plan'],
     },
@@ -178,7 +178,7 @@ test('installed workflow router routes a user-perspective intent matrix without 
 });
 
 test('installed workflow check has a passing gate path for every owner state', () => {
-  const targetDir = installIntoTemp('skill-hub-owner-pass-smoke-');
+  const targetDir = installIntoTemp('harness-hub-owner-pass-smoke-');
   const workflowCheckScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'workflow-check.mjs');
   const cases = [
     {
@@ -206,8 +206,8 @@ test('installed workflow check has a passing gate path for every owner state', (
       args: ['--has-scope', '--has-spec', '--has-acceptance', '--has-plan'],
     },
     {
-      prompt: 'Continue converging Skill Hub skill quality and trigger boundaries; add executable smoke coverage.',
-      state: 'skill-hub-maintenance',
+      prompt: 'Continue converging Harness Hub skill quality and trigger boundaries; add executable smoke coverage.',
+      state: 'harness-hub-maintenance',
       owner: 'hub-maintenance-workflow',
       args: ['--has-scope', '--has-spec', '--has-acceptance', '--has-plan'],
     },
@@ -234,7 +234,7 @@ test('installed workflow check has a passing gate path for every owner state', (
 });
 
 test('installed skill metadata selects high-overlap helper skills from user prompts', () => {
-  const targetDir = installIntoTemp('skill-hub-user-skill-smoke-');
+  const targetDir = installIntoTemp('harness-hub-user-skill-smoke-');
   const activationCheckScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'skill-activation-check.mjs');
   const casesFile = path.resolve('tests/fixtures/skill-routing-cases.json');
   const fixture = JSON.parse(fs.readFileSync('tests/fixtures/skill-routing-cases.json', 'utf8')) as {
@@ -253,7 +253,7 @@ test('installed skill metadata selects high-overlap helper skills from user prom
 
   const pauseReportSmoke = runActivationCheck(
     activationCheckScript,
-    'Agent要停下来汇报：这次 Skill Hub 路由改动涉及 .codex、触发边界、测试结果和风险，信息相对复杂，请用结构化中文说明。',
+    'Agent要停下来汇报：这次 Harness Hub 路由改动涉及 .codex、触发边界、测试结果和风险，信息相对复杂，请用结构化中文说明。',
   );
   expect(pauseReportSmoke.selectedSkill).toBe('effective-interact');
   expect(pauseReportSmoke.mutates).toBe(false);
@@ -301,9 +301,9 @@ test('installed skill metadata selects high-overlap helper skills from user prom
 });
 
 test('installed skill activation check fails when helper boundary prompts are missing', () => {
-  const targetDir = installIntoTemp('skill-hub-user-skill-boundary-smoke-');
+  const targetDir = installIntoTemp('harness-hub-user-skill-boundary-smoke-');
   const activationCheckScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'skill-activation-check.mjs');
-  const casesFile = path.join(os.tmpdir(), `skill-hub-weak-activation-${Date.now()}.json`);
+  const casesFile = path.join(os.tmpdir(), `harness-hub-weak-activation-${Date.now()}.json`);
   fs.writeFileSync(casesFile, JSON.stringify({
     version: 1,
     cases: [
