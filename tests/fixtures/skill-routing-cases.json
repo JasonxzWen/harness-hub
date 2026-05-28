@@ -122,6 +122,30 @@
       "docsBoundary": "`frontend-design` loads for production-grade visual UI creation, not routine reports or debugging."
     },
     {
+      "id": "design-taste-frontend-positive-marketing-landing",
+      "skill": "design-taste-frontend",
+      "kind": "positive",
+      "prompt": "Give this marketing landing page a design read and anti-template visual direction before implementation.",
+      "expectedSkill": "design-taste-frontend",
+      "docsBoundary": "`design-taste-frontend` loads for anti-template visual direction and pre-flight critique for landing pages, portfolios, marketing pages, and redesigns; it does not load for dashboards, data tables, multi-step product UI, routine frontend logic, HTML reports, or slide decks."
+    },
+    {
+      "id": "design-taste-frontend-negative-dashboard",
+      "skill": "design-taste-frontend",
+      "kind": "negative",
+      "prompt": "Design and build a polished SaaS dashboard page with production-grade visual hierarchy.",
+      "expectedSkill": "frontend-design",
+      "docsBoundary": "`design-taste-frontend` loads for anti-template visual direction and pre-flight critique for landing pages, portfolios, marketing pages, and redesigns; it does not load for dashboards, data tables, multi-step product UI, routine frontend logic, HTML reports, or slide decks."
+    },
+    {
+      "id": "design-taste-frontend-forbidden-frontend-logic",
+      "skill": "design-taste-frontend",
+      "kind": "forbidden-load",
+      "prompt": "Implement React form state, hooks, routing, and accessibility behavior for this settings flow.",
+      "expectedSkill": "frontend-patterns",
+      "docsBoundary": "`design-taste-frontend` loads for anti-template visual direction and pre-flight critique for landing pages, portfolios, marketing pages, and redesigns; it does not load for dashboards, data tables, multi-step product UI, routine frontend logic, HTML reports, or slide decks."
+    },
+    {
       "id": "effective-interact-positive-review-artifact",
       "skill": "effective-interact",
       "kind": "positive",
@@ -458,6 +482,14 @@
       "docsBoundary": "`internal-comms` loads for internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, and project updates."
     },
     {
+      "id": "stop-slop-positive-english-prose",
+      "skill": "stop-slop",
+      "kind": "positive",
+      "prompt": "Edit this English essay to remove AI tells, throat-clearing, formulaic contrast, and generic business prose.",
+      "expectedSkill": "stop-slop",
+      "docsBoundary": "`stop-slop` loads only for English prose AI-tell cleanup, draft editing, or prose review; it is a strong style editor, not a default rule for code explanations, Chinese output, technical specs, status reports, or ordinary documentation."
+    },
+    {
       "id": "theme-factory-positive-visual-theme",
       "skill": "theme-factory",
       "kind": "positive",
@@ -720,6 +752,22 @@
       "prompt": "Create an incident report with timeline, impact, root cause evidence, mitigations, follow-up owners, and uncertainty boundaries.",
       "expectedSkill": "effective-interact",
       "docsBoundary": "`internal-comms` loads for internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, and project updates."
+    },
+    {
+      "id": "stop-slop-negative-durable-doc",
+      "skill": "stop-slop",
+      "kind": "negative",
+      "prompt": "Collaboratively draft and reader-test this English RFC with technical constraints, acceptance criteria, and open questions.",
+      "expectedSkill": "doc-coauthoring",
+      "docsBoundary": "`stop-slop` loads only for English prose AI-tell cleanup, draft editing, or prose review; it is a strong style editor, not a default rule for code explanations, Chinese output, technical specs, status reports, or ordinary documentation."
+    },
+    {
+      "id": "stop-slop-forbidden-chinese-status",
+      "skill": "stop-slop",
+      "kind": "forbidden-load",
+      "prompt": "请用中文汇报这次代码变更、测试结果和剩余风险，不要做英文文风清理。",
+      "expectedSkill": null,
+      "docsBoundary": "`stop-slop` loads only for English prose AI-tell cleanup, draft editing, or prose review; it is a strong style editor, not a default rule for code explanations, Chinese output, technical specs, status reports, or ordinary documentation."
     },
     {
       "id": "theme-factory-forbidden-production-ui",

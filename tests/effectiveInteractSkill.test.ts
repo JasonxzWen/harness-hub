@@ -388,6 +388,11 @@ test('effective-interact generalizes HTML effectiveness source cases without ove
   expect(sourcePatterns).toContain('Trigger on reader need');
   expect(sourcePatterns).toContain('Warm neutral base');
   expect(sourcePatterns).toContain('Clay accent');
+  expect(sourcePatterns).toContain('Taste-Derived Aesthetic Preflight');
+  expect(sourcePatterns).toContain('AI-purple');
+  expect(sourcePatterns).toContain('default card grid');
+  expect(sourcePatterns).toContain('Layout diversity check');
+  expect(skill).toContain('references/html-aesthetic-preflight.md');
   expect(sourcePatterns).toContain('Template Mapping');
   expect(sourcePatterns).toContain('HTML Escalation Checklist');
   expect(sourcePatterns).toContain('Stay in chat or Markdown');
@@ -538,6 +543,7 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
     validateInteractionScript,
     `${skillDir}/references/interaction-input-schema.json`,
     `${skillDir}/references/html-effectiveness-patterns.md`,
+    `${skillDir}/references/html-aesthetic-preflight.md`,
     `${skillDir}/references/session-ledger-schema.json`,
     `${skillDir}/.gitignore`,
     `${skillDir}/assets/fixtures/pre-rendered-report.json`,
@@ -569,7 +575,7 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
   expect(schema.properties.sections.items.properties.columns.type).toBe('array');
   expect(schema.properties.sections.items.properties.rows.type).toBe('array');
   expect(schema.properties.renderMode.enum).toEqual(['runtime-cdn', 'pre-rendered', 'fallback-only', 'runtime']);
-  expect(schema.properties.renderMode.default).toBe('runtime-cdn');
+  expect(schema.properties.renderMode.default).toBe('pre-rendered');
   expect(schema.properties.sections.items.properties.group.type).toBe('string');
   expect(schema.properties.sections.items.properties.priority.type).toBe('integer');
   expect(schema.properties.sections.items.properties.summary.type).toBe('string');
@@ -1207,6 +1213,93 @@ test('effective-interact validator warns when rich rendering opportunities stay 
   ]));
 });
 
+test('effective-interact validator accepts structured flow sections without forcing Mermaid', async () => {
+  const validateModule = await import(pathToFileURL(path.resolve(validateInteractionScript)).href);
+  const html = `<!doctype html>
+<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered">
+<head><meta charset="utf-8"><title>Structured flow fixture</title><style>@media (prefers-reduced-motion: reduce) { * { transition: none; } }</style></head>
+<body>
+  <main>
+    <header class="report-hero" data-report-intent data-primary-question="Is the flow readable?" data-time-budget="30s"><h1>Structured flow fixture</h1><p><strong>Conclusion exists.</strong></p></header>
+    <nav data-report-nav><div class="report-nav-group"><a data-nav-link href="#flow">Flow</a></div></nav>
+    <section id="flow" data-section-type="timeline" data-section-group="evidence" data-render-state="ready">
+      <h2>Flow</h2>
+      <ol><li><strong>workflow-check:</strong> route the request.</li><li><strong>validation:</strong> verify the handoff path.</li></ol>
+    </section>
+  </main>
+</body>
+</html>`;
+
+  const result = validateModule.validateStatic(html);
+
+  expect(result.ok).toBe(true);
+  expect(result.warnings).not.toEqual(expect.arrayContaining([
+    expect.stringContaining('advisory: rich content opportunity: consider Mermaid'),
+  ]));
+});
+
+test('effective-interact validator warns when runtime rich rendering remains pending without browser verification', async () => {
+  const validateModule = await import(pathToFileURL(path.resolve(validateInteractionScript)).href);
+  const html = `<!doctype html>
+<html lang="zh-CN" data-html-work-report data-render-mode="runtime-cdn">
+<head><meta charset="utf-8"><title>Runtime pending fixture</title><style>@media (prefers-reduced-motion: reduce) { * { transition: none; } }</style></head>
+<body>
+  <main>
+    <header class="report-hero" data-report-intent data-primary-question="Did runtime rendering settle?" data-time-budget="30s"><h1>Runtime pending fixture</h1><p><strong>Conclusion exists.</strong></p></header>
+    <nav data-report-nav><div class="report-nav-group"><a data-nav-link href="#summary">Summary</a></div></nav>
+    <section id="summary" data-section-type="markdown" data-section-group="overview" data-rich-section data-rich-kind="markdown" data-render-state="pending">
+      <h2>Summary</h2>
+      <div data-rich-markdown></div>
+      <pre data-source-fallback hidden><code data-rich-source>## Pending</code></pre>
+    </section>
+    <div data-runtime-dependencies hidden>
+      <span data-runtime-dependency-url="https://cdn.jsdelivr.net/npm/marked@18.0.3">Marked@18.0.3</span>
+      <span data-runtime-dependency-url="https://cdn.jsdelivr.net/npm/dompurify@3.4.2">DOMPurify@3.4.2</span>
+      <span data-runtime-dependency-url="https://cdn.jsdelivr.net/npm/mermaid@11.15.0">Mermaid@11.15.0</span>
+      <span data-runtime-dependency-url="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.11.1">@highlightjs/cdn-assets@11.11.1</span>
+    </div>
+  </main>
+</body>
+</html>`;
+
+  const result = validateModule.validateStatic(html);
+
+  expect(result.ok).toBe(true);
+  expect(result.warnings).toEqual(expect.arrayContaining([
+    expect.stringContaining('advisory: runtime rich render pending'),
+  ]));
+});
+
+test('effective-interact validator emits taste-derived aesthetic preflight warnings', async () => {
+  const validateModule = await import(pathToFileURL(path.resolve(validateInteractionScript)).href);
+  const html = `<!doctype html>
+<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered">
+<head><meta charset="utf-8"><title>Aesthetic fixture</title><style>
+  :root { --accent: #a855f7; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none; animation: none; } }
+</style></head>
+<body>
+  <main>
+    <header class="report-hero" data-report-intent data-primary-question="Does this look templated?" data-time-budget="30s"><h1>Aesthetic fixture</h1><p><strong>Conclusion exists.</strong></p></header>
+    <nav data-report-nav><div class="report-nav-group"><a data-nav-link href="#summary">Summary</a></div></nav>
+    <section id="summary" class="default-card" data-section-type="summary" data-section-group="summary" data-render-state="ready">
+      <h2>Summary</h2>
+      <p><strong>Report:</strong> this card grid uses an AI-purple accent.</p>
+    </section>
+  </main>
+</body>
+</html>`;
+
+  const result = validateModule.validateStatic(html);
+
+  expect(result.ok).toBe(true);
+  expect(result.checks).toContain('aesthetic-preflight-scan');
+  expect(result.warnings).toEqual(expect.arrayContaining([
+    expect.stringContaining('advisory: aesthetic preflight: avoid AI-purple'),
+    expect.stringContaining('advisory: aesthetic preflight: audit default-card grids'),
+  ]));
+});
+
 test('effective-interact stress fixture covers runtime-cdn quality risks', () => {
   const fixture = JSON.parse(fs.readFileSync(`${skillDir}/assets/fixtures/runtime-cdn-stress-report.json`, 'utf8'));
 
@@ -1322,18 +1415,33 @@ test('effective-interact sanitizes Mermaid fallback diagnostics', () => {
     'browser-mermaid-fallback',
     '--json',
     '--browser-mermaid',
-  ], { encoding: 'utf8' });
+  ], {
+    encoding: 'utf8',
+    env: { ...process.env, EFFECTIVE_INTERACT_DISABLE_BROWSER_MERMAID: '1' },
+  });
 
   expect(result.status, result.stderr).toBe(0);
   const payload = JSON.parse(result.stdout);
   const html = fs.readFileSync(payload.outputPath, 'utf8');
 
   expect(html).toContain('data-mermaid-renderer="fallback"');
+  expect(html).toContain('data-render-state="degraded"');
   expect(html).toContain('Playwright unavailable');
   expect(html).not.toContain(process.cwd());
   expect(html).not.toMatch(/[A-Za-z]:[\\/](?:Users|skill-hub|code-agent-harness)[^<\s]*/);
   expect(html).not.toMatch(/file:\/\/\//i);
   expect(html).not.toMatch(/\b(?:gho|ghp|github_pat)_[A-Za-z0-9_]+/);
+
+  const validation = spawnSync(process.execPath, [
+    validateInteractionScript,
+    payload.outputPath,
+    '--json',
+    '--skip-browser',
+  ], { encoding: 'utf8' });
+  expect(validation.status, validation.stderr).toBe(0);
+  expect(JSON.parse(validation.stdout).warnings).toEqual(expect.arrayContaining([
+    expect.stringContaining('advisory: mermaid fallback'),
+  ]));
 });
 
 test('effective-interact sanitizes generator and validator diagnostics', async () => {
@@ -1468,7 +1576,7 @@ test('effective-interact keeps optional modules out of concise reports', () => {
   expect(JSON.parse(validation.stdout).ok).toBe(true);
 });
 
-test('effective-interact defaults to runtime-cdn and maps legacy runtime alias', () => {
+test('effective-interact defaults to pre-rendered and maps legacy runtime alias', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-default-mode-'));
   const base = JSON.parse(fs.readFileSync(`${skillDir}/assets/fixtures/runtime-report.json`, 'utf8'));
   delete base.renderMode;
@@ -1482,11 +1590,11 @@ test('effective-interact defaults to runtime-cdn and maps legacy runtime alias',
     '--out-dir',
     tmpDir,
     '--slug',
-    'default-runtime-cdn',
+    'default-pre-rendered',
     '--json',
   ], { encoding: 'utf8' });
   expect(defaultResult.status, defaultResult.stderr).toBe(0);
-  expect(JSON.parse(defaultResult.stdout).renderMode).toBe('runtime-cdn');
+  expect(JSON.parse(defaultResult.stdout).renderMode).toBe('pre-rendered');
 
   base.renderMode = 'runtime';
   const legacyInput = path.join(tmpDir, 'legacy.json');

@@ -391,6 +391,7 @@
         "self-contained-html-interaction-artifacts",
         "interactive-work-artifacts",
         "html-change-artifacts",
+        "html-aesthetic-preflight-validation",
         "visual-code-evidence-artifacts",
         "generated-interaction-artifacts",
         "validated-interaction-artifacts",
@@ -409,6 +410,9 @@
       "detects": [
         {
           "path": "skills/effective-interact/SKILL.md"
+        },
+        {
+          "path": "skills/effective-interact/references/html-aesthetic-preflight.md"
         }
       ],
       "agents": [
@@ -662,6 +666,34 @@
       ],
       "risk": "low",
       "recommendation": "Use for polished product UI or web pages, not routine interaction artifacts."
+    },
+    "skill:design-taste-frontend": {
+      "kind": "skill",
+      "path": "skills/design-taste-frontend",
+      "version": "0.1.0",
+      "source": "Leonxlnx/taste-skill",
+      "provides": [
+        "anti-template-frontend-visual-direction",
+        "landing-redesign-aesthetic-preflight"
+      ],
+      "overlapsWith": [
+        "skill:frontend-design",
+        "skill:frontend-patterns",
+        "skill:web-artifacts-builder",
+        "skill:theme-factory",
+        "skill:effective-interact"
+      ],
+      "routing": "Use for anti-template visual direction, design-read calibration, and pre-flight critique for landing pages, portfolios, marketing pages, and redesigns; use frontend-design for production UI implementation, frontend-patterns for logic, web-artifacts-builder for standalone artifacts, effective-interact for reports, and do not use for dashboards, data tables, or multi-step product UI.",
+      "detects": [
+        {
+          "path": "skills/design-taste-frontend/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Use as a narrow anti-slop visual taste layer for landing pages, portfolios, marketing pages, and redesigns."
     },
     "skill:web-artifacts-builder": {
       "kind": "skill",
@@ -1026,6 +1058,39 @@
       ],
       "risk": "low",
       "recommendation": "Add an internal communications atom with reusable reference formats."
+    },
+    "skill:stop-slop": {
+      "kind": "skill",
+      "path": "skills/stop-slop",
+      "version": "0.1.0",
+      "source": "hardikpandya/stop-slop",
+      "provides": [
+        "english-prose-ai-tell-cleanup",
+        "draft-prose-style-editing",
+        "strong-style-prose-review"
+      ],
+      "overlapsWith": [
+        "skill:doc-coauthoring",
+        "skill:internal-comms",
+        "skill:answer-workflow"
+      ],
+      "routing": "Load when the user explicitly asks to draft, edit, or review English prose for AI-writing tells; do not use for code explanations, Chinese output, technical specs, or routine status reports.",
+      "detects": [
+        {
+          "path": "skills/stop-slop/SKILL.md"
+        },
+        {
+          "path": "skills/stop-slop/references/phrases.md"
+        },
+        {
+          "path": "skills/stop-slop/references/structures.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "medium",
+      "recommendation": "Install a narrow English prose cleanup skill for AI-writing tells; treat its bans on adverbs, passive voice, Wh- openers, and em dashes as strong style-editing rules, not default documentation policy."
     },
     "skill:theme-factory": {
       "kind": "skill",

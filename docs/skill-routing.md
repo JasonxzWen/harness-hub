@@ -33,6 +33,8 @@ Skill Hub is a personal workflow distribution set with a routing overlay. Route 
 | Creating, adapting, or evaluating standard skills | `skill-creator` | Use under `hub-maintenance-workflow` or `sdd-workflow` after the owner is selected. |
 | Collaborative drafting of PRDs, RFCs, proposals, specs, or decision records | `doc-coauthoring` | Use for durable docs; use `product-capability` for implementation-ready capability contracts. |
 | Internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, or project updates | `internal-comms` | Use for internal communications; public marketing copy routes elsewhere. |
+| English prose AI-tell cleanup, draft editing, or prose review | `stop-slop` | Use only for English prose strong style editing; do not use for code explanation, Chinese output, technical specs, or routine status reports. |
+| Anti-template visual direction for landing pages, portfolios, marketing pages, or redesigns | `design-taste-frontend` | Use as a frontend taste layer; production UI implementation remains `frontend-design`, and dashboards/data tables/multi-step product UI route elsewhere. |
 | Applying a coherent visual theme to slides, reports, docs, HTML artifacts, or landing pages | `theme-factory` | Use for theming existing artifacts; production UI creation remains `frontend-design`. |
 | Creating, optimizing, or validating Slack animated GIFs | `slack-gif-creator` | Use for Slack emoji/message GIF targets only. |
 | Agent/tool harness loop, repeated tool failure, drift, or recoverable self-debugging | `agent-introspection-debugging` | Use after ordinary product debugging is ruled out. |
@@ -40,11 +42,11 @@ Skill Hub is a personal workflow distribution set with a routing overlay. Route 
 
 ## Overlap Rules
 
-- Use `frontend-design` for production UI; use `web-artifacts-builder` for complex standalone React/Tailwind artifacts; use `effective-interact` for communication/report artifacts.
+- Use `frontend-design` for production UI; use `design-taste-frontend` for anti-template visual direction on landing pages, portfolios, marketing pages, and redesigns; use `web-artifacts-builder` for complex standalone React/Tailwind artifacts; use `effective-interact` for communication/report artifacts.
 - Use `theme-factory` after an artifact exists or when the request is specifically about theme selection; use `frontend-design` when layout, UX, and implementation are the primary task.
 - Use `slack-gif-creator` only for Slack GIFs; use image/video generation or frontend/artifact skills for other visual media.
 - Use `webapp-testing` for one-off local browser inspection; use `e2e-testing` for durable Playwright suites.
-- Use `doc-coauthoring` for durable docs and `internal-comms` for organizational updates; use `answer-workflow` for ordinary explanatory answers.
+- Use `doc-coauthoring` for durable docs, `internal-comms` for organizational updates, and `stop-slop` only for strong English prose anti-AI-tell editing; use `answer-workflow` for ordinary explanatory answers.
 - Use `claude-api` only for Anthropic provider work; use `documentation-lookup` for general library/API facts and other providers.
 - Use `mcp-builder` for MCP servers; use `claude-api` for Anthropic API clients and `security-review` when secret/tool-execution risk is central.
 - Use `skill-creator` for standard skill content; `hub-maintenance-workflow` still owns source records, capability metadata, and Skill Hub lifecycle decisions.
@@ -84,6 +86,8 @@ Skill Hub is a personal workflow distribution set with a routing overlay. Route 
 - `skill-creator` loads for creating, updating, adapting, or evaluating standard agent skills.
 - `doc-coauthoring` loads for collaboratively drafting, restructuring, or reader-testing docs, PRDs, RFCs, proposals, specs, or decision records.
 - `internal-comms` loads for internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, and project updates.
+- `stop-slop` loads only for English prose AI-tell cleanup, draft editing, or prose review; it is a strong style editor, not a default rule for code explanations, Chinese output, technical specs, status reports, or ordinary documentation.
+- `design-taste-frontend` loads for anti-template visual direction and pre-flight critique for landing pages, portfolios, marketing pages, and redesigns; it does not load for dashboards, data tables, multi-step product UI, routine frontend logic, HTML reports, or slide decks.
 - `theme-factory` loads for applying or choosing coherent visual themes for slides, docs, reports, HTML artifacts, or landing pages.
 - `slack-gif-creator` loads for creating, optimizing, or validating animated GIFs for Slack emoji or messages.
 - `openspec-explore` loads only for explicit OpenSpec exploration, discovery, or requirement clarification.
@@ -91,7 +95,7 @@ Skill Hub is a personal workflow distribution set with a routing overlay. Route 
 - `openspec-apply-change` loads only for implementing or continuing an existing OpenSpec change.
 - `openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes.
 - `hub-maintenance-workflow` loads for maintaining this Skill Hub's source records, installed skill components, routing, npm package boundary, and candidate-source decisions.
-- `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
+- `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, and `slack-gif-creator` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
 
 ## Subagents And Hooks
 

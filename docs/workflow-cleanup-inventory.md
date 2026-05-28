@@ -1,6 +1,6 @@
 # Workflow Cleanup Inventory
 
-Date: 2026-05-22
+Date: 2026-05-28
 
 This inventory is a cleanup planning artifact for the personal workflow routing overlay and lifecycle installer. It classifies what remains in the standard install, what stays as source evidence, and what requires explicit approval before deletion or demotion.
 
@@ -11,9 +11,9 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 | Area | Current count | Notes |
 |---|---:|---|
 | Install bundles | 0 | The CLI no longer supports selectable install bundles. |
-| Installable components | 39 | All active components are standard skills under `skills/<name>/`. |
-| Local `skills` directories | 39 | Matches installable skill component directories after Ralph retirement. |
-| Packaged `skills` directories | 39 | npm publishes the personal distributed skill source tree. |
+| Installable components | 41 | All active components are standard skills under `skills/<name>/`. |
+| Local `skills` directories | 41 | Matches installable skill component directories after Ralph retirement, `stop-slop`, and `design-taste-frontend` installation. |
+| Packaged `skills` directories | 41 | npm publishes the personal distributed skill source tree. |
 | First-class workflow target | 1 | `standard` installs into `skills/<name>/`; host packaging stays outside skill bodies. |
 
 ## Keep In Standard Install

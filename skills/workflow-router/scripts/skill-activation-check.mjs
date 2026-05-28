@@ -294,6 +294,31 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'ux audit',
     'web interface guideline',
   ]);
+  const designTasteSignal = (
+    includesAny(text, [
+      'anti-slop',
+      'anti-template',
+      'design read',
+      'design taste',
+      'generic landing',
+      'make it not look templated',
+      'marketing landing',
+      'non-templated',
+      'portfolio',
+      'taste-skill',
+      'visual direction',
+    ]) || (
+      includesAny(text, ['landing page', 'marketing page', 'redesign'])
+      && includesAny(text, ['anti-template', 'design direction', 'not generic', 'not templated', 'visual direction'])
+    )
+  ) && !includesAny(text, [
+    'dashboard',
+    'data table',
+    'html report',
+    'multi-step',
+    'react state',
+    'slide deck',
+  ]);
   const openspecExploreSignal = includesAny(text, [
     'openspec discovery',
     'openspec exploration',
@@ -358,6 +383,21 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'leadership update',
     'project update',
     'status report for leadership',
+  ]);
+  const stopSlopSignal = includesAny(text, [
+    'ai tells',
+    'ai-writing tells',
+    'formulaic contrast',
+    'generic business prose',
+    'remove ai tells',
+    'throat-clearing',
+  ]) && includesAny(text, [
+    'draft',
+    'edit',
+    'english essay',
+    'english prose',
+    'prose',
+    'review',
   ]);
   const themeFactorySignal = includesAny(text, [
     'apply a visual theme',
@@ -479,6 +519,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     return 'web-design-guidelines';
   }
 
+  if (designTasteSignal && canLoad(metadata, 'design-taste-frontend', ['anti-template frontend visual direction', 'landing pages'])) {
+    return 'design-taste-frontend';
+  }
+
   if (productUiSignal && canLoad(metadata, 'frontend-design', ['polished product ui', 'styling'])) {
     return 'frontend-design';
   }
@@ -518,6 +562,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
 
   if (internalCommsSignal && canLoad(metadata, 'internal-comms', ['internal communications'])) {
     return 'internal-comms';
+  }
+
+  if (stopSlopSignal && canLoad(metadata, 'stop-slop', ['english prose', 'ai-writing tells'])) {
+    return 'stop-slop';
   }
 
   if (themeFactorySignal && canLoad(metadata, 'theme-factory', ['coherent visual theme'])) {
