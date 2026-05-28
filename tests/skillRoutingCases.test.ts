@@ -27,6 +27,7 @@ const optionalDemoSkills = [
   'coding-standards',
   'documentation-lookup',
   'design-taste-frontend',
+  'clone-website',
   'web-artifacts-builder',
   'frontend-slides',
   'frontend-patterns',

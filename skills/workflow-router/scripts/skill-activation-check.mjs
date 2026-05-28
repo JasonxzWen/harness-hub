@@ -164,6 +164,22 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'unsafe io',
     'webhook',
   ]);
+  const cloneWebsiteSignal = includesAny(text, [
+    'clone our authorized',
+    'clone website',
+    'clone a website',
+    'clone the website',
+    'clone this website',
+    'copy of this site',
+    'rebuild an authorized website',
+    'rebuild this page',
+    'reverse-engineer',
+    'website clone',
+  ]) || (
+    includesAny(text, ['clone', 'rebuild'])
+    && includesAny(text, ['site', 'url', 'web page', 'website'])
+    && includesAny(text, ['authorized', 'own', 'public', 'replace the content'])
+  );
   const agentSignal = includesAny(text, [
     'agent is stuck',
     'agent keeps',
@@ -454,6 +470,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
 
   if (finalGateSignal && canLoad(metadata, 'verification-loop', ['final build', 'artifact checks'])) {
     return 'verification-loop';
+  }
+
+  if (cloneWebsiteSignal && canLoad(metadata, 'clone-website', ['clone', 'reverse-engineer'])) {
+    return 'clone-website';
   }
 
   if (securitySignal && canLoad(metadata, 'security-review', ['security-sensitive', 'injection'])) {

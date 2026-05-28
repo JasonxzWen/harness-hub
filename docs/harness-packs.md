@@ -7,6 +7,7 @@ Harness packs are explicit repo-harness extensions for projects that need more t
 | Pack | Status | Activation |
 |---|---|---|
 | `minimal` | Local, source-owned, explicit | `harness-hub init-harness <target> --dry-run` then `--yes` |
+| `website-cloner` | Local smoke scaffold, explicit-only | Use with the `clone-website` skill for authorized clone/report artifacts; not part of default install |
 | `advanced-openai` | Evaluated source reference only | Not installable until license and host metadata review is complete |
 
 ## Source Review Boundary
@@ -28,6 +29,7 @@ Keep its advanced content reference-only until all of the following are true:
 - No wholesale upstream import.
 - No hidden hooks, schedules, remote runner setup, commits, pushes, or external automations.
 - No default advanced pack activation through `install`.
+- No automatic website cloning, external scraping, or third-party brand copying.
 - No package or repository rename as a prerequisite for advanced pack evaluation.
 
 ## Promotion Checklist

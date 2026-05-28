@@ -37,6 +37,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 | Anti-template visual direction for landing pages, portfolios, marketing pages, or redesigns | `design-taste-frontend` | Use as a frontend taste layer; production UI implementation remains `frontend-design`, and dashboards/data tables/multi-step product UI route elsewhere. |
 | Applying a coherent visual theme to slides, reports, docs, HTML artifacts, or landing pages | `theme-factory` | Use for theming existing artifacts; production UI creation remains `frontend-design`. |
 | Creating, optimizing, or validating Slack animated GIFs | `slack-gif-creator` | Use for Slack emoji/message GIF targets only. |
+| Explicitly cloning, reverse-engineering, or rebuilding an authorized website | `clone-website` | Requires permission, browser inspection, replacement-content handling, and validation; ordinary visual inspiration or production UI creation remains `frontend-design` or `design-taste-frontend`. |
 | Agent/tool harness loop, repeated tool failure, drift, or recoverable self-debugging | `agent-introspection-debugging` | Use after ordinary product debugging is ruled out. |
 | Clear complex communication and alignment, long-task fact ledgers, option comparison, multi-option approval, implementation plan, PR writeup, architecture/dependency/milestone map, structure tree, status/incident update, research explainer, visual/design/component approval board, or lightweight export editor | `effective-interact` | Select plain text, Markdown, visual Markdown, or self-contained HTML by decision cost. Do not load merely because an answer is long. `grill-me` remains the pressure-test owner; `frontend-design` owns production UI; `frontend-slides` owns decks. |
 
@@ -45,6 +46,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Use `frontend-design` for production UI; use `design-taste-frontend` for anti-template visual direction on landing pages, portfolios, marketing pages, and redesigns; use `web-artifacts-builder` for complex standalone React/Tailwind artifacts; use `effective-interact` for communication/report artifacts.
 - Use `theme-factory` after an artifact exists or when the request is specifically about theme selection; use `frontend-design` when layout, UX, and implementation are the primary task.
 - Use `slack-gif-creator` only for Slack GIFs; use image/video generation or frontend/artifact skills for other visual media.
+- Use `clone-website` only for explicit authorized site cloning or reverse engineering; use `frontend-design` for new production pages, `design-taste-frontend` for visual direction, and `web-artifacts-builder` for standalone artifacts that do not require live-site reconstruction.
 - Use `webapp-testing` for one-off local browser inspection; use `e2e-testing` for durable Playwright suites.
 - Use `doc-coauthoring` for durable docs, `internal-comms` for organizational updates, and `stop-slop` only for strong English prose anti-AI-tell editing; use `answer-workflow` for ordinary explanatory answers.
 - Use `claude-api` only for Anthropic provider work; use `documentation-lookup` for general library/API facts and other providers.
@@ -90,12 +92,13 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `design-taste-frontend` loads for anti-template visual direction and pre-flight critique for landing pages, portfolios, marketing pages, and redesigns; it does not load for dashboards, data tables, multi-step product UI, routine frontend logic, HTML reports, or slide decks.
 - `theme-factory` loads for applying or choosing coherent visual themes for slides, docs, reports, HTML artifacts, or landing pages.
 - `slack-gif-creator` loads for creating, optimizing, or validating animated GIFs for Slack emoji or messages.
+- `clone-website` loads only when the user explicitly asks to clone, reverse-engineer, or rebuild an authorized website; it does not load for generic redesign, visual inspiration, scraping, phishing, impersonation, or third-party brand copying.
 - `openspec-explore` loads only for explicit OpenSpec exploration, discovery, or requirement clarification.
 - `openspec-propose` loads only for explicit new OpenSpec proposals with design, spec deltas, and tasks.
 - `openspec-apply-change` loads only for implementing or continuing an existing OpenSpec change.
 - `openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes.
 - `hub-maintenance-workflow` loads for maintaining this Harness Hub's source records, installed skill components, routing, npm package boundary, and candidate-source decisions.
-- `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, and `slack-gif-creator` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
+- `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, `slack-gif-creator`, and `clone-website` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
 
 ## Subagents And Hooks
 

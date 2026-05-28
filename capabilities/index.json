@@ -56,6 +56,46 @@
       "risk": "medium",
       "recommendation": "Initialize a minimal repo-local harness with Codex-only root state, handoff, task scope, validation, and managed ownership only through an explicit bootstrap command."
     },
+    "harness:website-cloner": {
+      "kind": "harness-template",
+      "path": "harness/website-cloner",
+      "dest": ".",
+      "version": "0.1.0",
+      "source": "JCodesMore/ai-website-cloner-template",
+      "provides": [
+        "authorized-website-clone-scaffold",
+        "browser-verifiable-report-artifact",
+        "clone-safety-boundaries",
+        "static-site-smoke-validation"
+      ],
+      "overlapsWith": [
+        "skill:clone-website",
+        "skill:frontend-design",
+        "skill:web-artifacts-builder",
+        "skill:webapp-testing",
+        "skill:e2e-testing"
+      ],
+      "routing": "Use only as an explicit template for authorized website clone smoke tests and report artifacts; default skill install must not write website-cloner harness files.",
+      "detects": [
+        {
+          "path": "AGENTS.md"
+        },
+        {
+          "path": "package.json"
+        },
+        {
+          "path": "site/index.html"
+        },
+        {
+          "path": "scripts/validate-site.mjs"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "high",
+      "recommendation": "Keep website cloning behind explicit user intent, safety review, browser evidence, and local validation because it uses external sites, file writes, and potentially protected third-party design assets."
+    },
     "skill:workflow-router": {
       "kind": "skill",
       "path": "skills/workflow-router",
@@ -694,6 +734,43 @@
       ],
       "risk": "low",
       "recommendation": "Use as a narrow anti-slop visual taste layer for landing pages, portfolios, marketing pages, and redesigns."
+    },
+    "skill:clone-website": {
+      "kind": "skill",
+      "path": "skills/clone-website",
+      "version": "0.1.0",
+      "source": "JCodesMore/ai-website-cloner-template",
+      "provides": [
+        "authorized-website-reconstruction",
+        "browser-inspection-clone-workflow",
+        "third-party-brand-safety-gates",
+        "component-spec-driven-page-rebuilds"
+      ],
+      "overlapsWith": [
+        "skill:frontend-design",
+        "skill:design-taste-frontend",
+        "skill:web-artifacts-builder",
+        "skill:webapp-testing",
+        "skill:e2e-testing",
+        "skill:security-review"
+      ],
+      "routing": "Load when the user explicitly asks to clone, reverse-engineer, or rebuild an authorized website; do not use for generic redesign, visual inspiration, scraping, phishing, impersonation, or third-party brand copying.",
+      "detects": [
+        {
+          "path": "skills/clone-website/SKILL.md"
+        },
+        {
+          "path": "skills/clone-website/references/safety-and-permissions.md"
+        },
+        {
+          "path": "skills/clone-website/references/extraction-checklist.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "high",
+      "recommendation": "Use as an explicit website-clone workflow only after permission, browser automation, replacement-content, and validation gates are clear."
     },
     "skill:web-artifacts-builder": {
       "kind": "skill",

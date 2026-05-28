@@ -31,8 +31,9 @@ Scan scope:
 | `anthropics/skills` | `anthropics-skills` | `690f15cac7f7b4c055c5ab109c79ed9259934081` | 17 |
 | `Leonxlnx/taste-skill` | `taste-skill` | `3c7017d636c3a4aad378433ea6d0cfa6c921da4a` | 12 |
 | `hardikpandya/stop-slop` | `stop-slop` | `8da1f030185bdfe8471220585162991eaeb970e9` | 1 |
+| `JCodesMore/ai-website-cloner-template` | `ai-website-cloner-template` | `c9b4fea5b257370af339abedad727c8903490dac` | 1 |
 
-Total non-ECC canonical/reference skill surfaces scanned: 152.
+Total non-ECC canonical/reference skill surfaces scanned: 153.
 
 ## Excluded Sources
 
@@ -73,9 +74,15 @@ License/source note: the upstream README states many examples are Apache 2.0, wh
 | `Leonxlnx/taste-skill` | Installed as `design-taste-frontend` plus selective `effective-interact` absorption | MIT and fills a bounded anti-template frontend taste gap for landing pages, portfolios, marketing pages, and redesigns. The standard skill keeps narrow routing and reference-spoke guidance instead of copying the whole repo. It is not the default frontend design skill and does not own dashboards, data tables, multi-step product UI, reports, or decks. |
 | `hardikpandya/stop-slop` | Installed as `stop-slop` | MIT, standard skill shape, and fills a bounded English prose AI-tell cleanup gap. Local routing marks it as a strong style editor so its hard bans do not become default rules for code explanations, Chinese output, technical specs, status reports, or ordinary docs. |
 
+## Website Cloner Import Decision
+
+| Source | Decision | Reason |
+|---|---|---|
+| `JCodesMore/ai-website-cloner-template` | Installed as explicit-only `clone-website` plus lightweight `harness/website-cloner` scaffold | MIT and provides a strong browser-inspection, component-spec, and validation workflow for authorized site reconstruction. Skill Hub keeps the trigger narrow, excludes host-specific multi-platform metadata, and requires safety, replacement-content, browser evidence, and local validation gates. |
+
 ## Coverage Notes
 
-- After excluding ECC and adding `anthropics/skills`, `taste-skill`, and `stop-slop`, the candidate pool has 152 scanned surfaces across workflow, SDD, review, debugging, frontend, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, creative artifacts, and prose cleanup. Ralph remains source-recorded but is retired from installable distribution.
+- After excluding ECC and adding `anthropics/skills`, `taste-skill`, `stop-slop`, and `ai-website-cloner-template`, the candidate pool has 153 scanned surfaces across workflow, SDD, review, debugging, frontend, website reconstruction, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, creative artifacts, and prose cleanup. Ralph remains source-recorded but is retired from installable distribution.
 - The first Anthropic atom pass promoted seven installable skills or local rewrites into `capabilities/index.json`: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator`. The prose pass promoted `stop-slop`; the taste pass promoted `design-taste-frontend` and also changed `effective-interact` references and validator behavior.
 - It does not need to become a general marketplace. Future source expansion should follow recurring personal project needs first.
 - The sustainable direction is to keep Harness Hub's local layer as personal orchestration, routing, lifecycle, provenance, dedupe, and validation; pull atomic skills from upstream only when license, source quality, trigger contract, and personal usefulness pass.
