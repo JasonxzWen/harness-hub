@@ -2,10 +2,15 @@
 
 ## Unreleased
 
+## 0.1.10 - 2026-05-28
+
+- Rename the project, package, CLI, source entrypoint, docs, specs, and release workflows to Harness Hub.
+- Publish the scoped `@jasonwen/harness-hub` package with only the `harness-hub` binary and `.harness-hub` managed state.
 - Remove selectable install profiles entirely: `analyze`, `install`, and `init` now operate on the complete standard skill set.
 - Remove harness template components and package contents so the lifecycle CLI manages only platform-neutral `skills/<name>/` directories.
 - Remove retired Ralph PRD/story-loop skills and distribution entries now that native Codex and Claude Code goal/story workflows cover that lane.
 - Drop the Ralph PRD example script from package contents and keep remaining SDD routing focused on platform-neutral workflow owners and helper atoms.
+- Add `validate-harness` assessment reporting with five subsystem scores, HTML output, generic verification-command detection, and benchmark summary guidance.
 
 ## 0.1.9 - 2026-05-21
 
