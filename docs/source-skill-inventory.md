@@ -1,6 +1,6 @@
 # Source Skill Inventory
 
-Date: 2026-05-21
+Date: 2026-05-28
 
 This inventory records the local refresh of Skill Hub's referenced source repositories after removing `affaan-m/everything-claude-code` from the atomic skill candidate pool. Existing local skill lineage is not rewritten here; this file is only the candidate-source inventory for future atom selection and routing placement.
 
@@ -29,8 +29,10 @@ Scan scope:
 | `michalvavra/agents` | `michalvavra-agents` | `77473489d5c7b248af51ee7acf072c84a59ba6d4` | 2 active, 16 archived |
 | `Cocoon-AI/architecture-diagram-generator` | `architecture-diagram-generator` | `4b9087d55268c79a935105439dbcd37b630fc3f3` | 1 |
 | `anthropics/skills` | `anthropics-skills` | `690f15cac7f7b4c055c5ab109c79ed9259934081` | 17 |
+| `Leonxlnx/taste-skill` | `taste-skill` | `3c7017d636c3a4aad378433ea6d0cfa6c921da4a` | 12 |
+| `hardikpandya/stop-slop` | `stop-slop` | `8da1f030185bdfe8471220585162991eaeb970e9` | 1 |
 
-Total non-ECC canonical/reference skill surfaces scanned: 139.
+Total non-ECC canonical/reference skill surfaces scanned: 152.
 
 ## Excluded Sources
 
@@ -64,9 +66,16 @@ License/source note: the upstream README states many examples are Apache 2.0, wh
 | `algorithmic-art`, `canvas-design` | Reference-only | Creative and potentially useful, but niche/heavy and not needed for the first atom import. |
 | `docx`, `pdf`, `pptx`, `xlsx` | Reference-only | High-value gap area, but source-available licensing blocks redistribution by default. |
 
+## `taste-skill` And `stop-slop` Import Decision
+
+| Source | Decision | Reason |
+|---|---|---|
+| `Leonxlnx/taste-skill` | Installed as `design-taste-frontend` plus selective `effective-interact` absorption | MIT and fills a bounded anti-template frontend taste gap for landing pages, portfolios, marketing pages, and redesigns. The standard skill keeps narrow routing and reference-spoke guidance instead of copying the whole repo. It is not the default frontend design skill and does not own dashboards, data tables, multi-step product UI, reports, or decks. |
+| `hardikpandya/stop-slop` | Installed as `stop-slop` | MIT, standard skill shape, and fills a bounded English prose AI-tell cleanup gap. Local routing marks it as a strong style editor so its hard bans do not become default rules for code explanations, Chinese output, technical specs, status reports, or ordinary docs. |
+
 ## Coverage Notes
 
-- After excluding ECC and adding `anthropics/skills`, the candidate pool has 139 scanned surfaces across workflow, SDD, review, debugging, frontend, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, and creative artifacts. Ralph remains source-recorded but is retired from installable distribution.
-- The first Anthropic atom pass promoted seven installable skills or local rewrites into `capabilities/index.json`: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator`.
+- After excluding ECC and adding `anthropics/skills`, `taste-skill`, and `stop-slop`, the candidate pool has 152 scanned surfaces across workflow, SDD, review, debugging, frontend, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, creative artifacts, and prose cleanup. Ralph remains source-recorded but is retired from installable distribution.
+- The first Anthropic atom pass promoted seven installable skills or local rewrites into `capabilities/index.json`: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator`. The prose pass promoted `stop-slop`; the taste pass promoted `design-taste-frontend` and also changed `effective-interact` references and validator behavior.
 - It does not need to become a general marketplace. Future source expansion should follow recurring personal project needs first.
 - The sustainable direction is to keep Skill Hub's local layer as personal orchestration, routing, lifecycle, provenance, dedupe, and validation; pull atomic skills from upstream only when license, source quality, trigger contract, and personal usefulness pass.

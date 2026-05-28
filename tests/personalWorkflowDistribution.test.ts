@@ -62,6 +62,8 @@ test('default distributed imported skills have source registry coverage', () => 
     'anthropics-skills-adapted': 'anthropics/skills',
     'compound-engineering-plugin-adapted': 'EveryInc/compound-engineering-plugin',
     'everything-claude-code': 'everything-claude-code',
+    'hardikpandya/stop-slop': 'hardikpandya/stop-slop',
+    'Leonxlnx/taste-skill': 'Leonxlnx/taste-skill',
     'learn-faster-kit-inspired-local': 'hluaguo/learn-faster-kit',
     'mattpocock-skills-adapted': 'mattpocock/skills',
     openspec: 'Fission-AI/OpenSpec',

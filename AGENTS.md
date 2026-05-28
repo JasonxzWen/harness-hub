@@ -45,6 +45,7 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 
 - Non-trivial requests: use `workflow-router` first to classify the request into exactly one owner state; when a terminal is available, run or mirror `node skills/workflow-router/scripts/workflow-check.mjs --prompt "<request>" --json` before substantive work.
 - Questions and evidence lookup: use `answer-workflow`.
+- English prose AI-tell cleanup or draft review: use `stop-slop` only for English prose; do not use it for Chinese output, code explanations, specs, or status reports.
 - SDD change work: use `sdd-workflow`; align core details, target spec, and acceptance criteria before implementation.
 - Runtime bug reports that start from failure evidence: use `diagnosis-workflow`.
 - Code, plan, release, UI, or security review: use `review-workflow`.

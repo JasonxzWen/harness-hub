@@ -102,4 +102,4 @@ Hand-write HTML only when the generator cannot express the needed local editor o
 
 ## Verification
 
-Before HTML handoff, run `scripts/validate-interaction.mjs`; prefer `--require-browser`. Report degradation honestly. Read `references/interaction-patterns.md`, `references/html-effectiveness-patterns.md`, `references/session-ledger-schema.json`, and `evals/routing-cases.json` before changing trigger or HTML escalation rules.
+Before HTML handoff, run `scripts/validate-interaction.mjs`; report degradation. Read `references/interaction-patterns.md`, `references/html-effectiveness-patterns.md`, `references/html-aesthetic-preflight.md`, `references/session-ledger-schema.json`, and `evals/routing-cases.json` before changing trigger or HTML rules.
