@@ -1,15 +1,23 @@
 {
-  "schemaVersion": 1,
-  "features": [
-    {
-      "id": "initial-harness",
-      "status": "planned",
-      "summary": "Define the first repo-local agent harness contract.",
-      "acceptance": [
-        "Agent instructions are explicit.",
-        "Progress and handoff files exist.",
-        "A deterministic validation command is documented."
-      ]
-    }
-  ]
+  "schema_version": 1,
+  "features": [],
+  "worktree_policy": {
+    "write_task_isolation": "Use one git worktree or branch per write task.",
+    "code_organization": "Keep source code organized by project architecture, not by agent task folders."
+  },
+  "parallel_write_policy": {
+    "default": "blocked",
+    "allowed_when": [
+      "independent worktrees or branches",
+      "non-overlapping allowed paths",
+      "independent validation",
+      "single integration review point"
+    ],
+    "read_only_parallel_work": [
+      "research",
+      "review",
+      "log analysis",
+      "validation"
+    ]
+  }
 }

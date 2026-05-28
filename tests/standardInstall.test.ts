@@ -23,19 +23,20 @@ const REQUIRED_WORKFLOW_COMPONENTS = [
   'skill:verification-loop',
 ];
 
-test('capability index keeps harness separate from standard skill install surface', () => {
+test('capability index keeps harness metadata outside the standard install surface', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
     defaults?: unknown;
     profiles?: unknown;
-    components: Record<string, { kind: string }>;
+    components: Record<string, { kind: string; path: string }>;
   };
 
   expect(index.defaults).toBeUndefined();
   expect(index.profiles).toBeUndefined();
   expect(index.components['harness:minimal']?.kind).toBe('harness-template');
-  expect(Object.entries(index.components)
-    .filter(([id]) => !id.startsWith('harness:'))
-    .every(([, component]) => component.kind === 'skill')).toBe(true);
+  expect(index.components['harness:minimal']?.path).toBe('harness/minimal');
+  expect(Object.values(index.components).every((component) => (
+    component.kind === 'skill' || component.kind === 'harness-template'
+  ))).toBe(true);
 });
 
 test('default standard install exposes all workflow skills and omits retired Ralph skills', () => {

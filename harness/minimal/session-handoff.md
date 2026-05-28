@@ -1,17 +1,21 @@
 # Session Handoff
 
-## Current State
+## Current Status
 
-- Minimal repo harness files are present.
+- No active Codex task is in progress.
 
-## Next Actions
+## Changed Files
 
-1. Update `feature_list.json` with real feature work.
-2. Update `progress.md` after each material change.
-3. Record restart context here before ending a long session.
+- None.
 
-## Validation Commands
+## Validation Evidence
 
-```powershell
-node scripts/harness-validate.mjs
-```
+- Not run yet.
+
+## Blockers
+
+- None recorded.
+
+## Next Action
+
+- Fill `tasks/current-task.md` with a goal-ready task before starting implementation.

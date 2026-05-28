@@ -1,0 +1,11 @@
+# Clean State Checklist
+
+Use this checklist before handoff.
+
+- `git status --short` has been reviewed.
+- Changed files match the current task's allowed paths.
+- Forbidden paths were not modified.
+- Temporary logs or generated artifacts are in ignored locations.
+- Validation commands from `tasks/current-task.md` have been run or explicitly skipped with a reason.
+- `progress.md` and `session-handoff.md` reflect the current state.
+- `node scripts/harness-validate.mjs` passes.

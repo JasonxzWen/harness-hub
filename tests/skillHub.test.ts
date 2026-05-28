@@ -29,6 +29,16 @@ import {
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const AGENT_READINESS_FIXTURES = path.join(TEST_DIR, 'fixtures', 'agent-readiness');
 const READINESS_CATEGORIES = [...AGENT_READINESS_CATEGORIES];
+const REQUIRED_HARNESS_FILES = [
+  'AGENTS.md',
+  'clean-state-checklist.md',
+  'definition-of-done.md',
+  'feature_list.json',
+  'progress.md',
+  'scripts/harness-validate.mjs',
+  'session-handoff.md',
+  'tasks/current-task.md',
+] as const;
 
 test('plans default install into standard skill directory', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-plan-'));
@@ -223,9 +233,10 @@ test('harness init dry-run reports exact plan without writing files', async () =
 
   expect(result.code).toBe(0);
   const plan = JSON.parse(result.stdout);
-  expect(plan.componentId).toBe('harness:minimal');
-  expect(plan.items.map((item: { relativePath: string }) => item.relativePath)).toContain('AGENTS.md');
-  expect(plan.items.every((item: { action: string }) => item.action === 'create')).toBe(true);
+  expect(plan.harnessComponentId).toBe('harness:minimal');
+  expect(plan.harnessFiles.map((item: { relativePath: string }) => item.relativePath).sort())
+    .toEqual([...REQUIRED_HARNESS_FILES].sort());
+  expect(plan.harnessFiles.every((item: { exists: boolean }) => item.exists === false)).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
 });
@@ -239,6 +250,9 @@ test('confirmed harness init writes lock-managed files and validates', async () 
   expect(fs.existsSync(path.join(targetDir, 'feature_list.json'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'progress.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'session-handoff.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'clean-state-checklist.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'definition-of-done.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'tasks', 'current-task.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'scripts', 'harness-validate.mjs'))).toBe(true);
 
   const lock = readLock(targetDir);
@@ -249,13 +263,7 @@ test('confirmed harness init writes lock-managed files and validates', async () 
   const component = lock.data.components.find((entry) => entry.id === 'harness:minimal');
   expect(component?.kind).toBe('harness-template');
   expect(component?.dest).toBe('.');
-  expect(component?.files.map((file) => file.path).sort()).toEqual([
-    'AGENTS.md',
-    'feature_list.json',
-    'progress.md',
-    'scripts/harness-validate.mjs',
-    'session-handoff.md',
-  ]);
+  expect(component?.files.map((file) => file.path).sort()).toEqual([...REQUIRED_HARNESS_FILES].sort());
 
   const validation = validateHarness(targetDir);
   expect(validation.exitCode).toBe(0);
@@ -375,10 +383,13 @@ test('harness update only refreshes lock-owned files', () => {
   }
   const harness = lock.data.components.find((entry) => entry.id === 'harness:minimal');
   expect(harness?.files.map((file) => file.path).sort()).toEqual([
+    'clean-state-checklist.md',
+    'definition-of-done.md',
     'feature_list.json',
     'progress.md',
     'scripts/harness-validate.mjs',
     'session-handoff.md',
+    'tasks/current-task.md',
   ]);
 });
 

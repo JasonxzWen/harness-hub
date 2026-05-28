@@ -1,20 +1,13 @@
 # Progress
 
-## Current Goal
+## Current State
 
-- Establish the first repo-local agent harness.
+- No active task has been recorded yet.
 
-## Completed
+## Recent Validation
 
-- Harness files were initialized.
+- Not run yet.
 
-## Pending
+## Notes
 
-- Replace placeholder feature inventory with project-specific work.
-- Document the repository's required validation commands.
-
-## Validation
-
-```powershell
-node scripts/harness-validate.mjs
-```
+- Keep this file focused on current and recent state. Move old details to task summaries or archives.

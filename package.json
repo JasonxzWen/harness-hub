@@ -30,6 +30,7 @@
     "harness/",
     "dist/",
     "docs/",
+    "harness/",
     "openspec/config.yaml",
     "openspec/specs/",
     ".claude-plugin/",
