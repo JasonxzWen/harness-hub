@@ -16,7 +16,8 @@ skills/
     scripts/      # optional
     assets/       # optional
 harness/
-  minimal/      # explicit repo harness template source
+  minimal/          # explicit repo harness template source
+  website-cloner/  # explicit authorized website clone smoke scaffold
 .claude-plugin/
   plugin.json
   marketplace.json
@@ -32,9 +33,9 @@ See [Personal Workflow Distribution](docs/personal-workflow-distribution.md) for
 - Planning and pressure testing: `grill-me`, OpenSpec helpers.
 - Runtime diagnosis and implementation quality: `diagnose`, `tdd-workflow`, `verification-loop`, `compound-code-review`, `security-review`.
 - Documentation, communication, learning, and handoff: `doc-coauthoring`, `internal-comms`, `stop-slop` for narrow English prose AI-tell cleanup, `documentation-lookup`, `feynman-learning-coach`, `handoff`.
-- Web and artifact workflows: `effective-interact` for complex communication, option approval, status/incident reports, architecture/milestone maps, ignored long-task ledgers, HTML handoffs, and report-only aesthetic preflight; `frontend-design`, `design-taste-frontend`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, and browser testing skills cover adjacent UI/artifact lanes.
+- Web and artifact workflows: `effective-interact` for complex communication, option approval, status/incident reports, architecture/milestone maps, ignored long-task ledgers, HTML handoffs, and report-only aesthetic preflight; `frontend-design`, `design-taste-frontend`, `clone-website`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, and browser testing skills cover adjacent UI/artifact lanes.
 - Platform and extension atoms: `claude-api`, `mcp-builder`, `skill-creator`.
-- Repo harness lifecycle: `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove, and minimal root harness templates.
+- Repo harness lifecycle: `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove, minimal root harness templates, and explicit-only website-cloner smoke scaffolds.
 - Skill maintenance: `hub-maintenance-workflow`, source-project records, capability metadata, and `skill-quality-inventory`.
 
 ## CLI
