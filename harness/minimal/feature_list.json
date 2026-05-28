@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "features": [
+    {
+      "id": "initial-harness",
+      "status": "planned",
+      "summary": "Define the first repo-local agent harness contract.",
+      "acceptance": [
+        "Agent instructions are explicit.",
+        "Progress and handoff files exist.",
+        "A deterministic validation command is documented."
+      ]
+    }
+  ]
+}

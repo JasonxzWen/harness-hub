@@ -2,11 +2,11 @@
 
 Date: 2026-05-15
 
-This guide defines the quality bar for Skill Hub skills. It turns the public Agent Skills guidance provided in the May 2026 Perplexity write-up into local, reviewable rules for this repository.
+This guide defines the quality bar for Skill Hub's personal workflow distribution. It is strict for local routing and workflow-owner skills, and intentionally lighter for imported skill bodies that should preserve upstream style by default.
 
 ## Core Principle
 
-A skill is context for an agent, not documentation for a human reader. Every skill adds routing and context cost. Add or keep a skill only when it changes agent behavior in a way that a short prompt or existing global instruction cannot.
+A skill is context for an agent, not documentation for a human reader. Every distributed skill adds routing and context cost, but imported skills do not need to share one local writing style. Add or keep a skill only when it changes agent behavior in a way that a short prompt or existing global instruction cannot.
 
 Use this test for every sentence in a skill:
 
@@ -49,22 +49,22 @@ Use these spokes when they reduce loaded context:
 
 Avoid deep hierarchy until it solves a real navigation problem. If a skill needs multiple levels of hierarchy, include short index files or lookup helpers so the agent does not pay excessive indirection.
 
-## Frontmatter Standard
+## Frontmatter And Source Standard
 
-The root `SKILL.md` must have:
+Local routing, workflow-owner, and locally authored skill `SKILL.md` files should have:
 
 - `name`: lower-case, hyphenated, and exactly matching the directory name.
 - `description`: a routing trigger, not a feature summary.
-- `license` or source metadata when copied or adapted from an external project.
-- `metadata.source`, `metadata.upstream_commit`, or equivalent source notes for imported/adapted skills.
 
-Preferred description form:
+Imported skills need enough source information to update, remove, or audit them later. That can live in the upstream body, frontmatter, `capabilities/index.json`, `docs/source-projects.md`, or `docs/source-skill-inventory.md`; do not edit an imported body solely to move source notes into frontmatter.
+
+Preferred local overlay description form:
 
 ```yaml
 description: "Load when the user asks to <intent phrase>, <nearby phrase>, or <real query wording>; do not load for <adjacent non-goal>."
 ```
 
-Description rules:
+Description rules for local overlay skills:
 
 - Prefer starting with `Load when`.
 - Target 50 words or fewer.
@@ -74,11 +74,13 @@ Description rules:
 - Do not list implementation steps.
 - Do not include volatile tool versions or remote service details.
 
-Changing a description is a routing change. It requires positive, negative, and forbidden-load evaluation coverage before merge unless the edit is purely mechanical and leaves trigger meaning unchanged.
+Imported descriptions can keep upstream wording. Change them only when the wording creates a real routing conflict that cannot be fixed in `docs/skill-routing.md`, `capabilities/index.json`, or an owner workflow.
+
+Changing a local routing-sensitive description is a routing change. It requires positive, negative, and forbidden-load evaluation coverage before merge unless the edit is purely mechanical and leaves trigger meaning unchanged.
 
 ## Body Standard
 
-The loaded `SKILL.md` body should stay short and high-signal. A useful target is under 5,000 tokens; local tests may use byte or word-count proxies when token counting is not available.
+Locally authored `SKILL.md` bodies should stay short and high-signal. A useful target is under 5,000 tokens; local tests may use byte or word-count proxies when token counting is not available. Imported bodies are allowed to keep upstream structure unless they create excessive context cost in normal routing.
 
 Write the body for model behavior, not human onboarding:
 
@@ -117,7 +119,7 @@ Gotchas should be append-mostly. Prefer adding a specific negative example over 
 
 ## Evaluation Standard
 
-Every new installable skill should have an evaluation story before it is treated as default-route material.
+Every new installable local overlay skill should have an evaluation story before it is treated as default-route material. Imported skills need enough routing placement to avoid obvious conflicts; deeper evals should be added when a recurring conflict appears.
 
 Minimum evaluation set:
 
@@ -134,12 +136,12 @@ For third-party evaluations, capture the eval rationale in docs even if the skil
 ## Maintenance Rules
 
 - Treat the skill index as a scarce shared budget.
-- Prefer selective adaptation over wholesale imports.
+- Preserve upstream skill bodies by default; adapt only for safety, license clarity, usability, or direct routing conflict.
 - Keep broad workflow principles in `AGENTS.md`; keep conditional workflow context in skills.
 - Keep volatile API/tool behavior in live documentation lookup, not static skills.
-- Re-check current host capabilities before adding host-specific skills, wrappers, or workflow docs; prefer portable assets, lifecycle governance, deterministic checks, and standard skill content over duplicating native host surfaces.
+- Re-check current host capabilities before adding host-specific wrappers or workflow docs; keep host assumptions out of the local overlay unless explicitly needed.
 - Keep side-effect-heavy workflows explicit-only until the repo has confirmed safety boundaries.
-- Run `scripts/validate-skills.ps1 -SkipExternal` after skill file changes.
+- Run `scripts/validate-skills.ps1 -SkipExternal` after skill file changes or install-surface changes.
 - Run `bun run validate` before claiming repo-level changes are complete.
 
 ## Review Checklist
@@ -147,12 +149,12 @@ For third-party evaluations, capture the eval rationale in docs even if the skil
 Use this checklist when reviewing a new or changed skill:
 
 1. Does the skill fill a real gap not already covered by existing skills or global instructions?
-2. Does `description` describe when to load, in 50 words or fewer?
+2. For local overlay skills, does `description` describe when to load, in 50 words or fewer?
 3. Are nearest overlaps and forbidden loads documented?
 4. Is heavy or conditional content moved to spokes?
 5. Are scripts/assets/references reusable rather than copied into the body?
 6. Are gotchas concrete and failure-derived?
-7. Are source, license, and upstream version recorded?
+7. Are source, license, and upstream version recorded somewhere durable?
 8. Are routing docs and capability metadata updated?
 9. Are positive, negative, and forbidden evals present or explicitly planned?
 10. Did validation pass?

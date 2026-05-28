@@ -13,11 +13,14 @@ test('package manifest keeps release validation and source traceability explicit
     homepage?: string;
     bugs?: { url?: string };
     publishConfig?: { access?: string; registry?: string };
+    bin?: Record<string, string>;
     files: string[];
     scripts: Record<string, string>;
   };
 
   expect(packageJson.name).toBe('@jasonwen/skill-hub');
+  expect(packageJson.bin?.['skill-hub']).toBe('bin/skill-hub.mjs');
+  expect(packageJson.bin?.['harness-hub']).toBe('bin/harness-hub.mjs');
   expect(packageJson.repository?.url).toBe('git+https://github.com/JasonxzWen/skill-hub.git');
   expect(packageJson.homepage).toBe('https://github.com/JasonxzWen/skill-hub#readme');
   expect(packageJson.bugs?.url).toBe('https://github.com/JasonxzWen/skill-hub/issues');
@@ -26,12 +29,14 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.scripts['validate:release']).toContain('bun run validate');
   expect(packageJson.scripts['validate:release']).toContain('bun run build');
   expect(packageJson.scripts['validate:release']).toContain('node bin/skill-hub.mjs --help');
+  expect(packageJson.scripts['validate:release']).toContain('node bin/harness-hub.mjs --help');
   expect(packageJson.scripts['validate:release']).toContain('npm pack --dry-run');
   expect(packageJson.scripts.validate).toContain('bun run validate:artifact-policy');
   expect(packageJson.scripts.validate).toContain('bun run validate:skills');
   expect(packageJson.files).toEqual(artifactPolicy.npm.files);
   expect(packageJson.files).toContain('CHANGELOG.md');
   expect(packageJson.files).toContain('config/');
+  expect(packageJson.files).toContain('harness/');
   expect(packageJson.files).toContain('scripts/sync-codex-skills.mjs');
   expect(packageJson.files).toContain('scripts/run-validate-skills.mjs');
   expect(packageJson.files).toContain('openspec/config.yaml');
@@ -46,7 +51,7 @@ test('package manifest keeps release validation and source traceability explicit
   expect(artifactPolicy.npm.forbidden).toContain('.codex/');
 });
 
-test('npm package publishes the platform-neutral skill source tree', () => {
+test('npm package publishes the personal distributed skill source tree', () => {
   const artifactPolicy = JSON.parse(fs.readFileSync('config/artifact-policy.json', 'utf8')) as {
     npm: { files: string[] };
   };
@@ -60,11 +65,15 @@ test('npm package publishes the platform-neutral skill source tree', () => {
     .sort();
 
   expect(artifactPolicy.npm.files).toContain('skills/');
+  expect(artifactPolicy.npm.files).toContain('harness/');
   expect(artifactPolicy.npm.files).toContain('.claude-plugin/');
   expect(artifactPolicy.npm.files).not.toContain('.codex/');
   expect(artifactPolicy.npm.files).not.toContain('.codex/skills/');
   expect(skillComponentPaths).toContain('skills/workflow-router');
   expect(skillComponentPaths).not.toContain('skills/everything-claude-code');
+  expect(Object.entries(capabilityIndex.components)
+    .filter(([, component]) => component.kind === 'skill')
+    .map(([id]) => id)).not.toContain('harness:minimal');
 });
 
 test('npm publish workflow uses trusted publishing and release tag checks', () => {

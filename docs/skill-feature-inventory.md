@@ -1,6 +1,6 @@
 # Skill Feature Inventory
 
-This inventory summarizes the active platform-neutral Skill Hub surface.
+This inventory summarizes the active personal Skill Hub distribution surface.
 
 ## Counts
 
@@ -26,6 +26,6 @@ The source root is `skills/`. Host-specific metadata directories are not part of
 
 ## Policy
 
-- A skill is installable only when it can run as standard skill content without host-specific assumptions.
+- A skill is installable only when it can run as standard skill content in the user's projects or has explicit routing notes for its assumptions.
 - Host distribution metadata lives outside `skills/`.
 - Claude plugin support is provided by `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.

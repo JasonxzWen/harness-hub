@@ -1,6 +1,10 @@
-# Skill Hub
+# Harness Hub
 
-Skill Hub is a curated, platform-neutral library of agent skills and lifecycle tooling.
+Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects. It analyzes a target repository, installs the reusable skill set, initializes explicit root-level harness files when requested, validates the resulting harness, and keeps managed files safe through lock-backed lifecycle commands.
+
+Skill Hub remains the compatible skill-distribution subsystem: the existing `skill-hub` command and standard `skills/<name>/` install behavior continue to work during the Harness Hub migration.
+
+Most skills can come from upstream sources and keep their upstream style. This repository adds the personal routing overlay, source records, harness templates, and lifecycle tooling needed to analyze, initialize, validate, install, update, status-check, and remove managed agent workflow assets in target projects.
 
 The repository source of truth is the standard skill layout:
 
@@ -11,12 +15,16 @@ skills/
     references/   # optional
     scripts/      # optional
     assets/       # optional
+harness/
+  minimal/      # explicit repo harness template source
 .claude-plugin/
   plugin.json
   marketplace.json
 ```
 
-Skills must not depend on a specific agent host. Host-specific packaging, such as Claude plugin distribution, lives outside the skill bodies.
+Skills should stay usable across agent hosts when practical, but imported skill bodies are not rewritten just for local style. Host-specific packaging, such as Claude plugin distribution, lives outside the skill bodies.
+
+See [Personal Workflow Distribution](docs/personal-workflow-distribution.md) for the lightweight maintenance rules, TODOs, and acceptance criteria.
 
 ## What Is Included
 
@@ -26,6 +34,7 @@ Skills must not depend on a specific agent host. Host-specific packaging, such a
 - Documentation, communication, learning, and handoff: `doc-coauthoring`, `internal-comms`, `documentation-lookup`, `feynman-learning-coach`, `handoff`.
 - Web and artifact workflows: `effective-interact` for complex communication, option approval, status/incident reports, architecture/milestone maps, ignored long-task ledgers, and HTML handoffs; `frontend-design`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, and browser testing skills cover adjacent UI/artifact lanes.
 - Platform and extension atoms: `claude-api`, `mcp-builder`, `skill-creator`.
+- Repo harness lifecycle: `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove, and minimal root harness templates.
 - Skill maintenance: `hub-maintenance-workflow`, source-project records, capability metadata, and `skill-quality-inventory`.
 
 ## CLI
@@ -36,6 +45,10 @@ bun run validate
 bun run bootstrap:codex-skills
 
 npx @jasonwen/skill-hub analyze D:\path\to\target --json
+npx @jasonwen/skill-hub analyze D:\path\to\target --agent-readiness --harness --json
+npx @jasonwen/skill-hub init-harness D:\path\to\target --dry-run --json
+npx @jasonwen/skill-hub init-harness D:\path\to\target --yes
+npx @jasonwen/skill-hub validate-harness D:\path\to\target --json
 npx @jasonwen/skill-hub install D:\path\to\target --target standard --dry-run
 npx @jasonwen/skill-hub install D:\path\to\target --target standard --yes
 npx @jasonwen/skill-hub status D:\path\to\target --json
@@ -43,7 +56,9 @@ npx @jasonwen/skill-hub update D:\path\to\target --dry-run --json
 npx @jasonwen/skill-hub remove D:\path\to\target --dry-run --json
 ```
 
-There are no named install variants. `install` installs every standard Skill Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. Legacy host-specific directories are not the distribution shape.
+The package also exposes a `harness-hub` binary. Until the package itself is renamed, `skill-hub` is the compatibility command and `harness-hub` is the forward command.
+
+There are no named skill install variants. `install` installs every standard Skill Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. `install` does not create root harness files; use explicit `init-harness` for `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`. Legacy host-specific directories are not the distribution shape.
 
 ## Codex Self-Bootstrap
 
@@ -81,12 +96,15 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | Path | Purpose |
 |---|---|
 | `skills/` | Platform-neutral skill source of truth |
+| `harness/` | Source-owned repo harness templates and advanced pack metadata |
 | `.claude-plugin/` | Claude plugin and marketplace manifests |
-| `capabilities/index.json` | Skill install graph and source-retained component metadata |
+| `capabilities/index.json` | Skill and harness component metadata |
 | `src/skillHub.ts` | CLI implementation |
 | `scripts/validate-skills.ps1` | Standard skill validation gate |
 | `scripts/skill-quality-inventory.ts` | Report-only skill quality inventory |
 | `docs/skill-routing.md` | Overlap and routing rules |
+| `docs/personal-workflow-distribution.md` | Personal distribution rules, TODOs, and acceptance criteria |
+| `docs/harness-packs.md` | Harness pack source-review boundary and promotion checklist |
 | `docs/source-projects.md` | Upstream source and decision log |
 | `docs/workflow-source-dossier.md` | Reference dossier for SDD, routing, Effective Interact, OpenSpec, Superpowers, ECC, Matt Pocock skills, Vercel, and retired Ralph source notes |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy |

@@ -9,10 +9,12 @@ import {
   AGENT_READINESS_CATEGORIES,
   analyzeTarget,
   applyInstall,
+  applyHarnessInit,
   getRemovePlan,
   getStatus,
   getUpdatePlan,
   migrateLock,
+  planHarnessInit,
   planInstall,
   readCapabilityIndex,
   readLock,
@@ -20,6 +22,7 @@ import {
   runCli,
   type SkillHubLock,
   updateManaged,
+  validateHarness,
   validateCapabilityIndex,
 } from '../src/skillHub';
 
@@ -198,6 +201,185 @@ test('default analysis omits agent readiness data unless requested', () => {
   const result = analyzeTarget({ targetDir, agents: ['standard'] });
 
   expect('agentReadiness' in result).toBe(false);
+});
+
+test('harness analysis is opt-in and side-effect-free', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-analysis-'));
+  const defaultResult = analyzeTarget({ targetDir, agents: ['standard'] });
+  const result = await captureCli(['analyze', targetDir, '--harness', '--json']);
+
+  expect('harness' in defaultResult).toBe(false);
+  expect(result.code).toBe(0);
+  const report = JSON.parse(result.stdout);
+  expect(report.harness.componentId).toBe('harness:minimal');
+  expect(report.harness.requiredFiles).toContain('AGENTS.md');
+  expect(report.harness.findings.some((finding: { state: string }) => finding.state === 'missing')).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.skill-hub'))).toBe(false);
+});
+
+test('harness init dry-run reports exact plan without writing files', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-dry-run-'));
+  const result = await captureCli(['init-harness', targetDir, '--dry-run', '--json']);
+
+  expect(result.code).toBe(0);
+  const plan = JSON.parse(result.stdout);
+  expect(plan.componentId).toBe('harness:minimal');
+  expect(plan.items.map((item: { relativePath: string }) => item.relativePath)).toContain('AGENTS.md');
+  expect(plan.items.every((item: { action: string }) => item.action === 'create')).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+});
+
+test('confirmed harness init writes lock-managed files and validates', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-init-'));
+  const result = await captureCli(['init-harness', targetDir, '--yes', '--json']);
+
+  expect(result.code).toBe(0);
+  expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'feature_list.json'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'progress.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'session-handoff.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'scripts', 'harness-validate.mjs'))).toBe(true);
+
+  const lock = readLock(targetDir);
+  expect(lock?.data.schemaVersion).toBe(2);
+  if (!lock || lock.data.schemaVersion !== 2) {
+    throw new Error('expected schema version 2 lock');
+  }
+  const component = lock.data.components.find((entry) => entry.id === 'harness:minimal');
+  expect(component?.kind).toBe('harness-template');
+  expect(component?.dest).toBe('.');
+  expect(component?.files.map((file) => file.path).sort()).toEqual([
+    'AGENTS.md',
+    'feature_list.json',
+    'progress.md',
+    'scripts/harness-validate.mjs',
+    'session-handoff.md',
+  ]);
+
+  const validation = validateHarness(targetDir);
+  expect(validation.exitCode).toBe(0);
+  expect(validation.missing).toEqual([]);
+
+  const status = getStatus({ targetDir, index: readCapabilityIndex() });
+  expect(status.current.some((row) => row.id === 'harness:minimal')).toBe(true);
+});
+
+test('harness init skips existing root files unless forced', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-skip-'));
+  fs.writeFileSync(path.join(targetDir, 'AGENTS.md'), 'user-owned instructions\n');
+
+  const plan = planHarnessInit({ targetDir });
+  const agentsItem = plan.items.find((item) => item.relativePath === 'AGENTS.md');
+  expect(agentsItem?.action).toBe('skip');
+
+  const result = applyHarnessInit(plan);
+  expect(result.skipped.some((item) => item.relativePath === 'AGENTS.md')).toBe(true);
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toBe('user-owned instructions\n');
+});
+
+test('harness init blocks schema version one locks before writing files', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-v1-preflight-'));
+  fs.mkdirSync(path.join(targetDir, '.skill-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.skill-hub', 'lock.json'), `${JSON.stringify({
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    hubVersion: '0.1.0',
+    agents: ['standard'],
+    components: [],
+  }, null, 2)}\n`);
+
+  expect(() => applyHarnessInit(planHarnessInit({ targetDir }))).toThrow('schema version 1 lock');
+  expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'feature_list.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'progress.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'session-handoff.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'scripts', 'harness-validate.mjs'))).toBe(false);
+});
+
+test('harness managed files report modified and missing states', () => {
+  const modifiedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-modified-'));
+  applyHarnessInit(planHarnessInit({ targetDir: modifiedTarget }));
+  fs.appendFileSync(path.join(modifiedTarget, 'AGENTS.md'), '\nlocal edit\n');
+  const modifiedStatus = getStatus({ targetDir: modifiedTarget, index: readCapabilityIndex() });
+
+  expect(modifiedStatus.modified.some((row) => row.id === 'harness:minimal')).toBe(true);
+  const removeResult = removeManaged(modifiedTarget, { yes: true });
+  expect(removeResult.exitCode).toBe(3);
+  expect(fs.existsSync(path.join(modifiedTarget, 'AGENTS.md'))).toBe(true);
+
+  const missingTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-missing-'));
+  applyHarnessInit(planHarnessInit({ targetDir: missingTarget }));
+  fs.rmSync(path.join(missingTarget, 'progress.md'));
+  const missingStatus = getStatus({ targetDir: missingTarget, index: readCapabilityIndex() });
+
+  expect(missingStatus.missing.some((row) => row.id === 'harness:minimal')).toBe(true);
+});
+
+test('harness component supports selected update planning', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-update-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  makeLockComponentStale(targetDir, 'harness:minimal', { version: '0.0.0' });
+
+  const plan = getUpdatePlan({
+    targetDir,
+    index: readCapabilityIndex(),
+    components: ['harness:minimal'],
+  });
+
+  expect(plan.updates.map((row) => row.id)).toEqual(['harness:minimal']);
+  expect(plan.blockers).toEqual([]);
+});
+
+test('standard install preserves existing harness lock records', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-install-preserve-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+
+  const lock = readLock(targetDir);
+  if (!lock || lock.data.schemaVersion !== 2) {
+    throw new Error('expected schema version 2 lock');
+  }
+  expect(lock.data.components.some((entry) => entry.id === 'harness:minimal')).toBe(true);
+  expect(lock.data.components.some((entry) => entry.id === 'skill:grill-me')).toBe(true);
+  expect(getStatus({ targetDir }).current.some((row) => row.id === 'harness:minimal')).toBe(true);
+});
+
+test('harness update only refreshes lock-owned files', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-update-owned-only-'));
+  fs.writeFileSync(path.join(targetDir, 'AGENTS.md'), 'user-owned instructions\n');
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  makeLockComponentStale(targetDir, 'harness:minimal', { version: '0.0.0' });
+  const progressPath = path.join(targetDir, 'progress.md');
+  const oldProgress = 'stale managed progress\n';
+  fs.writeFileSync(progressPath, oldProgress);
+  mutateLock(targetDir, (lock) => {
+    if (lock.schemaVersion !== 2) throw new Error('expected v2');
+    const component = lock.components.find((entry) => entry.id === 'harness:minimal');
+    if (!component) throw new Error('missing harness component');
+    const progress = component.files.find((file) => file.path === 'progress.md');
+    if (!progress) throw new Error('missing progress record');
+    progress.sha256 = hashContent(oldProgress);
+    progress.size = Buffer.byteLength(oldProgress);
+  });
+
+  const result = updateManaged(targetDir, { yes: true, components: ['harness:minimal'] });
+
+  expect(result.exitCode).toBe(0);
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toBe('user-owned instructions\n');
+  expect(fs.readFileSync(progressPath, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'harness', 'minimal', 'progress.md'), 'utf8'));
+  const lock = readLock(targetDir);
+  if (!lock || lock.data.schemaVersion !== 2) {
+    throw new Error('expected schema version 2 lock');
+  }
+  const harness = lock.data.components.find((entry) => entry.id === 'harness:minimal');
+  expect(harness?.files.map((file) => file.path).sort()).toEqual([
+    'feature_list.json',
+    'progress.md',
+    'scripts/harness-validate.mjs',
+    'session-handoff.md',
+  ]);
 });
 
 test('readiness analysis reports unknown states for an empty target repo', async () => {

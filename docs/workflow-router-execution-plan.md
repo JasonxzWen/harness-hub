@@ -6,7 +6,7 @@ This document turns the accepted workflow-router direction into implementation w
 
 ## Goal
 
-Ship an original platform-neutral workflow system where each non-trivial request is routed to one top-level workflow owner, SDD is the default change lane, TDD is embedded inside accepted specs, and `effective-interact` lowers human interpretation cost at alignment and handoff points.
+Ship a personal workflow routing overlay where each non-trivial request is routed to one top-level workflow owner, SDD is the default change lane, TDD is embedded inside accepted specs, and `effective-interact` lowers human interpretation cost at alignment and handoff points.
 
 ## Canonical Work Lifecycle
 
@@ -31,7 +31,7 @@ Use one standard install set:
 2. Install every standard skill component from `capabilities/index.json`.
 3. Run disposable-target install/update/remove smoke tests before publishing lifecycle changes.
 
-Implementation status: the router skill, public owner skills, routing fixture tests, and standard install set now exist. Physical cleanup was approved on 2026-05-21 after source records were retained, and non-component `skills` directories were removed. A disposable standard target lifecycle smoke passed after cleanup: `install --dry-run`, `install --yes`, `status`, `update --dry-run`, `remove --dry-run`, and `remove --yes` all preserved lock-backed ownership. Hook automation and any future cleanup/removal work remain separate approval gates.
+Implementation status: the router skill, owner skills, routing fixture tests, and standard install set now exist. Physical cleanup was approved on 2026-05-21 after source records were retained, and non-component `skills` directories were removed. A disposable standard target lifecycle smoke passed after cleanup: `install --dry-run`, `install --yes`, `status`, `update --dry-run`, `remove --dry-run`, and `remove --yes` all preserved lock-backed ownership. Hook automation and any future cleanup/removal work remain separate approval gates.
 
 ## Workstreams
 
@@ -201,7 +201,7 @@ Acceptance:
 
 Ask the user before:
 
-- deleting or renaming existing public skills,
+- deleting or renaming existing distributed skills,
 - changing CLI lifecycle semantics,
 - adding blocking hooks,
 - adding remote or credential-bearing automation,

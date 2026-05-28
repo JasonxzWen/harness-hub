@@ -60,12 +60,12 @@ test('docs describe the single full install set', () => {
   const readme = fs.readFileSync('README.md', 'utf8');
   const capabilityMap = fs.readFileSync('docs/capability-map.md', 'utf8');
 
-  expect(readme).toContain('There are no named install variants');
+  expect(readme).toContain('There are no named skill install variants');
   expect(readme).toContain('overwrites an existing same-name skill directory');
-  expect(readme).toContain('Skill install graph and source-retained component metadata');
-  expect(capabilityMap).toContain('one personal install set');
-  expect(capabilityMap).toContain('No named variants');
-  expect(capabilityMap).toContain('No root harness files are installed');
+  expect(readme).toContain('Skill and harness component metadata');
+  expect(capabilityMap).toContain('one personal skill install set');
+  expect(capabilityMap).toContain('No named skill variants');
+  expect(capabilityMap).toContain('`install` never writes root harness files');
 });
 
 test('current lifecycle specs and smokes do not use named install variants', () => {

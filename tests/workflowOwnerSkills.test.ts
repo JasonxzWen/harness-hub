@@ -20,7 +20,7 @@ function frontmatterValue(skill: string, name: string): string {
   return match?.[1] || '';
 }
 
-test('workflow owner skills are public and progressively loaded', () => {
+test('workflow owner skills are installable and progressively loaded', () => {
   for (const name of workflowSkills) {
     const skillPath = `skills/${name}/SKILL.md`;
     const agentPath = `skills/${name}/agents/openai.yaml`;

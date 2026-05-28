@@ -8,7 +8,7 @@ Source evaluation belongs in [Workflow source dossier](workflow-source-dossier.m
 
 ## Capability Statement
 
-Skill Hub MUST provide an original platform-neutral workflow system where each non-trivial user request is classified into one task state, handed to one workflow owner, and completed through explicit alignment, verification, and handoff gates.
+Skill Hub MUST provide a personal workflow routing overlay where each non-trivial user request is classified into one task state, handed to one workflow owner, and completed through explicit alignment, verification, and handoff gates.
 
 ## Terms
 
@@ -171,6 +171,7 @@ No remote writes from hooks are allowed. A hook MUST NOT bypass SDD alignment, u
 The workflow system MUST preserve existing npm and lock-backed lifecycle guarantees.
 
 - The standard target is the first-class install shape; host packaging belongs outside skill bodies.
+- Imported skill bodies may preserve upstream style; routing and safety decisions belong in the overlay first.
 - New workflow skills SHOULD enter the standard install surface only after routing and lifecycle tests cover them.
 - Managed files MUST be removable through lock-backed `remove`.
 - Deleted or renamed managed workflow files MUST be handled by `update` or migration metadata.
@@ -250,6 +251,6 @@ The redesign is accepted when:
 | Decision | Default recommendation | Why |
 |---|---|---|
 | Install surface | Use one standard install set. | Avoids bundle selection complexity and keeps lifecycle behavior deterministic. |
-| Public owner names | Use explicit public skill names. | The user asked for each stage to have a clear and unique skill. |
+| Owner names | Use explicit skill names. | Each stage should have a clear and unique owner in the personal routing overlay. |
 | Hooks timing | Defer blocking hooks. | Advisory checks are enough until routing and SDD gates are proven. |
-| Other agent hosts | Keep as explicit compatibility work. | The install graph should stay platform-neutral; host packaging can wrap the standard skill tree separately. |
+| Other agent hosts | Keep as explicit compatibility work. | The install graph should stay simple for personal project reuse; host packaging can wrap the standard skill tree separately. |

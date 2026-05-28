@@ -1,6 +1,6 @@
 # Source Projects
 
-This file records upstream projects reviewed for Skill Hub. The install rule is platform-neutral normalization: source ideas may come from any host ecosystem, but committed skills must stay in the standard `skills/<name>/SKILL.md` shape.
+This file records upstream projects reviewed for Skill Hub. The install rule is personal distribution with a routing overlay: source ideas may come from any host ecosystem, imported skill bodies should keep upstream style by default, and committed distributed skills must stay in the standard `skills/<name>/SKILL.md` shape.
 
 ## Active Sources
 
@@ -14,6 +14,7 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 | `hluaguo/learn-faster-kit` | Refreshed at `209db9f6c873e3600a4b387748d82ffd24ddaf6e`; MIT | Adapted the learning lifecycle into `feynman-learning-coach`; did not import the larger runtime. |
 | `zarazhangrui/frontend-slides` | Refreshed at `8dca834fc61abc9dd633cbe6a74ed7be3d82a608`; MIT | Reference source for `frontend-slides`; not merged into `effective-interact`. |
 | `anthropics/skills` | Refreshed at `690f15cac7f7b4c055c5ab109c79ed9259934081`; plugin marketplace has `document-skills`, `example-skills`, and `claude-api` sets | Installed selective atoms: `mcp-builder`, `internal-comms`, `theme-factory`, `slack-gif-creator`; adapted slim atoms: `claude-api`, `skill-creator`; rewrote `doc-coauthoring` locally because the refreshed upstream directory had no per-skill license file. Do not import wholesale; document skills are source-available, not open source. |
+| `walkinglabs/learn-harness-engineering` | Refreshed at `ea746b29b40a2629a59f85aeced9389477abfb7c`; public learning site and repository include harness-engineering lessons, example projects, resources, and a `harness-creator` skill/script | Evaluated as source material for Harness Hub. Do not import wholesale yet: root repository license evidence and host-specific metadata such as `agents/openai.yaml` must be resolved before redistribution. Use a local minimal harness template plus source records first. |
 
 ## Evaluated But Not Installed
 
@@ -37,8 +38,10 @@ This file records upstream projects reviewed for Skill Hub. The install rule is 
 ## Current Policy
 
 - Read upstream README, skill files, plugin metadata, and license before deciding.
-- Prefer selective adaptation over wholesale import.
+- Prefer preserving upstream skill bodies over local style rewrites.
+- Use selective adaptation only when an upstream skill is unsafe, unusable, legally unclear, or directly conflicts with the routing overlay.
 - Keep source attribution in skill metadata or this file.
-- Remove host-specific tool names, config paths, runner scripts, and UI metadata before committing a skill.
+- Keep host-specific tool names, config paths, runner scripts, and UI metadata out of local routing/workflow layers; do not rewrite imported bodies solely for this unless it blocks safe personal distribution.
+- Keep advanced harness packs reference-only or explicit-only until license, host metadata, side-effect boundaries, and overlap with local harness lifecycle are reviewed.
 - Update `docs/skill-routing.md`, `capabilities/index.json`, README, and tests when a candidate changes routing or the installable skill surface.
 - See `docs/source-skill-inventory.md` for the latest local refresh, scanned skill names, and coverage notes.

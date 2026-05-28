@@ -2,7 +2,7 @@
 
 Date: 2026-05-08
 
-Every third-party skill request must be evaluated before installation. The repository should remain a curated capability set, not a dump of every useful prompt pack.
+Every third-party skill request must be evaluated before installation. The repository is a personal workflow distribution set with a routing overlay, not a dump of every useful prompt pack.
 
 Use [Skill quality guide](skill-quality-guide.md) as the quality bar for deciding whether a candidate belongs in the index, should stay explicit-only, or should be rejected.
 
@@ -11,7 +11,7 @@ Use [Skill quality guide](skill-quality-guide.md) as the quality bar for decidin
 | Decision | Meaning |
 |---|---|
 | Install | Add the skill because it fills a real capability gap and has clean trigger boundaries. |
-| Adapt | Add a platform-neutral version because upstream assumes a specific harness. |
+| Adapt | Add a local wrapper or minimal content change because upstream is unsafe, unusable, legally unclear, or conflicts with the routing overlay. |
 | Reject | Do not install because it duplicates existing guidance, lacks license clarity, or adds trigger noise. |
 | Explicit-only | Keep as a documented candidate, but require a direct user request before installing or running it. |
 
@@ -24,10 +24,10 @@ For every candidate:
 3. Compare against `skills/`, `skills/`, `AGENTS.md`, and `docs/skill-routing.md`.
 4. Decide whether it adds a distinct capability or only repeats existing behavior.
 5. Check the candidate against the skill quality guide:
-   - Does the `description` behave like a routing trigger?
-   - Are adjacent negative and forbidden-load cases clear?
-   - Is heavy or conditional content split into spokes?
-   - Are gotchas concrete rather than generic advice?
+   - Does the local routing overlay know when to use it?
+   - Are adjacent negative and forbidden-load cases clear when the candidate overlaps existing skills?
+   - Is source/license information durable enough for future update or removal?
+   - Does the upstream body introduce unsafe side effects or unusable host assumptions?
 6. Record positive, negative, and forbidden routing examples for installed candidates, or explain why the candidate remains explicit-only/rejected.
 7. Update documentation immediately.
 8. Run `scripts/validate-skills.ps1 -SkipExternal`.
@@ -42,6 +42,6 @@ For every candidate:
 
 ## Default Bias
 
-Prefer rejection or explicit-only status for broad behavioral guideline packs. Prefer installation for concrete, bounded workflows with scripts, assets, or references that improve execution quality.
+Prefer rejection or explicit-only status for broad behavioral guideline packs. Prefer installation for concrete, bounded workflows with scripts, assets, or references that improve execution quality. Preserve upstream body text unless a concrete safety, source, usability, or routing issue requires a local change.
 
-Description edits after installation are routing edits. Require eval evidence before accepting them unless the change is purely mechanical and leaves trigger meaning unchanged.
+Local overlay description edits after installation are routing edits. Require eval evidence before accepting them unless the change is purely mechanical and leaves trigger meaning unchanged.

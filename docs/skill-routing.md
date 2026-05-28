@@ -1,6 +1,6 @@
 # Skill Routing
 
-Skill Hub skills are platform-neutral. Route by user intent and workflow boundary, not by agent host.
+Skill Hub is a personal workflow distribution set with a routing overlay. Route by user intent and workflow boundary, not by agent host. Imported skill bodies may keep upstream style; fix conflicts in this routing layer first.
 
 ## Source Roots
 
@@ -91,7 +91,7 @@ Skill Hub skills are platform-neutral. Route by user intent and workflow boundar
 - `openspec-apply-change` loads only for implementing or continuing an existing OpenSpec change.
 - `openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes.
 - `hub-maintenance-workflow` loads for maintaining this Skill Hub's source records, installed skill components, routing, npm package boundary, and candidate-source decisions.
-- `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator` load as helper atoms under the selected owner workflow, not as public workflow owners.
+- `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
 
 ## Subagents And Hooks
 

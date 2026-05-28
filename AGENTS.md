@@ -1,8 +1,10 @@
 ﻿always respond in 中文
 
-# Skill Hub Instructions
+# Harness Hub Instructions
 
-Skill Hub maintains platform-neutral agent skills. Keep every skill in the standard layout under `skills/<skill-name>/SKILL.md` with optional `references/`, `scripts/`, and `assets/` spokes.
+Harness Hub initializes and governs repo-local agent harnesses across multiple projects. Skill Hub remains the compatible skill-distribution subsystem. Most inner skills may come from upstream sources and should keep their upstream style by default; this repo mainly owns routing, source records, harness templates, lifecycle tooling, and a small number of custom workflow skills.
+
+Keep every distributed skill in the standard layout under `skills/<skill-name>/SKILL.md` with optional `references/`, `scripts/`, and `assets/` spokes.
 
 ## Core Rules
 
@@ -24,14 +26,18 @@ Skill Hub maintains platform-neutral agent skills. Keep every skill in the stand
    - Define success criteria before broad changes.
    - Verify with the nearest tests and validation gates before handoff.
 
-## Platform-Neutral Skill Policy
+## Personal Distribution Policy
 
-- Do not add host-specific tool names, config paths, UI metadata, or runner assumptions to skill bodies.
+- Do not rewrite imported skill bodies solely for house style, description format, progressive-loading style, or platform-neutral wording.
+- Prefer preserving upstream `SKILL.md` content and placing local behavior in `AGENTS.md`, `docs/skill-routing.md`, `skills/workflow-router/`, owner workflow skills, and `capabilities/index.json`.
+- Edit imported skill content only when the upstream text is unsafe, unusable in this repo, legally unclear, or directly conflicts with the routing overlay.
+- Do not add host-specific tool names, config paths, UI metadata, or runner assumptions to distributed skill bodies.
 - Do not add `agents/openai.yaml`, `.claude/skills/`, `.opencode/skills/`, or similar host-local metadata to the source skill tree.
 - Keep project-local Codex bootstrap wrappers under ignored `.codex/skills/<skill-name>/`; each wrapper points back to the canonical `skills/<skill-name>/SKILL.md`.
 - Put host packaging outside skills. Claude plugin support belongs in `.claude-plugin/`; the skill content remains standard.
-- If an upstream skill assumes a specific runner, normalize it into host-neutral language before installing.
-- If a capability cannot be normalized without losing its value, keep it as an evaluated source or explicit-only reference.
+- If an upstream skill assumes a specific runner, prefer routing notes, source records, or explicit-only status before rewriting its body.
+- If a capability cannot be used safely without rewriting away its core value, keep it as an evaluated source or explicit-only reference.
+- Keep repo harness templates under `harness/<template-name>/`; root harness files in target projects are installed only through explicit harness lifecycle commands, never through default skill installation.
 
 ## Skill Routing
 
@@ -43,7 +49,7 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - Runtime bug reports that start from failure evidence: use `diagnosis-workflow`.
 - Code, plan, release, UI, or security review: use `review-workflow`.
 - Delivery, validation closeout, cleanup, or handoff: use `delivery-workflow`.
-- Skill Hub source, routing, capability, npm lifecycle, or cleanup work: use `hub-maintenance-workflow`.
+- Harness Hub or Skill Hub source, routing, capability, npm lifecycle, harness templates, or cleanup work: use `hub-maintenance-workflow`.
 - Plan/design pressure testing: use `grill-me`.
 - Runtime bugs/performance regressions: use `diagnose`.
 - Agent/tool harness failures: use `agent-introspection-debugging`.
@@ -68,21 +74,28 @@ Hooks should start as advisory or deterministic local checks only. Do not introd
 Use `docs/skill-quality-guide.md` as the quality bar for authoring, importing, reviewing, and maintaining skills.
 
 - Treat `SKILL.md` `description` as routing logic.
-- Prefer "Load when..." phrasing, target 50 words or fewer, and describe user intent rather than workflow internals.
+- Prefer "Load when..." phrasing for local routing and workflow-owner skills; do not rewrite imported descriptions solely to satisfy style.
 - Keep heavy or conditional content out of `SKILL.md`; use `scripts/`, `references/`, and `assets/`.
-- Do not change a skill description without updating routing/eval coverage unless the edit is purely mechanical.
+- Do not change a local routing-sensitive description without updating routing/eval coverage unless the edit is purely mechanical.
 - Before adding an installable skill, verify it fills a bounded gap and does not duplicate global instructions.
+- Keep quality inventory findings report-only unless they map to a real routing, safety, source, or distribution problem.
 
 ## CLI Lifecycle
 
 Use these verbs for target-repo lifecycle work:
 
 - `skill-hub analyze <target> --json`
+- `skill-hub analyze <target> --agent-readiness --harness --json`
+- `skill-hub init-harness <target> --dry-run --json`
+- `skill-hub init-harness <target> --yes`
+- `skill-hub validate-harness <target> --json`
 - `skill-hub install <target> --target standard --dry-run`
 - `skill-hub install <target> --target standard --yes`
 - `skill-hub status <target> --json`
 - `skill-hub update <target> --dry-run --json`
 - `skill-hub remove <target> --dry-run --json`
+
+`install` remains the standard skill install command and must not create root harness files. `init-harness` owns root harness initialization and must stay dry-run/confirmation guarded.
 
 Before release-oriented CLI changes, run `bun run validate`, `git diff --check`, and the relevant smoke flow.
 
@@ -95,6 +108,7 @@ For every third-party skill evaluation:
 - Read upstream README, skill bodies, plugin metadata, and license before deciding.
 - Compare against `skills/`, root `AGENTS.md`, and `docs/skill-routing.md`.
 - Install only when the candidate fills a real gap or provides a materially better bounded workflow.
+- Preserve upstream skill content by default; add local routing/source records instead of rewriting body text for consistency.
 - Prefer reject or explicit-only status when the candidate repeats existing behavior or would create trigger noise.
 - Update `docs/source-projects.md`, `docs/skill-routing.md`, `README.md`, and inventory docs when installation, counts, sources, vendor paths, or runtime state change.
 - Run `powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExternal` before finishing skill maintenance.
