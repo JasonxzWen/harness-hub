@@ -1,6 +1,6 @@
 # npm Publishing
 
-This repo is prepared to publish the `skill-hub` CLI to the public npm registry as the scoped package `@jasonwen/skill-hub`.
+This repo is prepared to publish the `harness-hub` CLI to the public npm registry as the scoped package `@jasonwen/harness-hub`.
 
 ## What Is Automated
 
@@ -25,7 +25,7 @@ Git tracking, Git ignore rules, and npm package contents are coordinated through
 - `publishAndGit`: source assets that must be committed and shipped, such as `skills/effective-interact/`, capability metadata, docs, and stable OpenSpec specs.
 - `publishOnlyGenerated`: generated files that ship to npm but stay ignored in Git. Today this is `dist/`, rebuilt by `prepack`.
 - `gitOnly`: maintainer work files that are committed to GitHub but not shipped to npm, such as `.github/`, `src/`, `tests/`, and active `openspec/changes/<name>/` directories.
-- Generated HTML reports and interaction intermediates belong under ignored local output such as `reports/`, `.skill-hub/reports/`, or `skills/effective-interact/artifacts/`; they must not be committed.
+- Generated HTML reports and interaction intermediates belong under ignored local output such as `reports/`, `.harness-hub/reports/`, or `skills/effective-interact/artifacts/`; they must not be committed.
 - `ignoredLocal`: local runtime or vendor state that should be neither committed nor published.
 
 Run this check before publishing:
@@ -38,22 +38,22 @@ The check fails if `package.json.files` drifts from the policy, `.gitignore` mis
 
 ## What You Must Do
 
-The npm package name is scoped because npm blocks the unscoped `skill-hub` name as too similar to the existing `skillhub` package:
+The npm package name is scoped so the public package stays tied to the personal namespace and GitHub Trusted Publishing setup:
 
 ```text
-@jasonwen/skill-hub
+@jasonwen/harness-hub
 ```
 
 Before the first automated publish:
 
-1. Make the GitHub repository public: `https://github.com/JasonxzWen/skill-hub`.
+1. Make the GitHub repository public: `https://github.com/JasonxzWen/harness-hub`.
 2. Create or sign in to an npm account.
 3. Publish the first version manually if npm will not let you configure trusted publishing before the package exists.
-4. On npmjs.com, open the package settings for `@jasonwen/skill-hub`.
+4. On npmjs.com, open the package settings for `@jasonwen/harness-hub`.
 5. Configure Trusted Publisher:
    - Provider: GitHub Actions
    - Organization or user: `JasonxzWen`
-   - Repository: `skill-hub`
+   - Repository: `harness-hub`
    - Workflow file: `publish-npm.yml`
 6. For later releases, bump `package.json` version and publish a GitHub Release whose tag matches that version, such as `v0.1.1`.
 
@@ -84,12 +84,12 @@ git push --tags
 
 Then create a GitHub Release for the pushed tag. The workflow publishes only when the release is published, and it fails if the tag does not match `package.json` version.
 
-Users install or run the package with the scoped package name, while the installed command remains `skill-hub`:
+Users install or run the package with the scoped package name, while the installed command remains `harness-hub`:
 
 ```powershell
-npx @jasonwen/skill-hub@latest --help
-npm install -g @jasonwen/skill-hub@latest
-skill-hub --help
+npx @jasonwen/harness-hub@latest --help
+npm install -g @jasonwen/harness-hub@latest
+harness-hub --help
 ```
 
 ## Important Boundaries

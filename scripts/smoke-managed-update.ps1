@@ -27,20 +27,20 @@ function Invoke-CheckedCommand {
   return ($output -join "`n")
 }
 
-function Invoke-SkillHub {
+function Invoke-HarnessHub {
   param(
     [Parameter(Mandatory = $true)]
     [string[]]$Arguments,
     [int]$ExpectedExitCode = 0
   )
 
-  $allArguments = @("bin\skill-hub.mjs") + $Arguments
+  $allArguments = @("bin\harness-hub.mjs") + $Arguments
   return Invoke-CheckedCommand -FilePath "node" -Arguments $allArguments -ExpectedExitCode $ExpectedExitCode
 }
 
 function Read-Lock {
   param([Parameter(Mandatory = $true)][string]$TargetDir)
-  return Get-Content -LiteralPath (Join-Path $TargetDir ".skill-hub\lock.json") -Raw | ConvertFrom-Json
+  return Get-Content -LiteralPath (Join-Path $TargetDir ".harness-hub\lock.json") -Raw | ConvertFrom-Json
 }
 
 function Write-Lock {
@@ -50,7 +50,7 @@ function Write-Lock {
   )
   $json = $Lock | ConvertTo-Json -Depth 100
   [System.IO.File]::WriteAllText(
-    (Join-Path $TargetDir ".skill-hub\lock.json"),
+    (Join-Path $TargetDir ".harness-hub\lock.json"),
     "$json`n",
     [System.Text.UTF8Encoding]::new($false)
   )
@@ -117,28 +117,28 @@ function New-Target {
   return $path
 }
 
-$tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("skill-hub-managed-update-" + [guid]::NewGuid().ToString("N"))
+$tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("harness-hub-managed-update-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $tempRoot | Out-Null
 
 try {
   Invoke-CheckedCommand -FilePath "bun" -Arguments @("run", "build") | Out-Null
 
   $target = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $target, "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-HarnessHub -Arguments @("install", $target, "--target", "standard", "--yes", "--json") | Out-Null
   Set-ComponentStale -TargetDir $target -ComponentIds @("skill:grill-me")
-  $status = Invoke-SkillHub -Arguments @("status", $target, "--json") | ConvertFrom-Json
+  $status = Invoke-HarnessHub -Arguments @("status", $target, "--json") | ConvertFrom-Json
   Assert-HasUpdate -Report $status -ComponentId "skill:grill-me"
-  $preview = Invoke-SkillHub -Arguments @("update", $target, "--dry-run", "--json") | ConvertFrom-Json
+  $preview = Invoke-HarnessHub -Arguments @("update", $target, "--dry-run", "--json") | ConvertFrom-Json
   Assert-HasUpdate -Report $preview -ComponentId "skill:grill-me"
-  $updated = Invoke-SkillHub -Arguments @("update", $target, "--yes", "--json") | ConvertFrom-Json
+  $updated = Invoke-HarnessHub -Arguments @("update", $target, "--yes", "--json") | ConvertFrom-Json
   if (@($updated.updated | Where-Object { $_.id -eq "skill:grill-me" }).Count -ne 1) {
     throw "Expected confirmed update to update skill:grill-me"
   }
 
   $selectedTarget = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $selectedTarget, "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-HarnessHub -Arguments @("install", $selectedTarget, "--target", "standard", "--yes", "--json") | Out-Null
   Set-ComponentStale -TargetDir $selectedTarget -ComponentIds @("skill:grill-me", "skill:diagnose")
-  $selected = Invoke-SkillHub -Arguments @("update", $selectedTarget, "--component", "skill:grill-me", "--yes", "--json") | ConvertFrom-Json
+  $selected = Invoke-HarnessHub -Arguments @("update", $selectedTarget, "--component", "skill:grill-me", "--yes", "--json") | ConvertFrom-Json
   if (@($selected.updated | Where-Object { $_.id -eq "skill:grill-me" }).Count -ne 1) {
     throw "Expected selected update to update only skill:grill-me"
   }
@@ -149,29 +149,29 @@ try {
   }
 
   $forceTarget = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $forceTarget, "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-HarnessHub -Arguments @("install", $forceTarget, "--target", "standard", "--yes", "--json") | Out-Null
   Set-ComponentStale -TargetDir $forceTarget -ComponentIds @("skill:grill-me")
   Add-Content -LiteralPath (Join-Path $forceTarget "skills\grill-me\SKILL.md") -Value "modified"
-  Invoke-SkillHub -Arguments @("update", $forceTarget, "--yes", "--json") -ExpectedExitCode 3 | Out-Null
-  $forced = Invoke-SkillHub -Arguments @("update", $forceTarget, "--force", "--yes", "--json") | ConvertFrom-Json
+  Invoke-HarnessHub -Arguments @("update", $forceTarget, "--yes", "--json") -ExpectedExitCode 3 | Out-Null
+  $forced = Invoke-HarnessHub -Arguments @("update", $forceTarget, "--force", "--yes", "--json") | ConvertFrom-Json
   if (@($forced.forced | Where-Object { $_.id -eq "skill:grill-me" }).Count -ne 1) {
     throw "Expected force update to report skill:grill-me"
   }
 
   $migrationTarget = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $migrationTarget, "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-HarnessHub -Arguments @("install", $migrationTarget, "--target", "standard", "--yes", "--json") | Out-Null
   Convert-ToSchemaOneLock -TargetDir $migrationTarget
-  $migration = Invoke-SkillHub -Arguments @("migrate-lock", $migrationTarget, "--yes", "--json") | ConvertFrom-Json
+  $migration = Invoke-HarnessHub -Arguments @("migrate-lock", $migrationTarget, "--yes", "--json") | ConvertFrom-Json
   if ($migration.lock.data.schemaVersion -ne 2) {
     throw "Expected migrate-lock to write schema version 2"
   }
-  Invoke-SkillHub -Arguments @("remove", $migrationTarget, "--yes", "--json") | Out-Null
+  Invoke-HarnessHub -Arguments @("remove", $migrationTarget, "--yes", "--json") | Out-Null
 
   $divergentTarget = New-Target -Root $tempRoot
-  Invoke-SkillHub -Arguments @("install", $divergentTarget, "--target", "standard", "--yes", "--json") | Out-Null
+  Invoke-HarnessHub -Arguments @("install", $divergentTarget, "--target", "standard", "--yes", "--json") | Out-Null
   Convert-ToSchemaOneLock -TargetDir $divergentTarget
   Add-Content -LiteralPath (Join-Path $divergentTarget "skills\grill-me\SKILL.md") -Value "divergent"
-  Invoke-SkillHub -Arguments @("migrate-lock", $divergentTarget, "--yes", "--json") -ExpectedExitCode 3 | Out-Null
+  Invoke-HarnessHub -Arguments @("migrate-lock", $divergentTarget, "--yes", "--json") -ExpectedExitCode 3 | Out-Null
 
   Write-Host "Managed update smoke passed."
 } finally {

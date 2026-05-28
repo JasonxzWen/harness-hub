@@ -8,7 +8,7 @@ import {
   applyInstall,
   planInstall,
   readCapabilityIndex,
-} from '../src/skillHub';
+} from '../src/harnessHub';
 
 type HelperContractResult = {
   ok: boolean;
@@ -69,7 +69,7 @@ test('helper contract check validates high-risk helpers without mutation or suba
 });
 
 test('helper contract check fails when a high-risk helper loses side-effect boundaries', () => {
-  const skillsRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-helper-contract-weak-'));
+  const skillsRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-helper-contract-weak-'));
   const helperDir = path.join(skillsRoot, 'compound-code-review');
   fs.mkdirSync(helperDir, { recursive: true });
   fs.writeFileSync(
@@ -103,7 +103,7 @@ test('helper contract check fails when a high-risk helper loses side-effect boun
 });
 
 test('standard install exposes helper contract check in the target repo', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-helper-contract-install-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-helper-contract-install-'));
   applyInstall(planInstall({ targetDir, agents: ['standard'] }));
   const installedScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'helper-contract-check.mjs');
 

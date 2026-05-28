@@ -18,7 +18,7 @@ This skill owns intent recognition and handoff only. It does not implement, test
 | diagnosis | `diagnosis-workflow` |
 | review | `review-workflow` |
 | delivery | `delivery-workflow` |
-| skill-hub-maintenance | `hub-maintenance-workflow` |
+| harness-hub-maintenance | `hub-maintenance-workflow` |
 
 ## Workflow
 

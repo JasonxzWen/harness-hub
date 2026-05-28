@@ -1,11 +1,11 @@
 ---
 name: hub-maintenance-workflow
-description: Load when workflow-router selects the skill-hub-maintenance state for Skill Hub source evaluation, personal workflow distribution, routing overlay, capabilities, npm lifecycle, or managed update/remove behavior; preserve local adaptations and upstream skill bodies.
+description: Load when workflow-router selects the harness-hub-maintenance state for Harness Hub source evaluation, personal workflow distribution, routing overlay, capabilities, npm lifecycle, or managed update/remove behavior; preserve local adaptations and upstream skill bodies.
 ---
 
 # Hub Maintenance Workflow
 
-Use this owner for Skill Hub repository work.
+Use this owner for Harness Hub repository work.
 
 ## Workflow
 
@@ -27,7 +27,7 @@ Use repo-local source records and deterministic project files instead of delegat
 - `docs/workflow-source-dossier.md` for lifecycle-stage comparisons across Matt Pocock skills, Superpowers, ECC, OpenSpec, Effective Interact, Vercel, retired Ralph source notes, and local docs.
 - `docs/skill-routing.md` for overlap and trigger decisions.
 - `capabilities/index.json` for the installable component surface.
-- `skill-hub` CLI dry-runs for target-repo analyze/install/status/update/remove behavior.
+- `harness-hub` CLI dry-runs for target-repo analyze/install/status/update/remove behavior.
 - `skill-creator` for standard skill authoring and routing-evaluation details when local skills are created or changed.
 - `doc-coauthoring` for durable proposals or decision records when the maintenance change needs a reviewed document.
 

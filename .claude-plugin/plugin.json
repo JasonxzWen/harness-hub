@@ -1,8 +1,8 @@
 {
-  "name": "skill-hub",
-  "displayName": "Skill Hub",
+  "name": "harness-hub",
+  "displayName": "Harness Hub",
   "description": "Platform-neutral engineering skills for planning, debugging, testing, review, documentation, and workflow handoff.",
-  "repository": "https://github.com/JasonxzWen/skill-hub",
+  "repository": "https://github.com/JasonxzWen/harness-hub",
   "license": "MIT",
   "keywords": [
     "agent-skills",

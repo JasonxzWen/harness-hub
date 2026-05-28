@@ -1,6 +1,6 @@
 # Insight Publishing
 
-Insight publishing is the second explicit Skill Hub capability beside dev harness bootstrap. It turns user-provided source material, such as blogs, X/Twitter posts, interviews, or release notes, into a source-backed project insight post and a small GitHub Pages site.
+Insight publishing is the second explicit Harness Hub capability beside dev harness bootstrap. It turns user-provided source material, such as blogs, X/Twitter posts, interviews, or release notes, into a source-backed project insight post and a small GitHub Pages site.
 
 ## Source Of Truth
 
@@ -30,10 +30,10 @@ The slug is `<date>-<title-slug>` unless `--slug` is supplied. The slug is URL-s
 ## Commands
 
 ```powershell
-skill-hub insight-generate . --input input.json --json
-skill-hub insight-build . --json
-skill-hub insight-validate . --json
-skill-hub insight-publish . --dry-run --json
+harness-hub insight-generate . --input input.json --json
+harness-hub insight-build . --json
+harness-hub insight-validate . --json
+harness-hub insight-publish . --dry-run --json
 ```
 
 `insight-generate` validates the structured input before writing public files. `insight-build` writes the root and insight indexes under `site/`. `insight-validate` checks the generated site and post metadata. `insight-publish --dry-run` verifies workflow presence, Pages output, source metadata, links, branch state, and worktree cleanliness.
@@ -48,7 +48,7 @@ Posts must keep source-backed claims separate from viewpoint extraction:
 - `sourceClaims[].kind` must be explicit: `fact`, `inference`, `assumption`, or `project-judgment`;
 - viewpoints must trace to source claim IDs;
 - generated HTML must be UTF-8;
-- public Pages output must not reuse ignored local artifact directories such as `.skill-hub/reports/`, `reports/`, or `skills/effective-interact/artifacts/`.
+- public Pages output must not reuse ignored local artifact directories such as `.harness-hub/reports/`, `reports/`, or `skills/effective-interact/artifacts/`.
 
 ## Publishing Boundary
 

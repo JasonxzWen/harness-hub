@@ -176,6 +176,19 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'tool limits',
     'tool loop',
   ]);
+  const hubMaintenanceSignal = includesAny(text, [
+    'harness hub',
+    'harness-hub',
+  ]) && includesAny(text, [
+    'capability metadata',
+    'install policy',
+    'maintain',
+    'maintaining',
+    'npm',
+    'quality',
+    'routing',
+    'source records',
+  ]);
   const prototypeSignal = includesAny(text, [
     'before choosing',
     'compare two',
@@ -445,6 +458,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
 
   if (securitySignal && canLoad(metadata, 'security-review', ['security-sensitive', 'injection'])) {
     return 'security-review';
+  }
+
+  if (hubMaintenanceSignal) {
+    return null;
   }
 
   if (agentSignal && canLoad(metadata, 'agent-introspection-debugging', ['agent run', 'harness/tool'])) {

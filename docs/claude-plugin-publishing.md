@@ -1,6 +1,6 @@
 # Claude Plugin Publishing
 
-Skill Hub supports Claude plugin distribution without making the skill bodies Claude-specific.
+Harness Hub supports Claude plugin distribution without making the skill bodies Claude-specific.
 
 ## Layout
 
@@ -26,8 +26,8 @@ claude plugin validate . --strict
 
 ```powershell
 claude plugin validate .
-claude plugin marketplace add JasonxzWen/skill-hub
-claude plugin install skill-hub@skill-hub
+claude plugin marketplace add JasonxzWen/harness-hub
+claude plugin install harness-hub@harness-hub
 ```
 
 The manifests omit explicit `version` so Git installations can use commit SHA versioning during active development. Add a semver `version` only when every plugin release will bump it.

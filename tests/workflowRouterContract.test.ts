@@ -17,7 +17,7 @@ type WorkflowState =
   | 'diagnosis'
   | 'review'
   | 'delivery'
-  | 'skill-hub-maintenance'
+  | 'harness-hub-maintenance'
   | 'clarify'
   | 'none';
 
@@ -55,7 +55,7 @@ const stateOwners: Record<Exclude<WorkflowState, 'clarify' | 'none'>, string> = 
   diagnosis: 'diagnosis-workflow',
   review: 'review-workflow',
   delivery: 'delivery-workflow',
-  'skill-hub-maintenance': 'hub-maintenance-workflow',
+  'harness-hub-maintenance': 'hub-maintenance-workflow',
 };
 
 const lifecyclePhrases: Record<LifecycleGate, string> = {
@@ -120,7 +120,7 @@ test('workflow-router cases enforce one top-level owner or explicit no-owner out
 
 test('workflow-router cases preserve read-only states and SDD lifecycle gates', () => {
   const fixture = readFixture();
-  const fullLifecycleStates: WorkflowState[] = ['sdd-change', 'skill-hub-maintenance'];
+  const fullLifecycleStates: WorkflowState[] = ['sdd-change', 'harness-hub-maintenance'];
 
   for (const entry of fixture.cases) {
     if (entry.expectedState === 'question' || entry.expectedState === 'review') {

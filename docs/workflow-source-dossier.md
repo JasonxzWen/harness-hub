@@ -29,7 +29,7 @@ The workflow system must serve this order:
 | OpenSpec | Installed as formal lifecycle helpers. | Proposal/spec/task/archive artifacts and formal change tracking. | Use only when the user explicitly asks for OpenSpec or existing artifacts require it. |
 | Compound Engineering Plugin | `compound-code-review` adapted; rest explicit-only or reference. | Structured review, reviewer lenses, doc-review candidates, side-effect-heavy work loops. | Keep review lane; postpone broader workflows. |
 | Effective Interact | Original local skill. | Chinese-first interaction-cost reduction, answer-first visual handoffs, evidence, option comparison, validation dashboards. | High-priority interaction layer across all non-trivial lifecycle phases. |
-| Skill Hub CLI lifecycle | Implemented and documented locally. | Lock-backed install/status/update/remove and safe cleanup ownership. | Preserve as mandatory distribution and cleanup boundary. |
+| Harness Hub CLI lifecycle | Implemented and documented locally. | Lock-backed install/status/update/remove and safe cleanup ownership. | Preserve as mandatory distribution and cleanup boundary. |
 | Vercel/Web/React skills | `web-design-guidelines` remains active; other Vercel Web/React skills are source-retained only. | Frontend implementation and UI quality for target repos that need it. | Helper/reference sources only; not top-level lifecycle owners. |
 | Anthropic skills | Selective atoms installed or locally wrapped: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, `slack-gif-creator`. | Provider API, MCP server, skill authoring, doc/comms, visual theme, and Slack GIF atoms. | Helper atoms under owner workflows; document four-pack remains reference-only due licensing. |
 | Ralph | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` retired on 2026-05-22. | Historical autonomous story-loop reference. | Source evidence only; native Codex and Claude Code goal/story workflows now cover this lane. |
@@ -80,7 +80,7 @@ The workflow system must serve this order:
 
 | Source | Useful idea | Reject or constrain | Local decision |
 |---|---|---|---|
-| Skill Hub CLI lifecycle | Lock-backed `status`, `update`, `remove`, schema migration, safe ownership checks. | Do not delete by path/name alone. | Make cleanup a pre-implementation gate and preserve lock-backed ownership. |
+| Harness Hub CLI lifecycle | Lock-backed `status`, `update`, `remove`, schema migration, safe ownership checks. | Do not delete by path/name alone. | Make cleanup a pre-implementation gate and preserve lock-backed ownership. |
 | `hub-maintenance-workflow` | Preserve local adaptations and reject trigger-noise sources. | Do not remove unrelated local edits or source evidence. | Cleanup must distinguish delete, demote, archive, and retain. |
 | Superpowers finish/worktree discipline | Finish cleanly and avoid lingering branch/runtime state. | Do not import full worktree workflow by default. | Reference for delivery cleanup and local state hygiene. |
 | Effective Interact | Handoff can show cleanup list and residual risks. | HTML report is not the cleanup mechanism. | Use report to make cleanup visible and reviewable. |
@@ -92,7 +92,7 @@ The workflow system must serve this order:
 | `tdd-workflow` | Write failing tests or deterministic gates before implementation. | TDD must not compete with SDD as top-level workflow. | Embed TDD inside accepted SDD spec. |
 | Matt `tdd` | Reinforces test-first habit. | Rejected by local routing due to overlap with installed TDD/OpenSpec surfaces. | Reference-only; do not install by default. |
 | ECC coding standards | General code quality and conservative edits. | Avoid duplicating root project instructions inside every skill. | Keep as helper/library behavior. |
-| Anthropic `claude-api`, `mcp-builder`, `skill-creator` | Provider-specific API guidance, MCP server design/eval, and skill authoring patterns. | Avoid copying volatile API tables or host-specific skill-eval runners. | Use explicit helper atoms under SDD or Skill Hub maintenance. |
+| Anthropic `claude-api`, `mcp-builder`, `skill-creator` | Provider-specific API guidance, MCP server design/eval, and skill authoring patterns. | Avoid copying volatile API tables or host-specific skill-eval runners. | Use explicit helper atoms under SDD or Harness Hub maintenance. |
 | OpenSpec apply | Task-by-task implementation from formal change artifacts. | Explicit formal lifecycle only. | Use when an OpenSpec change already exists. |
 
 ### 7. Test And Accept
@@ -109,7 +109,7 @@ The workflow system must serve this order:
 | Source | Useful idea | Reject or constrain | Local decision |
 |---|---|---|---|
 | Effective Interact | Chinese-first static HTML reports with evidence, validation, risks, and next actions. | Do not use for trivial chat, production UI, decks, bundled apps, credentials, or repo-writing editors. | Mandatory communication layer for material work. |
-| Skill Hub CLI lifecycle docs | Release/checklist handoff with concrete commands. | Do not conflate CLI package self-update with target-repo managed `update`. | Preserve package-vs-target update distinction. |
+| Harness Hub CLI lifecycle docs | Release/checklist handoff with concrete commands. | Do not conflate CLI package self-update with target-repo managed `update`. | Preserve package-vs-target update distinction. |
 | CE code review artifact handoff | Stable finding numbering and artifact-style review output. | Keep only the review lane. | Use for review handoffs when findings matter. |
 | Anthropic `internal-comms`, `theme-factory`, `slack-gif-creator` | Internal updates, artifact theming, and Slack GIF delivery formats. | They are deliverable-specific helpers, not workflow owners. | Use only when the selected owner reaches that output shape. |
 | OpenSpec archive | Formal closeout and spec archive. | Use only for explicit OpenSpec changes. | Reference for lifecycle closure, not default delivery. |
@@ -118,7 +118,7 @@ The workflow system must serve this order:
 
 | Decision | Sources | Local behavior |
 |---|---|---|
-| Adopt | Effective Interact, Skill Hub CLI lifecycle, local AGENTS constraints. | Make them high-priority local infrastructure. |
+| Adopt | Effective Interact, Harness Hub CLI lifecycle, local AGENTS constraints. | Make them high-priority local infrastructure. |
 | Adapt | Matt `grill-me`/`diagnose`/`prototype`, Compound `ce-code-review`, selected Vercel/Web guidance, selected Anthropic atoms. | Keep bounded helper lanes with local routing. |
 | Reference-only | Superpowers full pack, ECC broad system, OpenSpec formal lifecycle, Matt `grill-with-docs`, CE doc review, frontend-slides upstream, Anthropic document four-pack and creative-heavy examples. | Study specific ideas without default installation. |
 | Reject for default | Full Superpowers, full CE plugin, Matt issue/triage/setup flows, side-effect-heavy PR/publish/credential workflows. | Prevent trigger noise and unsafe external actions. |

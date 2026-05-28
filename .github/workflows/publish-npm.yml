@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   publish:
-    name: Publish @jasonwen/skill-hub to npm
+    name: Publish @jasonwen/harness-hub to npm
     runs-on: ubuntu-latest
 
     steps:

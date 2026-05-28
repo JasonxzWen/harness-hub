@@ -18,18 +18,18 @@ test('package manifest keeps release validation and source traceability explicit
     scripts: Record<string, string>;
   };
 
-  expect(packageJson.name).toBe('@jasonwen/skill-hub');
-  expect(packageJson.bin?.['skill-hub']).toBe('bin/skill-hub.mjs');
+  expect(packageJson.name).toBe('@jasonwen/harness-hub');
+  expect(Object.keys(packageJson.bin ?? {})).toEqual(['harness-hub']);
   expect(packageJson.bin?.['harness-hub']).toBe('bin/harness-hub.mjs');
-  expect(packageJson.repository?.url).toBe('git+https://github.com/JasonxzWen/skill-hub.git');
-  expect(packageJson.homepage).toBe('https://github.com/JasonxzWen/skill-hub#readme');
-  expect(packageJson.bugs?.url).toBe('https://github.com/JasonxzWen/skill-hub/issues');
+  expect(packageJson.repository?.url).toBe('git+https://github.com/JasonxzWen/harness-hub.git');
+  expect(packageJson.homepage).toBe('https://github.com/JasonxzWen/harness-hub#readme');
+  expect(packageJson.bugs?.url).toBe('https://github.com/JasonxzWen/harness-hub/issues');
   expect(packageJson.publishConfig?.access).toBe('public');
   expect(packageJson.publishConfig?.registry).toBe('https://registry.npmjs.org/');
   expect(packageJson.scripts['validate:release']).toContain('bun run validate');
   expect(packageJson.scripts['validate:release']).toContain('bun run build');
-  expect(packageJson.scripts['validate:release']).toContain('node bin/skill-hub.mjs --help');
   expect(packageJson.scripts['validate:release']).toContain('node bin/harness-hub.mjs --help');
+  expect(packageJson.scripts['validate:release'].match(/node bin\/harness-hub\.mjs --help/g)?.length).toBe(1);
   expect(packageJson.scripts['validate:release']).toContain('npm pack --dry-run');
   expect(packageJson.scripts.validate).toContain('bun run validate:artifact-policy');
   expect(packageJson.scripts.validate).toContain('bun run validate:skills');

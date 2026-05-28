@@ -20,7 +20,7 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 
 | Surface | Decision | Reason |
 |---|---|---|
-| Workflow owners | Install | `workflow-router`, SDD, diagnosis, review, delivery, answer, and Skill Hub maintenance are the public lifecycle lanes. |
+| Workflow owners | Install | `workflow-router`, SDD, diagnosis, review, delivery, answer, and Harness Hub maintenance are the public lifecycle lanes. |
 | `effective-interact` | Install | High-priority interaction layer that reduces user interpretation cost for material alignment and handoff. |
 | Matt Pocock adapted skills | Install | `grill-me`, `diagnose`, `prototype`, `handoff`, and `tdd-workflow` are narrow, adapted helpers with stable routing. |
 | Everything Claude Code core helpers | Install | Keep bounded helpers such as `verification-loop`, `security-review`, `coding-standards`, and `agent-introspection-debugging`. |
@@ -34,7 +34,7 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 | Everything Claude Code broad surface | Source/reference | Broad local skill directories removed; source checkout, docs, agents, config, and selected installed helpers remain. |
 | Superpowers | Reference-only | Not installed. Keep as source evidence for intent routing, subagent discipline, and finish hygiene. |
 | Matt Pocock non-installed skills | Reference-only or rejected | Keep decisions in docs; do not import wholesale. |
-| Compound Engineering non-review lanes | Rejected or reference-only | Keep code review adaptation; leave commit, PR, Slack, Proof, Gemini, and autonomous work lanes out of Skill Hub. |
+| Compound Engineering non-review lanes | Rejected or reference-only | Keep code review adaptation; leave commit, PR, Slack, Proof, Gemini, and autonomous work lanes out of Harness Hub. |
 | Harness templates | Removed from distribution | Root repo scaffolding is not a skill and no longer has a lifecycle CLI installation path. |
 
 ## Keep As Library Skills
@@ -49,11 +49,11 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 
 The following non-component `skills` directories were removed from the active project skill root. Their source repos, upstream versions, and adoption/rejection decisions remain in `docs/source-projects.md`, `docs/workflow-source-dossier.md`, and related setup docs.
 
-Post-cleanup disposable target smoke passed on 2026-05-21 for `skill-hub install --target standard`, `status`, `update --dry-run`, `remove --dry-run`, and `remove --yes`. The smoke installed the managed standard skill set, reported current records, had no update blockers, removed all lock-recorded standard skill files, and left only the generated `.skill-hub/reports` audit directory.
+Post-cleanup disposable target smoke passed on 2026-05-21 for `harness-hub install --target standard`, `status`, `update --dry-run`, `remove --dry-run`, and `remove --yes`. The smoke installed the managed standard skill set, reported current records, had no update blockers, removed all lock-recorded standard skill files, and left only the generated `.harness-hub/reports` audit directory.
 
 | Removed group | Directories |
 |---|---|
-| ECC broad/local library | `agent-sort`, `api-design`, `backend-patterns`, `brainstorming`, `bun-runtime`, `deep-research`, `dmux-workflows`, `eval-harness`, `everything-claude-code`, `exa-search`, `mcp-builder`, `mcp-server-patterns`, `nextjs-turbopack`, `strategic-compact`, `update-skill-hub` |
+| ECC broad/local library | `agent-sort`, `api-design`, `backend-patterns`, `brainstorming`, `bun-runtime`, `deep-research`, `dmux-workflows`, `eval-harness`, `everything-claude-code`, `exa-search`, `mcp-builder`, `mcp-server-patterns`, `nextjs-turbopack`, `strategic-compact`, `update-harness-hub` |
 | Skill discovery/evaluation helpers folded into `hub-maintenance-workflow` | `find-skills`, `skill-evaluator` |
 | Content, media, docs, and format library lanes | `algorithmic-art`, `article-writing`, `brand-guidelines`, `brand-voice`, `canvas-design`, `content-engine`, `crosspost`, `doc-coauthoring`, `docx`, `fal-ai-media`, `internal-comms`, `investor-materials`, `investor-outreach`, `market-research`, `pdf`, `pptx`, `slack-gif-creator`, `theme-factory`, `video-editing`, `x-api`, `xlsx` |
 | Vercel React reference skills | `vercel-composition-patterns`, `vercel-react-best-practices`, `vercel-react-view-transitions` |
@@ -79,7 +79,7 @@ These are candidates for later cleanup or demotion. Each needs explicit user app
 - no broad cleanup hidden inside implementation work;
 - no removal of source evidence needed to justify adoption, adaptation, rejection, or reference-only decisions;
 - no managed install-surface removal without disposable install/status/update/remove smoke coverage;
-- no lock-backed managed file removal outside the existing `.skill-hub/lock.json` ownership model.
+- no lock-backed managed file removal outside the existing `.harness-hub/lock.json` ownership model.
 
 ## Next Cleanup Plan
 

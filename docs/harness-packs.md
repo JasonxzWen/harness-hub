@@ -6,7 +6,7 @@ Harness packs are explicit repo-harness extensions for projects that need more t
 
 | Pack | Status | Activation |
 |---|---|---|
-| `minimal` | Local, source-owned, explicit | `skill-hub init-harness <target> --dry-run` then `--yes` |
+| `minimal` | Local, source-owned, explicit | `harness-hub init-harness <target> --dry-run` then `--yes` |
 | `advanced-openai` | Evaluated source reference only | Not installable until license and host metadata review is complete |
 
 ## Source Review Boundary

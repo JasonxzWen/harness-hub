@@ -1428,7 +1428,7 @@ test('effective-interact sanitizes Mermaid fallback diagnostics', () => {
   expect(html).toContain('data-render-state="degraded"');
   expect(html).toContain('Playwright unavailable');
   expect(html).not.toContain(process.cwd());
-  expect(html).not.toMatch(/[A-Za-z]:[\\/](?:Users|skill-hub|code-agent-harness)[^<\s]*/);
+  expect(html).not.toMatch(/[A-Za-z]:[\\/](?:Users|harness-hub|code-agent-harness)[^<\s]*/);
   expect(html).not.toMatch(/file:\/\/\//i);
   expect(html).not.toMatch(/\b(?:gho|ghp|github_pat)_[A-Za-z0-9_]+/);
 
