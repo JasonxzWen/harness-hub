@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import type { Dirent } from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -149,7 +150,7 @@ export interface ManagedComponentRecord {
   status: 'installed' | 'skipped';
 }
 
-export interface SkillHubLockV1 {
+export interface HarnessHubLockV1 {
   schemaVersion: 1;
   generatedAt: string;
   hubVersion: string;
@@ -163,7 +164,7 @@ export interface SkillHubLockV1 {
   }>;
 }
 
-export interface SkillHubLockV2 {
+export interface HarnessHubLockV2 {
   schemaVersion: 2;
   generatedAt: string;
   hubVersion: string;
@@ -171,7 +172,7 @@ export interface SkillHubLockV2 {
   components: ManagedComponentRecord[];
 }
 
-export type SkillHubLock = SkillHubLockV1 | SkillHubLockV2;
+export type HarnessHubLock = HarnessHubLockV1 | HarnessHubLockV2;
 
 export type StatusState =
   | 'current'
@@ -295,7 +296,7 @@ export interface InstallPlan {
 
 export interface LockReadResult {
   path: string;
-  data: SkillHubLock;
+  data: HarnessHubLock;
 }
 
 export interface InstallResult {
@@ -351,7 +352,51 @@ export interface HarnessValidationResult {
   missing: string[];
   managed: string[];
   checks: HarnessValidationCheck[];
+  assessment: HarnessAssessment;
+  benchmark: HarnessBenchmark;
   reason: string;
+}
+
+export type HarnessSubsystemName = 'instructions' | 'state' | 'verification' | 'scope' | 'lifecycle';
+
+export interface HarnessAssessmentCheck {
+  pass: boolean;
+  message: string;
+  evidence: string[];
+}
+
+export interface HarnessSubsystemAssessment {
+  score: number;
+  passed: number;
+  total: number;
+  checks: HarnessAssessmentCheck[];
+}
+
+export interface HarnessProjectDetection {
+  stack: string;
+  packageManager: string | null;
+  verificationCommands: string[];
+  evidence: string[];
+}
+
+export interface HarnessAssessment {
+  overall: number;
+  bottleneck: HarnessSubsystemName;
+  project: HarnessProjectDetection;
+  subsystems: Record<HarnessSubsystemName, HarnessSubsystemAssessment>;
+}
+
+export interface HarnessBenchmarkCheck {
+  pass: boolean;
+  message: string;
+}
+
+export interface HarnessBenchmark {
+  score: number;
+  passed: number;
+  total: number;
+  checks: HarnessBenchmarkCheck[];
+  recommendation: string;
 }
 
 export type HarnessBlockerCode = 'dirty-worktree' | 'existing-file' | 'non-codex-platform-file' | 'unsafe-path';
@@ -543,7 +588,7 @@ export interface InsightPreflightResult {
   reason: string;
 }
 
-export interface SkillHubStatus {
+export interface HarnessHubStatus {
   targetDir: string;
   lock: LockReadResult | null;
   current: StatusRow[];
@@ -632,6 +677,7 @@ const MINIMAL_HARNESS_COMPONENT_ID = 'harness:minimal';
 const HARNESS_COMPONENT_ID = MINIMAL_HARNESS_COMPONENT_ID;
 const HARNESS_TEMPLATE_KINDS = new Set(['harness-template', 'harness-pack']);
 const HARNESS_DEST = '.';
+const HARNESS_SUBSYSTEMS: HarnessSubsystemName[] = ['instructions', 'state', 'verification', 'scope', 'lifecycle'];
 const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   'AGENTS.md': 32 * 1024,
   'progress.md': 16 * 1024,
@@ -1504,7 +1550,7 @@ function writeHarnessLock(plan: HarnessInitPlan, installed: HarnessPlanItem[]): 
     installedAt,
     status: 'installed',
   };
-  const lock: SkillHubLockV2 = {
+  const lock: HarnessHubLockV2 = {
     schemaVersion: 2,
     generatedAt: installedAt,
     hubVersion: plan.hubVersion,
@@ -1816,7 +1862,7 @@ export function applyDevBootstrap(
     installedAt,
     status: 'installed',
   };
-  const nextLock: SkillHubLockV2 = {
+  const nextLock: HarnessHubLockV2 = {
     ...lock.data,
     generatedAt: installedAt,
     hubVersion: refreshedPlan.hubVersion,
@@ -1991,6 +2037,13 @@ export function validateHarness(targetDirInput: string): HarnessValidationResult
 
   checks.push(...validateRequiredContent(targetDir));
   const failures = checks.filter((check) => check.state === 'fail');
+  const assessment = assessHarness(targetDir);
+  const benchmark = benchmarkHarness({
+    assessment,
+    checks,
+    managed,
+    requiredFiles,
+  });
 
   return {
     schemaVersion: 1,
@@ -2003,10 +2056,413 @@ export function validateHarness(targetDirInput: string): HarnessValidationResult
     missing,
     managed,
     checks,
+    assessment,
+    benchmark,
     reason: failures.length > 0
       ? `${failures.length} harness validation checks failed.`
       : 'Harness validation passed.',
   };
+}
+
+function assessHarness(targetDir: string): HarnessAssessment {
+  const files = loadHarnessAssessmentFiles(targetDir);
+  const project = detectHarnessProject(targetDir, files);
+  const text = (relativePath: string): string => files.get(relativePath) || '';
+  const agents = text('AGENTS.md') || text('CLAUDE.md');
+  const featureList = text('feature_list.json') || text('feature-list.json');
+  const progress = text('progress.md');
+  const handoff = text('session-handoff.md');
+  const currentTask = text('tasks/current-task.md');
+  const validationScript = text('scripts/harness-validate.mjs') || text('init.sh');
+  const definitionOfDone = text('definition-of-done.md');
+  const cleanState = text('clean-state-checklist.md');
+  const allText = [...files.entries()].map(([relativePath, content]) => `${relativePath}\n${content}`).join('\n\n');
+
+  const subsystemChecks: Record<HarnessSubsystemName, HarnessAssessmentCheck[]> = {
+    instructions: [
+      assessmentFileCheck(files, ['AGENTS.md', 'CLAUDE.md'], 'Agent instruction file exists'),
+      assessmentTextCheck(agents, ['Operating Rules', 'Startup Workflow', 'Before writing code', 'Start from'], 'Startup or operating workflow is documented'),
+      assessmentTextCheck(agents + definitionOfDone, ['Required Handoff', 'Definition of Done', 'done only when', 'handoff'], 'Completion or handoff gate is documented'),
+      assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands', 'test', 'verify'], 'Verification command is discoverable'),
+      assessmentTextCheck(agents, ['feature_list.json', 'progress.md', 'session-handoff.md', 'tasks/current-task.md'], 'State artifacts are routed from instructions'),
+    ],
+    state: [
+      assessmentFileCheck(files, ['feature_list.json', 'feature-list.json'], 'Feature tracker exists'),
+      assessmentFeatureListCheck(featureList, 'Feature tracker is valid and has required structure'),
+      assessmentFileCheck(files, ['progress.md'], 'Progress log exists'),
+      assessmentTextCheck(progress, ['Current State', 'Recent Validation', 'Notes', 'Next'], 'Progress log supports restart'),
+      assessmentTextCheck(handoff, ['Current Status', 'Changed Files', 'Validation Evidence', 'Blockers', 'Next Action'], 'Handoff captures status, files, evidence, blockers, and next action'),
+    ],
+    verification: [
+      assessmentFileCheck(files, ['scripts/harness-validate.mjs', 'init.sh'], 'Verification entrypoint exists'),
+      assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands'], 'Verification entrypoint is referenced by the harness'),
+      assessmentTextCheck(validationScript, ['process.exit', 'set -e', 'failures'], 'Verification entrypoint can fail the run'),
+      assessmentTextCheck(progress + handoff + currentTask, ['Validation Evidence', 'Recent Validation', 'command', 'output'], 'Validation evidence has a durable place to be recorded'),
+      assessmentCheck(project.verificationCommands.length > 0, 'Project verification command is detected', project.verificationCommands),
+    ],
+    scope: [
+      assessmentTextCheck(agents + currentTask, ['one git worktree', 'one feature', 'Allowed paths', 'Forbidden paths'], 'Work is scoped to a task, branch, worktree, or allowed paths'),
+      assessmentTextCheck(currentTask, ['Allowed paths', 'Forbidden paths'], 'Allowed and forbidden paths are explicit'),
+      assessmentTextCheck(currentTask + definitionOfDone, ['Acceptance criteria', 'Definition of Done'], 'Acceptance or done criteria are explicit'),
+      assessmentTextCheck(agents + currentTask + featureList, ['Parallel writes', 'parallel_write_policy', 'non-overlapping'], 'Parallel write boundary is documented'),
+      assessmentCheck(files.has('feature_list.json') || files.has('feature-list.json'), 'Feature state provides a scope inventory', ['feature_list.json']),
+    ],
+    lifecycle: [
+      assessmentTextCheck(agents + currentTask, ['Start from', 'Current Task', 'tasks/current-task.md'], 'Startup path points to the active task'),
+      assessmentFileCheck(files, ['session-handoff.md'], 'Session handoff template exists'),
+      assessmentTextCheck(progress + handoff, ['Current Status', 'Current State', 'Next Action', 'Recommended Next Step'], 'Session restart markers exist'),
+      assessmentFileCheck(files, ['clean-state-checklist.md', 'definition-of-done.md'], 'Clean state and done guidance exists'),
+      assessmentTextCheck(agents + currentTask, ['Update `progress.md`', 'Update `session-handoff.md`', 'handoff'], 'End-of-session update routine is explicit'),
+    ],
+  };
+
+  const subsystems = {} as Record<HarnessSubsystemName, HarnessSubsystemAssessment>;
+  for (const name of HARNESS_SUBSYSTEMS) {
+    const checks = subsystemChecks[name];
+    const passed = checks.filter((check) => check.pass).length;
+    subsystems[name] = {
+      score: Math.max(1, Math.round((passed / checks.length) * 5)),
+      passed,
+      total: checks.length,
+      checks,
+    };
+  }
+
+  const total = HARNESS_SUBSYSTEMS.reduce((sum, name) => sum + subsystems[name].score, 0);
+  const bottleneck = [...HARNESS_SUBSYSTEMS].sort((left, right) => subsystems[left].score - subsystems[right].score)[0];
+  return {
+    overall: Math.round((total / (HARNESS_SUBSYSTEMS.length * 5)) * 100),
+    bottleneck,
+    project,
+    subsystems,
+  };
+}
+
+function benchmarkHarness({
+  assessment,
+  checks,
+  managed,
+  requiredFiles,
+}: {
+  assessment: HarnessAssessment;
+  checks: HarnessValidationCheck[];
+  managed: string[];
+  requiredFiles: string[];
+}): HarnessBenchmark {
+  const failedChecks = checks.filter((check) => check.state === 'fail');
+  const benchmarkChecks: HarnessBenchmarkCheck[] = [
+    {
+      pass: failedChecks.length === 0,
+      message: 'Minimal harness validation passes',
+    },
+    {
+      pass: assessment.overall >= 70,
+      message: 'Five-subsystem assessment reaches the 70/100 structural threshold',
+    },
+    {
+      pass: HARNESS_SUBSYSTEMS.every((name) => assessment.subsystems[name].score >= 3),
+      message: 'No subsystem scores below 3/5',
+    },
+    {
+      pass: managed.length >= requiredFiles.length,
+      message: 'All required harness files are lock-managed',
+    },
+    {
+      pass: assessment.project.verificationCommands.length > 0,
+      message: 'Project verification command is detected',
+    },
+    {
+      pass: !checks.some((check) => check.code === 'codex-only' && check.state === 'fail'),
+      message: 'No non-Codex platform instruction file conflicts with this harness',
+    },
+    {
+      pass: !checks.some((check) => check.code === 'file-size' && check.state === 'fail'),
+      message: 'Current-state files stay within configured size limits',
+    },
+    {
+      pass: checks.some((check) => check.code === 'structured-content' && check.state === 'pass'),
+      message: 'Feature state JSON is structurally valid',
+    },
+    {
+      pass: checks.some((check) => check.path === 'tasks/current-task.md' && check.state === 'pass'),
+      message: 'Goal-ready current task markers are present',
+    },
+    {
+      pass: HARNESS_SUBSYSTEMS.every((name) => assessment.subsystems[name].checks.length > 0),
+      message: 'Report covers all five harness subsystems',
+    },
+  ];
+  const passed = benchmarkChecks.filter((check) => check.pass).length;
+  const score = Math.round((passed / benchmarkChecks.length) * 100);
+  return {
+    score,
+    passed,
+    total: benchmarkChecks.length,
+    checks: benchmarkChecks,
+    recommendation: recommendHarnessBenchmark(assessment, score, failedChecks),
+  };
+}
+
+function recommendHarnessBenchmark(
+  assessment: HarnessAssessment,
+  benchmarkScore: number,
+  failedChecks: HarnessValidationCheck[],
+): string {
+  if (failedChecks.length > 0) {
+    return 'Fix failing minimal validation checks before treating the harness as ready.';
+  }
+  if (assessment.overall >= 85 && benchmarkScore >= 90) {
+    return 'Ready for realistic before/after agent-session benchmarking.';
+  }
+  if (assessment.overall < 70) {
+    return `Improve the ${assessment.bottleneck} subsystem before benchmarking agent behavior.`;
+  }
+  return 'Usable, with structural gaps worth tightening after first real sessions.';
+}
+
+function loadHarnessAssessmentFiles(targetDir: string): Map<string, string> {
+  const candidates = [
+    'AGENTS.md',
+    'CLAUDE.md',
+    'feature_list.json',
+    'feature-list.json',
+    'progress.md',
+    'session-handoff.md',
+    'clean-state-checklist.md',
+    'definition-of-done.md',
+    'tasks/current-task.md',
+    'scripts/harness-validate.mjs',
+    'init.sh',
+  ];
+  const files = new Map<string, string>();
+  for (const relativePath of candidates) {
+    const filePath = path.join(targetDir, relativePath);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      files.set(relativePath, fs.readFileSync(filePath, 'utf8'));
+    }
+  }
+  return files;
+}
+
+function assessmentFileCheck(files: Map<string, string>, names: string[], message: string): HarnessAssessmentCheck {
+  return assessmentCheck(names.some((name) => files.has(name)), message, names);
+}
+
+function assessmentTextCheck(text: string, needles: string[], message: string): HarnessAssessmentCheck {
+  const lower = text.toLowerCase();
+  return assessmentCheck(
+    needles.some((needle) => lower.includes(needle.toLowerCase())),
+    message,
+    needles,
+  );
+}
+
+function assessmentFeatureListCheck(text: string, message: string): HarnessAssessmentCheck {
+  try {
+    const parsed = JSON.parse(text) as unknown;
+    const pass = isRecord(parsed)
+      && Array.isArray(parsed.features)
+      && isRecord(parsed.parallel_write_policy);
+    return assessmentCheck(pass, message, ['features array', 'parallel_write_policy object']);
+  } catch {
+    return assessmentCheck(false, message, ['valid JSON']);
+  }
+}
+
+function assessmentCheck(pass: boolean, message: string, evidence: string[] = []): HarnessAssessmentCheck {
+  return { pass, message, evidence };
+}
+
+function detectHarnessProject(targetDir: string, harnessFiles: Map<string, string>): HarnessProjectDetection {
+  const files = listProjectFilesBounded(targetDir, 800);
+  const has = (name: string): boolean => files.some((file) => file === name || file.endsWith(`/${name}`));
+  const hasPrefix = (prefix: string): boolean => files.some((file) => file.startsWith(prefix));
+  const packageJson = readPackageJsonForDetection(targetDir);
+  const packageManager = detectPackageManagerForHarness(targetDir, packageJson !== null);
+  const evidence: string[] = [];
+  let stack = 'generic';
+
+  if (packageJson) {
+    evidence.push('package.json');
+    const deps = {
+      ...(packageJson.dependencies || {}),
+      ...(packageJson.devDependencies || {}),
+    };
+    if ('react' in deps || hasPrefix('src/renderer')) {
+      stack = 'typescript-react';
+    } else if ('typescript' in deps || has('tsconfig.json')) {
+      stack = 'typescript';
+    } else {
+      stack = 'node';
+    }
+  } else if (has('pyproject.toml') || has('requirements.txt')) {
+    stack = 'python';
+    evidence.push(has('pyproject.toml') ? 'pyproject.toml' : 'requirements.txt');
+  } else if (has('go.mod')) {
+    stack = 'go';
+    evidence.push('go.mod');
+  } else if (has('Cargo.toml')) {
+    stack = 'rust';
+    evidence.push('Cargo.toml');
+  } else if (has('pom.xml')) {
+    stack = 'java-maven';
+    evidence.push('pom.xml');
+  } else if (has('build.gradle') || has('build.gradle.kts')) {
+    stack = 'java-gradle';
+    evidence.push(has('build.gradle') ? 'build.gradle' : 'build.gradle.kts');
+  } else if (files.some((file) => file.endsWith('.csproj') || file.endsWith('.sln'))) {
+    stack = 'dotnet';
+    evidence.push(files.find((file) => file.endsWith('.csproj') || file.endsWith('.sln')) || '.NET project');
+  }
+
+  if (harnessFiles.has('scripts/harness-validate.mjs')) {
+    evidence.push('scripts/harness-validate.mjs');
+  }
+
+  return {
+    stack,
+    packageManager,
+    verificationCommands: verificationCommandsForHarnessProject(stack, packageJson, packageManager, harnessFiles),
+    evidence,
+  };
+}
+
+function readPackageJsonForDetection(targetDir: string): {
+  scripts?: Record<string, string>;
+  dependencies?: Record<string, unknown>;
+  devDependencies?: Record<string, unknown>;
+} | null {
+  const packagePath = path.join(targetDir, 'package.json');
+  if (!fs.existsSync(packagePath)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(fs.readFileSync(packagePath, 'utf8')) as {
+      scripts?: Record<string, string>;
+      dependencies?: Record<string, unknown>;
+      devDependencies?: Record<string, unknown>;
+    };
+  } catch {
+    return null;
+  }
+}
+
+function detectPackageManagerForHarness(targetDir: string, hasPackageJson: boolean): string | null {
+  if (fs.existsSync(path.join(targetDir, 'bun.lockb')) || fs.existsSync(path.join(targetDir, 'bun.lock'))) {
+    return 'bun';
+  }
+  if (fs.existsSync(path.join(targetDir, 'pnpm-lock.yaml'))) {
+    return 'pnpm';
+  }
+  if (fs.existsSync(path.join(targetDir, 'yarn.lock'))) {
+    return 'yarn';
+  }
+  if (hasPackageJson) {
+    return 'npm';
+  }
+  return null;
+}
+
+function verificationCommandsForHarnessProject(
+  stack: string,
+  packageJson: { scripts?: Record<string, string> } | null,
+  packageManager: string | null,
+  harnessFiles: Map<string, string>,
+): string[] {
+  if (stack === 'python') {
+    return ['python -m pytest', 'python -m compileall .'];
+  }
+  if (stack === 'go') {
+    return ['go test ./...'];
+  }
+  if (stack === 'rust') {
+    return ['cargo test'];
+  }
+  if (stack === 'java-maven') {
+    return ['mvn test'];
+  }
+  if (stack === 'java-gradle') {
+    return ['./gradlew test'];
+  }
+  if (stack === 'dotnet') {
+    return ['dotnet test'];
+  }
+  if (packageJson) {
+    const pm = packageManager || 'npm';
+    const scripts = packageJson.scripts || {};
+    const run = (script: string): string => {
+      if (pm === 'npm') {
+        return script === 'test' ? 'npm test' : `npm run ${script}`;
+      }
+      if (pm === 'yarn') {
+        return `yarn ${script}`;
+      }
+      return `${pm} run ${script}`;
+    };
+    const install = pm === 'npm' ? 'npm install' : pm === 'yarn' ? 'yarn install' : `${pm} install`;
+    return dedupe([
+      install,
+      scripts.check ? run('check') : null,
+      scripts.typecheck ? run('typecheck') : null,
+      scripts['type-check'] ? run('type-check') : null,
+      scripts.lint ? run('lint') : null,
+      scripts.test ? run('test') : null,
+      scripts.build ? run('build') : null,
+      scripts.validate ? run('validate') : null,
+    ].filter((command): command is string => Boolean(command)));
+  }
+  if (harnessFiles.has('scripts/harness-validate.mjs')) {
+    return ['node scripts/harness-validate.mjs'];
+  }
+  return [];
+}
+
+function listProjectFilesBounded(targetDir: string, maxFiles: number): string[] {
+  const ignored = new Set([
+    '.git',
+    '.skill-hub',
+    '.codex',
+    '.claude-plugin',
+    'skills',
+    'node_modules',
+    'dist',
+    'build',
+    '.next',
+    '.venv',
+    'venv',
+    '__pycache__',
+  ]);
+  const files: string[] = [];
+  const walk = (current: string, relative: string): void => {
+    if (files.length >= maxFiles) {
+      return;
+    }
+    let entries: Dirent[];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (files.length >= maxFiles || ignored.has(entry.name)) {
+        continue;
+      }
+      const rel = relative ? `${relative}/${entry.name}` : entry.name;
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath, rel);
+      } else if (entry.isFile()) {
+        files.push(rel);
+      }
+    }
+  };
+  walk(targetDir, '');
+  return files.sort();
+}
+
+function dedupe(values: string[]): string[] {
+  return [...new Set(values)];
 }
 
 function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
@@ -2481,8 +2937,8 @@ function adaptInsightToEffectiveInteract(input: InsightPostInput, slug: string, 
     template: 'research-explainer',
     renderMode: 'fallback-only',
     intent: {
-      audience: 'Skill Hub maintainer',
-      primaryQuestion: 'How should external material change Skill Hub iteration?',
+      audience: 'Harness Hub maintainer',
+      primaryQuestion: 'How should external material change Harness Hub iteration?',
       decision: 'Publish source-backed project insight and iteration records.',
       artifactKind: 'research',
       successCriteria: [
@@ -2653,7 +3109,7 @@ function renderInsightsIndexHtml(posts: InsightBuildResult['posts']): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Skill Hub Insights</title>
+  <title>Harness Hub Insights</title>
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; color: #172033; background: #f7f8fb; }
     main { max-width: 880px; margin: 0 auto; padding: 32px 20px; }
@@ -2667,7 +3123,7 @@ function renderInsightsIndexHtml(posts: InsightBuildResult['posts']): string {
 </head>
 <body>
   <main>
-    <h1>Skill Hub Insights</h1>
+    <h1>Harness Hub Insights</h1>
     <p>Source-backed project thinking and iteration notes.</p>
     <ul>
       ${postItems}
@@ -2688,7 +3144,7 @@ function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Skill Hub</title>
+  <title>Harness Hub</title>
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; color: #172033; background: #ffffff; }
     main { max-width: 760px; margin: 0 auto; padding: 40px 20px; }
@@ -2697,7 +3153,7 @@ function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
 </head>
 <body>
   <main>
-    <h1>Skill Hub</h1>
+    <h1>Harness Hub</h1>
     <p><a href="insights/">Insights</a></p>
     ${latestHtml}
   </main>
@@ -2712,7 +3168,7 @@ function validatePublicArtifactBoundary(repoRoot: string): InsightValidationChec
     ? listFilesRecursive(siteDir)
       .map((file) => toPortablePath(path.relative(repoRoot, file)))
       .filter((relativePath) => (
-        relativePath.includes('.skill-hub/reports/')
+        relativePath.includes('.harness-hub/reports/')
         || relativePath.includes('skills/effective-interact/artifacts/')
         || relativePath.startsWith('reports/')
       ))
@@ -2947,9 +3403,9 @@ export function writeLock(
   plan: InstallPlan,
   result: Pick<InstallResult, 'installed' | 'skipped'>,
 ): LockReadResult {
-  const skillHubDir = path.join(plan.targetDir, '.skill-hub');
-  fs.mkdirSync(skillHubDir, { recursive: true });
-  const lockPath = path.join(skillHubDir, 'lock.json');
+  const harnessHubDir = path.join(plan.targetDir, '.harness-hub');
+  fs.mkdirSync(harnessHubDir, { recursive: true });
+  const lockPath = path.join(harnessHubDir, 'lock.json');
   const installedAt = new Date().toISOString();
   const incomingIds = new Set([...result.installed, ...result.skipped].map((item) => item.componentId));
   const currentLock = readLock(plan.targetDir);
@@ -2967,7 +3423,7 @@ export function writeLock(
     installedAt,
     status: 'reason' in item ? 'skipped' : 'installed',
   }));
-  const lock: SkillHubLockV2 = {
+  const lock: HarnessHubLockV2 = {
     schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     hubVersion: plan.hubVersion,
@@ -2981,25 +3437,25 @@ export function writeLock(
 }
 
 export function readLock(targetDir: string): LockReadResult | null {
-  const lockPath = path.join(path.resolve(targetDir), '.skill-hub', 'lock.json');
+  const lockPath = path.join(path.resolve(targetDir), '.harness-hub', 'lock.json');
   if (!fs.existsSync(lockPath)) {
     return null;
   }
   return {
     path: lockPath,
-    data: JSON.parse(fs.readFileSync(lockPath, 'utf8')) as SkillHubLock,
+    data: JSON.parse(fs.readFileSync(lockPath, 'utf8')) as HarnessHubLock,
   };
 }
 
-function writeLockData(targetDir: string, lock: SkillHubLock): LockReadResult {
-  const skillHubDir = path.join(path.resolve(targetDir), '.skill-hub');
-  fs.mkdirSync(skillHubDir, { recursive: true });
-  const lockPath = path.join(skillHubDir, 'lock.json');
+function writeLockData(targetDir: string, lock: HarnessHubLock): LockReadResult {
+  const harnessHubDir = path.join(path.resolve(targetDir), '.harness-hub');
+  fs.mkdirSync(harnessHubDir, { recursive: true });
+  const lockPath = path.join(harnessHubDir, 'lock.json');
   fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
   return { path: lockPath, data: lock };
 }
 
-export function getStatus(options: StatusOptions = {}): SkillHubStatus {
+export function getStatus(options: StatusOptions = {}): HarnessHubStatus {
   const targetDir = path.resolve(options.targetDir || process.cwd());
   const index = options.index || readCapabilityIndex(options.hubRoot || HUB_ROOT);
   const lock = readLock(targetDir);
@@ -3099,7 +3555,7 @@ export function getRemovePlan(targetDirInput: string, options: { force?: boolean
       removed: [],
       skipped: [],
       blocked: [],
-      reason: 'No Skill Hub lock found.',
+      reason: 'No Harness Hub lock found.',
     };
   }
 
@@ -3201,7 +3657,7 @@ export function removeManaged(
     }
   }
 
-  const lockPath = path.join(targetDir, '.skill-hub', 'lock.json');
+  const lockPath = path.join(targetDir, '.harness-hub', 'lock.json');
   if (fs.existsSync(lockPath)) {
     fs.rmSync(lockPath);
     pruneEmptyParents(targetDir, path.dirname(lockPath));
@@ -3238,7 +3694,7 @@ function validateSelectedComponents(lock: LockReadResult | null, selectedCompone
     return;
   }
   if (!lock) {
-    throw new Error(`Selected component '${selectedComponents[0]}' is not managed because no Skill Hub lock was found.`);
+    throw new Error(`Selected component '${selectedComponents[0]}' is not managed because no Harness Hub lock was found.`);
   }
   const managed = new Set(lock.data.components.flatMap((component) => managedSelectionIds(component.id)));
   for (const componentId of selectedComponents) {
@@ -3254,7 +3710,7 @@ function componentSourcePath(hubRoot: string, component: CapabilityComponent): s
 
 function makeStatusRow(
   targetDir: string,
-  component: SkillHubLock['components'][number],
+  component: HarnessHubLock['components'][number],
   latest: CapabilityComponent | undefined,
   state: StatusState,
   reason: string,
@@ -3276,7 +3732,7 @@ function makeStatusRow(
 
 function resolveManagedComponentLatest(
   index: CapabilityIndex,
-  component: SkillHubLock['components'][number],
+  component: HarnessHubLock['components'][number],
 ): { id: string; component?: CapabilityComponent; rename?: ManagedComponentRename } {
   const current = index.components[component.id];
   if (current) {
@@ -3300,7 +3756,7 @@ function managedSelectionIds(componentId: string): string[] {
 }
 
 function shouldIncludeManagedComponent(
-  component: SkillHubLock['components'][number],
+  component: HarnessHubLock['components'][number],
   selectedComponents: string[],
 ): boolean {
   if (selectedComponents.length === 0) {
@@ -3490,7 +3946,7 @@ export function updateManaged(
       updated: [],
       forced: [],
       lock,
-      reason: plan.blockers.length > 0 ? 'Update blocked by safety checks.' : 'No Skill Hub lock found.',
+      reason: plan.blockers.length > 0 ? 'Update blocked by safety checks.' : 'No Harness Hub lock found.',
     };
   }
 
@@ -3519,8 +3975,8 @@ export function updateManaged(
   const updatedAt = new Date().toISOString();
   const updateIds = new Set(plan.updates.map((row) => row.id));
   const forcedIds = new Set(plan.forceOverridable.map((row) => row.id));
-  const nextLock: SkillHubLockV2 = {
-    ...JSON.parse(JSON.stringify(lock.data)) as SkillHubLockV2,
+  const nextLock: HarnessHubLockV2 = {
+    ...JSON.parse(JSON.stringify(lock.data)) as HarnessHubLockV2,
     generatedAt: updatedAt,
     hubVersion: index.version,
     components: (JSON.parse(JSON.stringify(lock.data.components)) as ManagedComponentRecord[]).map((component) => ({ ...component })),
@@ -3633,17 +4089,17 @@ function compareSourceAndDestination(source: string, dest: string): { matches: b
     return {
       matches: false,
       evidence: [...new Set([...sourceKeys, ...destKeys])].sort(),
-      reason: 'Destination file list differs from current Skill Hub component assets.',
+      reason: 'Destination file list differs from current Harness Hub component assets.',
     };
   }
 
   for (const key of sourceKeys) {
     if (sourceFiles.get(key)?.sha256 !== destFiles.get(key)?.sha256) {
-      return { matches: false, evidence: [key], reason: 'Destination file content differs from current Skill Hub component assets.' };
+      return { matches: false, evidence: [key], reason: 'Destination file content differs from current Harness Hub component assets.' };
     }
   }
 
-  return { matches: true, evidence: sourceKeys, reason: 'Destination exactly matches current Skill Hub component assets.' };
+  return { matches: true, evidence: sourceKeys, reason: 'Destination exactly matches current Harness Hub component assets.' };
 }
 
 export function migrateLock(
@@ -3679,7 +4135,7 @@ export function migrateLock(
       blockers,
       skipped,
       lock: null,
-      reason: 'No Skill Hub lock found.',
+      reason: 'No Harness Hub lock found.',
     };
   }
 
@@ -3759,7 +4215,7 @@ export function migrateLock(
     };
   }
 
-  const nextLock: SkillHubLockV2 = {
+  const nextLock: HarnessHubLockV2 = {
     schemaVersion: 2,
     generatedAt: migratedAt,
     hubVersion: index.version,
@@ -3791,15 +4247,15 @@ export function migrateLock(
   };
 }
 
-export function writeStatusReport(status: SkillHubStatus, hubVersion: string): string {
-  const reportDir = path.join(status.targetDir, '.skill-hub', 'reports');
+export function writeStatusReport(status: HarnessHubStatus, hubVersion: string): string {
+  const reportDir = path.join(status.targetDir, '.harness-hub', 'reports');
   fs.mkdirSync(reportDir, { recursive: true });
   const filePath = path.join(reportDir, `status-${timestampForFile()}.html`);
   fs.writeFileSync(filePath, renderHtml({
-    title: 'Skill Hub Status Report',
+    title: 'Harness Hub Status Report',
     summary: status.lock
       ? `${status.current.length} current, ${status.updates.length} updates, ${status.missing.length} missing.`
-      : 'No Skill Hub lock file found.',
+      : 'No Harness Hub lock file found.',
     rows: [
       ...status.current.map((row) => ({ ...row, state: 'current' })),
       ...status.updates.map((row) => ({ ...row, state: 'update available' })),
@@ -3814,7 +4270,7 @@ export function writeHtmlReport(
   plan: InstallPlan,
   result: Pick<InstallResult, 'installed' | 'skipped'>,
 ): string {
-  const reportDir = path.join(plan.targetDir, '.skill-hub', 'reports');
+  const reportDir = path.join(plan.targetDir, '.harness-hub', 'reports');
   fs.mkdirSync(reportDir, { recursive: true });
   const filePath = path.join(reportDir, `install-${timestampForFile()}.html`);
   const rows = [
@@ -3833,7 +4289,7 @@ export function writeHtmlReport(
   ];
 
   fs.writeFileSync(filePath, renderHtml({
-    title: 'Skill Hub Install Report',
+    title: 'Harness Hub Install Report',
     summary: `${result.installed.length} installed, ${result.skipped.length} skipped.`,
     rows,
     hubVersion: plan.hubVersion,
@@ -3992,12 +4448,12 @@ export async function runCli(argv: string[]): Promise<number> {
     return await runCliInner(argv);
   } catch (error) {
     if (error instanceof CliError) {
-      console.error(`skill-hub: ${error.message}`);
+      console.error(`harness-hub: ${error.message}`);
       return error.exitCode;
     }
     const message = error instanceof Error ? error.message : String(error);
     const exitCode = /Unsupported agent|Unknown command|Missing value|Selected component/.test(message) ? 2 : 1;
-    console.error(`skill-hub: ${message}`);
+    console.error(`harness-hub: ${message}`);
     return exitCode;
   }
 }
@@ -4043,7 +4499,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       targetDir: options.targetDir || undefined,
     });
     if (options.dryRun) {
-      emitReport(renderLifecycleReport('Skill Hub Dev Bootstrap Plan', plan, options), options);
+      emitReport(renderLifecycleReport('Harness Hub Dev Bootstrap Plan', plan, options), options);
       return 0;
     }
     const result = applyDevBootstrap(plan, {
@@ -4051,13 +4507,13 @@ async function runCliInner(argv: string[]): Promise<number> {
       force: options.force,
       overwrite: options.overwrite,
     });
-    emitReport(renderLifecycleReport('Skill Hub Dev Bootstrap Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Dev Bootstrap Report', result, options), options);
     return result.exitCode;
   }
 
   if (options.command === 'validate-harness') {
     const result = validateHarness(options.targetDir || process.cwd());
-    emitReport(renderLifecycleReport('Skill Hub Harness Validation Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Harness Validation Report', result, options), options);
     return result.exitCode;
   }
 
@@ -4071,19 +4527,19 @@ async function runCliInner(argv: string[]): Promise<number> {
       repoRoot: options.targetDir || undefined,
       slug: options.slug || undefined,
     });
-    emitReport(renderLifecycleReport('Skill Hub Insight Generation Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Insight Generation Report', result, options), options);
     return result.validation.exitCode;
   }
 
   if (options.command === 'insight-build') {
     const result = buildInsightSite({ repoRoot: options.targetDir || undefined });
-    emitReport(renderLifecycleReport('Skill Hub Insight Build Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Insight Build Report', result, options), options);
     return result.exitCode;
   }
 
   if (options.command === 'insight-validate') {
     const result = validateInsightSite({ repoRoot: options.targetDir || undefined });
-    emitReport(renderLifecycleReport('Skill Hub Insight Validation Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Insight Validation Report', result, options), options);
     return result.exitCode;
   }
 
@@ -4096,7 +4552,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       dryRun: true,
       allowDirty: options.allowDirty,
     });
-    emitReport(renderLifecycleReport('Skill Hub Insight Publish Preflight Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Insight Publish Preflight Report', result, options), options);
     return result.exitCode;
   }
 
@@ -4110,7 +4566,7 @@ async function runCliInner(argv: string[]): Promise<number> {
     });
     if (options.dryRun) {
       if (options.json || options.html || options.output) {
-        emitReport(renderLifecycleReport('Skill Hub Install Plan', plan, options), options);
+        emitReport(renderLifecycleReport('Harness Hub Install Plan', plan, options), options);
       } else {
         printPlan(plan);
       }
@@ -4118,7 +4574,7 @@ async function runCliInner(argv: string[]): Promise<number> {
     }
     const result = applyInstall(plan, options);
     if (options.json || options.html || options.output) {
-      emitReport(renderLifecycleReport('Skill Hub Install Report', result, options), options);
+      emitReport(renderLifecycleReport('Harness Hub Install Report', result, options), options);
     } else {
       console.log(`Installed: ${result.installed.length}`);
       console.log(`Skipped: ${result.skipped.length}`);
@@ -4131,7 +4587,7 @@ async function runCliInner(argv: string[]): Promise<number> {
   if (options.command === 'status') {
     const index = readCapabilityIndex();
     const status = getStatus({ targetDir: options.targetDir || undefined, index });
-    emitReport(renderLifecycleReport('Skill Hub Status Report', status, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Status Report', status, options), options);
     return 0;
   }
 
@@ -4141,7 +4597,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       yes: options.yes,
       force: options.force,
     });
-    emitReport(renderLifecycleReport('Skill Hub Remove Report', result, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Remove Report', result, options), options);
     return result.exitCode;
   }
 
@@ -4154,7 +4610,7 @@ async function runCliInner(argv: string[]): Promise<number> {
         components: options.componentIds,
         force: options.force,
       });
-      emitReport(renderLifecycleReport('Skill Hub Update Report', updatePlan, options), options);
+      emitReport(renderLifecycleReport('Harness Hub Update Report', updatePlan, options), options);
       return 0;
     }
     const updateResult = updateManaged(options.targetDir || process.cwd(), {
@@ -4162,7 +4618,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       force: options.force,
       components: options.componentIds,
     });
-    emitReport(renderLifecycleReport('Skill Hub Update Report', updateResult, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Update Report', updateResult, options), options);
     return updateResult.exitCode;
   }
 
@@ -4171,7 +4627,7 @@ async function runCliInner(argv: string[]): Promise<number> {
       dryRun: options.dryRun,
       yes: options.yes,
     });
-    emitReport(renderLifecycleReport('Skill Hub Lock Migration Report', migration, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Lock Migration Report', migration, options), options);
     return migration.exitCode;
   }
 
@@ -4180,7 +4636,7 @@ async function runCliInner(argv: string[]): Promise<number> {
 
 function renderLifecycleReport(
   title: string,
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
   options: CliOptions,
 ): string {
   if (options.json) {
@@ -4201,15 +4657,54 @@ function renderLifecycleReport(
 }
 
 function rowsForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): HtmlRow[] {
+  if ('checks' in data && 'assessment' in data) {
+    return [
+      {
+        id: 'assessment.overall',
+        state: `${data.assessment.overall}/100`,
+        dest: `Bottleneck: ${data.assessment.bottleneck}. Stack: ${data.assessment.project.stack}.`,
+        version: 'five-subsystem',
+        latestVersion: data.assessment.project.verificationCommands.join(', '),
+      },
+      ...HARNESS_SUBSYSTEMS.map((name) => {
+        const subsystem = data.assessment.subsystems[name];
+        return {
+          id: `assessment.${name}`,
+          state: `${subsystem.score}/5`,
+          dest: `${subsystem.passed}/${subsystem.total} checks passed`,
+          version: 'subsystem',
+          latestVersion: subsystem.checks
+            .filter((check) => !check.pass)
+            .map((check) => check.message)
+            .join('; '),
+        };
+      }),
+      {
+        id: 'benchmark.structural',
+        state: `${data.benchmark.score}/100`,
+        dest: `${data.benchmark.passed}/${data.benchmark.total} checks passed`,
+        version: 'benchmark',
+        latestVersion: data.benchmark.recommendation,
+      },
+      ...data.checks.map((check) => ({
+        id: check.path,
+        state: check.state,
+        dest: check.reason,
+        version: check.code,
+        latestVersion: check.limit ? `${check.size || 0}/${check.limit}` : '',
+      })),
+    ];
+  }
+
   if ('checks' in data) {
     return data.checks.map((check) => ({
       id: check.path,
       state: check.state,
       dest: check.reason,
       version: check.code,
-      latestVersion: check.limit ? `${check.size || 0}/${check.limit}` : '',
+      latestVersion: 'limit' in check && check.limit ? `${check.size || 0}/${check.limit}` : '',
     }));
   }
 
@@ -4407,8 +4902,13 @@ function rowsForLifecycleData(
 }
 
 function summaryForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): string {
+  if ('checks' in data && 'assessment' in data) {
+    const failed = data.checks.filter((check) => check.state === 'fail').length;
+    return `${data.checks.length - failed} passed, ${failed} failed. Assessment ${data.assessment.overall}/100, bottleneck ${data.assessment.bottleneck}. Benchmark ${data.benchmark.score}/100. ${data.reason}`;
+  }
+
   if ('checks' in data) {
     const failed = data.checks.filter((check) => check.state === 'fail').length;
     return `${data.checks.length - failed} passed, ${failed} failed. ${data.reason}`;
@@ -4467,7 +4967,7 @@ function summaryForLifecycleData(
   if ('rows' in data) {
     return data.lock
       ? `${data.current.length} current, ${data.updates.length} updates, ${data.modified.length} modified, ${data.missing.length} missing.`
-      : 'No Skill Hub lock found.';
+      : 'No Harness Hub lock found.';
   }
 
   if ('removed' in data) {
@@ -4530,8 +5030,6 @@ function printPlan(plan: InstallPlan): void {
 function printHelp() {
   console.log(`Harness Hub
 
-Compatible commands: harness-hub, skill-hub
-
 Usage:
   harness-hub analyze [target] [--target standard] [--agent-readiness] [--harness] [--json|--html] [--output file]
   harness-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
@@ -4544,27 +5042,10 @@ Usage:
   harness-hub remove [target] [--dry-run|--yes] [--force] [--json|--html]
   harness-hub components
 
-Skill Hub compatibility examples:
-  skill-hub analyze [target] [--target standard] [--agent-readiness] [--harness] [--json|--html] [--output file]
-  skill-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
-  skill-hub validate-harness [target] [--json|--html] [--output file]
-  skill-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
-  skill-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
-  skill-hub init-harness [target] [--target standard] [--dry-run|--yes] [--force] [--json|--html]
-  skill-hub validate-harness [target] [--json|--html]
-  skill-hub insight-generate [target] --input file [--slug slug] [--json|--html]
-  skill-hub insight-build [target] [--json|--html]
-  skill-hub insight-validate [target] [--json|--html]
-  skill-hub insight-publish [target] --dry-run [--allow-dirty] [--json|--html]
-  skill-hub status [target] [--json|--html] [--output file]
-  skill-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
-  skill-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
-  skill-hub remove [target] [--dry-run|--yes] [--force] [--json|--html]
-  skill-hub components
-
 Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
 Install selects every standard skill component and overwrites same-name skill directories by default.
 Use init-harness for Codex-only dev bootstrap: standard skills plus root harness files.
+validate-harness includes minimal checks, five-subsystem assessment, and a structural benchmark.
 Use insight-* for structured source-to-blog generation and GitHub Pages preflight.
 `);
 }

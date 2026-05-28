@@ -30,8 +30,8 @@ test('advisory check warns before SDD implementation without aligned artifacts',
   ]);
 });
 
-test('advisory check warns before Skill Hub maintenance mutates without aligned artifacts', () => {
-  const result = runAdvisory(['--state', 'skill-hub-maintenance', '--phase', 'pre-implementation']);
+test('advisory check warns before Harness Hub maintenance mutates without aligned artifacts', () => {
+  const result = runAdvisory(['--state', 'harness-hub-maintenance', '--phase', 'pre-implementation']);
 
   expect(result.ok).toBe(false);
   expect(result.blocking).toBe(false);
@@ -153,7 +153,7 @@ test('advisory check warns on state and phase mismatches instead of returning a 
 });
 
 test('advisory check is side-effect free in disposable directories', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-advisory-check-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-advisory-check-'));
   const before = fs.readdirSync(targetDir);
 
   const result = runAdvisory([

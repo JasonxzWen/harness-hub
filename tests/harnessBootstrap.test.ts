@@ -12,7 +12,7 @@ import {
   readLock,
   runCli,
   validateHarness,
-} from '../src/skillHub';
+} from '../src/harnessHub';
 
 const REQUIRED_HARNESS_FILES = [
   'AGENTS.md',
@@ -26,7 +26,7 @@ const REQUIRED_HARNESS_FILES = [
 ] as const;
 
 test('dev bootstrap dry run plans skills plus Codex harness without writing files', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-plan-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-plan-'));
 
   const plan = planDevBootstrap({ targetDir, agents: ['standard'] });
   const cli = await captureCli(['init-harness', targetDir, '--target', 'standard', '--dry-run', '--json']);
@@ -39,11 +39,11 @@ test('dev bootstrap dry run plans skills plus Codex harness without writing file
   expect(JSON.parse(cli.stdout).harnessFiles.map((file: { relativePath: string }) => file.relativePath).sort())
     .toEqual([...REQUIRED_HARNESS_FILES].sort());
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('confirmed dev bootstrap writes minimal Codex harness and managed ownership', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-apply-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-apply-'));
 
   const result = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
 
@@ -73,10 +73,21 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   const validation = validateHarness(targetDir);
   expect(validation.exitCode).toBe(0);
   expect(validation.checks.every((check) => check.state === 'pass')).toBe(true);
+  expect(validation.assessment.overall).toBeGreaterThanOrEqual(80);
+  expect(validation.assessment.subsystems.instructions.score).toBeGreaterThanOrEqual(4);
+  expect(validation.assessment.project.verificationCommands).toContain('node scripts/harness-validate.mjs');
+  expect(validation.benchmark.score).toBeGreaterThanOrEqual(90);
 
   const cliValidation = await captureCli(['validate-harness', targetDir, '--json']);
   expect(cliValidation.code).toBe(0);
-  expect(JSON.parse(cliValidation.stdout).reason).toBe('Harness validation passed.');
+  const cliValidationJson = JSON.parse(cliValidation.stdout);
+  expect(cliValidationJson.reason).toBe('Harness validation passed.');
+  expect(cliValidationJson.assessment.bottleneck).toBeDefined();
+  expect(cliValidationJson.benchmark.checks.length).toBeGreaterThan(0);
+  const htmlValidation = await captureCli(['validate-harness', targetDir, '--html']);
+  expect(htmlValidation.code).toBe(0);
+  expect(htmlValidation.stdout).toContain('assessment.overall');
+  expect(htmlValidation.stdout).toContain('benchmark.structural');
   const scriptOutput = execFileSync(process.execPath, ['scripts/harness-validate.mjs'], {
     cwd: targetDir,
     encoding: 'utf8',
@@ -85,7 +96,7 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
 });
 
 test('dev bootstrap blocks existing harness files unless force is explicit', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-conflict-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-conflict-'));
   fs.writeFileSync(path.join(targetDir, 'AGENTS.md'), 'local instructions\n');
   const before = fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8');
 
@@ -94,7 +105,7 @@ test('dev bootstrap blocks existing harness files unless force is explicit', () 
   expect(blocked.exitCode).toBe(3);
   expect(blocked.blockers.some((blocker) => blocker.code === 'existing-file' && blocker.path === 'AGENTS.md')).toBe(true);
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toBe(before);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 
   const forced = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true, force: true });
 
@@ -103,7 +114,7 @@ test('dev bootstrap blocks existing harness files unless force is explicit', () 
 });
 
 test('dev bootstrap rechecks existing harness files before writing', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-stale-conflict-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-stale-conflict-'));
   const plan = planDevBootstrap({ targetDir, agents: ['standard'] });
   fs.writeFileSync(path.join(targetDir, 'AGENTS.md'), 'local instructions after planning\n');
   const before = fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8');
@@ -113,11 +124,11 @@ test('dev bootstrap rechecks existing harness files before writing', () => {
   expect(blocked.exitCode).toBe(3);
   expect(blocked.blockers.some((blocker) => blocker.code === 'existing-file' && blocker.path === 'AGENTS.md')).toBe(true);
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toBe(before);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('dev bootstrap blocks dirty git worktrees before writing managed files', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-dirty-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-dirty-'));
   execFileSync('git', ['init'], { cwd: targetDir, stdio: 'ignore' });
   fs.writeFileSync(path.join(targetDir, 'dirty.txt'), 'untracked local work\n');
 
@@ -126,11 +137,11 @@ test('dev bootstrap blocks dirty git worktrees before writing managed files', ()
   expect(result.exitCode).toBe(3);
   expect(result.blockers.some((blocker) => blocker.code === 'dirty-worktree' && blocker.path === 'dirty.txt')).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('dev bootstrap rechecks dirty git worktrees before writing', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-stale-dirty-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-stale-dirty-'));
   execFileSync('git', ['init'], { cwd: targetDir, stdio: 'ignore' });
   const plan = planDevBootstrap({ targetDir, agents: ['standard'] });
   fs.writeFileSync(path.join(targetDir, 'dirty.txt'), 'untracked local work after planning\n');
@@ -140,11 +151,11 @@ test('dev bootstrap rechecks dirty git worktrees before writing', () => {
   expect(result.exitCode).toBe(3);
   expect(result.blockers.some((blocker) => blocker.code === 'dirty-worktree' && blocker.path === 'dirty.txt')).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('dev bootstrap blocks non-Codex platform instruction files before writing', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-platform-file-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-platform-file-'));
   fs.writeFileSync(path.join(targetDir, 'CLAUDE.md'), 'platform-specific instructions\n');
 
   const result = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true, force: true });
@@ -155,11 +166,11 @@ test('dev bootstrap blocks non-Codex platform instruction files before writing',
     && blocker.path === 'CLAUDE.md'
   ))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, '.skill-hub', 'lock.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
 test('harness validation reports current-state files that exceed size limits', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-size-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-size-'));
   applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
   fs.appendFileSync(path.join(targetDir, 'session-handoff.md'), `\n${'x'.repeat(20_000)}\n`);
 
@@ -174,7 +185,7 @@ test('harness validation reports current-state files that exceed size limits', (
 });
 
 test('harness validation rejects malformed feature state JSON', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-harness-feature-json-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-feature-json-'));
   applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
   fs.writeFileSync(path.join(targetDir, 'feature_list.json'), '{"features":[],"parallel_write_policy":');
 

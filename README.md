@@ -2,7 +2,6 @@
 
 Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects. It analyzes a target repository, installs the reusable skill set, initializes explicit root-level harness files when requested, validates the resulting harness, and keeps managed files safe through lock-backed lifecycle commands.
 
-Skill Hub remains the compatible skill-distribution subsystem: the existing `skill-hub` command and standard `skills/<name>/` install behavior continue to work during the Harness Hub migration.
 
 Most skills can come from upstream sources and keep their upstream style. This repository adds the personal routing overlay, source records, harness templates, and lifecycle tooling needed to analyze, initialize, validate, install, update, status-check, and remove managed agent workflow assets in target projects.
 
@@ -36,6 +35,7 @@ See [Personal Workflow Distribution](docs/personal-workflow-distribution.md) for
 - Web and artifact workflows: `effective-interact` for complex communication, option approval, status/incident reports, architecture/milestone maps, ignored long-task ledgers, HTML handoffs, and report-only aesthetic preflight; `frontend-design`, `design-taste-frontend`, `clone-website`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, and browser testing skills cover adjacent UI/artifact lanes.
 - Platform and extension atoms: `claude-api`, `mcp-builder`, `skill-creator`.
 - Repo harness lifecycle: `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove, minimal root harness templates, and explicit-only website-cloner smoke scaffolds.
+- Harness assessment: `validate-harness` reports required-file checks, five-subsystem structural scoring, HTML assessment output, generic verification-command detection, and a lightweight benchmark summary.
 - Skill maintenance: `hub-maintenance-workflow`, source-project records, capability metadata, and `skill-quality-inventory`.
 
 ## CLI
@@ -45,30 +45,31 @@ bun install
 bun run validate
 bun run bootstrap:codex-skills
 
-npx @jasonwen/skill-hub analyze D:\path\to\target --json
-npx @jasonwen/skill-hub analyze D:\path\to\target --agent-readiness --harness --json
-npx @jasonwen/skill-hub init-harness D:\path\to\target --dry-run --json
-npx @jasonwen/skill-hub init-harness D:\path\to\target --yes
-npx @jasonwen/skill-hub validate-harness D:\path\to\target --json
-npx @jasonwen/skill-hub install D:\path\to\target --target standard --dry-run
-npx @jasonwen/skill-hub install D:\path\to\target --target standard --yes
-npx @jasonwen/skill-hub init-harness D:\path\to\target --target standard --dry-run
-npx @jasonwen/skill-hub init-harness D:\path\to\target --target standard --yes
-npx @jasonwen/skill-hub validate-harness D:\path\to\target --json
-npx @jasonwen/skill-hub insight-generate . --input input.json --json
-npx @jasonwen/skill-hub insight-build . --json
-npx @jasonwen/skill-hub insight-validate . --json
-npx @jasonwen/skill-hub insight-publish . --dry-run --json
-npx @jasonwen/skill-hub status D:\path\to\target --json
-npx @jasonwen/skill-hub update D:\path\to\target --dry-run --json
-npx @jasonwen/skill-hub remove D:\path\to\target --dry-run --json
+npx @jasonwen/harness-hub analyze D:\path\to\target --json
+npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --harness --json
+npx @jasonwen/harness-hub init-harness D:\path\to\target --dry-run --json
+npx @jasonwen/harness-hub init-harness D:\path\to\target --yes
+npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
+npx @jasonwen/harness-hub install D:\path\to\target --target standard --dry-run
+npx @jasonwen/harness-hub install D:\path\to\target --target standard --yes
+npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run
+npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
+npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
+npx @jasonwen/harness-hub insight-generate . --input input.json --json
+npx @jasonwen/harness-hub insight-build . --json
+npx @jasonwen/harness-hub insight-validate . --json
+npx @jasonwen/harness-hub insight-publish . --dry-run --json
+npx @jasonwen/harness-hub status D:\path\to\target --json
+npx @jasonwen/harness-hub update D:\path\to\target --dry-run --json
+npx @jasonwen/harness-hub remove D:\path\to\target --dry-run --json
 ```
 
-The package also exposes a `harness-hub` binary. Until the package itself is renamed, `skill-hub` is the compatibility command and `harness-hub` is the forward command.
 
-There are no named skill install variants. `install` installs every standard Skill Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. `install` does not create root harness files; use explicit `init-harness` for `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`. Legacy host-specific directories are not the distribution shape.
+There are no named skill install variants. `install` installs every standard Harness Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. `install` does not create root harness files; use explicit `init-harness` for `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`. Legacy host-specific directories are not the distribution shape.
 
-`init-harness` is the explicit Codex-only dev bootstrap path. It composes the standard skill install with root harness files such as `AGENTS.md`, `feature_list.json`, `tasks/current-task.md`, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `definition-of-done.md`, and `scripts/harness-validate.mjs`. It records managed ownership in `.skill-hub/lock.json`, blocks dirty git worktrees and existing harness files by default, and leaves low-level `install` skills-only.
+`init-harness` is the explicit Codex-only dev bootstrap path. It composes the standard skill install with root harness files such as `AGENTS.md`, `feature_list.json`, `tasks/current-task.md`, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `definition-of-done.md`, and `scripts/harness-validate.mjs`. It records managed ownership in `.harness-hub/lock.json`, blocks dirty git worktrees and existing harness files by default, and leaves low-level `install` skills-only.
+
+`validate-harness` is side-effect-free. Its JSON and HTML reports include five-subsystem assessment scores for instructions, state, verification, scope, and lifecycle, plus a structural benchmark recommendation.
 
 `insight-*` is the explicit source-to-blog path. It treats `post.json` plus source metadata as the editable source of truth, adapts the first public draft through `effective-interact`, writes GitHub Pages output under `site/`, validates UTF-8/source attribution/fact-inference separation/link safety/excerpt size, and keeps local CLI publishing to a dry-run preflight. Actual Pages deployment is owned by `.github/workflows/publish-insights.yml`.
 
@@ -80,7 +81,7 @@ For local Codex dogfooding, generate a host-local copy of the standard skills:
 bun run bootstrap:codex-skills
 ```
 
-This mirrors `skills/<name>/` into `.codex/skills/<name>/` and writes a `.skill-hub-managed` marker in each generated copy. `.codex/` is ignored by Git and is not published; edit the source skill under `skills/` and rerun the bootstrap command. For host activation smoke, use `workflow-router` with executable `workflow-check.mjs` before owner workflows.
+This mirrors `skills/<name>/` into `.codex/skills/<name>/` and writes a `.harness-hub-managed` marker in each generated copy. `.codex/` is ignored by Git and is not published; edit the source skill under `skills/` and rerun the bootstrap command. For host activation smoke, use `workflow-router` with executable `workflow-check.mjs` before owner workflows.
 
 ## Claude Plugin Publishing
 
@@ -97,8 +98,8 @@ Marketplace test:
 
 ```powershell
 claude plugin validate .
-claude plugin marketplace add JasonxzWen/skill-hub
-claude plugin install skill-hub@skill-hub
+claude plugin marketplace add JasonxzWen/harness-hub
+claude plugin install harness-hub@harness-hub
 ```
 
 The plugin manifest intentionally omits `version`; when installed from Git, Claude Code can use the commit SHA as the plugin version. Add an explicit semver `version` only when release cadence requires manual version bumps.
@@ -112,7 +113,7 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | `.claude-plugin/` | Claude plugin and marketplace manifests |
 | `capabilities/index.json` | Skill and harness component metadata, including source-retained components |
 | `site/` | Git-only GitHub Pages output for insight posts |
-| `src/skillHub.ts` | CLI implementation |
+| `src/harnessHub.ts` | CLI implementation |
 | `scripts/validate-skills.ps1` | Standard skill validation gate |
 | `scripts/skill-quality-inventory.ts` | Report-only skill quality inventory |
 | `docs/skill-routing.md` | Overlap and routing rules |
@@ -123,7 +124,7 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | `docs/workflow-source-dossier.md` | Reference dossier for SDD, routing, Effective Interact, OpenSpec, Superpowers, ECC, Matt Pocock skills, Vercel, and retired Ralph source notes |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy |
 
-Generated reports, intermediate interaction artifacts, and Codex dogfood copies stay local: `reports/`, `.skill-hub/reports/`, `skills/effective-interact/artifacts/`, and `.codex/` are ignored and must not be committed or published. `site/` is Git-only Pages output and is intentionally excluded from the npm package.
+Generated reports, intermediate interaction artifacts, and Codex dogfood copies stay local: `reports/`, `.harness-hub/reports/`, `skills/effective-interact/artifacts/`, and `.codex/` are ignored and must not be committed or published. `site/` is Git-only Pages output and is intentionally excluded from the npm package.
 
 ## Validation
 

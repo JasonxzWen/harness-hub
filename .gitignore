@@ -31,9 +31,9 @@ vendor/forrestchang-andrej-karpathy-skills/
 vendor/mattpocock-skills/
 vendor/EveryInc-compound-engineering-plugin/
 
-# Skill Hub local CLI runtime reports
+# Harness Hub local CLI runtime reports
 reports/
-.skill-hub/reports/
+.harness-hub/reports/
 
 # Local generated HTML reports and skill interaction artifacts
 skills/effective-interact/artifacts/

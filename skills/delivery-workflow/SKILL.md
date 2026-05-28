@@ -27,5 +27,5 @@ Use this owner after work has been accepted or implemented and needs closure.
 - Do not start new feature work.
 - Do not hide failed or skipped verification.
 - Do not push, publish, merge, post, or mutate third-party resources unless the user explicitly asks.
-- Use lock-backed ownership for Skill Hub managed cleanup.
+- Use lock-backed ownership for Harness Hub managed cleanup.
 - Follow `workflow-router/references/orchestration-policy.md` for any subagent verification or advisory hook checks; the main agent owns the final handoff.

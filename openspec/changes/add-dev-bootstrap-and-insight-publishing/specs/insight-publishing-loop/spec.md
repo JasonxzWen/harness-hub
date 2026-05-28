@@ -1,12 +1,12 @@
 ## ADDED Requirements
 
 ### Requirement: Source research produces project-aware insight posts
-The system SHALL transform user-provided source material into a UTF-8 insight post that extracts viewpoints, integrates them, maps them to Skill Hub, and records iteration impact.
+The system SHALL transform user-provided source material into a UTF-8 insight post that extracts viewpoints, integrates them, maps them to Harness Hub, and records iteration impact.
 
 #### Scenario: Generate insight post draft
 - **WHEN** the user provides one or more source URLs or source texts
 - **THEN** the system records source metadata
-- **AND** the generated post identifies source claims, extracted viewpoints, integrated insight, Skill Hub impact, iteration record, action boundary, and source references
+- **AND** the generated post identifies source claims, extracted viewpoints, integrated insight, Harness Hub impact, iteration record, action boundary, and source references
 - **AND** the post distinguishes facts, inferences, assumptions, and user/project judgments
 
 #### Scenario: Avoid source rewriting

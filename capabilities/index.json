@@ -289,12 +289,12 @@
       "version": "0.1.0",
       "source": "local",
       "provides": [
-        "skill-hub-maintenance-workflow",
+        "harness-hub-maintenance-workflow",
         "source-evaluation-workflow",
         "capability-lifecycle-governance"
       ],
       "overlapsWith": [],
-      "routing": "Use for maintaining Skill Hub sources, routing, capabilities, npm lifecycle, and managed update/remove behavior.",
+      "routing": "Use for maintaining Harness Hub sources, routing, capabilities, npm lifecycle, and managed update/remove behavior.",
       "detects": [
         {
           "path": "skills/hub-maintenance-workflow/SKILL.md"
@@ -304,7 +304,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Maintain Skill Hub with source evidence, narrow changes, validation, and lock-backed lifecycle boundaries."
+      "recommendation": "Maintain Harness Hub with source evidence, narrow changes, validation, and lock-backed lifecycle boundaries."
     },
     "skill:product-capability": {
       "kind": "skill",

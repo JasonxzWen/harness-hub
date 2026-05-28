@@ -1,6 +1,6 @@
 # Skill Routing
 
-Skill Hub is a personal workflow distribution set with a routing overlay. Route by user intent and workflow boundary, not by agent host. Imported skill bodies may keep upstream style; fix conflicts in this routing layer first.
+Harness Hub is a personal workflow distribution set with a routing overlay. Route by user intent and workflow boundary, not by agent host. Imported skill bodies may keep upstream style; fix conflicts in this routing layer first.
 
 ## Source Roots
 
@@ -13,13 +13,13 @@ Skill Hub is a personal workflow distribution set with a routing overlay. Route 
 
 | User intent | Preferred skill | Notes |
 |---|---|---|
-| Non-trivial request that needs intent recognition | `workflow-router` | Classify into exactly one state: question, SDD change, diagnosis, review, delivery, or Skill Hub maintenance. |
+| Non-trivial request that needs intent recognition | `workflow-router` | Classify into exactly one state: question, SDD change, diagnosis, review, delivery, or Harness Hub maintenance. |
 | Read-only question, explanation, feasibility check, evidence lookup, or comparison | `answer-workflow` | Answer from evidence; do not mutate files. |
 | Feature, bug fix, refactor, product/spec change, or implementation request | `sdd-workflow` | Align need, source material, spec, acceptance, executable plan, cleanup, implementation, tests, and delivery before coding. |
 | Failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure report | `diagnosis-workflow` | Reproduce or bound the failure before choosing helper skills. |
 | Code, plan, release, UI, or security review | `review-workflow` | Findings first; do not implement fixes unless redirected. |
 | Validation closeout, cleanup, release notes, or handoff | `delivery-workflow` | Run accepted checks and report residual risk. |
-| Skill Hub source, routing, capability metadata, npm lifecycle, or managed cleanup work | `hub-maintenance-workflow` | Use source records and CLI dry-runs instead of removed broad helper skills. |
+| Harness Hub source, routing, capability metadata, npm lifecycle, or managed cleanup work | `hub-maintenance-workflow` | Use source records and CLI dry-runs instead of removed broad helper skills. |
 | Plan/design pressure testing before implementation | `grill-me` | Ask one hard question at a time and surface assumptions. |
 | Diagnose runtime bug, failing command, flaky behavior, or performance regression | `diagnose` | `diagnose` owns unknown runtime bugs and performance regressions; use `tdd-workflow` after the behavior is understood. |
 | Implement production feature, confirmed bug fix, or refactor through tests | `tdd-workflow` | One public behavior at a time through red-green-refactor. |
@@ -51,9 +51,9 @@ Skill Hub is a personal workflow distribution set with a routing overlay. Route 
 - Use `doc-coauthoring` for durable docs, `internal-comms` for organizational updates, and `stop-slop` only for strong English prose anti-AI-tell editing; use `answer-workflow` for ordinary explanatory answers.
 - Use `claude-api` only for Anthropic provider work; use `documentation-lookup` for general library/API facts and other providers.
 - Use `mcp-builder` for MCP servers; use `claude-api` for Anthropic API clients and `security-review` when secret/tool-execution risk is central.
-- Use `skill-creator` for standard skill content; `hub-maintenance-workflow` still owns source records, capability metadata, and Skill Hub lifecycle decisions.
+- Use `skill-creator` for standard skill content; `hub-maintenance-workflow` still owns source records, capability metadata, and Harness Hub lifecycle decisions.
 - Use OpenSpec skills only when the user explicitly wants the formal OpenSpec lifecycle.
-- Native goal/story loops are handled by current Codex and Claude Code capabilities; Skill Hub no longer distributes Ralph PRD or loop skills.
+- Native goal/story loops are handled by current Codex and Claude Code capabilities; Harness Hub no longer distributes Ralph PRD or loop skills.
 - Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
 - `sdd-workflow` is the default change lane and `tdd-workflow` is an embedded implementation discipline, not a competing owner.
 - Do not treat `effective-interact` as a default-considered skill for non-trivial sessions merely because a reply may be long; the trigger is a real communication, alignment, verification, approval, handoff, or continuation need.
@@ -97,7 +97,7 @@ Skill Hub is a personal workflow distribution set with a routing overlay. Route 
 - `openspec-propose` loads only for explicit new OpenSpec proposals with design, spec deltas, and tasks.
 - `openspec-apply-change` loads only for implementing or continuing an existing OpenSpec change.
 - `openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes.
-- `hub-maintenance-workflow` loads for maintaining this Skill Hub's source records, installed skill components, routing, npm package boundary, and candidate-source decisions.
+- `hub-maintenance-workflow` loads for maintaining this Harness Hub's source records, installed skill components, routing, npm package boundary, and candidate-source decisions.
 - `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, `slack-gif-creator`, and `clone-website` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
 
 ## Subagents And Hooks

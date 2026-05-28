@@ -12,7 +12,7 @@
 - Broaden `effective-interact` into a low-noise complex communication skill that selects plain text, Markdown, visual Markdown, or HTML by decision cost instead of answer length alone.
 - Absorb the HTML effectiveness reference cases into trigger evals, pattern references, warm neutral visual tokens, and new implementation-plan, visual-exploration, and editor-workbench templates.
 - Add optional ignored long-task fact ledgers and route generated HTML/intermediate artifacts into ignored local directories instead of tracked `reports/`.
-- Bump `skill:effective-interact` to `0.2.0` so managed installs can detect and apply the strengthened communication contract through `skill-hub update`.
+- Bump `skill:effective-interact` to `0.2.0` so managed installs can detect and apply the strengthened communication contract through `harness-hub update`.
 
 ## 0.1.8 - 2026-05-21
 
@@ -29,7 +29,7 @@
 ## 0.1.6 - 2026-05-20
 
 - Move the source skill tree to standard `skills/`, remove host-specific skill metadata, and add Claude plugin manifests.
-- Migrate schema version 2 managed `skill:html-work-reports` lock records to `skill:effective-interact` during `skill-hub update`, after hash checks and while replacing an existing same-name `effective-interact` skill destination.
+- Migrate schema version 2 managed `skill:html-work-reports` lock records to `skill:effective-interact` during `harness-hub update`, after hash checks and while replacing an existing same-name `effective-interact` skill destination.
 
 ## 0.1.5 - 2026-05-18
 
@@ -51,6 +51,6 @@
 
 ## 0.1.0 - Initial npm release
 
-- Package `skill-hub` as a Node-compatible CLI.
+- Package `harness-hub` as a Node-compatible CLI.
 - Support target-repo `analyze`, `install`, `status`, `update`, `migrate-lock`, and `remove` lifecycle commands.
 - Include curated skill profiles, harness templates, and release validation.

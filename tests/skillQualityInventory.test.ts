@@ -46,7 +46,7 @@ test('skill quality inventory enforces routing metadata for installed skills', (
 });
 
 test('skill quality inventory marks imported metadata gaps as warnings', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-quality-warn-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-quality-warn-'));
   writeSkill(root, 'imported-warning', [
     'name: imported-warning',
     'description: Imported skill without the required Load when routing prefix.',
@@ -86,7 +86,7 @@ test('skill quality inventory CLI accepts json flag without treating it as a roo
 });
 
 test('skill quality inventory CLI fails when warnings exist', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-quality-cli-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-quality-cli-'));
   writeSkill(root, 'bad-skill', [
     'name: bad-skill',
     'description: Missing load when prefix.',
@@ -110,7 +110,7 @@ test('skill quality inventory CLI fails when warnings exist', () => {
 });
 
 test('skill quality inventory CLI rejects missing roots instead of returning an empty pass', () => {
-  const missingRoot = path.join(os.tmpdir(), `skill-hub-missing-${Date.now()}`);
+  const missingRoot = path.join(os.tmpdir(), `harness-hub-missing-${Date.now()}`);
   const result = spawnSync(process.execPath, [
     path.resolve('scripts/skill-quality-inventory.ts'),
     missingRoot,

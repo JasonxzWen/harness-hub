@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-This guide defines the quality bar for Skill Hub's personal workflow distribution. It is strict for local routing and workflow-owner skills, and intentionally lighter for imported skill bodies that should preserve upstream style by default.
+This guide defines the quality bar for Harness Hub's personal workflow distribution. It is strict for local routing and workflow-owner skills, and intentionally lighter for imported skill bodies that should preserve upstream style by default.
 
 ## Core Principle
 
@@ -29,7 +29,7 @@ Do not create or install a skill when:
 - The content is only a list of ordinary commands the model already knows.
 - The content duplicates root `AGENTS.md`, host system instructions, or common project conventions.
 - The content only reimplements host-native UI, orchestration, automation, review, browser, or multi-agent behavior already supplied by the active agent host.
-- The source changes faster than Skill Hub can maintain it.
+- The source changes faster than Harness Hub can maintain it.
 - The capability belongs in an explicit user-requested workflow rather than automatic routing.
 - The main value is broad advice, not a bounded workflow or durable special case.
 

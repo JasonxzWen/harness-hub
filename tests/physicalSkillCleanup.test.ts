@@ -62,9 +62,9 @@ test('removed helper skills are not used as active maintenance routes', () => {
   const capabilityIndex = read('capabilities/index.json');
 
   expect(agents).not.toContain('Use `skill-evaluator`');
-  expect(routing).not.toContain('Use `update-skill-hub`');
-  expect(hubSkill).not.toContain('`update-skill-hub` for this repository');
-  expect(capabilityIndex).not.toContain('"skill:update-skill-hub"');
+  expect(routing).not.toContain('Use `update-harness-hub`');
+  expect(hubSkill).not.toContain('`update-harness-hub` for this repository');
+  expect(capabilityIndex).not.toContain('"skill:update-harness-hub"');
   expect(capabilityIndex).not.toContain('"skill:skill-evaluator"');
   expect(capabilityIndex).not.toContain('"skill:agent-sort"');
 });
@@ -78,7 +78,7 @@ test('active skill bodies do not recommend physically removed helper skills', ()
     'exa-search',
     'find-skills',
     'skill-evaluator',
-    'update-skill-hub',
+    'update-harness-hub',
     'vercel-composition-patterns',
     'vercel-react-best-practices',
     'vercel-react-view-transitions',

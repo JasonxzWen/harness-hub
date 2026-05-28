@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'bun:test';
 
-import { readCapabilityIndex } from '../src/skillHub';
+import { readCapabilityIndex } from '../src/harnessHub';
 
 const harnessRoot = path.resolve('harness/website-cloner');
 

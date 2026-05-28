@@ -8,7 +8,7 @@ Source evaluation belongs in [Workflow source dossier](workflow-source-dossier.m
 
 ## Capability Statement
 
-Skill Hub MUST provide a personal workflow routing overlay where each non-trivial user request is classified into one task state, handed to one workflow owner, and completed through explicit alignment, verification, and handoff gates.
+Harness Hub MUST provide a personal workflow routing overlay where each non-trivial user request is classified into one task state, handed to one workflow owner, and completed through explicit alignment, verification, and handoff gates.
 
 ## Terms
 
@@ -30,7 +30,7 @@ Skill Hub MUST provide a personal workflow routing overlay where each non-trivia
 | Diagnosis | `diagnosis-workflow` | The user reports a failing command, runtime bug, flaky behavior, performance issue, or agent/tool failure. | Apply a fix before the symptom is reproduced or bounded. |
 | Review | `review-workflow` | The user asks for code review, plan review, release review, security review, or confidence check. | Hide findings behind summaries or implement without permission. |
 | Delivery | `delivery-workflow` | The user asks for acceptance, handoff, cleanup, release notes, validation closeout, or environment reset. | Declare done without verification and residual-risk notes. |
-| Skill Hub maintenance | `hub-maintenance-workflow` | The user asks to maintain this hub, evaluate skill sources, adjust routing, or change install/update/remove policy. | Wholesale import another workflow or bypass lock-backed lifecycle rules. |
+| Harness Hub maintenance | `hub-maintenance-workflow` | The user asks to maintain this hub, evaluate skill sources, adjust routing, or change install/update/remove policy. | Wholesale import another workflow or bypass lock-backed lifecycle rules. |
 
 ## Canonical Lifecycle
 
@@ -55,7 +55,7 @@ Every non-trivial change request MUST follow this order unless the selected stat
 - If a request is ambiguous between states, the router MUST ask one concise clarification or choose the safer non-mutating state.
 - The router MUST expose the selected state, reason, and next gate to the active workflow owner.
 - The router MUST NOT implement, test, review, or deliver work itself.
-- Explicit owner references MUST NOT override contradictory no-mutation, Skill Hub maintenance, or mixed review-and-implementation signals.
+- Explicit owner references MUST NOT override contradictory no-mutation, Harness Hub maintenance, or mixed review-and-implementation signals.
 
 ### WR-2: SDD-First Change Flow
 
@@ -120,7 +120,7 @@ Examples:
 - `review-workflow` may use `compound-code-review`, `security-review`, and `web-design-guidelines`.
 - `hub-maintenance-workflow` may use source records, routing docs, capability metadata, lifecycle CLI dry-runs, and targeted repo/source inspection.
 
-Native goal/story loops are outside Skill Hub's distributed skill set. They MUST NOT bypass SDD alignment or start autonomous repeated execution without user approval.
+Native goal/story loops are outside Harness Hub's distributed skill set. They MUST NOT bypass SDD alignment or start autonomous repeated execution without user approval.
 
 ### WR-7: Subagent Orchestration
 

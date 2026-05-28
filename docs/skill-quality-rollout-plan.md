@@ -2,9 +2,9 @@
 
 Date: 2026-05-12
 
-This plan upgrades Skill Hub from a curated skill collection into a governed skill-quality system. The work is intentionally staged so existing imported skills remain usable while local quality gates tighten over time.
+This plan upgrades Harness Hub from a curated skill collection into a governed skill-quality system. The work is intentionally staged so existing imported skills remain usable while local quality gates tighten over time.
 
-Current direction note: Skill Hub now optimizes for personal workflow distribution with a routing overlay. Quality work should preserve upstream skill bodies by default and treat inventory findings as report-only unless they reveal a real routing, safety, source, or distribution problem.
+Current direction note: Harness Hub now optimizes for personal workflow distribution with a routing overlay. Quality work should preserve upstream skill bodies by default and treat inventory findings as report-only unless they reveal a real routing, safety, source, or distribution problem.
 
 ## Goals
 
@@ -141,7 +141,7 @@ Verification:
 
 Deliverables:
 
-- Expose quality findings through `skill-hub analyze` or a dedicated report only after the lint data is stable.
+- Expose quality findings through `harness-hub analyze` or a dedicated report only after the lint data is stable.
 - Add quality metadata to `capabilities/index.json` only if it has a clear install or recommendation use.
 - Keep mutating install/remove behavior unchanged.
 

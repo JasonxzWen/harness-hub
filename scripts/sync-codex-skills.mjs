@@ -4,7 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(SCRIPT_PATH), '..');
-const MARKER_FILE = '.skill-hub-managed';
+const MARKER_FILE = '.harness-hub-managed';
 const PRESERVED_LOCAL_DIRS = new Set(['artifacts']);
 
 function toPortable(relativePath) {

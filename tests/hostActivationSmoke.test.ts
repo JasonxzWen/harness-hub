@@ -7,7 +7,7 @@ import { expect, test } from 'bun:test';
 import {
   applyInstall,
   planInstall,
-} from '../src/skillHub';
+} from '../src/harnessHub';
 
 function route(scriptPath: string, prompt: string): { state: string; owner: string | null; mutates: boolean } {
   const output = execFileSync(process.execPath, [scriptPath, '--prompt', prompt, '--json'], {
@@ -44,7 +44,7 @@ test('root host instructions activate the executable workflow router before owne
 });
 
 test('standard install exposes the router script for target-repo host activation', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-host-activation-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-host-activation-'));
   const result = applyInstall(planInstall({ targetDir, agents: ['standard'] }));
   const routerSkill = path.join(targetDir, 'skills', 'workflow-router', 'SKILL.md');
   const routerScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'route-intent.mjs');
@@ -84,11 +84,11 @@ test('standard install exposes the router script for target-repo host activation
 
   const review = route(routerScript, 'Review these skill boundaries and do not change files yet.');
   const change = route(routerScript, 'Implement the accepted settings validation change with tests.');
-  const preflight = workflowCheck(workflowCheckScript, 'Remove install profiles and make Skill Hub default to full install with overwrite smoke coverage.');
+  const preflight = workflowCheck(workflowCheckScript, 'Remove install profiles and make Harness Hub default to full install with overwrite smoke coverage.');
 
   expect(review).toMatchObject({ state: 'review', owner: 'review-workflow', mutates: false });
   expect(change).toMatchObject({ state: 'sdd-change', owner: 'sdd-workflow', mutates: false });
-  expect(preflight.route).toMatchObject({ state: 'skill-hub-maintenance', owner: 'hub-maintenance-workflow' });
+  expect(preflight.route).toMatchObject({ state: 'harness-hub-maintenance', owner: 'hub-maintenance-workflow' });
   expect(preflight.advisory.warnings.map((warning) => warning.id)).toEqual([
     'missing-scope',
     'missing-spec',

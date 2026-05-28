@@ -181,7 +181,7 @@
       "id": "effective-interact-positive-complex-pause-report",
       "skill": "effective-interact",
       "kind": "positive",
-      "prompt": "Agent pauses to report: this Skill Hub routing change touches .codex, trigger boundaries, test results, and risks; the information is relatively complex, so use structured Chinese.",
+      "prompt": "Agent pauses to report: this Harness Hub routing change touches .codex, trigger boundaries, test results, and risks; the information is relatively complex, so use structured Chinese.",
       "expectedSkill": "effective-interact",
       "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
@@ -757,7 +757,7 @@
       "id": "skill-creator-forbidden-hub-maintenance",
       "skill": "skill-creator",
       "kind": "forbidden-load",
-      "prompt": "Continue maintaining Skill Hub routing and capability metadata; inspect the current repo evidence first.",
+      "prompt": "Continue maintaining Harness Hub routing and capability metadata; inspect the current repo evidence first.",
       "expectedSkill": null,
       "docsBoundary": "`skill-creator` loads for creating, updating, adapting, or evaluating standard agent skills."
     },

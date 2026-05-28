@@ -9,7 +9,7 @@ import {
   applyInstall,
   planInstall,
   readCapabilityIndex,
-} from '../src/skillHub';
+} from '../src/harnessHub';
 
 type RouteResult = {
   schemaVersion: 1;
@@ -114,12 +114,12 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   expect(review.state).toBe('review');
   expect(review.owner).toBe('review-workflow');
   expect(review.mutationAllowed).toBe(false);
-  expect(change.state).toBe('skill-hub-maintenance');
+  expect(change.state).toBe('harness-hub-maintenance');
   expect(change.owner).toBe('hub-maintenance-workflow');
   expect(change.requiredGates).toContain('write-spec-and-acceptance');
-  expect(maintenance.state).toBe('skill-hub-maintenance');
+  expect(maintenance.state).toBe('harness-hub-maintenance');
   expect(maintenance.owner).toBe('hub-maintenance-workflow');
-  expect(pureChineseMaintenance.state).toBe('skill-hub-maintenance');
+  expect(pureChineseMaintenance.state).toBe('harness-hub-maintenance');
   expect(pureChineseMaintenance.owner).toBe('hub-maintenance-workflow');
   expect(pureChineseDelivery.state).toBe('delivery');
   expect(pureChineseDelivery.owner).toBe('delivery-workflow');
@@ -148,7 +148,7 @@ test('workflow-router modules can be imported without CLI argv', () => {
 });
 
 test('installed workflow-router script runs in a target repo smoke', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-router-smoke-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-router-smoke-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   applyInstall(plan);
   const installedScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'route-intent.mjs');
@@ -184,15 +184,15 @@ test('workflow check composes routing with owner gate warnings', () => {
   expect(result.dispatchesSubagents).toBe(false);
 });
 
-test('workflow check routes Skill Hub install policy requests into maintenance gates', () => {
+test('workflow check routes Harness Hub install policy requests into maintenance gates', () => {
   const result = runWorkflowCheck(workflowCheckScript, [
     '--prompt',
-    'Remove install profiles and make Skill Hub default to full install with overwrite smoke coverage.',
+    'Remove install profiles and make Harness Hub default to full install with overwrite smoke coverage.',
     '--phase',
     'pre-implementation',
   ]);
 
-  expect(result.route.state).toBe('skill-hub-maintenance');
+  expect(result.route.state).toBe('harness-hub-maintenance');
   expect(result.route.owner).toBe('hub-maintenance-workflow');
   expect(result.advisory.warnings.map((warning) => warning.id)).toEqual([
     'missing-scope',
@@ -204,30 +204,30 @@ test('workflow check routes Skill Hub install policy requests into maintenance g
   expect(result.dispatchesSubagents).toBe(false);
 });
 
-test('workflow check routes explicit Skill Hub repair discovered during review into maintenance gates', () => {
+test('workflow check routes explicit Harness Hub repair discovered during review into maintenance gates', () => {
   const result = runWorkflowCheck(workflowCheckScript, [
     '--prompt',
-    'Continue auditing Skill Hub: fix npm package artifacts and verify the real package contents.',
+    'Continue auditing Harness Hub: fix npm package artifacts and verify the real package contents.',
     '--phase',
     'pre-implementation',
   ]);
 
-  expect(result.route.state).toBe('skill-hub-maintenance');
+  expect(result.route.state).toBe('harness-hub-maintenance');
   expect(result.route.owner).toBe('hub-maintenance-workflow');
   expect(result.route.mutationAllowed).toBe(true);
   expect(result.mutates).toBe(false);
   expect(result.dispatchesSubagents).toBe(false);
 });
 
-test('workflow check routes Chinese Skill Hub quality convergence into maintenance gates', () => {
+test('workflow check routes Chinese Harness Hub quality convergence into maintenance gates', () => {
   const result = runWorkflowCheck(workflowCheckScript, [
     '--prompt',
-    '继续收敛 Skill Hub 的 skill 质量和触发边界，补齐可执行门禁。',
+    '继续收敛 Harness Hub 的 skill 质量和触发边界，补齐可执行门禁。',
     '--phase',
     'pre-implementation',
   ]);
 
-  expect(result.route.state).toBe('skill-hub-maintenance');
+  expect(result.route.state).toBe('harness-hub-maintenance');
   expect(result.route.owner).toBe('hub-maintenance-workflow');
   expect(result.route.confidence).toBe('high');
   expect(result.mutates).toBe(false);
@@ -237,12 +237,12 @@ test('workflow check routes Chinese Skill Hub quality convergence into maintenan
 test('workflow check routes user-perspective activation smoke upgrades into maintenance gates', () => {
   const result = runWorkflowCheck(workflowCheckScript, [
     '--prompt',
-    '继续自顶向下审查 Skill Hub：把用户视角 skill activation smoke 从测试内逻辑提升为安装后可执行脚本，并验证无自动 subagent 调度。',
+    '继续自顶向下审查 Harness Hub：把用户视角 skill activation smoke 从测试内逻辑提升为安装后可执行脚本，并验证无自动 subagent 调度。',
     '--phase',
     'pre-implementation',
   ]);
 
-  expect(result.route.state).toBe('skill-hub-maintenance');
+  expect(result.route.state).toBe('harness-hub-maintenance');
   expect(result.route.owner).toBe('hub-maintenance-workflow');
   expect(result.route.confidence).toBe('high');
   expect(result.advisory.warnings.map((warning) => warning.id)).toEqual([
@@ -255,15 +255,15 @@ test('workflow check routes user-perspective activation smoke upgrades into main
   expect(result.dispatchesSubagents).toBe(false);
 });
 
-test('workflow check routes Skill Hub gate regression wording into maintenance gates', () => {
+test('workflow check routes Harness Hub gate regression wording into maintenance gates', () => {
   const result = runWorkflowCheck(workflowCheckScript, [
     '--prompt',
-    '继续从用户视角审查 Skill Hub：验证 workflow owner 门禁不会在错误阶段给假绿灯，并补可执行回归。',
+    '继续从用户视角审查 Harness Hub：验证 workflow owner 门禁不会在错误阶段给假绿灯，并补可执行回归。',
     '--phase',
     'pre-implementation',
   ]);
 
-  expect(result.route.state).toBe('skill-hub-maintenance');
+  expect(result.route.state).toBe('harness-hub-maintenance');
   expect(result.route.owner).toBe('hub-maintenance-workflow');
   expect(result.advisory.warnings.map((warning) => warning.id)).toEqual([
     'missing-scope',
@@ -314,7 +314,7 @@ test('workflow check only warns on read-only owners when mutation is explicitly 
 });
 
 test('installed workflow check runs in a target repo smoke', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-workflow-check-smoke-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-workflow-check-smoke-'));
   applyInstall(planInstall({ targetDir, agents: ['standard'] }));
   const installedScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'workflow-check.mjs');
 
@@ -334,7 +334,7 @@ test('installed workflow check runs in a target repo smoke', () => {
 });
 
 test('installed workflow check warns when the selected owner skill is missing', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-owner-contract-smoke-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-owner-contract-smoke-'));
   applyInstall(planInstall({ targetDir, agents: ['standard'] }));
   fs.rmSync(path.join(targetDir, 'skills', 'sdd-workflow'), { recursive: true, force: true });
   const installedScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'workflow-check.mjs');

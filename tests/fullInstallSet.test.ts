@@ -10,7 +10,7 @@ import {
   readCapabilityIndex,
   runCli,
   validateCapabilityIndex,
-} from '../src/skillHub';
+} from '../src/harnessHub';
 
 const requiredWorkflowComponents = [
   'skill:workflow-router',
@@ -31,7 +31,7 @@ test('capability index has no alternate install sets', () => {
 });
 
 test('default install set includes every standard skill component', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-all-skills-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-all-skills-'));
   const index = readCapabilityIndex();
   const skillComponentIds = Object.entries(index.components)
     .filter(([, component]) => component.kind === 'skill')
@@ -47,7 +47,7 @@ test('default install set includes every standard skill component', () => {
 });
 
 test('default install set does not write root harness files', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-no-harness-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-no-harness-'));
 
   applyInstall(planInstall({ targetDir, agents: ['standard'] }));
 
@@ -85,7 +85,7 @@ test('current lifecycle specs and smokes do not use named install variants', () 
 });
 
 test('confirmed install overwrites same-name skills and records lock-backed status', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-overwrite-skill-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-overwrite-skill-'));
   const localSkillDir = path.join(targetDir, 'skills', 'workflow-router');
   fs.mkdirSync(localSkillDir, { recursive: true });
   fs.writeFileSync(path.join(localSkillDir, 'SKILL.md'), 'local stale router\n');
@@ -110,7 +110,7 @@ test('confirmed install overwrites same-name skills and records lock-backed stat
 });
 
 test('CLI confirmed install overwrites same-name skills by default', async () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-cli-overwrite-skill-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-cli-overwrite-skill-'));
   const localSkillDir = path.join(targetDir, 'skills', 'workflow-router');
   fs.mkdirSync(localSkillDir, { recursive: true });
   fs.writeFileSync(path.join(localSkillDir, 'SKILL.md'), 'local stale router\n');

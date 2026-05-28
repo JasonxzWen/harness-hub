@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "skill-hub",
+      "name": "harness-hub",
       "devDependencies": {
         "@types/bun": "^1.3.3",
         "@types/node": "^24.10.1",

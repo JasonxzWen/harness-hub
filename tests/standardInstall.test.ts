@@ -8,7 +8,7 @@ import {
   getStatus,
   planInstall,
   readCapabilityIndex,
-} from '../src/skillHub';
+} from '../src/harnessHub';
 
 const REQUIRED_WORKFLOW_COMPONENTS = [
   'skill:workflow-router',
@@ -45,7 +45,7 @@ test('default standard install exposes all workflow skills and omits retired Ral
     .filter(([, component]) => component.kind === 'skill')
     .map(([id]) => id)
     .sort();
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-standard-install-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-standard-install-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   const plannedComponentIds = plan.items.map((item) => item.componentId).sort();
 
@@ -58,7 +58,7 @@ test('default standard install exposes all workflow skills and omits retired Ral
 });
 
 test('default standard install writes lock-backed status for the full skill set', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-hub-standard-status-'));
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-standard-status-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });
   const result = applyInstall(plan);
 

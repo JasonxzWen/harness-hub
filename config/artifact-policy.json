@@ -10,7 +10,6 @@
       "config/",
       "harness/",
       "docs/",
-      "harness/",
       "openspec/config.yaml",
       "openspec/specs/",
       ".claude-plugin/",
@@ -39,7 +38,7 @@
       "node_modules/",
       "vendor/",
       "reports/",
-      ".skill-hub/reports/",
+      ".harness-hub/reports/",
       "skills/effective-interact/artifacts/",
       ".codex/",
       ".learning/"
@@ -56,7 +55,6 @@
       "harness/",
       "dist/",
       "docs/",
-      "harness/",
       "openspec/config.yaml",
       "openspec/specs/",
       ".claude-plugin/",
@@ -71,7 +69,7 @@
     "requiredExcludes": [],
     "forbidden": [
       ".github/",
-      ".skill-hub/",
+      ".harness-hub/",
       ".learning/",
       "node_modules/",
       "reports/",
@@ -107,7 +105,7 @@
       "vendor/mattpocock-skills/",
       "vendor/EveryInc-compound-engineering-plugin/",
       "reports/",
-      ".skill-hub/reports/",
+      ".harness-hub/reports/",
       "skills/effective-interact/artifacts/",
       ".codex/",
       ".learning/"

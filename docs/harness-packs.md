@@ -6,13 +6,15 @@ Harness packs are explicit repo-harness extensions for projects that need more t
 
 | Pack | Status | Activation |
 |---|---|---|
-| `minimal` | Local, source-owned, explicit | `skill-hub init-harness <target> --dry-run` then `--yes` |
+| `minimal` | Local, source-owned, explicit | `harness-hub init-harness <target> --dry-run` then `--yes` |
 | `website-cloner` | Local smoke scaffold, explicit-only | Use with the `clone-website` skill for authorized clone/report artifacts; not part of default install |
 | `advanced-openai` | Evaluated source reference only | Not installable until license and host metadata review is complete |
 
 ## Source Review Boundary
 
-`walkinglabs/learn-harness-engineering` is useful source material for advanced harness engineering. The current reviewed revision is `ea746b29b40a2629a59f85aeced9389477abfb7c`.
+`walkinglabs/learn-harness-engineering` is useful source material for advanced harness engineering. The current reviewed revision is `f31db7cd54ba222a1e62035ac0fd27dbbc6f8fd7`.
+
+The local `validate-harness` command adapts the source project's five-subsystem assessment, HTML report surface, structural benchmark framing, and generic verification-command detection. It does not copy or activate the upstream `create-harness.mjs` writer, `agents/openai.yaml`, or advanced pack files.
 
 Keep its advanced content reference-only until all of the following are true:
 

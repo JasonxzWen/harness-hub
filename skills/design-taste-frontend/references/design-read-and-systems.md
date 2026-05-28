@@ -1,6 +1,6 @@
 # Design Read And Systems
 
-Source: adapted from `Leonxlnx/taste-skill` at `3c7017d636c3a4aad378433ea6d0cfa6c921da4a` under MIT. Scope is narrowed for Skill Hub routing.
+Source: adapted from `Leonxlnx/taste-skill` at `3c7017d636c3a4aad378433ea6d0cfa6c921da4a` under MIT. Scope is narrowed for Harness Hub routing.
 
 ## Table Of Contents
 

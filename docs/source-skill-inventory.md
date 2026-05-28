@@ -2,9 +2,9 @@
 
 Date: 2026-05-28
 
-This inventory records the local refresh of Skill Hub's referenced source repositories after removing `affaan-m/everything-claude-code` from the atomic skill candidate pool. Existing local skill lineage is not rewritten here; this file is only the candidate-source inventory for future atom selection and routing placement.
+This inventory records the local refresh of Harness Hub's referenced source repositories after removing `affaan-m/everything-claude-code` from the atomic skill candidate pool. Existing local skill lineage is not rewritten here; this file is only the candidate-source inventory for future atom selection and routing placement.
 
-The refresh cache is outside the repo at `C:\Users\Admin\.codex\source-cache\skill-hub` so source inspection does not mutate installable skills.
+The refresh cache is outside the repo at `C:\Users\Admin\.codex\source-cache\harness-hub` so source inspection does not mutate installable skills.
 
 Scan scope:
 
@@ -59,10 +59,10 @@ License/source note: the upstream README states many examples are Apache 2.0, wh
 | `internal-comms` | Installed, normalized | Apache 2.0 and fills the internal update/FAQ/incident communication gap. `examples/` was normalized to `references/`, and trigger text was made organization-neutral. |
 | `theme-factory` | Installed, normalized | Apache 2.0 and adds a bounded visual theming atom for artifacts. Theme assets moved under `assets/`. |
 | `slack-gif-creator` | Installed, normalized | Apache 2.0 and adds a narrow Slack GIF atom with reusable Python utilities under `scripts/`. |
-| `claude-api` | Installed as slim adaptation | Upstream is useful but volatile and provider-specific. Skill Hub keeps a routing/source-lookup wrapper rather than copying all current API tables. |
-| `skill-creator` | Installed as slim adaptation | Upstream includes host-specific eval scripts and UI metadata. Skill Hub keeps the platform-neutral authoring and evaluation contract. |
-| `doc-coauthoring` | Local rewrite, not copied | The refreshed upstream directory had no per-skill license file. Skill Hub fills the gap with a local-original standard skill. |
-| `frontend-design`, `web-artifacts-builder`, `webapp-testing` | Not imported | Existing local Skill Hub skills already cover these. |
+| `claude-api` | Installed as slim adaptation | Upstream is useful but volatile and provider-specific. Harness Hub keeps a routing/source-lookup wrapper rather than copying all current API tables. |
+| `skill-creator` | Installed as slim adaptation | Upstream includes host-specific eval scripts and UI metadata. Harness Hub keeps the platform-neutral authoring and evaluation contract. |
+| `doc-coauthoring` | Local rewrite, not copied | The refreshed upstream directory had no per-skill license file. Harness Hub fills the gap with a local-original standard skill. |
+| `frontend-design`, `web-artifacts-builder`, `webapp-testing` | Not imported | Existing local Harness Hub skills already cover these. |
 | `brand-guidelines` | Not imported | It encodes Anthropic's brand rather than a reusable brand workflow. |
 | `algorithmic-art`, `canvas-design` | Reference-only | Creative and potentially useful, but niche/heavy and not needed for the first atom import. |
 | `docx`, `pdf`, `pptx`, `xlsx` | Reference-only | High-value gap area, but source-available licensing blocks redistribution by default. |
@@ -85,4 +85,4 @@ License/source note: the upstream README states many examples are Apache 2.0, wh
 - After excluding ECC and adding `anthropics/skills`, `taste-skill`, `stop-slop`, and `ai-website-cloner-template`, the candidate pool has 153 scanned surfaces across workflow, SDD, review, debugging, frontend, website reconstruction, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, creative artifacts, and prose cleanup. Ralph remains source-recorded but is retired from installable distribution.
 - The first Anthropic atom pass promoted seven installable skills or local rewrites into `capabilities/index.json`: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator`. The prose pass promoted `stop-slop`; the taste pass promoted `design-taste-frontend` and also changed `effective-interact` references and validator behavior.
 - It does not need to become a general marketplace. Future source expansion should follow recurring personal project needs first.
-- The sustainable direction is to keep Skill Hub's local layer as personal orchestration, routing, lifecycle, provenance, dedupe, and validation; pull atomic skills from upstream only when license, source quality, trigger contract, and personal usefulness pass.
+- The sustainable direction is to keep Harness Hub's local layer as personal orchestration, routing, lifecycle, provenance, dedupe, and validation; pull atomic skills from upstream only when license, source quality, trigger contract, and personal usefulness pass.

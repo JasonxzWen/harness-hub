@@ -2,7 +2,7 @@
 
 # Harness Hub Instructions
 
-Harness Hub initializes and governs repo-local agent harnesses across multiple projects. Skill Hub remains the compatible skill-distribution subsystem. Most inner skills may come from upstream sources and should keep their upstream style by default; this repo mainly owns routing, source records, harness templates, lifecycle tooling, and a small number of custom workflow skills.
+Harness Hub initializes and governs repo-local agent harnesses across multiple projects. Most inner skills may come from upstream sources and should keep their upstream style by default; this repo mainly owns routing, source records, harness templates, lifecycle tooling, and a small number of custom workflow skills.
 
 Keep every distributed skill in the standard layout under `skills/<skill-name>/SKILL.md` with optional `references/`, `scripts/`, and `assets/` spokes.
 
@@ -50,19 +50,19 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - Runtime bug reports that start from failure evidence: use `diagnosis-workflow`.
 - Code, plan, release, UI, or security review: use `review-workflow`.
 - Delivery, validation closeout, cleanup, or handoff: use `delivery-workflow`.
-- Harness Hub or Skill Hub source, routing, capability, npm lifecycle, harness templates, or cleanup work: use `hub-maintenance-workflow`.
+- Harness Hub source, routing, capability, npm lifecycle, harness templates, or cleanup work: use `hub-maintenance-workflow`.
 - Plan/design pressure testing: use `grill-me`.
 - Runtime bugs/performance regressions: use `diagnose`.
 - Agent/tool harness failures: use `agent-introspection-debugging`.
 - Production feature work or confirmed bug fixes with tests: use `tdd-workflow`.
-- Native goal/story loops are now handled by Codex/Claude Code directly; Skill Hub no longer distributes Ralph PRD or loop skills.
+- Native goal/story loops are now handled by Codex/Claude Code directly; Harness Hub no longer distributes Ralph PRD or loop skills.
 - Throwaway design exploration: use `prototype`; use `frontend-design` for production UI.
 - Deep pre-PR review: use `compound-code-review`; use `security-review` only for focused security checks.
 - Final command gates and build/test validation: use `verification-loop`.
 
 ## Workflow Router Direction
 
-The target architecture is a thin, executable `workflow-router` that classifies each non-trivial request into exactly one workflow state: question, SDD change, diagnosis, review, delivery, or Skill Hub maintenance. Default development should be SDD-first with TDD embedded. Do not start implementation before the user's core details, target spec, and acceptance criteria are aligned.
+The target architecture is a thin, executable `workflow-router` that classifies each non-trivial request into exactly one workflow state: question, SDD change, diagnosis, review, delivery, or Harness Hub maintenance. Default development should be SDD-first with TDD embedded. Do not start implementation before the user's core details, target spec, and acceptance criteria are aligned.
 
 `effective-interact` is high-priority communication infrastructure. Default-consider it for every non-trivial session, especially after material repo or skill changes. Its job is to reduce human interpretation cost through answer-first structure, visual comparison, evidence, validation, and handoff artifacts; it does not replace production UI, slide, or bundled app skills.
 
@@ -85,16 +85,16 @@ Use `docs/skill-quality-guide.md` as the quality bar for authoring, importing, r
 
 Use these verbs for target-repo lifecycle work:
 
-- `skill-hub analyze <target> --json`
-- `skill-hub analyze <target> --agent-readiness --harness --json`
-- `skill-hub init-harness <target> --dry-run --json`
-- `skill-hub init-harness <target> --yes`
-- `skill-hub validate-harness <target> --json`
-- `skill-hub install <target> --target standard --dry-run`
-- `skill-hub install <target> --target standard --yes`
-- `skill-hub status <target> --json`
-- `skill-hub update <target> --dry-run --json`
-- `skill-hub remove <target> --dry-run --json`
+- `harness-hub analyze <target> --json`
+- `harness-hub analyze <target> --agent-readiness --harness --json`
+- `harness-hub init-harness <target> --dry-run --json`
+- `harness-hub init-harness <target> --yes`
+- `harness-hub validate-harness <target> --json`
+- `harness-hub install <target> --target standard --dry-run`
+- `harness-hub install <target> --target standard --yes`
+- `harness-hub status <target> --json`
+- `harness-hub update <target> --dry-run --json`
+- `harness-hub remove <target> --dry-run --json`
 
 `install` remains the standard skill install command and must not create root harness files. `init-harness` owns root harness initialization and must stay dry-run/confirmation guarded.
 

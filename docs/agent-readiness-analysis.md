@@ -2,24 +2,24 @@
 
 Date: 2026-05-12
 
-This document summarizes the implemented `agent-readiness-analysis` extension for Skill Hub. The archived OpenSpec change lives in `openspec/changes/archive/2026-05-12-add-agent-readiness-analysis/`, and the active specification lives in `openspec/specs/agent-readiness-analysis/spec.md`.
+This document summarizes the implemented `agent-readiness-analysis` extension for Harness Hub. The archived OpenSpec change lives in `openspec/changes/archive/2026-05-12-add-agent-readiness-analysis/`, and the active specification lives in `openspec/specs/agent-readiness-analysis/spec.md`.
 
 ## Goal
 
-Skill Hub should help target repositories answer a second question after capability analysis:
+Harness Hub should help target repositories answer a second question after capability analysis:
 
 > Is this repo ready for higher-autonomy agent work?
 
-The first lifecycle release answers what Skill Hub can recommend, install, track, and remove. Agent readiness stays read-only and evaluates whether a target repo has the operational scaffolding agents need: bounded context, explicit outcomes, verification gates, routing boundaries, automation candidates, and reviewable learning capture.
+The first lifecycle release answers what Harness Hub can recommend, install, track, and remove. Agent readiness stays read-only and evaluates whether a target repo has the operational scaffolding agents need: bounded context, explicit outcomes, verification gates, routing boundaries, automation candidates, and reviewable learning capture.
 
 ## CLI Shape
 
 ```powershell
-npx skill-hub analyze D:\path\to\target --agent-readiness --json
-npx skill-hub analyze D:\path\to\target --agent-readiness --html --output D:\tmp\agent-readiness.html
+npx harness-hub analyze D:\path\to\target --agent-readiness --json
+npx harness-hub analyze D:\path\to\target --agent-readiness --html --output D:\tmp\agent-readiness.html
 ```
 
-This option remains side-effect free: no `.skill-hub/` creation, no file writes unless `--output` is explicit, no git changes, no memory writes, and no external automation setup.
+This option remains side-effect free: no `.harness-hub/` creation, no file writes unless `--output` is explicit, no git changes, no memory writes, and no external automation setup.
 
 ## Report Categories
 

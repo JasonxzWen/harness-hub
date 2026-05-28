@@ -1,6 +1,6 @@
 # Personal Workflow Distribution
 
-This repository is now the Harness Hub source: a personal workflow distribution and repo-harness layer for reusing the same agent tools and root harness contracts across multiple projects. Skill Hub remains the compatible skill-distribution subsystem. It is not a public skill marketplace and does not need broad platform governance unless that directly helps personal maintenance.
+This repository is the Harness Hub source: a personal workflow distribution and repo-harness layer for reusing the same agent tools and root harness contracts across multiple projects. It is not a public skill marketplace and does not need broad platform governance unless that directly helps personal maintenance.
 
 ## Rules
 
