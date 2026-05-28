@@ -34,6 +34,7 @@ See [Personal Workflow Distribution](docs/personal-workflow-distribution.md) for
 - Web and artifact workflows: `effective-interact` for complex communication, option approval, status/incident reports, architecture/milestone maps, ignored long-task ledgers, HTML handoffs, and report-only aesthetic preflight; `frontend-design`, `design-taste-frontend`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, and browser testing skills cover adjacent UI/artifact lanes.
 - Platform and extension atoms: `claude-api`, `mcp-builder`, `skill-creator`.
 - Repo harness lifecycle: `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove, and minimal root harness templates.
+- Harness assessment: `validate-harness` reports required-file checks, five-subsystem structural scoring, HTML assessment output, generic verification-command detection, and a lightweight benchmark summary.
 - Skill maintenance: `hub-maintenance-workflow`, source-project records, capability metadata, and `skill-quality-inventory`.
 
 ## CLI
@@ -66,6 +67,8 @@ npx @jasonwen/harness-hub remove D:\path\to\target --dry-run --json
 There are no named skill install variants. `install` installs every standard Harness Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. `install` does not create root harness files; use explicit `init-harness` for `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`. Legacy host-specific directories are not the distribution shape.
 
 `init-harness` is the explicit Codex-only dev bootstrap path. It composes the standard skill install with root harness files such as `AGENTS.md`, `feature_list.json`, `tasks/current-task.md`, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `definition-of-done.md`, and `scripts/harness-validate.mjs`. It records managed ownership in `.harness-hub/lock.json`, blocks dirty git worktrees and existing harness files by default, and leaves low-level `install` skills-only.
+
+`validate-harness` is side-effect-free. Its JSON and HTML reports include five-subsystem assessment scores for instructions, state, verification, scope, and lifecycle, plus a structural benchmark recommendation.
 
 `insight-*` is the explicit source-to-blog path. It treats `post.json` plus source metadata as the editable source of truth, adapts the first public draft through `effective-interact`, writes GitHub Pages output under `site/`, validates UTF-8/source attribution/fact-inference separation/link safety/excerpt size, and keeps local CLI publishing to a dry-run preflight. Actual Pages deployment is owned by `.github/workflows/publish-insights.yml`.
 
