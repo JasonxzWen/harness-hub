@@ -105,3 +105,14 @@ The system SHALL keep project documentation linked to the agent-readiness planni
 #### Scenario: Design docs cite source rationale
 - **WHEN** the user reads the agent-readiness design
 - **THEN** the document includes links to the motivating Code with Claude and Reiner Pope materials
+
+### Requirement: Readiness can inform harness gaps
+The system SHALL allow read-only agent-readiness signals to inform harness recommendations without changing the side-effect-free readiness contract.
+
+#### Scenario: Harness recommendations reference readiness evidence
+- **WHEN** `skill-hub analyze <target> --agent-readiness --harness --json` detects verification, outcome, routing, or learning-capture gaps
+- **THEN** harness findings may cite those gaps as evidence for root harness initialization recommendations
+
+#### Scenario: Readiness remains non-mutating
+- **WHEN** readiness and harness analysis run together
+- **THEN** the system does not create `.skill-hub/`, target files, schedules, webhooks, commits, pushes, or external resources

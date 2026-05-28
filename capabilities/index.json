@@ -2,6 +2,42 @@
   "version": "0.1.0",
   "generatedAt": "2026-05-11",
   "components": {
+    "harness:minimal": {
+      "kind": "harness-template",
+      "path": "harness/minimal",
+      "dest": ".",
+      "version": "0.1.0",
+      "source": "local",
+      "provides": [
+        "repo-harness-initialization",
+        "root-agent-instructions",
+        "progress-and-handoff-files",
+        "harness-validation"
+      ],
+      "routing": "Use only through explicit init-harness and validate-harness commands; default skill install must not write root harness files.",
+      "detects": [
+        {
+          "path": "AGENTS.md"
+        },
+        {
+          "path": "feature_list.json"
+        },
+        {
+          "path": "progress.md"
+        },
+        {
+          "path": "session-handoff.md"
+        },
+        {
+          "path": "scripts/harness-validate.mjs"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "medium",
+      "recommendation": "Initialize a minimal repo-local harness only when the user explicitly requests root harness files."
+    },
     "skill:workflow-router": {
       "kind": "skill",
       "path": "skills/workflow-router",

@@ -1,7 +1,7 @@
 {
   "name": "@jasonwen/skill-hub",
   "version": "0.1.9",
-  "description": "Personal agent workflow distribution toolkit with routing overlay and managed skill installation.",
+  "description": "Personal repo harness toolkit with compatible skill distribution and lock-backed lifecycle commands.",
   "type": "module",
   "main": "dist/skillHub.js",
   "repository": {
@@ -13,7 +13,8 @@
     "url": "https://github.com/JasonxzWen/skill-hub/issues"
   },
   "bin": {
-    "skill-hub": "bin/skill-hub.mjs"
+    "skill-hub": "bin/skill-hub.mjs",
+    "harness-hub": "bin/harness-hub.mjs"
   },
   "publishConfig": {
     "access": "public",
@@ -26,6 +27,7 @@
     "bin/",
     "capabilities/",
     "config/",
+    "harness/",
     "dist/",
     "docs/",
     "openspec/config.yaml",
@@ -51,11 +53,13 @@
     "validate:artifact-policy": "bun ./scripts/validate-artifact-policy.ts",
     "validate:skills": "node ./scripts/run-validate-skills.mjs -SkipExternal",
     "validate": "bun run typecheck && bun test ./tests && bun run validate:artifact-policy && bun run validate:skills",
-    "validate:release": "bun run validate && bun run build && node bin/skill-hub.mjs --help && npm pack --dry-run"
+    "validate:release": "bun run validate && bun run build && node bin/skill-hub.mjs --help && node bin/harness-hub.mjs --help && npm pack --dry-run"
   },
   "keywords": [
+    "agent-harness",
     "agent-skills",
     "claude-plugin",
+    "harness-hub",
     "ai-agents",
     "skills"
   ],

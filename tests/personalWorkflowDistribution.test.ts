@@ -10,17 +10,17 @@ const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
 const sourceSkillInventory = fs.readFileSync('docs/source-skill-inventory.md', 'utf8');
 
 test('personal distribution contract is the project positioning source', () => {
-  expect(personalDistribution).toContain('personal workflow distribution layer');
+  expect(personalDistribution).toContain('personal workflow distribution and repo-harness layer');
   expect(personalDistribution).toContain('not a public skill marketplace');
   expect(personalDistribution).toContain('Preserve upstream skills by default');
   expect(personalDistribution).toContain('Put personal behavior in the overlay');
   expect(personalDistribution).toContain('Keep distribution simple');
   expect(personalDistribution).toContain('Acceptance Criteria');
 
-  expect(readme).toContain('personal workflow distribution repository');
+  expect(readme).toContain('personal repo harness toolkit');
   expect(readme).toContain('keep their upstream style');
   expect(readme).toContain('docs/personal-workflow-distribution.md');
-  expect(agents).toContain('personal agent workflow toolkit');
+  expect(agents).toContain('repo-local agent harnesses');
   expect(agents).toContain('keep their upstream style by default');
 });
 
@@ -40,7 +40,10 @@ test('package metadata reflects personal distribution scope', () => {
     components: Record<string, { recommendation?: string }>;
   };
 
-  expect(packageJson.description).toContain('Personal agent workflow distribution toolkit');
+  expect(packageJson.description).toContain('Personal repo harness toolkit');
+  expect(capabilityIndex.components['harness:minimal'].recommendation).toContain(
+    'minimal repo-local harness',
+  );
   expect(capabilityIndex.components['skill:workflow-router'].recommendation).toContain(
     'exactly one workflow owner',
   );

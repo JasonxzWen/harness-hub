@@ -45,6 +45,24 @@ export interface AgentReadinessReport {
   findings: AgentReadinessFinding[];
 }
 
+export type HarnessFindingState = 'present' | 'missing' | 'managed' | 'unmanaged' | 'candidate';
+export type HarnessPlanAction = 'create' | 'skip' | 'overwrite';
+
+export interface HarnessFinding {
+  id: string;
+  state: HarnessFindingState;
+  severity: 'info' | 'warning';
+  reason: string;
+  recommendation: string;
+  evidence: AgentReadinessEvidence[];
+}
+
+export interface HarnessReport {
+  componentId: string;
+  requiredFiles: string[];
+  findings: HarnessFinding[];
+}
+
 export interface PathDetectRule {
   path: string;
   agent?: AgentName;
@@ -53,6 +71,7 @@ export interface PathDetectRule {
 export interface CapabilityComponent {
   kind: 'skill' | 'config' | 'script' | 'rule' | 'hook' | 'mcp' | string;
   path: string;
+  dest?: string;
   version: string;
   source: string;
   provides: string[];
@@ -106,6 +125,7 @@ export interface AnalysisResult {
   signals: RepoSignals;
   findings: CapabilityFinding[];
   agentReadiness?: AgentReadinessReport;
+  harness?: HarnessReport;
 }
 
 export interface ManagedFileRecord {
@@ -245,6 +265,7 @@ interface AnalyzeTargetOptions {
   index?: CapabilityIndex;
   agents?: AgentName[];
   agentReadiness?: boolean;
+  harness?: boolean;
 }
 
 export interface InstallItem {
@@ -283,6 +304,52 @@ export interface InstallResult {
   report: string;
 }
 
+export interface HarnessPlanItem {
+  componentId: string;
+  componentVersion: string;
+  kind: string;
+  source: string;
+  sourceFile: string;
+  dest: string;
+  relativePath: string;
+  exists: boolean;
+  managed: boolean;
+  action: HarnessPlanAction;
+  reason: string;
+}
+
+export interface HarnessInitPlan {
+  generatedAt: string;
+  hubVersion: string;
+  targetDir: string;
+  componentId: string;
+  componentVersion: string;
+  componentKind: string;
+  source: string;
+  force: boolean;
+  items: HarnessPlanItem[];
+}
+
+export interface HarnessInitResult {
+  exitCode: number;
+  targetDir: string;
+  installed: HarnessPlanItem[];
+  skipped: HarnessPlanItem[];
+  lock: LockReadResult | null;
+  reason: string;
+}
+
+export interface HarnessValidationResult {
+  exitCode: number;
+  targetDir: string;
+  componentId: string;
+  requiredFiles: string[];
+  present: string[];
+  missing: string[];
+  managed: string[];
+  reason: string;
+}
+
 export interface SkillHubStatus {
   targetDir: string;
   lock: LockReadResult | null;
@@ -307,6 +374,7 @@ interface CliOptions {
   output: string | null;
   force: boolean;
   agentReadiness: boolean;
+  harness: boolean;
   componentIds: string[];
 }
 
@@ -338,6 +406,10 @@ interface MigrateLockOptions extends StatusOptions {
   yes?: boolean;
 }
 
+interface HarnessPlanOptions extends StatusOptions {
+  force?: boolean;
+}
+
 class CliError extends Error {
   constructor(
     message: string,
@@ -360,6 +432,15 @@ const MANAGED_COMPONENT_RENAMES: Readonly<Record<string, ManagedComponentRename>
 
 const VALID_RISKS = new Set<LifecycleRisk>(['low', 'medium', 'high']);
 const GLOB_CHARS = /[*?[\]{}]/;
+const MINIMAL_HARNESS_COMPONENT_ID = 'harness:minimal';
+const HARNESS_TEMPLATE_KINDS = new Set(['harness-template', 'harness-pack']);
+const MINIMAL_HARNESS_REQUIRED_FILES = [
+  'AGENTS.md',
+  'feature_list.json',
+  'progress.md',
+  'session-handoff.md',
+  'scripts/harness-validate.mjs',
+];
 
 export function readCapabilityIndex(hubRoot = HUB_ROOT): CapabilityIndex {
   const indexPath = path.join(hubRoot, 'capabilities', 'index.json');
@@ -532,6 +613,10 @@ export function analyzeTarget(options: AnalyzeTargetOptions = {}): AnalysisResul
     result.agentReadiness = analyzeAgentReadiness(targetDir);
   }
 
+  if (options.harness) {
+    result.harness = analyzeHarness(targetDir, { hubRoot, index, readiness: result.agentReadiness });
+  }
+
   return result;
 }
 
@@ -589,6 +674,9 @@ function installAgentsForComponent(component: CapabilityComponent, agents: Agent
 }
 
 function resolveComponentDest(component: CapabilityComponent, agent: AgentName): string {
+  if (component.dest) {
+    return normalizePortablePath(component.dest);
+  }
   const skillName = path.basename(component.path);
   return toPortablePath(path.join(AGENT_SKILL_DIRS[agent], skillName));
 }
@@ -1037,6 +1125,357 @@ function sortReadinessFindings(left: AgentReadinessFinding, right: AgentReadines
   );
 }
 
+export function analyzeHarness(
+  targetDirInput: string,
+  options: { hubRoot?: string; index?: CapabilityIndex; readiness?: AgentReadinessReport } = {},
+): HarnessReport {
+  const targetDir = path.resolve(targetDirInput);
+  const hubRoot = options.hubRoot || HUB_ROOT;
+  const index = options.index || readCapabilityIndex(hubRoot);
+  const { id, component } = getMinimalHarnessComponent(index);
+  const requiredFiles = listHarnessTemplateFiles(hubRoot, component).map((file) => file.relativePath);
+  const lock = readLock(targetDir);
+  const managedFiles = getManagedFilePaths(lock, id);
+  const findings = requiredFiles.map((relativePath) => {
+    const exists = safeRelativePathExists(targetDir, relativePath);
+    const managed = managedFiles.has(relativePath);
+    return makeHarnessFinding({
+      id: `harness_file.${findingIdForPath(relativePath)}`,
+      state: exists ? (managed ? 'managed' : 'present') : 'missing',
+      severity: exists ? 'info' : 'warning',
+      reason: exists
+        ? `${relativePath} is present${managed ? ' and lock-managed' : ''}.`
+        : `${relativePath} is missing from the target harness.`,
+      recommendation: exists
+        ? 'Keep the file current with project workflow changes.'
+        : 'Run init-harness after reviewing the dry-run plan.',
+      evidence: exists ? [{ kind: 'path', value: relativePath }] : [],
+    });
+  });
+
+  const warningEvidence = (options.readiness?.findings || [])
+    .filter((finding) => finding.severity === 'warning')
+    .map((finding) => ({ kind: 'signal' as const, value: finding.id, detail: finding.reason }));
+  if (warningEvidence.length > 0) {
+    findings.push(makeHarnessFinding({
+      id: 'harness.readiness_warnings',
+      state: 'candidate',
+      severity: 'warning',
+      reason: 'Agent-readiness warnings can inform the root harness initialization plan.',
+      recommendation: 'Review readiness warnings before confirming init-harness.',
+      evidence: warningEvidence,
+    }));
+  }
+
+  return {
+    componentId: id,
+    requiredFiles,
+    findings: findings.sort(sortHarnessFindings),
+  };
+}
+
+export function planHarnessInit(options: HarnessPlanOptions = {}): HarnessInitPlan {
+  const hubRoot = options.hubRoot || HUB_ROOT;
+  const targetDir = path.resolve(options.targetDir || process.cwd());
+  const index = options.index || readCapabilityIndex(hubRoot);
+  const { id, component } = getMinimalHarnessComponent(index);
+  const source = componentSourcePath(hubRoot, component);
+  if (!fs.existsSync(source)) {
+    throw new Error(`Harness source does not exist: ${component.path}`);
+  }
+  const managedFiles = getManagedFilePaths(readLock(targetDir), id);
+  const force = options.force ?? false;
+  const items = listHarnessTemplateFiles(hubRoot, component).map((file) => {
+    const dest = assertSafeRelativePath(targetDir, file.relativePath);
+    const exists = fs.existsSync(dest);
+    const managed = managedFiles.has(file.relativePath);
+    const action: HarnessPlanAction = exists ? (force ? 'overwrite' : 'skip') : 'create';
+    return {
+      componentId: id,
+      componentVersion: component.version,
+      kind: component.kind,
+      source,
+      sourceFile: file.sourceFile,
+      dest,
+      relativePath: file.relativePath,
+      exists,
+      managed,
+      action,
+      reason: harnessPlanReason(action, exists, managed),
+    };
+  });
+
+  return {
+    generatedAt: new Date().toISOString(),
+    hubVersion: index.version,
+    targetDir,
+    componentId: id,
+    componentVersion: component.version,
+    componentKind: component.kind,
+    source,
+    force,
+    items,
+  };
+}
+
+export function applyHarnessInit(plan: HarnessInitPlan): HarnessInitResult {
+  const installed = plan.items.filter((item) => item.action === 'create' || item.action === 'overwrite');
+  const skipped = plan.items.filter((item) => item.action === 'skip');
+
+  assertCanWriteHarnessLock(plan, installed);
+
+  for (const item of installed) {
+    fs.mkdirSync(path.dirname(item.dest), { recursive: true });
+    fs.copyFileSync(item.sourceFile, item.dest);
+  }
+
+  const lock = installed.length > 0 ? writeHarnessLock(plan, installed) : readLock(plan.targetDir);
+  return {
+    exitCode: 0,
+    targetDir: plan.targetDir,
+    installed,
+    skipped,
+    lock,
+    reason: `${installed.length} harness files installed, ${skipped.length} skipped.`,
+  };
+}
+
+function assertCanWriteHarnessLock(plan: HarnessInitPlan, installed: HarnessPlanItem[]): void {
+  if (installed.length === 0) {
+    return;
+  }
+  const currentLock = readLock(plan.targetDir);
+  if (currentLock && currentLock.data.schemaVersion !== 2) {
+    throw new Error('Existing schema version 1 lock cannot record harness files; run migrate-lock first.');
+  }
+}
+
+export function validateHarness(targetDirInput: string, options: StatusOptions = {}): HarnessValidationResult {
+  const targetDir = path.resolve(targetDirInput);
+  const index = options.index || readCapabilityIndex(options.hubRoot || HUB_ROOT);
+  const { id, component } = getMinimalHarnessComponent(index);
+  const requiredFiles = listHarnessTemplateFiles(options.hubRoot || HUB_ROOT, component).map((file) => file.relativePath);
+  const managedFiles = getManagedFilePaths(readLock(targetDir), id);
+  const present = requiredFiles.filter((relativePath) => safeRelativePathExists(targetDir, relativePath)).sort();
+  const missing = requiredFiles.filter((relativePath) => !present.includes(relativePath)).sort();
+  const managed = present.filter((relativePath) => managedFiles.has(relativePath)).sort();
+
+  return {
+    exitCode: missing.length > 0 ? 3 : 0,
+    targetDir,
+    componentId: id,
+    requiredFiles,
+    present,
+    missing,
+    managed,
+    reason: missing.length > 0
+      ? `${missing.length} required harness files are missing.`
+      : 'Minimal harness files are present.',
+  };
+}
+
+function getMinimalHarnessComponent(index: CapabilityIndex): { id: string; component: CapabilityComponent } {
+  const component = index.components[MINIMAL_HARNESS_COMPONENT_ID];
+  if (!component) {
+    throw new Error(`${MINIMAL_HARNESS_COMPONENT_ID} is not present in the capability index.`);
+  }
+  if (!HARNESS_TEMPLATE_KINDS.has(component.kind)) {
+    throw new Error(`${MINIMAL_HARNESS_COMPONENT_ID} must be a harness template component.`);
+  }
+  return { id: MINIMAL_HARNESS_COMPONENT_ID, component };
+}
+
+function listHarnessTemplateFiles(
+  hubRoot: string,
+  component: CapabilityComponent,
+): Array<{ sourceFile: string; relativePath: string }> {
+  const source = componentSourcePath(hubRoot, component);
+  if (!fs.existsSync(source)) {
+    throw new Error(`Harness source does not exist: ${component.path}`);
+  }
+  return listFilesRecursive(source)
+    .map((sourceFile) => ({
+      sourceFile,
+      relativePath: toPortablePath(path.relative(source, sourceFile)),
+    }))
+    .filter((file) => !file.relativePath.startsWith('.'))
+    .sort((left, right) => left.relativePath.localeCompare(right.relativePath));
+}
+
+function writeHarnessLock(plan: HarnessInitPlan, installed: HarnessPlanItem[]): LockReadResult {
+  const currentLock = readLock(plan.targetDir);
+  assertCanWriteHarnessLock(plan, installed);
+
+  const installedAt = new Date().toISOString();
+  const existingComponents = currentLock?.data.schemaVersion === 2
+    ? currentLock.data.components.filter((component) => component.id !== plan.componentId)
+    : [];
+  const harnessRecord: ManagedComponentRecord = {
+    id: plan.componentId,
+    version: plan.componentVersion,
+    agent: 'standard',
+    kind: plan.componentKind,
+    source: toPortablePath(path.relative(HUB_ROOT, plan.source)),
+    dest: '.',
+    files: installed.map((item) => digestManagedFile(plan.targetDir, item.relativePath)).sort((left, right) => (
+      left.path.localeCompare(right.path)
+    )),
+    installedAt,
+    status: 'installed',
+  };
+  const lock: SkillHubLockV2 = {
+    schemaVersion: 2,
+    generatedAt: installedAt,
+    hubVersion: plan.hubVersion,
+    agents: currentLock?.data.agents?.length ? currentLock.data.agents : ['standard'],
+    components: [...existingComponents, harnessRecord]
+      .sort((left, right) => left.id.localeCompare(right.id) || left.dest.localeCompare(right.dest)),
+  };
+
+  return writeLockData(plan.targetDir, lock);
+}
+
+function getManagedFilePaths(lock: LockReadResult | null, componentId?: string): Set<string> {
+  const paths = new Set<string>();
+  if (!lock || lock.data.schemaVersion !== 2) {
+    return paths;
+  }
+  for (const component of lock.data.components) {
+    if (componentId && component.id !== componentId) {
+      continue;
+    }
+    for (const file of component.files) {
+      paths.add(file.path);
+    }
+  }
+  return paths;
+}
+
+function digestManagedFile(targetDir: string, relativePath: string): ManagedFileRecord {
+  const filePath = assertSafeRelativePath(targetDir, relativePath);
+  const bytes = fs.readFileSync(filePath);
+  return {
+    path: normalizePortablePath(relativePath),
+    sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+    size: bytes.byteLength,
+  };
+}
+
+function collectManagedFilesFromSource(targetDir: string, dest: string, source: string): ManagedFileRecord[] {
+  const sourceStat = fs.statSync(source);
+  const sourceRoot = sourceStat.isDirectory() ? source : path.dirname(source);
+  const destRoot = relativeDestRoot(targetDir, dest);
+  return listFilesRecursive(source)
+    .map((sourceFile) => {
+      const sourceRelative = toPortablePath(path.relative(sourceRoot, sourceFile));
+      const targetRelative = destRoot === '.'
+        ? sourceRelative
+        : toPortablePath(path.posix.join(destRoot, sourceRelative));
+      return digestManagedFile(targetDir, targetRelative);
+    })
+    .sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function isHarnessComponentKind(kind: string): boolean {
+  return HARNESS_TEMPLATE_KINDS.has(kind);
+}
+
+function relativeDestRoot(targetDir: string, dest: string): string {
+  return normalizePortablePath(path.isAbsolute(dest) ? path.relative(targetDir, dest) || '.' : dest);
+}
+
+function joinDestRelativePath(destRoot: string, sourceRelative: string): string {
+  return destRoot === '.'
+    ? sourceRelative
+    : toPortablePath(path.posix.join(destRoot, sourceRelative));
+}
+
+function managedFileSourceRelativePath(targetDir: string, dest: string, managedPath: string): string {
+  const destRoot = relativeDestRoot(targetDir, dest);
+  const normalized = normalizePortablePath(managedPath);
+  if (destRoot === '.') {
+    return normalized;
+  }
+  if (!normalized.startsWith(`${destRoot}/`)) {
+    throw new Error(`Managed file '${managedPath}' is outside destination '${destRoot}'.`);
+  }
+  return normalized.slice(destRoot.length + 1);
+}
+
+function planManagedFileCopies(
+  targetDir: string,
+  currentDest: string,
+  nextDest: string,
+  source: string,
+  managedFiles: ManagedFileRecord[],
+): Array<{ sourceFile: string; targetRelative: string; targetFile: string }> {
+  const nextDestRoot = relativeDestRoot(targetDir, nextDest);
+  return managedFiles.map((file) => {
+    const sourceRelative = managedFileSourceRelativePath(targetDir, currentDest, file.path);
+    const sourceFile = path.join(source, ...sourceRelative.split('/'));
+    if (!fs.existsSync(sourceFile)) {
+      throw new Error(`Component source file does not exist: ${sourceRelative}`);
+    }
+    const targetRelative = joinDestRelativePath(nextDestRoot, sourceRelative);
+    return {
+      sourceFile,
+      targetRelative,
+      targetFile: assertSafeRelativePath(targetDir, targetRelative),
+    };
+  });
+}
+
+function copyManagedFilesFromSource(
+  targetDir: string,
+  copies: Array<{ sourceFile: string; targetRelative: string; targetFile: string }>,
+): ManagedFileRecord[] {
+  for (const copy of copies) {
+    fs.mkdirSync(path.dirname(copy.targetFile), { recursive: true });
+    fs.copyFileSync(copy.sourceFile, copy.targetFile);
+  }
+  return copies
+    .map((copy) => digestManagedFile(targetDir, copy.targetRelative))
+    .sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function copyComponentSourceAndCollectManagedFiles(
+  targetDir: string,
+  dest: string,
+  source: string,
+): ManagedFileRecord[] {
+  copyRecursive(source, dest);
+  return collectManagedFilesFromSource(targetDir, dest, source);
+}
+
+function harnessPlanReason(action: HarnessPlanAction, exists: boolean, managed: boolean): string {
+  if (action === 'create') {
+    return 'Harness file is missing and will be created.';
+  }
+  if (action === 'overwrite') {
+    return managed
+      ? 'Existing lock-managed harness file will be overwritten because --force was provided.'
+      : 'Existing unmanaged harness file will be overwritten because --force was provided.';
+  }
+  return exists
+    ? 'Existing target file is skipped by default.'
+    : 'Harness file is skipped.';
+}
+
+function makeHarnessFinding(input: HarnessFinding): HarnessFinding {
+  return {
+    ...input,
+    evidence: sortEvidence(input.evidence),
+  };
+}
+
+function sortHarnessFindings(left: HarnessFinding, right: HarnessFinding): number {
+  return left.id.localeCompare(right.id) || left.state.localeCompare(right.state);
+}
+
+function findingIdForPath(relativePath: string): string {
+  return normalizePortablePath(relativePath).replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').toLowerCase();
+}
+
 export function planInstall(options: PlanInstallOptions = {}): InstallPlan {
   const hubRoot = options.hubRoot || HUB_ROOT;
   const targetDir = path.resolve(options.targetDir || process.cwd());
@@ -1211,22 +1650,29 @@ export function writeLock(
   fs.mkdirSync(skillHubDir, { recursive: true });
   const lockPath = path.join(skillHubDir, 'lock.json');
   const installedAt = new Date().toISOString();
-  const lock: SkillHubLock = {
+  const incomingIds = new Set([...result.installed, ...result.skipped].map((item) => item.componentId));
+  const currentLock = readLock(plan.targetDir);
+  const preservedComponents = currentLock?.data.schemaVersion === 2
+    ? currentLock.data.components.filter((component) => component.kind !== 'skill' && !incomingIds.has(component.id))
+    : [];
+  const installedComponents: ManagedComponentRecord[] = [...result.installed, ...result.skipped].map((item) => ({
+    id: item.componentId,
+    version: item.componentVersion,
+    agent: item.agent,
+    kind: item.kind,
+    source: toPortablePath(path.relative(HUB_ROOT, item.source)),
+    dest: path.relative(plan.targetDir, item.dest).replaceAll(path.sep, '/'),
+    files: 'reason' in item ? [] : collectManagedFilesFromSource(plan.targetDir, item.dest, item.source),
+    installedAt,
+    status: 'reason' in item ? 'skipped' : 'installed',
+  }));
+  const lock: SkillHubLockV2 = {
     schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     hubVersion: plan.hubVersion,
     agents: plan.agents,
-    components: [...result.installed, ...result.skipped].map((item) => ({
-      id: item.componentId,
-      version: item.componentVersion,
-      agent: item.agent,
-      kind: item.kind,
-      source: toPortablePath(path.relative(HUB_ROOT, item.source)),
-      dest: path.relative(plan.targetDir, item.dest).replaceAll(path.sep, '/'),
-      files: 'reason' in item ? [] : collectManagedFiles(plan.targetDir, item.dest),
-      installedAt,
-      status: 'reason' in item ? 'skipped' : 'installed',
-    })),
+    components: [...preservedComponents, ...installedComponents]
+      .sort((left, right) => left.id.localeCompare(right.id) || left.dest.localeCompare(right.dest)),
   };
 
   fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
@@ -1792,6 +2238,12 @@ export function updateManaged(
     }
 
     const oldFiles = [...component.files];
+    const source = componentSourcePath(hubRoot, latest);
+    const nextDest = latestRef.rename ? resolveComponentDest(latest, component.agent) : component.dest;
+    const updatesOwnedFilesOnly = isHarnessComponentKind(component.kind) || isHarnessComponentKind(latest.kind);
+    const ownedFileCopies = updatesOwnedFilesOnly
+      ? planManagedFileCopies(targetDir, component.dest, nextDest, source, oldFiles)
+      : [];
     for (const file of oldFiles) {
       const filePath = assertSafeRelativePath(targetDir, file.path);
       if (fs.existsSync(filePath)) {
@@ -1800,14 +2252,13 @@ export function updateManaged(
       }
     }
 
-    const source = componentSourcePath(hubRoot, latest);
-    const nextDest = latestRef.rename ? resolveComponentDest(latest, component.agent) : component.dest;
     const dest = assertSafeRelativePath(targetDir, nextDest);
-    if (latestRef.rename && fs.existsSync(dest)) {
+    if (!updatesOwnedFilesOnly && latestRef.rename && fs.existsSync(dest)) {
       fs.rmSync(dest, { recursive: true, force: true });
     }
-    copyRecursive(source, dest);
-    const files = collectManagedFiles(targetDir, dest);
+    const files = updatesOwnedFilesOnly
+      ? copyManagedFilesFromSource(targetDir, ownedFileCopies)
+      : copyComponentSourceAndCollectManagedFiles(targetDir, dest, source);
     const nextComponentId = latestRef.id;
     const previousVersion = component.version;
     const isForced = forcedIds.has(component.id);
@@ -2167,6 +2618,7 @@ function parseArgs(argv: string[]): CliOptions {
     output: null,
     force: false,
     agentReadiness: false,
+    harness: false,
     componentIds: [],
   };
   const positional: string[] = [];
@@ -2193,6 +2645,8 @@ function parseArgs(argv: string[]): CliOptions {
       options.componentIds.push(readOptionValue(argv, ++index, arg));
     } else if (arg === '--agent-readiness') {
       options.agentReadiness = true;
+    } else if (arg === '--harness') {
+      options.harness = true;
     } else if (arg.startsWith('-')) {
       throw new CliError(`Unsupported option '${arg}'`, 2);
     } else {
@@ -2244,6 +2698,9 @@ async function runCliInner(argv: string[]): Promise<number> {
   if (options.agentReadiness && options.command !== 'analyze') {
     throw new CliError(`Unsupported option '--agent-readiness' for command '${options.command}'`, 2);
   }
+  if (options.harness && options.command !== 'analyze') {
+    throw new CliError(`Unsupported option '--harness' for command '${options.command}'`, 2);
+  }
 
   if (options.command === 'components') {
     for (const component of listComponents()) {
@@ -2257,9 +2714,33 @@ async function runCliInner(argv: string[]): Promise<number> {
       targetDir: options.targetDir || undefined,
       agents: options.agents,
       agentReadiness: options.agentReadiness,
+      harness: options.harness,
     });
-    emitReport(renderLifecycleReport('Skill Hub Analysis Report', analysis, options), options);
+    emitReport(renderLifecycleReport('Harness Hub Analysis Report', analysis, options), options);
     return 0;
+  }
+
+  if (options.command === 'init-harness') {
+    if (!options.dryRun && !options.yes) {
+      throw new CliError('Use --yes to confirm non-interactive harness initialization or --dry-run to preview.', 2);
+    }
+    const plan = planHarnessInit({
+      targetDir: options.targetDir || undefined,
+      force: options.force,
+    });
+    if (options.dryRun) {
+      emitReport(renderLifecycleReport('Harness Hub Init Plan', plan, options), options);
+      return 0;
+    }
+    const result = applyHarnessInit(plan);
+    emitReport(renderLifecycleReport('Harness Hub Init Report', result, options), options);
+    return result.exitCode;
+  }
+
+  if (options.command === 'validate-harness') {
+    const result = validateHarness(options.targetDir || process.cwd());
+    emitReport(renderLifecycleReport('Harness Hub Validation Report', result, options), options);
+    return result.exitCode;
   }
 
   if (options.command === 'init' || options.command === 'install') {
@@ -2342,7 +2823,7 @@ async function runCliInner(argv: string[]): Promise<number> {
 
 function renderLifecycleReport(
   title: string,
-  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult,
   options: CliOptions,
 ): string {
   if (options.json) {
@@ -2363,9 +2844,20 @@ function renderLifecycleReport(
 }
 
 function rowsForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult,
 ): HtmlRow[] {
   if ('findings' in data) {
+    if (data.harness) {
+      return data.harness.findings.map((finding) => ({
+        id: finding.id,
+        agent: data.harness?.componentId,
+        dest: finding.evidence.map((item) => item.value).join(', '),
+        state: finding.state,
+        version: finding.severity,
+        latestVersion: finding.recommendation,
+      }));
+    }
+
     if (data.agentReadiness) {
       return data.agentReadiness.findings.map((finding) => ({
         id: finding.id,
@@ -2386,6 +2878,16 @@ function rowsForLifecycleData(
     }));
   }
 
+  if ('componentKind' in data) {
+    return data.items.map((item) => ({
+      id: item.relativePath,
+      agent: data.componentId,
+      dest: item.relativePath,
+      state: item.action,
+      version: item.componentVersion,
+    }));
+  }
+
   if ('items' in data) {
     return data.items.map((item) => ({
       id: item.componentId,
@@ -2394,6 +2896,25 @@ function rowsForLifecycleData(
       state: item.exists ? 'skipped' : 'install',
       version: item.componentVersion,
     }));
+  }
+
+  if ('installed' in data && 'targetDir' in data) {
+    return [
+      ...data.installed.map((item) => ({
+        id: item.relativePath,
+        agent: item.componentId,
+        dest: item.relativePath,
+        state: item.action === 'overwrite' ? 'overwritten' : 'installed',
+        version: item.componentVersion,
+      })),
+      ...data.skipped.map((item) => ({
+        id: item.relativePath,
+        agent: item.componentId,
+        dest: item.relativePath,
+        state: 'skipped',
+        version: item.componentVersion,
+      })),
+    ];
   }
 
   if ('installed' in data) {
@@ -2412,6 +2933,13 @@ function rowsForLifecycleData(
         state: 'skipped',
         version: item.componentVersion,
       })),
+    ];
+  }
+
+  if ('requiredFiles' in data) {
+    return [
+      ...data.present.map((file) => ({ id: file, state: data.managed.includes(file) ? 'managed' : 'present' })),
+      ...data.missing.map((file) => ({ id: file, state: 'missing' })),
     ];
   }
 
@@ -2470,9 +2998,15 @@ function rowsForLifecycleData(
 }
 
 function summaryForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult,
 ): string {
   if ('findings' in data) {
+    if (data.harness) {
+      const missing = data.harness.findings.filter((finding) => finding.state === 'missing').length;
+      const managed = data.harness.findings.filter((finding) => finding.state === 'managed').length;
+      return `${missing} harness files missing, ${managed} lock-managed.`;
+    }
+
     if (data.agentReadiness) {
       return summaryForReadinessAnalysis(data);
     }
@@ -2483,6 +3017,13 @@ function summaryForLifecycleData(
     return `${recommended} recommended, ${detected} detected, ${conflicts} conflicts.`;
   }
 
+  if ('componentKind' in data) {
+    const create = data.items.filter((item) => item.action === 'create').length;
+    const overwrite = data.items.filter((item) => item.action === 'overwrite').length;
+    const skipped = data.items.filter((item) => item.action === 'skip').length;
+    return `${create} harness files planned, ${overwrite} overwrites, ${skipped} skipped.`;
+  }
+
   if ('items' in data) {
     const planned = data.items.filter((item) => !item.exists).length;
     const skipped = data.items.length - planned;
@@ -2491,6 +3032,10 @@ function summaryForLifecycleData(
 
   if ('installed' in data) {
     return `${data.installed.length} installed, ${data.skipped.length} skipped.`;
+  }
+
+  if ('requiredFiles' in data) {
+    return `${data.present.length} present, ${data.missing.length} missing. ${data.reason}`;
   }
 
   if ('rows' in data) {
@@ -2557,10 +3102,26 @@ function printPlan(plan: InstallPlan): void {
 }
 
 function printHelp() {
-  console.log(`skill-hub
+  console.log(`Harness Hub
+
+Compatible commands: harness-hub, skill-hub
 
 Usage:
-  skill-hub analyze [target] [--target standard] [--agent-readiness] [--json|--html] [--output file]
+  harness-hub analyze [target] [--target standard] [--agent-readiness] [--harness] [--json|--html] [--output file]
+  harness-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
+  harness-hub validate-harness [target] [--json|--html] [--output file]
+  harness-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
+  harness-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
+  harness-hub status [target] [--json|--html] [--output file]
+  harness-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
+  harness-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
+  harness-hub remove [target] [--dry-run|--yes] [--force] [--json|--html]
+  harness-hub components
+
+Skill Hub compatibility examples:
+  skill-hub analyze [target] [--target standard] [--agent-readiness] [--harness] [--json|--html] [--output file]
+  skill-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
+  skill-hub validate-harness [target] [--json|--html] [--output file]
   skill-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   skill-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   skill-hub status [target] [--json|--html] [--output file]
@@ -2571,5 +3132,6 @@ Usage:
 
 Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
 Install selects every standard skill component and overwrites same-name skill directories by default.
+Root harness files are written only by init-harness.
 `);
 }

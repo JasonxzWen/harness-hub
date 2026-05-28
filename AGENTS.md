@@ -1,8 +1,8 @@
 ﻿always respond in 中文
 
-# Skill Hub Instructions
+# Harness Hub Instructions
 
-Skill Hub distributes a personal agent workflow toolkit across multiple projects. Most inner skills may come from upstream sources and should keep their upstream style by default; this repo mainly owns routing, source records, lifecycle tooling, and a small number of custom workflow skills.
+Harness Hub initializes and governs repo-local agent harnesses across multiple projects. Skill Hub remains the compatible skill-distribution subsystem. Most inner skills may come from upstream sources and should keep their upstream style by default; this repo mainly owns routing, source records, harness templates, lifecycle tooling, and a small number of custom workflow skills.
 
 Keep every distributed skill in the standard layout under `skills/<skill-name>/SKILL.md` with optional `references/`, `scripts/`, and `assets/` spokes.
 
@@ -37,6 +37,7 @@ Keep every distributed skill in the standard layout under `skills/<skill-name>/S
 - Put host packaging outside skills. Claude plugin support belongs in `.claude-plugin/`; the skill content remains standard.
 - If an upstream skill assumes a specific runner, prefer routing notes, source records, or explicit-only status before rewriting its body.
 - If a capability cannot be used safely without rewriting away its core value, keep it as an evaluated source or explicit-only reference.
+- Keep repo harness templates under `harness/<template-name>/`; root harness files in target projects are installed only through explicit harness lifecycle commands, never through default skill installation.
 
 ## Skill Routing
 
@@ -48,7 +49,7 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - Runtime bug reports that start from failure evidence: use `diagnosis-workflow`.
 - Code, plan, release, UI, or security review: use `review-workflow`.
 - Delivery, validation closeout, cleanup, or handoff: use `delivery-workflow`.
-- Skill Hub source, routing, capability, npm lifecycle, or cleanup work: use `hub-maintenance-workflow`.
+- Harness Hub or Skill Hub source, routing, capability, npm lifecycle, harness templates, or cleanup work: use `hub-maintenance-workflow`.
 - Plan/design pressure testing: use `grill-me`.
 - Runtime bugs/performance regressions: use `diagnose`.
 - Agent/tool harness failures: use `agent-introspection-debugging`.
@@ -84,11 +85,17 @@ Use `docs/skill-quality-guide.md` as the quality bar for authoring, importing, r
 Use these verbs for target-repo lifecycle work:
 
 - `skill-hub analyze <target> --json`
+- `skill-hub analyze <target> --agent-readiness --harness --json`
+- `skill-hub init-harness <target> --dry-run --json`
+- `skill-hub init-harness <target> --yes`
+- `skill-hub validate-harness <target> --json`
 - `skill-hub install <target> --target standard --dry-run`
 - `skill-hub install <target> --target standard --yes`
 - `skill-hub status <target> --json`
 - `skill-hub update <target> --dry-run --json`
 - `skill-hub remove <target> --dry-run --json`
+
+`install` remains the standard skill install command and must not create root harness files. `init-harness` owns root harness initialization and must stay dry-run/confirmation guarded.
 
 Before release-oriented CLI changes, run `bun run validate`, `git diff --check`, and the relevant smoke flow.
 

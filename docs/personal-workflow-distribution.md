@@ -1,6 +1,6 @@
 # Personal Workflow Distribution
 
-This repository is a personal workflow distribution layer for reusing the same agent tools across multiple projects. It is not a public skill marketplace and does not need broad platform governance unless that directly helps personal maintenance.
+This repository is now the Harness Hub source: a personal workflow distribution and repo-harness layer for reusing the same agent tools and root harness contracts across multiple projects. Skill Hub remains the compatible skill-distribution subsystem. It is not a public skill marketplace and does not need broad platform governance unless that directly helps personal maintenance.
 
 ## Rules
 
@@ -16,6 +16,7 @@ This repository is a personal workflow distribution layer for reusing the same a
 
 3. Keep distribution simple.
    - Keep the complete standard install as the default unless a recurring project-specific need proves bundles are worth the extra maintenance.
+   - Keep root harness files behind explicit `init-harness`; do not hide them inside default skill installation.
    - Keep install, update, status, and remove lock-backed so target projects can be cleaned up safely.
    - Do not add public-marketplace polish, extra release ceremony, or host-specific wrappers unless they solve an active personal workflow problem.
 
@@ -56,7 +57,7 @@ This repository is a personal workflow distribution layer for reusing the same a
 
 ## Acceptance Criteria
 
-- README and AGENTS describe Skill Hub as a personal workflow distribution repo, not a general skill marketplace.
+- README and AGENTS describe Harness Hub as a personal repo harness and workflow distribution repo, not a general skill marketplace.
 - Imported skills can be added without rewriting their body text for local style.
 - Every default-distributed imported skill has enough source information to identify where it came from and whether it is safe to redistribute personally.
 - Top-level routing explains when overlapping skills should be used without forcing the skill bodies to match each other.

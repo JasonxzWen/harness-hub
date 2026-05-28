@@ -1,15 +1,22 @@
 # Capability Map
 
-Skill Hub exposes two surfaces:
+Harness Hub exposes three surfaces:
 
 - a personal distributed skill set under `skills/`;
-- a lifecycle CLI that can analyze, install, update, status-check, and remove managed skills from target repositories.
+- explicit repo harness templates under `harness/`;
+- a lifecycle CLI that can analyze, initialize, validate, install, update, status-check, and remove managed target-repo assets.
+
+Skill Hub is the compatibility name for the skill-distribution subsystem and existing `skill-hub` binary. Harness Hub is the product direction and adds root harness lifecycle commands without changing default skill install behavior.
 
 ## CLI Commands
 
 | Command | Mutates target? | Purpose |
 |---|---:|---|
 | `skill-hub analyze <target>` | No | Detect existing standard skills, missing capabilities, conflicts, and recommendations. |
+| `skill-hub analyze <target> --harness` | No | Detect repo harness gaps, existing root harness evidence, and initialization recommendations. |
+| `skill-hub init-harness <target> --dry-run` | No | Preview root harness initialization without writing files or lock state. |
+| `skill-hub init-harness <target> --yes` | Yes | Write missing minimal harness files and record ownership in `.skill-hub/lock.json`. |
+| `skill-hub validate-harness <target>` | No | Validate required minimal harness files and report missing pieces. |
 | `skill-hub install <target> --target standard --dry-run` | No | Preview managed installation of every standard skill. |
 | `skill-hub install <target> --target standard --yes` | Yes | Copy every managed standard skill and write `.skill-hub/lock.json`. |
 | `skill-hub status <target>` | No | Compare lock records with current files and hub versions. |
@@ -20,7 +27,9 @@ Skill Hub exposes two surfaces:
 
 ## Install Surface
 
-Skill Hub has one personal install set. No named variants exist. The CLI installs the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json` whose source lives under `skills/<name>/`. Confirmed install overwrites same-name skill directories and records the new managed files in `.skill-hub/lock.json`. No root harness files are installed.
+Skill Hub has one personal skill install set. No named skill variants exist. The CLI installs the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json` whose source lives under `skills/<name>/`. Confirmed install overwrites same-name skill directories and records the new managed files in `.skill-hub/lock.json`.
+
+Harness components use explicit lifecycle commands. `install` never writes root harness files. `init-harness` owns root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`, and records confirmed writes as harness components in the same lock.
 
 ## Atomic Capability Candidate Map
 
@@ -35,6 +44,7 @@ This map separates current installable capabilities from source-backed atom cand
 | Writing, handoff, knowledge, and learning | `doc-coauthoring`, `internal-comms`, `handoff`, `feynman-learning-coach`, `answer-workflow`, `documentation-lookup`, `effective-interact` | User-selected: Matt Pocock `writing-beats`, `writing-fragments`, `writing-shape`, `edit-article`, `handoff`; Anthropic `doc-coauthoring`, `internal-comms`, `brand-guidelines` | Filled collaborative doc and internal comms gaps. Keep Anthropic `brand-guidelines` reference-only because it is Anthropic-brand-specific. |
 | Documents, spreadsheets, slides, and PDFs | No installable Skill Hub atoms. External app skills exist in this Codex environment, but they are not repo-distributed Skill Hub components. | Anthropic `docx`, `pdf`, `pptx`, `xlsx` | Clear capability gap. Treat as high-value source candidates, but source-available licensing requires review before copying or redistributing. |
 | Agent platform, API, and skill authoring | `hub-maintenance-workflow`, `skill-quality-inventory`, `documentation-lookup`, `claude-api`, `mcp-builder`, `skill-creator` | Anthropic `claude-api`, `mcp-builder`, `skill-creator`; Matt Pocock `write-a-skill`; Superpowers `writing-skills` | Filled MCP, provider-specific Claude API, and skill-authoring gaps with explicit atoms. `claude-api` remains live-doc-first because API details change. |
+| Repo harness initialization and governance | `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove | `walkinglabs/learn-harness-engineering` and its `harness-creator` as evaluated reference material | New product lane. Keep minimal local harness template installable through explicit commands only; advanced packs remain source-reviewed and explicit-only until license and host metadata are clear. |
 | External tools and enterprise integrations | Limited; current installable graph avoids credentialed external writes by default. | User-selected: archived Michal Vavra `asncli`, `gogcli`, `snowcli`; CE Slack/release/session candidates from the broader source pool | Keep explicit-only until connector, credential, and side-effect boundaries are specified. |
 
 ## Local Alignment Notes
@@ -42,6 +52,7 @@ This map separates current installable capabilities from source-backed atom cand
 Current strengths:
 
 - Workflow ownership is clear: `workflow-router` selects one owner, then owner workflows call atoms.
+- Repo harness ownership is explicit: root files are initialized only through `init-harness`, not through default skill installation.
 - Engineering lifecycle coverage is strong: SDD, TDD, diagnosis, review, verification, handoff, and Skill Hub maintenance are all installable.
 - Web/artifact coverage is strong after adding `theme-factory`; production UI, standalone artifacts, slides, one-off browser checks, and durable E2E have separate lanes.
 - Writing coverage is now viable for docs and internal comms after adding `doc-coauthoring` and `internal-comms`.
@@ -50,8 +61,10 @@ Current strengths:
 Known gaps:
 
 - Native document/spreadsheet/PDF/PPT editing remains a distribution gap because Anthropic `docx`, `pdf`, `pptx`, and `xlsx` are source-available, not open source.
+- Advanced harness packs remain a source-review gap until redistribution license, host metadata, and side-effect boundaries are clear.
 - Cloud/provider coverage is Vercel-heavy; AWS/GCP/Azure, data/ML operations, security operations, and enterprise SaaS integrations still need additional reviewed sources.
 - Brand workflow remains generic-only; Anthropic `brand-guidelines` was not imported because it is Anthropic-specific.
+- Harness pack promotion is documented in `docs/harness-packs.md`; only `minimal` is currently explicit-init capable.
 
 Known redundancies:
 
@@ -82,7 +95,7 @@ Known redundancies:
 
 ## Metadata Rules
 
-`capabilities/index.json` is the install graph. Skill components use:
+`capabilities/index.json` is the component graph. Skill components use:
 
 - `path`: source path under `skills/<name>`;
 - `detects`: standard target evidence such as `skills/<name>/SKILL.md`;
@@ -90,3 +103,5 @@ Known redundancies:
 - `risk`: lifecycle risk for install/update/remove decisions.
 
 Do not add host-specific install directories to the capability graph. Packaging for a host belongs in that host's manifest layer, such as `.claude-plugin/`. Local Codex dogfooding uses `scripts/sync-codex-skills.mjs` to generate ignored `.codex/skills/` copies from the standard source tree; `.codex/` stays local and is not installable capability metadata. Subagents and hooks are workflow-owned optimizations: subagents need independent scopes, and hooks stay advisory until reviewed and approved.
+
+Harness components may live under `harness/<name>/`, but they are not part of default standard skill install. They are copied only by explicit harness lifecycle commands and must stay free of host-local runner metadata.

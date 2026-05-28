@@ -23,7 +23,7 @@ const REQUIRED_WORKFLOW_COMPONENTS = [
   'skill:verification-loop',
 ];
 
-test('capability index has no profile or harness installation surface', () => {
+test('capability index keeps harness separate from standard skill install surface', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
     defaults?: unknown;
     profiles?: unknown;
@@ -32,8 +32,10 @@ test('capability index has no profile or harness installation surface', () => {
 
   expect(index.defaults).toBeUndefined();
   expect(index.profiles).toBeUndefined();
-  expect(Object.keys(index.components).some((id) => id.startsWith('harness:'))).toBe(false);
-  expect(Object.values(index.components).every((component) => component.kind === 'skill')).toBe(true);
+  expect(index.components['harness:minimal']?.kind).toBe('harness-template');
+  expect(Object.entries(index.components)
+    .filter(([id]) => !id.startsWith('harness:'))
+    .every(([, component]) => component.kind === 'skill')).toBe(true);
 });
 
 test('default standard install exposes all workflow skills and omits retired Ralph skills', () => {
@@ -63,6 +65,10 @@ test('default standard install writes lock-backed status for the full skill set'
   expect(fs.existsSync(path.join(targetDir, 'skills', 'workflow-router', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'sdd-workflow', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'webapp-testing', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'feature_list.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'progress.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'session-handoff.md'))).toBe(false);
 
   const status = getStatus({ targetDir, index: readCapabilityIndex() });
   expect(status.current.length).toBe(plan.items.length);
