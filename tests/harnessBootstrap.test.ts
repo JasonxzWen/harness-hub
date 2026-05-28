@@ -73,10 +73,21 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   const validation = validateHarness(targetDir);
   expect(validation.exitCode).toBe(0);
   expect(validation.checks.every((check) => check.state === 'pass')).toBe(true);
+  expect(validation.assessment.overall).toBeGreaterThanOrEqual(80);
+  expect(validation.assessment.subsystems.instructions.score).toBeGreaterThanOrEqual(4);
+  expect(validation.assessment.project.verificationCommands).toContain('node scripts/harness-validate.mjs');
+  expect(validation.benchmark.score).toBeGreaterThanOrEqual(90);
 
   const cliValidation = await captureCli(['validate-harness', targetDir, '--json']);
   expect(cliValidation.code).toBe(0);
-  expect(JSON.parse(cliValidation.stdout).reason).toBe('Harness validation passed.');
+  const cliValidationJson = JSON.parse(cliValidation.stdout);
+  expect(cliValidationJson.reason).toBe('Harness validation passed.');
+  expect(cliValidationJson.assessment.bottleneck).toBeDefined();
+  expect(cliValidationJson.benchmark.checks.length).toBeGreaterThan(0);
+  const htmlValidation = await captureCli(['validate-harness', targetDir, '--html']);
+  expect(htmlValidation.code).toBe(0);
+  expect(htmlValidation.stdout).toContain('assessment.overall');
+  expect(htmlValidation.stdout).toContain('benchmark.structural');
   const scriptOutput = execFileSync(process.execPath, ['scripts/harness-validate.mjs'], {
     cwd: targetDir,
     encoding: 'utf8',
