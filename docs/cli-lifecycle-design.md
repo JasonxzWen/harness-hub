@@ -6,8 +6,9 @@ The Harness Hub CLI manages a repo-local agent harness lifecycle in target repos
 
 - Keep `analyze` read-only.
 - Keep `install` limited to standard skill folders in `skills/<name>/`.
-- Initialize root harness files only through explicit `init-harness`.
+- Keep full Codex dev harness bootstrap explicit through `init-harness`.
 - Validate root harness files through side-effect-free `validate-harness`.
+- Keep source-backed insight publishing explicit through `insight-*`.
 - Track managed files with `.skill-hub/lock.json`.
 - Remove and update only lock-recorded files.
 - Keep host-specific packaging outside the lifecycle CLI.
@@ -22,6 +23,13 @@ skill-hub init-harness <target> --yes
 skill-hub validate-harness <target> --json
 skill-hub install <target> --target standard --dry-run
 skill-hub install <target> --target standard --yes
+skill-hub init-harness <target> --target standard --dry-run
+skill-hub init-harness <target> --target standard --yes
+skill-hub validate-harness <target> --json
+skill-hub insight-generate <target> --input input.json --json
+skill-hub insight-build <target> --json
+skill-hub insight-validate <target> --json
+skill-hub insight-publish <target> --dry-run --json
 skill-hub status <target> --json
 skill-hub update <target> --dry-run --json
 skill-hub remove <target> --dry-run --json
@@ -31,7 +39,11 @@ skill-hub remove <target> --dry-run --json
 
 `init-harness` selects explicit harness components such as `harness:minimal`. These components can write root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`, but only after `--yes`. Dry runs must show the exact create/skip/overwrite plan without writing files or lock state.
 
+`init-harness` is the higher-level Codex-only dev bootstrap command. It composes skill installation with the managed `harness:minimal` template and writes root continuity artifacts only through this explicit path. It blocks dirty git worktrees and existing harness files by default; `--force` is the explicit override policy. The low-level `install` command remains skills-only.
+
 Local Codex dogfooding is intentionally outside the managed target lifecycle: `scripts/sync-codex-skills.mjs` mirrors `skills/` into ignored `.codex/skills/` copies for this checkout, without adding `.codex/` to the capability graph or lock-backed install targets.
+
+Insight publishing is also explicit, but it is not a target-repo install lifecycle. `post.json` is the editable source of truth, `effective-interact.input.json` is the generation adapter, and `site/` is the Git-only GitHub Pages output. Local publish is preflight-only; `.github/workflows/publish-insights.yml` owns the actual Pages deployment after review.
 
 ## Data Model
 

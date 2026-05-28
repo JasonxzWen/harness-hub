@@ -51,6 +51,13 @@ npx @jasonwen/skill-hub init-harness D:\path\to\target --yes
 npx @jasonwen/skill-hub validate-harness D:\path\to\target --json
 npx @jasonwen/skill-hub install D:\path\to\target --target standard --dry-run
 npx @jasonwen/skill-hub install D:\path\to\target --target standard --yes
+npx @jasonwen/skill-hub init-harness D:\path\to\target --target standard --dry-run
+npx @jasonwen/skill-hub init-harness D:\path\to\target --target standard --yes
+npx @jasonwen/skill-hub validate-harness D:\path\to\target --json
+npx @jasonwen/skill-hub insight-generate . --input input.json --json
+npx @jasonwen/skill-hub insight-build . --json
+npx @jasonwen/skill-hub insight-validate . --json
+npx @jasonwen/skill-hub insight-publish . --dry-run --json
 npx @jasonwen/skill-hub status D:\path\to\target --json
 npx @jasonwen/skill-hub update D:\path\to\target --dry-run --json
 npx @jasonwen/skill-hub remove D:\path\to\target --dry-run --json
@@ -59,6 +66,10 @@ npx @jasonwen/skill-hub remove D:\path\to\target --dry-run --json
 The package also exposes a `harness-hub` binary. Until the package itself is renamed, `skill-hub` is the compatibility command and `harness-hub` is the forward command.
 
 There are no named skill install variants. `install` installs every standard Skill Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. `install` does not create root harness files; use explicit `init-harness` for `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`. Legacy host-specific directories are not the distribution shape.
+
+`init-harness` is the explicit Codex-only dev bootstrap path. It composes the standard skill install with root harness files such as `AGENTS.md`, `feature_list.json`, `tasks/current-task.md`, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `definition-of-done.md`, and `scripts/harness-validate.mjs`. It records managed ownership in `.skill-hub/lock.json`, blocks dirty git worktrees and existing harness files by default, and leaves low-level `install` skills-only.
+
+`insight-*` is the explicit source-to-blog path. It treats `post.json` plus source metadata as the editable source of truth, adapts the first public draft through `effective-interact`, writes GitHub Pages output under `site/`, validates UTF-8/source attribution/fact-inference separation/link safety/excerpt size, and keeps local CLI publishing to a dry-run preflight. Actual Pages deployment is owned by `.github/workflows/publish-insights.yml`.
 
 ## Codex Self-Bootstrap
 
@@ -98,18 +109,20 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | `skills/` | Platform-neutral skill source of truth |
 | `harness/` | Source-owned repo harness templates and advanced pack metadata |
 | `.claude-plugin/` | Claude plugin and marketplace manifests |
-| `capabilities/index.json` | Skill and harness component metadata |
+| `capabilities/index.json` | Skill and harness component metadata, including source-retained components |
+| `site/` | Git-only GitHub Pages output for insight posts |
 | `src/skillHub.ts` | CLI implementation |
 | `scripts/validate-skills.ps1` | Standard skill validation gate |
 | `scripts/skill-quality-inventory.ts` | Report-only skill quality inventory |
 | `docs/skill-routing.md` | Overlap and routing rules |
 | `docs/personal-workflow-distribution.md` | Personal distribution rules, TODOs, and acceptance criteria |
 | `docs/harness-packs.md` | Harness pack source-review boundary and promotion checklist |
+| `docs/insight-publishing.md` | Source-to-insight blog workflow, validation, and publish boundary |
 | `docs/source-projects.md` | Upstream source and decision log |
 | `docs/workflow-source-dossier.md` | Reference dossier for SDD, routing, Effective Interact, OpenSpec, Superpowers, ECC, Matt Pocock skills, Vercel, and retired Ralph source notes |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy |
 
-Generated reports, intermediate interaction artifacts, and Codex dogfood copies stay local: `reports/`, `.skill-hub/reports/`, `skills/effective-interact/artifacts/`, and `.codex/` are ignored and must not be committed or published.
+Generated reports, intermediate interaction artifacts, and Codex dogfood copies stay local: `reports/`, `.skill-hub/reports/`, `skills/effective-interact/artifacts/`, and `.codex/` are ignored and must not be committed or published. `site/` is Git-only Pages output and is intentionally excluded from the npm package.
 
 ## Validation
 

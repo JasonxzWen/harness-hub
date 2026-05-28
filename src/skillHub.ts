@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const HUB_ROOT = path.resolve(__dirname, '..');
@@ -340,6 +341,8 @@ export interface HarnessInitResult {
 }
 
 export interface HarnessValidationResult {
+  schemaVersion: 1;
+  generatedAt: string;
   exitCode: number;
   targetDir: string;
   componentId: string;
@@ -347,6 +350,196 @@ export interface HarnessValidationResult {
   present: string[];
   missing: string[];
   managed: string[];
+  checks: HarnessValidationCheck[];
+  reason: string;
+}
+
+export type HarnessBlockerCode = 'dirty-worktree' | 'existing-file' | 'non-codex-platform-file' | 'unsafe-path';
+
+export interface HarnessBlocker {
+  code: HarnessBlockerCode;
+  path: string;
+  reason: string;
+  status?: string;
+}
+
+export interface HarnessFilePlan {
+  relativePath: string;
+  source: string;
+  dest: string;
+  exists: boolean;
+  size: number;
+  sizeLimit?: number;
+}
+
+export interface DirtyWorktreePath {
+  path: string;
+  status: string;
+}
+
+export interface DevBootstrapPlan {
+  schemaVersion: 1;
+  generatedAt: string;
+  hubVersion: string;
+  targetDir: string;
+  agents: AgentName[];
+  install: InstallPlan;
+  harnessComponentId: string;
+  harnessVersion: string;
+  harnessFiles: HarnessFilePlan[];
+  dirtyWorktree: DirtyWorktreePath[];
+  blockers: HarnessBlocker[];
+  validationCommand: string;
+}
+
+export interface HarnessValidationCheck {
+  code: 'required-file' | 'codex-only' | 'file-size' | 'required-content' | 'structured-content';
+  state: 'pass' | 'fail';
+  path: string;
+  reason: string;
+  size?: number;
+  limit?: number;
+  evidence?: string[];
+}
+
+export interface DevBootstrapResult extends DevBootstrapPlan {
+  exitCode: number;
+  installed: InstallItem[];
+  skipped: SkippedInstallItem[];
+  harnessFilesWritten: string[];
+  lock: LockReadResult | null;
+  report: string | null;
+  validation: HarnessValidationResult | null;
+  reason: string;
+}
+
+export interface InsightSource {
+  id: string;
+  title: string;
+  url: string;
+  type: string;
+  accessedAt: string;
+  excerpt?: string;
+  notes?: string;
+}
+
+export type InsightClaimKind = 'fact' | 'inference' | 'assumption' | 'project-judgment';
+
+export interface InsightSourceClaim {
+  id: string;
+  sourceId: string;
+  statement: string;
+  kind: InsightClaimKind;
+}
+
+export interface InsightViewpoint {
+  id: string;
+  statement: string;
+  sourceClaimIds: string[];
+}
+
+export interface InsightProjectMapping {
+  area: string;
+  impact: string;
+  action: string;
+}
+
+export interface InsightIterationRecord {
+  changed: string[];
+  confirmed: string[];
+  open: string[];
+  watch: string[];
+}
+
+export interface InsightActionBoundary {
+  now: string[];
+  observe: string[];
+  notNow: string[];
+}
+
+export interface InsightPostInput {
+  title: string;
+  date: string;
+  summary: string;
+  slug?: string;
+  sources: InsightSource[];
+  sourceClaims: InsightSourceClaim[];
+  viewpoints: InsightViewpoint[];
+  integration: string[];
+  projectMapping: InsightProjectMapping[];
+  iterationRecord: InsightIterationRecord;
+  actionBoundary: InsightActionBoundary;
+  assumptions?: string[];
+}
+
+export type InsightValidationCode =
+  | 'required-field'
+  | 'utf8'
+  | 'source-link'
+  | 'source-size'
+  | 'source-attribution'
+  | 'fact-inference-separation'
+  | 'source-reference'
+  | 'post-file'
+  | 'site-index'
+  | 'public-artifact-boundary'
+  | 'workflow'
+  | 'pages-output'
+  | 'branch'
+  | 'worktree';
+
+export interface InsightValidationCheck {
+  code: InsightValidationCode;
+  state: 'pass' | 'fail';
+  path: string;
+  reason: string;
+  evidence?: string[];
+  size?: number;
+  limit?: number;
+}
+
+export interface InsightValidationResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  targetDir: string;
+  exitCode: number;
+  checks: InsightValidationCheck[];
+  reason: string;
+}
+
+export interface InsightPostResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  repoRoot: string;
+  slug: string;
+  postDir: string;
+  postJsonPath: string;
+  sourceLedgerPath: string;
+  effectiveInteractInputPath: string;
+  htmlPath: string;
+  validation: InsightValidationResult;
+  reason: string;
+}
+
+export interface InsightBuildResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  repoRoot: string;
+  siteDir: string;
+  posts: Array<{ slug: string; title: string; date: string; summary: string; href: string }>;
+  files: string[];
+  validation: InsightValidationResult;
+  exitCode: number;
+  reason: string;
+}
+
+export interface InsightPreflightResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  repoRoot: string;
+  mode: 'dry-run' | 'publish';
+  exitCode: number;
+  checks: InsightValidationCheck[];
   reason: string;
 }
 
@@ -376,6 +569,9 @@ interface CliOptions {
   agentReadiness: boolean;
   harness: boolean;
   componentIds: string[];
+  input: string | null;
+  slug: string | null;
+  allowDirty: boolean;
 }
 
 interface PlanInstallOptions {
@@ -433,14 +629,20 @@ const MANAGED_COMPONENT_RENAMES: Readonly<Record<string, ManagedComponentRename>
 const VALID_RISKS = new Set<LifecycleRisk>(['low', 'medium', 'high']);
 const GLOB_CHARS = /[*?[\]{}]/;
 const MINIMAL_HARNESS_COMPONENT_ID = 'harness:minimal';
+const HARNESS_COMPONENT_ID = MINIMAL_HARNESS_COMPONENT_ID;
 const HARNESS_TEMPLATE_KINDS = new Set(['harness-template', 'harness-pack']);
-const MINIMAL_HARNESS_REQUIRED_FILES = [
-  'AGENTS.md',
-  'feature_list.json',
-  'progress.md',
-  'session-handoff.md',
-  'scripts/harness-validate.mjs',
-];
+const HARNESS_DEST = '.';
+const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
+  'AGENTS.md': 32 * 1024,
+  'progress.md': 16 * 1024,
+  'session-handoff.md': 16 * 1024,
+  'tasks/current-task.md': 16 * 1024,
+});
+const NON_CODEX_PLATFORM_FILES = ['CLAUDE.md'];
+const INSIGHT_SITE_ROOT = 'site';
+const INSIGHT_POSTS_ROOT = 'site/insights/posts';
+const INSIGHT_SOURCE_EXCERPT_WORD_LIMIT = 220;
+const INSIGHT_WORKFLOW_PATH = '.github/workflows/publish-insights.yml';
 
 export function readCapabilityIndex(hubRoot = HUB_ROOT): CapabilityIndex {
   const indexPath = path.join(hubRoot, 'capabilities', 'index.json');
@@ -676,6 +878,9 @@ function installAgentsForComponent(component: CapabilityComponent, agents: Agent
 function resolveComponentDest(component: CapabilityComponent, agent: AgentName): string {
   if (component.dest) {
     return normalizePortablePath(component.dest);
+  }
+  if (component.kind === 'harness-template') {
+    return HARNESS_DEST;
   }
   const skillName = path.basename(component.path);
   return toPortablePath(path.join(AGENT_SKILL_DIRS[agent], skillName));
@@ -1250,30 +1455,6 @@ function assertCanWriteHarnessLock(plan: HarnessInitPlan, installed: HarnessPlan
   }
 }
 
-export function validateHarness(targetDirInput: string, options: StatusOptions = {}): HarnessValidationResult {
-  const targetDir = path.resolve(targetDirInput);
-  const index = options.index || readCapabilityIndex(options.hubRoot || HUB_ROOT);
-  const { id, component } = getMinimalHarnessComponent(index);
-  const requiredFiles = listHarnessTemplateFiles(options.hubRoot || HUB_ROOT, component).map((file) => file.relativePath);
-  const managedFiles = getManagedFilePaths(readLock(targetDir), id);
-  const present = requiredFiles.filter((relativePath) => safeRelativePathExists(targetDir, relativePath)).sort();
-  const missing = requiredFiles.filter((relativePath) => !present.includes(relativePath)).sort();
-  const managed = present.filter((relativePath) => managedFiles.has(relativePath)).sort();
-
-  return {
-    exitCode: missing.length > 0 ? 3 : 0,
-    targetDir,
-    componentId: id,
-    requiredFiles,
-    present,
-    missing,
-    managed,
-    reason: missing.length > 0
-      ? `${missing.length} required harness files are missing.`
-      : 'Minimal harness files are present.',
-  };
-}
-
 function getMinimalHarnessComponent(index: CapabilityIndex): { id: string; component: CapabilityComponent } {
   const component = index.components[MINIMAL_HARNESS_COMPONENT_ID];
   if (!component) {
@@ -1515,6 +1696,1126 @@ export function planInstall(options: PlanInstallOptions = {}): InstallPlan {
     signals: detectRepoSignals(targetDir),
     items,
   };
+}
+
+export function planDevBootstrap(options: PlanInstallOptions = {}): DevBootstrapPlan {
+  const hubRoot = options.hubRoot || HUB_ROOT;
+  const targetDir = path.resolve(options.targetDir || process.cwd());
+  const index = options.index || readCapabilityIndex(hubRoot);
+  const install = planInstall({ ...options, hubRoot, targetDir, index });
+  const harnessComponent = index.components[HARNESS_COMPONENT_ID];
+  if (!harnessComponent) {
+    throw new Error(`Missing harness component metadata: ${HARNESS_COMPONENT_ID}`);
+  }
+  if (harnessComponent.kind !== 'harness-template') {
+    throw new Error(`${HARNESS_COMPONENT_ID} must be kind harness-template.`);
+  }
+
+  const sourceRoot = componentSourcePath(hubRoot, harnessComponent);
+  if (!fs.existsSync(sourceRoot)) {
+    throw new Error(`Harness template source does not exist: ${harnessComponent.path}`);
+  }
+
+  const harnessFiles = listFilesRecursive(sourceRoot)
+    .map((source) => {
+      const relativePath = toPortablePath(path.relative(sourceRoot, source));
+      const dest = assertSafeRelativePath(targetDir, relativePath);
+      const size = fs.statSync(source).size;
+      return {
+        relativePath,
+        source,
+        dest,
+        exists: fs.existsSync(dest),
+        size,
+        sizeLimit: HARNESS_SIZE_LIMITS[relativePath],
+      };
+    })
+    .sort((left, right) => left.relativePath.localeCompare(right.relativePath));
+
+  const dirtyWorktree = detectDirtyWorktree(targetDir);
+  const blockers = collectHarnessBlockers(targetDir, harnessFiles, dirtyWorktree);
+
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    hubVersion: index.version,
+    targetDir,
+    agents: install.agents,
+    install,
+    harnessComponentId: HARNESS_COMPONENT_ID,
+    harnessVersion: harnessComponent.version,
+    harnessFiles,
+    dirtyWorktree,
+    blockers,
+    validationCommand: 'node scripts/harness-validate.mjs',
+  };
+}
+
+export function applyDevBootstrap(
+  plan: DevBootstrapPlan,
+  options: { yes?: boolean; force?: boolean; overwrite?: boolean } = {},
+): DevBootstrapResult {
+  if (!options.yes) {
+    return makeDevBootstrapResult(plan, {
+      exitCode: 2,
+      installed: [],
+      skipped: [],
+      harnessFilesWritten: [],
+      lock: null,
+      report: null,
+      validation: null,
+      reason: 'Use --yes to confirm non-interactive dev bootstrap or --dry-run to preview.',
+    });
+  }
+
+  const refreshedPlan = refreshDevBootstrapPlan(plan);
+  const forceOverridable = new Set<HarnessBlockerCode>(['dirty-worktree', 'existing-file']);
+  const blockers = options.force
+    ? refreshedPlan.blockers.filter((blocker) => !forceOverridable.has(blocker.code))
+    : refreshedPlan.blockers;
+  if (blockers.length > 0) {
+    return makeDevBootstrapResult({ ...refreshedPlan, blockers }, {
+      exitCode: 3,
+      installed: [],
+      skipped: [],
+      harnessFilesWritten: [],
+      lock: null,
+      report: null,
+      validation: null,
+      reason: 'Dev bootstrap blocked by dirty worktree or existing harness files.',
+    });
+  }
+
+  const installResult = applyInstall(refreshedPlan.install, { overwrite: options.overwrite });
+  const harnessFilesWritten: string[] = [];
+  for (const file of refreshedPlan.harnessFiles) {
+    fs.mkdirSync(path.dirname(file.dest), { recursive: true });
+    fs.copyFileSync(file.source, file.dest);
+    harnessFilesWritten.push(file.relativePath);
+  }
+
+  const lock = readLock(refreshedPlan.targetDir);
+  if (!lock || lock.data.schemaVersion !== 2) {
+    throw new Error('Expected schema version 2 lock after skill installation.');
+  }
+
+  const index = readCapabilityIndex();
+  const harnessComponent = index.components[refreshedPlan.harnessComponentId];
+  if (!harnessComponent) {
+    throw new Error(`Missing harness component metadata: ${refreshedPlan.harnessComponentId}`);
+  }
+  const installedAt = new Date().toISOString();
+  const harnessRecord: ManagedComponentRecord = {
+    id: refreshedPlan.harnessComponentId,
+    version: harnessComponent.version,
+    agent: 'standard',
+    kind: harnessComponent.kind,
+    source: harnessComponent.path,
+    dest: HARNESS_DEST,
+    files: collectManagedFilesForRelativePaths(refreshedPlan.targetDir, harnessFilesWritten),
+    installedAt,
+    status: 'installed',
+  };
+  const nextLock: SkillHubLockV2 = {
+    ...lock.data,
+    generatedAt: installedAt,
+    hubVersion: refreshedPlan.hubVersion,
+    components: [
+      ...lock.data.components.filter((component) => component.id !== refreshedPlan.harnessComponentId),
+      harnessRecord,
+    ].sort((left, right) => left.id.localeCompare(right.id) || left.dest.localeCompare(right.dest)),
+  };
+  const writtenLock = writeLockData(refreshedPlan.targetDir, nextLock);
+  const validation = validateHarness(refreshedPlan.targetDir);
+
+  return makeDevBootstrapResult(refreshedPlan, {
+    exitCode: validation.exitCode,
+    installed: installResult.installed,
+    skipped: installResult.skipped,
+    harnessFilesWritten,
+    lock: writtenLock,
+    report: installResult.report,
+    validation,
+    reason: validation.exitCode === 0
+      ? 'Dev bootstrap completed and harness validation passed.'
+      : 'Dev bootstrap completed but harness validation failed.',
+  });
+}
+
+function refreshDevBootstrapPlan(plan: DevBootstrapPlan): DevBootstrapPlan {
+  const harnessFiles = plan.harnessFiles.map((file) => ({
+    ...file,
+    exists: fs.existsSync(file.dest),
+  }));
+  const dirtyWorktree = detectDirtyWorktree(plan.targetDir);
+  return {
+    ...plan,
+    harnessFiles,
+    dirtyWorktree,
+    blockers: collectHarnessBlockers(plan.targetDir, harnessFiles, dirtyWorktree),
+  };
+}
+
+function collectHarnessBlockers(
+  targetDir: string,
+  harnessFiles: HarnessFilePlan[],
+  dirtyWorktree: DirtyWorktreePath[],
+): HarnessBlocker[] {
+  return [
+    ...dirtyWorktree.map((entry) => ({
+      code: 'dirty-worktree' as const,
+      path: entry.path,
+      status: entry.status,
+      reason: `Target git worktree has uncommitted changes at ${entry.path}.`,
+    })),
+    ...harnessFiles
+      .filter((file) => file.exists)
+      .map((file) => ({
+        code: 'existing-file' as const,
+        path: file.relativePath,
+        reason: `Harness destination already exists: ${file.relativePath}.`,
+      })),
+    ...NON_CODEX_PLATFORM_FILES
+      .filter((relativePath) => fs.existsSync(path.join(targetDir, relativePath)))
+      .map((relativePath) => ({
+        code: 'non-codex-platform-file' as const,
+        path: relativePath,
+        reason: `Non-Codex platform instruction file already exists: ${relativePath}.`,
+      })),
+  ].sort((left, right) => left.path.localeCompare(right.path) || left.code.localeCompare(right.code));
+}
+
+function makeDevBootstrapResult(
+  plan: DevBootstrapPlan,
+  result: Pick<DevBootstrapResult, 'exitCode' | 'installed' | 'skipped' | 'harnessFilesWritten' | 'lock' | 'report' | 'validation' | 'reason'>,
+): DevBootstrapResult {
+  return { ...plan, ...result };
+}
+
+function collectManagedFilesForRelativePaths(targetDir: string, relativePaths: string[]): ManagedFileRecord[] {
+  return relativePaths
+    .map((relativePath) => {
+      const filePath = assertSafeRelativePath(targetDir, relativePath);
+      const bytes = fs.readFileSync(filePath);
+      return {
+        path: normalizePortablePath(relativePath),
+        sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+        size: bytes.byteLength,
+      };
+    })
+    .sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function detectDirtyWorktree(targetDir: string): DirtyWorktreePath[] {
+  if (!fs.existsSync(targetDir)) {
+    return [];
+  }
+
+  try {
+    execFileSync('git', ['rev-parse', '--is-inside-work-tree'], {
+      cwd: targetDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch {
+    return [];
+  }
+
+  const output = execFileSync('git', ['status', '--porcelain=v1', '--untracked-files=all'], {
+    cwd: targetDir,
+    encoding: 'utf8',
+  });
+
+  return output
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => {
+      const status = line.slice(0, 2);
+      const rawPath = line.slice(3).trim();
+      const cleanPath = rawPath.includes(' -> ')
+        ? rawPath.split(' -> ').at(-1) || rawPath
+        : rawPath;
+      return { status, path: normalizePortablePath(cleanPath.replace(/^"|"$/g, '')) };
+    })
+    .sort((left, right) => left.path.localeCompare(right.path));
+}
+
+export function validateHarness(targetDirInput: string): HarnessValidationResult {
+  const targetDir = path.resolve(targetDirInput);
+  const index = readCapabilityIndex();
+  const { id, component } = getMinimalHarnessComponent(index);
+  const requiredFiles = listHarnessTemplateFiles(HUB_ROOT, component).map((file) => file.relativePath);
+  const managedFiles = getManagedFilePaths(readLock(targetDir), id);
+  const present = requiredFiles.filter((relativePath) => safeRelativePathExists(targetDir, relativePath)).sort();
+  const missing = requiredFiles.filter((relativePath) => !present.includes(relativePath)).sort();
+  const managed = present.filter((relativePath) => managedFiles.has(relativePath)).sort();
+  const checks: HarnessValidationCheck[] = [];
+
+  for (const relativePath of requiredFiles) {
+    const exists = fs.existsSync(path.join(targetDir, relativePath));
+    checks.push({
+      code: 'required-file',
+      state: exists ? 'pass' : 'fail',
+      path: relativePath,
+      reason: exists ? 'Required harness file exists.' : 'Required harness file is missing.',
+    });
+  }
+
+  for (const relativePath of NON_CODEX_PLATFORM_FILES) {
+    const exists = fs.existsSync(path.join(targetDir, relativePath));
+    checks.push({
+      code: 'codex-only',
+      state: exists ? 'fail' : 'pass',
+      path: relativePath,
+      reason: exists ? 'Non-Codex platform instruction file is present.' : 'No non-Codex platform instruction file detected.',
+    });
+  }
+
+  for (const [relativePath, limit] of Object.entries(HARNESS_SIZE_LIMITS)) {
+    const filePath = path.join(targetDir, relativePath);
+    if (!fs.existsSync(filePath)) {
+      continue;
+    }
+    const size = fs.statSync(filePath).size;
+    checks.push({
+      code: 'file-size',
+      state: size <= limit ? 'pass' : 'fail',
+      path: relativePath,
+      size,
+      limit,
+      reason: size <= limit
+        ? 'Current-state file is within the configured size limit.'
+        : 'Current-state file exceeds the configured size limit and should be summarized or archived.',
+    });
+  }
+
+  checks.push(...validateRequiredContent(targetDir));
+  const failures = checks.filter((check) => check.state === 'fail');
+
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    targetDir,
+    exitCode: failures.length > 0 ? 3 : 0,
+    componentId: id,
+    requiredFiles,
+    present,
+    missing,
+    managed,
+    checks,
+    reason: failures.length > 0
+      ? `${failures.length} harness validation checks failed.`
+      : 'Harness validation passed.',
+  };
+}
+
+function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
+  const checks: HarnessValidationCheck[] = [];
+  checks.push(validateFileContains(targetDir, 'AGENTS.md', ['Codex', 'worktree', 'session-handoff']));
+  checks.push(validateFileContains(targetDir, 'tasks/current-task.md', [
+    'Goal',
+    'Allowed paths',
+    'Forbidden paths',
+    'Validation commands',
+    'Parallel writes',
+    'Handoff requirements',
+  ]));
+  checks.push(validateFeatureListJson(targetDir));
+  return checks;
+}
+
+function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
+  const relativePath = 'feature_list.json';
+  const filePath = path.join(targetDir, relativePath);
+  const evidence = ['features array', 'parallel_write_policy object'];
+  if (!fs.existsSync(filePath)) {
+    return {
+      code: 'structured-content',
+      state: 'fail',
+      path: relativePath,
+      reason: 'Feature state JSON could not be checked because the file is missing.',
+      evidence,
+    };
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return {
+      code: 'structured-content',
+      state: 'fail',
+      path: relativePath,
+      reason: 'Feature state must be valid JSON.',
+      evidence,
+    };
+  }
+
+  const missing: string[] = [];
+  if (!isRecord(data) || !Array.isArray(data.features)) {
+    missing.push('features array');
+  }
+  if (!isRecord(data) || !isRecord(data.parallel_write_policy)) {
+    missing.push('parallel_write_policy object');
+  }
+
+  return {
+    code: 'structured-content',
+    state: missing.length === 0 ? 'pass' : 'fail',
+    path: relativePath,
+    reason: missing.length === 0
+      ? 'Feature state JSON has the required structure.'
+      : `Feature state JSON is missing required structure: ${missing.join(', ')}.`,
+    evidence,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function validateFileContains(targetDir: string, relativePath: string, markers: string[]): HarnessValidationCheck {
+  const filePath = path.join(targetDir, relativePath);
+  if (!fs.existsSync(filePath)) {
+    return {
+      code: 'required-content',
+      state: 'fail',
+      path: relativePath,
+      reason: 'Required content could not be checked because the file is missing.',
+      evidence: markers,
+    };
+  }
+
+  const content = fs.readFileSync(filePath, 'utf8');
+  const missing = markers.filter((marker) => !content.includes(marker));
+  return {
+    code: 'required-content',
+    state: missing.length === 0 ? 'pass' : 'fail',
+    path: relativePath,
+    reason: missing.length === 0
+      ? 'Required harness guidance markers are present.'
+      : `Missing required harness guidance markers: ${missing.join(', ')}.`,
+    evidence: markers,
+  };
+}
+
+export function createInsightPost(
+  input: InsightPostInput,
+  options: { repoRoot?: string; slug?: string; writeInvalid?: boolean } = {},
+): InsightPostResult {
+  const repoRoot = path.resolve(options.repoRoot || process.cwd());
+  const slug = resolveInsightSlug(input, options.slug);
+  const postDir = assertSafeRelativePath(repoRoot, path.posix.join(INSIGHT_POSTS_ROOT, slug));
+  const postJsonPath = path.join(postDir, 'post.json');
+  const sourceLedgerPath = path.join(postDir, 'source-ledger.json');
+  const effectiveInteractInputPath = path.join(postDir, 'effective-interact.input.json');
+  const htmlPath = path.join(postDir, 'index.html');
+  const validation = validateInsightPostInput(input, repoRoot);
+  const generatedAt = new Date().toISOString();
+
+  if (validation.exitCode !== 0) {
+    return {
+      schemaVersion: 1,
+      generatedAt,
+      repoRoot,
+      slug,
+      postDir,
+      postJsonPath,
+      sourceLedgerPath,
+      effectiveInteractInputPath,
+      htmlPath,
+      validation,
+      reason: 'Insight post generation skipped because source validation failed.',
+    };
+  }
+
+  fs.mkdirSync(postDir, { recursive: true });
+  const post = { ...input, slug };
+  writeJsonFile(postJsonPath, post);
+  writeJsonFile(sourceLedgerPath, buildInsightSourceLedger(post, slug, generatedAt));
+  writeJsonFile(effectiveInteractInputPath, adaptInsightToEffectiveInteract(post, slug, generatedAt));
+
+  execFileSync(process.execPath, [
+    path.join(HUB_ROOT, 'skills', 'effective-interact', 'scripts', 'create-interaction.mjs'),
+    '--input',
+    effectiveInteractInputPath,
+    '--out-dir',
+    postDir,
+    '--slug',
+    'index',
+    '--json',
+  ], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  return {
+    schemaVersion: 1,
+    generatedAt,
+    repoRoot,
+    slug,
+    postDir,
+    postJsonPath,
+    sourceLedgerPath,
+    effectiveInteractInputPath,
+    htmlPath,
+    validation,
+    reason: 'Insight post generated from structured source truth.',
+  };
+}
+
+export function buildInsightSite(options: { repoRoot?: string } = {}): InsightBuildResult {
+  const repoRoot = path.resolve(options.repoRoot || process.cwd());
+  const siteDir = assertSafeRelativePath(repoRoot, INSIGHT_SITE_ROOT);
+  const insightsDir = assertSafeRelativePath(repoRoot, 'site/insights');
+  const posts = collectInsightPostSummaries(repoRoot);
+  const files = [
+    path.join(siteDir, 'index.html'),
+    path.join(insightsDir, 'index.html'),
+    path.join(insightsDir, 'index.json'),
+  ];
+
+  fs.mkdirSync(insightsDir, { recursive: true });
+  writeJsonFile(path.join(insightsDir, 'index.json'), {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    posts,
+  });
+  fs.writeFileSync(path.join(insightsDir, 'index.html'), renderInsightsIndexHtml(posts), 'utf8');
+  fs.writeFileSync(path.join(siteDir, 'index.html'), renderSiteHomeHtml(posts), 'utf8');
+
+  const validation = validateInsightSite({ repoRoot });
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    repoRoot,
+    siteDir,
+    posts,
+    files,
+    validation,
+    exitCode: validation.exitCode,
+    reason: validation.exitCode === 0
+      ? 'Insight site indexes are ready for GitHub Pages.'
+      : 'Insight site indexes were written, but validation failed.',
+  };
+}
+
+export function validateInsightSite(options: { repoRoot?: string } = {}): InsightValidationResult {
+  const repoRoot = path.resolve(options.repoRoot || process.cwd());
+  const siteDir = path.join(repoRoot, INSIGHT_SITE_ROOT);
+  const checks: InsightValidationCheck[] = [];
+  const requiredIndexes = ['site/index.html', 'site/insights/index.html', 'site/insights/index.json'];
+
+  for (const relativePath of requiredIndexes) {
+    const filePath = path.join(repoRoot, relativePath);
+    checks.push({
+      code: 'site-index',
+      state: fs.existsSync(filePath) ? 'pass' : 'fail',
+      path: relativePath,
+      reason: fs.existsSync(filePath)
+        ? 'Public site index file exists.'
+        : 'Public site index file is missing; run insight-build first.',
+    });
+  }
+
+  checks.push(validatePublicArtifactBoundary(repoRoot));
+
+  for (const postDir of listInsightPostDirs(repoRoot)) {
+    const slug = path.basename(postDir);
+    const postJsonPath = path.join(postDir, 'post.json');
+    const sourceLedgerPath = path.join(postDir, 'source-ledger.json');
+    const effectiveInteractInputPath = path.join(postDir, 'effective-interact.input.json');
+    const htmlPath = path.join(postDir, 'index.html');
+    const requiredPostFiles = [
+      postJsonPath,
+      sourceLedgerPath,
+      effectiveInteractInputPath,
+      htmlPath,
+    ];
+
+    for (const filePath of requiredPostFiles) {
+      const relativePath = toPortablePath(path.relative(repoRoot, filePath));
+      checks.push({
+        code: 'post-file',
+        state: fs.existsSync(filePath) ? 'pass' : 'fail',
+        path: relativePath,
+        reason: fs.existsSync(filePath)
+          ? 'Required insight post file exists.'
+          : `Required insight post file is missing for ${slug}.`,
+      });
+    }
+
+    if (!fs.existsSync(postJsonPath)) {
+      continue;
+    }
+
+    try {
+      const post = readJsonFile<InsightPostInput>(postJsonPath);
+      checks.push(...validateInsightPostInput(post, repoRoot).checks);
+    } catch {
+      checks.push({
+        code: 'post-file',
+        state: 'fail',
+        path: toPortablePath(path.relative(repoRoot, postJsonPath)),
+        reason: 'Insight post source JSON is not valid JSON.',
+      });
+    }
+
+    if (fs.existsSync(htmlPath)) {
+      const html = fs.readFileSync(htmlPath, 'utf8');
+      checks.push({
+        code: 'utf8',
+        state: html.includes('<meta charset="utf-8">') ? 'pass' : 'fail',
+        path: toPortablePath(path.relative(repoRoot, htmlPath)),
+        reason: html.includes('<meta charset="utf-8">')
+          ? 'Generated HTML declares UTF-8.'
+          : 'Generated HTML must declare UTF-8.',
+      });
+    }
+  }
+
+  return makeInsightValidationResult(repoRoot, checks, 'Insight site validation');
+}
+
+export function publishInsightPreflight(
+  options: { repoRoot?: string; dryRun?: boolean; allowDirty?: boolean } = {},
+): InsightPreflightResult {
+  const repoRoot = path.resolve(options.repoRoot || process.cwd());
+  const mode: InsightPreflightResult['mode'] = options.dryRun === false ? 'publish' : 'dry-run';
+  const checks: InsightValidationCheck[] = [];
+  const siteValidation = validateInsightSite({ repoRoot });
+
+  checks.push({
+    code: 'workflow',
+    state: fs.existsSync(path.join(repoRoot, INSIGHT_WORKFLOW_PATH)) ? 'pass' : 'fail',
+    path: INSIGHT_WORKFLOW_PATH,
+    reason: fs.existsSync(path.join(repoRoot, INSIGHT_WORKFLOW_PATH))
+      ? 'GitHub Pages workflow exists.'
+      : 'GitHub Pages workflow is missing.',
+  });
+
+  for (const relativePath of ['site/index.html', 'site/insights/index.html', 'site/insights/index.json']) {
+    const filePath = path.join(repoRoot, relativePath);
+    checks.push({
+      code: 'pages-output',
+      state: fs.existsSync(filePath) ? 'pass' : 'fail',
+      path: relativePath,
+      reason: fs.existsSync(filePath)
+        ? 'GitHub Pages output file exists.'
+        : 'GitHub Pages output file is missing; run insight-build first.',
+    });
+  }
+
+  checks.push(...siteValidation.checks);
+  checks.push(checkGitBranch(repoRoot));
+  checks.push(checkInsightWorktree(repoRoot, options.allowDirty === true));
+
+  const failures = checks.filter((check) => check.state === 'fail');
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    repoRoot,
+    mode,
+    exitCode: failures.length > 0 ? 3 : 0,
+    checks,
+    reason: failures.length > 0
+      ? `${failures.length} insight publish preflight checks failed.`
+      : 'Insight publish preflight passed.',
+  };
+}
+
+function validateInsightPostInput(input: InsightPostInput, targetDir: string): InsightValidationResult {
+  const sources = Array.isArray(input.sources) ? input.sources : [];
+  const sourceClaims = Array.isArray(input.sourceClaims) ? input.sourceClaims : [];
+  const viewpoints = Array.isArray(input.viewpoints) ? input.viewpoints : [];
+  const integration = Array.isArray(input.integration) ? input.integration : [];
+  const projectMapping = Array.isArray(input.projectMapping) ? input.projectMapping : [];
+  const sourceIds = new Set(sources.map((source) => source.id));
+  const claimIds = new Set(sourceClaims.map((claim) => claim.id));
+  const checks: InsightValidationCheck[] = [];
+
+  const requiredFieldsPresent = Boolean(
+    input.title
+    && input.date
+    && input.summary
+    && Array.isArray(input.sources)
+    && Array.isArray(input.sourceClaims)
+    && Array.isArray(input.viewpoints)
+    && Array.isArray(input.integration)
+    && Array.isArray(input.projectMapping)
+    && isRecord(input.iterationRecord)
+    && isRecord(input.actionBoundary),
+  );
+  checks.push({
+    code: 'required-field',
+    state: requiredFieldsPresent ? 'pass' : 'fail',
+    path: 'post.json',
+    reason: requiredFieldsPresent
+      ? 'Required insight post fields are present.'
+      : 'Insight post source is missing required fields.',
+  });
+
+  checks.push({
+    code: 'utf8',
+    state: hasLikelyMojibake(JSON.stringify(input)) ? 'fail' : 'pass',
+    path: 'post.json',
+    reason: hasLikelyMojibake(JSON.stringify(input))
+      ? 'Insight post source contains likely mojibake; write files as UTF-8.'
+      : 'Insight post source has no likely mojibake markers.',
+  });
+
+  const sourceAttributionOk = Array.isArray(input.sources)
+    && sources.length > 0
+    && sources.every((source) => Boolean(source.id && source.title && source.url && source.type && source.accessedAt));
+  checks.push({
+    code: 'source-attribution',
+    state: sourceAttributionOk ? 'pass' : 'fail',
+    path: 'sources',
+    reason: sourceAttributionOk
+      ? 'Every source has attribution metadata.'
+      : 'Every post needs at least one source with id, title, url, type, and accessedAt.',
+  });
+
+  const unsafeLinks = sources.filter((source) => !isSafeHttpUrl(source.url));
+  checks.push({
+    code: 'source-link',
+    state: unsafeLinks.length === 0 ? 'pass' : 'fail',
+    path: 'sources[].url',
+    reason: unsafeLinks.length === 0
+      ? 'All source links use http or https.'
+      : `Unsafe source links detected: ${unsafeLinks.map((source) => source.id || source.url).join(', ')}.`,
+    evidence: unsafeLinks.map((source) => source.url),
+  });
+
+  const oversizedSources = sources
+    .map((source) => ({ source, words: countWords(source.excerpt || '') }))
+    .filter((entry) => entry.words > INSIGHT_SOURCE_EXCERPT_WORD_LIMIT);
+  checks.push({
+    code: 'source-size',
+    state: oversizedSources.length === 0 ? 'pass' : 'fail',
+    path: 'sources[].excerpt',
+    reason: oversizedSources.length === 0
+      ? 'Source excerpts stay within copyright-safe size limits.'
+      : `Source excerpts exceed ${INSIGHT_SOURCE_EXCERPT_WORD_LIMIT} words: ${oversizedSources.map((entry) => entry.source.id).join(', ')}.`,
+    size: oversizedSources[0]?.words,
+    limit: INSIGHT_SOURCE_EXCERPT_WORD_LIMIT,
+  });
+
+  const validClaimKinds = new Set<InsightClaimKind>(['fact', 'inference', 'assumption', 'project-judgment']);
+  const factInferenceOk = sourceClaims.length > 0
+    && viewpoints.length > 0
+    && sourceClaims.every((claim) => validClaimKinds.has(claim.kind));
+  checks.push({
+    code: 'fact-inference-separation',
+    state: factInferenceOk ? 'pass' : 'fail',
+    path: 'sourceClaims',
+    reason: factInferenceOk
+      ? 'Source claims and viewpoints keep explicit claim kinds and trace links.'
+      : 'Insight posts must separate source-backed claims from viewpoint extraction with explicit claim kinds.',
+  });
+
+  const invalidClaimRefs = sourceClaims.filter((claim) => !sourceIds.has(claim.sourceId));
+  const invalidViewpointRefs = viewpoints.flatMap((viewpoint) => (
+    (viewpoint.sourceClaimIds || [])
+      .filter((claimId) => !claimIds.has(claimId))
+      .map((claimId) => `${viewpoint.id}:${claimId}`)
+  ));
+  checks.push({
+    code: 'source-reference',
+    state: invalidClaimRefs.length === 0 && invalidViewpointRefs.length === 0 ? 'pass' : 'fail',
+    path: 'sourceClaims/viewpoints',
+    reason: invalidClaimRefs.length === 0 && invalidViewpointRefs.length === 0
+      ? 'Claims and viewpoints resolve to known sources.'
+      : 'Claims or viewpoints reference missing source metadata.',
+    evidence: [
+      ...invalidClaimRefs.map((claim) => claim.id),
+      ...invalidViewpointRefs,
+    ],
+  });
+
+  if (requiredFieldsPresent && (integration.length === 0 || projectMapping.length === 0)) {
+    checks.push({
+      code: 'required-field',
+      state: 'fail',
+      path: 'integration/projectMapping',
+      reason: 'Insight post source needs project integration and project mapping entries.',
+    });
+  }
+
+  return makeInsightValidationResult(path.resolve(targetDir), checks, 'Insight post validation');
+}
+
+function makeInsightValidationResult(targetDir: string, checks: InsightValidationCheck[], label: string): InsightValidationResult {
+  const failures = checks.filter((check) => check.state === 'fail');
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    targetDir: path.resolve(targetDir),
+    exitCode: failures.length > 0 ? 3 : 0,
+    checks,
+    reason: failures.length > 0 ? `${failures.length} ${label} checks failed.` : `${label} passed.`,
+  };
+}
+
+function buildInsightSourceLedger(input: InsightPostInput, slug: string, generatedAt: string): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    slug,
+    generatedAt,
+    sourceOfTruth: 'post.json',
+    excerptWordLimit: INSIGHT_SOURCE_EXCERPT_WORD_LIMIT,
+    copyrightBoundary: 'Use short excerpts and project-specific analysis; do not archive or rewrite source articles.',
+    sources: input.sources,
+    sourceClaims: input.sourceClaims,
+    viewpoints: input.viewpoints,
+  };
+}
+
+function adaptInsightToEffectiveInteract(input: InsightPostInput, slug: string, generatedAt: string): Record<string, unknown> {
+  return {
+    title: input.title,
+    summary: input.summary,
+    status: 'draft',
+    generatedAt,
+    template: 'research-explainer',
+    renderMode: 'fallback-only',
+    intent: {
+      audience: 'Skill Hub maintainer',
+      primaryQuestion: 'How should external material change Skill Hub iteration?',
+      decision: 'Publish source-backed project insight and iteration records.',
+      artifactKind: 'research',
+      successCriteria: [
+        'Facts and inferences are separated.',
+        'Every public claim links back to source metadata.',
+        'Project actions are bounded to the current iteration.',
+      ],
+    },
+    sections: [
+      {
+        type: 'markdown',
+        title: 'Source Claims',
+        group: 'evidence',
+        status: 'info',
+        content: formatSourceClaimsMarkdown(input),
+      },
+      {
+        type: 'markdown',
+        title: 'Viewpoint Extraction',
+        group: 'main',
+        status: 'info',
+        content: formatViewpointsMarkdown(input),
+      },
+      {
+        type: 'markdown',
+        title: 'Project Mapping',
+        group: 'impact',
+        status: 'ready',
+        content: formatProjectMappingMarkdown(input),
+      },
+      {
+        type: 'markdown',
+        title: 'Iteration Record',
+        group: 'changes',
+        status: 'ready',
+        content: formatIterationRecordMarkdown(input.iterationRecord),
+      },
+      {
+        type: 'markdown',
+        title: 'Action Boundary',
+        group: 'next',
+        status: 'ready',
+        content: formatActionBoundaryMarkdown(input.actionBoundary),
+      },
+    ],
+    evidence: input.sources.map((source) => ({
+      id: source.id,
+      kind: 'source',
+      label: source.title,
+      value: source.notes || source.excerpt || source.title,
+      status: 'info',
+      sourceUrl: source.url,
+      sourceTitle: source.title,
+      sourceType: source.type,
+      accessedAt: source.accessedAt,
+      trustLevel: 'mixed-trust',
+      knownLimits: [
+        'Source text is used for attribution and bounded excerpts only.',
+        `Canonical post slug: ${slug}`,
+      ],
+    })),
+    claims: input.sourceClaims.map((claim) => ({
+      id: claim.id,
+      statement: `[${claim.kind}] ${claim.statement}`,
+      kind: mapInsightClaimKind(claim.kind),
+      evidenceIds: [claim.sourceId],
+      confidence: claim.kind === 'fact' ? 'high' : 'medium',
+      knownLimits: [`Original claim kind: ${claim.kind}`],
+    })),
+    nextActions: input.actionBoundary.now,
+  };
+}
+
+function mapInsightClaimKind(kind: InsightClaimKind): string {
+  if (kind === 'fact') return 'conclusion';
+  if (kind === 'assumption') return 'assumption';
+  if (kind === 'inference') return 'recommendation';
+  return 'recommendation';
+}
+
+function formatSourceClaimsMarkdown(input: InsightPostInput): string {
+  return input.sourceClaims
+    .map((claim) => {
+      const source = input.sources.find((item) => item.id === claim.sourceId);
+      return `- **${claim.kind}** \`${claim.id}\`: ${claim.statement} Source: ${source ? `[${source.title}](${source.url})` : claim.sourceId}.`;
+    })
+    .join('\n');
+}
+
+function formatViewpointsMarkdown(input: InsightPostInput): string {
+  const viewpoints = input.viewpoints.map((viewpoint) => (
+    `- \`${viewpoint.id}\`: ${viewpoint.statement} Trace: ${viewpoint.sourceClaimIds.map((id) => `\`${id}\``).join(', ')}.`
+  ));
+  const assumptions = (input.assumptions || []).map((item) => `- Assumption: ${item}`);
+  return [...viewpoints, ...assumptions].join('\n');
+}
+
+function formatProjectMappingMarkdown(input: InsightPostInput): string {
+  return [
+    ...input.integration.map((item) => `- Integration: ${item}`),
+    ...input.projectMapping.map((item) => `- **${item.area}**: ${item.impact} Action: ${item.action}`),
+  ].join('\n');
+}
+
+function formatIterationRecordMarkdown(record: InsightIterationRecord): string {
+  return [
+    `### Changed\n${formatMarkdownList(record.changed)}`,
+    `### Confirmed\n${formatMarkdownList(record.confirmed)}`,
+    `### Open\n${formatMarkdownList(record.open)}`,
+    `### Watch\n${formatMarkdownList(record.watch)}`,
+  ].join('\n\n');
+}
+
+function formatActionBoundaryMarkdown(boundary: InsightActionBoundary): string {
+  return [
+    `### Now\n${formatMarkdownList(boundary.now)}`,
+    `### Observe\n${formatMarkdownList(boundary.observe)}`,
+    `### Not Now\n${formatMarkdownList(boundary.notNow)}`,
+  ].join('\n\n');
+}
+
+function formatMarkdownList(values: string[]): string {
+  return values.length > 0 ? values.map((value) => `- ${value}`).join('\n') : '- None.';
+}
+
+function collectInsightPostSummaries(repoRoot: string): InsightBuildResult['posts'] {
+  return listInsightPostDirs(repoRoot)
+    .flatMap((postDir) => {
+      const postJsonPath = path.join(postDir, 'post.json');
+      if (!fs.existsSync(postJsonPath)) {
+        return [];
+      }
+      const slug = path.basename(postDir);
+      let post: InsightPostInput;
+      try {
+        post = readJsonFile<InsightPostInput>(postJsonPath);
+      } catch {
+        return [];
+      }
+      return [{
+        slug,
+        title: post.title,
+        date: post.date,
+        summary: post.summary,
+        href: `posts/${slug}/`,
+      }];
+    })
+    .sort((left, right) => right.date.localeCompare(left.date) || left.title.localeCompare(right.title));
+}
+
+function listInsightPostDirs(repoRoot: string): string[] {
+  const postsDir = path.join(repoRoot, INSIGHT_POSTS_ROOT);
+  if (!fs.existsSync(postsDir)) {
+    return [];
+  }
+  return fs.readdirSync(postsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(postsDir, entry.name))
+    .sort();
+}
+
+function renderInsightsIndexHtml(posts: InsightBuildResult['posts']): string {
+  const postItems = posts.length > 0
+    ? posts.map((post) => `<li><a href="${escapeAttr(post.href)}">${escapeHtml(post.title)}</a><span>${escapeHtml(post.date)}</span><p>${escapeHtml(post.summary)}</p></li>`).join('\n')
+    : '<li>No insight posts yet.</li>';
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skill Hub Insights</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; color: #172033; background: #f7f8fb; }
+    main { max-width: 880px; margin: 0 auto; padding: 32px 20px; }
+    h1 { font-size: 2rem; margin-bottom: 0.35rem; }
+    ul { list-style: none; padding: 0; display: grid; gap: 14px; }
+    li { background: #fff; border: 1px solid #d9deea; border-radius: 8px; padding: 16px; }
+    a { color: #155eef; font-weight: 700; text-decoration: none; }
+    span { display: block; margin-top: 6px; color: #5b6578; font-size: 0.92rem; }
+    p { margin-bottom: 0; line-height: 1.55; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Skill Hub Insights</h1>
+    <p>Source-backed project thinking and iteration notes.</p>
+    <ul>
+      ${postItems}
+    </ul>
+  </main>
+</body>
+</html>
+`;
+}
+
+function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
+  const latest = posts[0];
+  const latestHtml = latest
+    ? `<p>Latest: <a href="insights/${escapeAttr(latest.href)}">${escapeHtml(latest.title)}</a></p>`
+    : '<p>No insight posts yet.</p>';
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skill Hub</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; color: #172033; background: #ffffff; }
+    main { max-width: 760px; margin: 0 auto; padding: 40px 20px; }
+    a { color: #155eef; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Skill Hub</h1>
+    <p><a href="insights/">Insights</a></p>
+    ${latestHtml}
+  </main>
+</body>
+</html>
+`;
+}
+
+function validatePublicArtifactBoundary(repoRoot: string): InsightValidationCheck {
+  const siteDir = path.join(repoRoot, INSIGHT_SITE_ROOT);
+  const leaked = fs.existsSync(siteDir)
+    ? listFilesRecursive(siteDir)
+      .map((file) => toPortablePath(path.relative(repoRoot, file)))
+      .filter((relativePath) => (
+        relativePath.includes('.skill-hub/reports/')
+        || relativePath.includes('skills/effective-interact/artifacts/')
+        || relativePath.startsWith('reports/')
+      ))
+    : [];
+  return {
+    code: 'public-artifact-boundary',
+    state: leaked.length === 0 ? 'pass' : 'fail',
+    path: INSIGHT_SITE_ROOT,
+    reason: leaked.length === 0
+      ? 'Public site does not reuse ignored local artifact directories.'
+      : 'Public site contains files from ignored local artifact directories.',
+    evidence: leaked,
+  };
+}
+
+function checkGitBranch(repoRoot: string): InsightValidationCheck {
+  try {
+    const branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    const namedBranch = branch.length > 0 && branch !== 'HEAD';
+    return {
+      code: 'branch',
+      state: namedBranch ? 'pass' : 'fail',
+      path: '.git',
+      reason: namedBranch
+        ? `Git branch is available: ${branch}.`
+        : 'Publishing should run from a named branch, not detached HEAD.',
+      evidence: branch ? [branch] : [],
+    };
+  } catch {
+    return {
+      code: 'branch',
+      state: 'fail',
+      path: '.git',
+      reason: 'Publishing requires a git worktree and a named branch.',
+    };
+  }
+}
+
+function checkInsightWorktree(repoRoot: string, allowDirty: boolean): InsightValidationCheck {
+  const dirty = detectDirtyWorktree(repoRoot);
+  return {
+    code: 'worktree',
+    state: dirty.length === 0 || allowDirty ? 'pass' : 'fail',
+    path: '.',
+    reason: dirty.length === 0
+      ? 'Git worktree is clean.'
+      : allowDirty
+        ? 'Git worktree has local changes, accepted by --allow-dirty for dry-run.'
+        : 'Git worktree has local changes; commit or stash before publishing.',
+    evidence: dirty.map((entry) => `${entry.status} ${entry.path}`),
+  };
+}
+
+function resolveInsightSlug(input: InsightPostInput, explicitSlug?: string): string {
+  if (explicitSlug || input.slug) {
+    return slugifyForUrl(explicitSlug || input.slug || '');
+  }
+  return slugifyForUrl(`${input.date}-${slugifyForUrl(input.title)}`);
+}
+
+function slugifyForUrl(value: string): string {
+  const ascii = value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
+  if (ascii) {
+    return ascii.slice(0, 96).replace(/-+$/g, '');
+  }
+  return `post-${crypto.createHash('sha256').update(value).digest('hex').slice(0, 8)}`;
+}
+
+function isSafeHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function countWords(value: string): number {
+  return value.trim().length === 0 ? 0 : value.trim().split(/\s+/).length;
+}
+
+function hasLikelyMojibake(value: string): boolean {
+  return /�|ï¿½|\?{4,}/.test(value);
+}
+
+function writeJsonFile(filePath: string, data: unknown): void {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+}
+
+function readJsonFile<T>(filePath: string): T {
+  const content = fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '');
+  return JSON.parse(content) as T;
 }
 
 export function copyRecursive(source: string, dest: string): void {
@@ -2605,6 +3906,10 @@ function escapeHtml(value: unknown): string {
     .replaceAll('"', '&quot;');
 }
 
+function escapeAttr(value: unknown): string {
+  return escapeHtml(value).replaceAll("'", '&#39;');
+}
+
 function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
     command: argv[0] || 'help',
@@ -2620,6 +3925,9 @@ function parseArgs(argv: string[]): CliOptions {
     agentReadiness: false,
     harness: false,
     componentIds: [],
+    input: null,
+    slug: null,
+    allowDirty: false,
   };
   const positional: string[] = [];
 
@@ -2647,6 +3955,12 @@ function parseArgs(argv: string[]): CliOptions {
       options.agentReadiness = true;
     } else if (arg === '--harness') {
       options.harness = true;
+    } else if (arg === '--input') {
+      options.input = readOptionValue(argv, ++index, arg);
+    } else if (arg === '--slug') {
+      options.slug = readOptionValue(argv, ++index, arg);
+    } else if (arg === '--allow-dirty') {
+      options.allowDirty = true;
     } else if (arg.startsWith('-')) {
       throw new CliError(`Unsupported option '${arg}'`, 2);
     } else {
@@ -2720,26 +4034,69 @@ async function runCliInner(argv: string[]): Promise<number> {
     return 0;
   }
 
-  if (options.command === 'init-harness') {
+  if (options.command === 'init-harness' || options.command === 'bootstrap-dev') {
     if (!options.dryRun && !options.yes) {
-      throw new CliError('Use --yes to confirm non-interactive harness initialization or --dry-run to preview.', 2);
+      throw new CliError('Use --yes to confirm non-interactive dev bootstrap or --dry-run to preview.', 2);
     }
-    const plan = planHarnessInit({
+    const plan = planDevBootstrap({
+      ...options,
       targetDir: options.targetDir || undefined,
-      force: options.force,
     });
     if (options.dryRun) {
-      emitReport(renderLifecycleReport('Harness Hub Init Plan', plan, options), options);
+      emitReport(renderLifecycleReport('Skill Hub Dev Bootstrap Plan', plan, options), options);
       return 0;
     }
-    const result = applyHarnessInit(plan);
-    emitReport(renderLifecycleReport('Harness Hub Init Report', result, options), options);
+    const result = applyDevBootstrap(plan, {
+      yes: options.yes,
+      force: options.force,
+      overwrite: options.overwrite,
+    });
+    emitReport(renderLifecycleReport('Skill Hub Dev Bootstrap Report', result, options), options);
     return result.exitCode;
   }
 
   if (options.command === 'validate-harness') {
     const result = validateHarness(options.targetDir || process.cwd());
-    emitReport(renderLifecycleReport('Harness Hub Validation Report', result, options), options);
+    emitReport(renderLifecycleReport('Skill Hub Harness Validation Report', result, options), options);
+    return result.exitCode;
+  }
+
+  if (options.command === 'insight-generate') {
+    if (!options.input) {
+      throw new CliError("Use --input <file> with insight-generate.", 2);
+    }
+    const inputPath = path.resolve(options.input);
+    const input = readJsonFile<InsightPostInput>(inputPath);
+    const result = createInsightPost(input, {
+      repoRoot: options.targetDir || undefined,
+      slug: options.slug || undefined,
+    });
+    emitReport(renderLifecycleReport('Skill Hub Insight Generation Report', result, options), options);
+    return result.validation.exitCode;
+  }
+
+  if (options.command === 'insight-build') {
+    const result = buildInsightSite({ repoRoot: options.targetDir || undefined });
+    emitReport(renderLifecycleReport('Skill Hub Insight Build Report', result, options), options);
+    return result.exitCode;
+  }
+
+  if (options.command === 'insight-validate') {
+    const result = validateInsightSite({ repoRoot: options.targetDir || undefined });
+    emitReport(renderLifecycleReport('Skill Hub Insight Validation Report', result, options), options);
+    return result.exitCode;
+  }
+
+  if (options.command === 'insight-publish') {
+    if (!options.dryRun) {
+      throw new CliError('Use --dry-run for local insight publish preflight. GitHub Actions performs the actual Pages deploy.', 2);
+    }
+    const result = publishInsightPreflight({
+      repoRoot: options.targetDir || undefined,
+      dryRun: true,
+      allowDirty: options.allowDirty,
+    });
+    emitReport(renderLifecycleReport('Skill Hub Insight Publish Preflight Report', result, options), options);
     return result.exitCode;
   }
 
@@ -2823,7 +4180,7 @@ async function runCliInner(argv: string[]): Promise<number> {
 
 function renderLifecycleReport(
   title: string,
-  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
   options: CliOptions,
 ): string {
   if (options.json) {
@@ -2844,8 +4201,67 @@ function renderLifecycleReport(
 }
 
 function rowsForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): HtmlRow[] {
+  if ('checks' in data) {
+    return data.checks.map((check) => ({
+      id: check.path,
+      state: check.state,
+      dest: check.reason,
+      version: check.code,
+      latestVersion: check.limit ? `${check.size || 0}/${check.limit}` : '',
+    }));
+  }
+
+  if ('postJsonPath' in data) {
+    return [
+      data.postJsonPath,
+      data.sourceLedgerPath,
+      data.effectiveInteractInputPath,
+      data.htmlPath,
+    ].map((filePath) => ({
+      id: data.slug,
+      dest: path.relative(data.repoRoot, filePath).replaceAll(path.sep, '/'),
+      state: fs.existsSync(filePath) ? 'written' : 'missing',
+    }));
+  }
+
+  if ('siteDir' in data) {
+    return [
+      ...data.files.map((filePath) => ({
+        id: 'site',
+        dest: path.relative(data.repoRoot, filePath).replaceAll(path.sep, '/'),
+        state: fs.existsSync(filePath) ? 'written' : 'missing',
+      })),
+      ...data.posts.map((post) => ({
+        id: post.slug,
+        dest: post.href,
+        state: 'indexed',
+        version: post.date,
+      })),
+    ];
+  }
+
+  if ('harnessComponentId' in data) {
+    const written = 'harnessFilesWritten' in data ? new Set(data.harnessFilesWritten) : new Set<string>();
+    return [
+      ...data.harnessFiles.map((file) => ({
+        id: data.harnessComponentId,
+        agent: 'standard',
+        dest: file.relativePath,
+        state: written.has(file.relativePath) ? 'written' : file.exists ? 'exists' : 'planned',
+        version: data.harnessVersion,
+      })),
+      ...data.blockers.map((blocker) => ({
+        id: data.harnessComponentId,
+        agent: 'standard',
+        dest: blocker.path,
+        state: blocker.code,
+        latestVersion: blocker.reason,
+      })),
+    ];
+  }
+
   if ('findings' in data) {
     if (data.harness) {
       return data.harness.findings.map((finding) => ({
@@ -2936,13 +4352,6 @@ function rowsForLifecycleData(
     ];
   }
 
-  if ('requiredFiles' in data) {
-    return [
-      ...data.present.map((file) => ({ id: file, state: data.managed.includes(file) ? 'managed' : 'present' })),
-      ...data.missing.map((file) => ({ id: file, state: 'missing' })),
-    ];
-  }
-
   if ('rows' in data) {
     return data.rows.map((row) => ({ ...row, state: row.state }));
   }
@@ -2998,8 +4407,29 @@ function rowsForLifecycleData(
 }
 
 function summaryForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | SkillHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): string {
+  if ('checks' in data) {
+    const failed = data.checks.filter((check) => check.state === 'fail').length;
+    return `${data.checks.length - failed} passed, ${failed} failed. ${data.reason}`;
+  }
+
+  if ('postJsonPath' in data) {
+    return `${data.slug}: ${data.reason}`;
+  }
+
+  if ('siteDir' in data) {
+    return `${data.posts.length} insight posts indexed. ${data.reason}`;
+  }
+
+  if ('harnessComponentId' in data) {
+    const installPlanned = data.install.items.filter((item) => !item.exists).length;
+    if ('harnessFilesWritten' in data) {
+      return `${data.installed.length} skills installed, ${data.harnessFilesWritten.length} harness files written, ${data.blockers.length} blockers. ${data.reason}`;
+    }
+    return `${installPlanned} skills planned, ${data.harnessFiles.length} harness files planned, ${data.blockers.length} blockers.`;
+  }
+
   if ('findings' in data) {
     if (data.harness) {
       const missing = data.harness.findings.filter((finding) => finding.state === 'missing').length;
@@ -3032,10 +4462,6 @@ function summaryForLifecycleData(
 
   if ('installed' in data) {
     return `${data.installed.length} installed, ${data.skipped.length} skipped.`;
-  }
-
-  if ('requiredFiles' in data) {
-    return `${data.present.length} present, ${data.missing.length} missing. ${data.reason}`;
   }
 
   if ('rows' in data) {
@@ -3124,6 +4550,12 @@ Skill Hub compatibility examples:
   skill-hub validate-harness [target] [--json|--html] [--output file]
   skill-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   skill-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
+  skill-hub init-harness [target] [--target standard] [--dry-run|--yes] [--force] [--json|--html]
+  skill-hub validate-harness [target] [--json|--html]
+  skill-hub insight-generate [target] --input file [--slug slug] [--json|--html]
+  skill-hub insight-build [target] [--json|--html]
+  skill-hub insight-validate [target] [--json|--html]
+  skill-hub insight-publish [target] --dry-run [--allow-dirty] [--json|--html]
   skill-hub status [target] [--json|--html] [--output file]
   skill-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
   skill-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
@@ -3132,6 +4564,7 @@ Skill Hub compatibility examples:
 
 Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
 Install selects every standard skill component and overwrites same-name skill directories by default.
-Root harness files are written only by init-harness.
+Use init-harness for Codex-only dev bootstrap: standard skills plus root harness files.
+Use insight-* for structured source-to-blog generation and GitHub Pages preflight.
 `);
 }

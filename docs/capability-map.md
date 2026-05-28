@@ -8,6 +8,8 @@ Harness Hub exposes three surfaces:
 
 Skill Hub is the compatibility name for the skill-distribution subsystem and existing `skill-hub` binary. Harness Hub is the product direction and adds root harness lifecycle commands without changing default skill install behavior.
 
+It also owns two explicit higher-level repo capabilities: Codex dev harness bootstrap through `init-harness`, and source-backed insight publishing through `insight-*`.
+
 ## CLI Commands
 
 | Command | Mutates target? | Purpose |
@@ -19,6 +21,13 @@ Skill Hub is the compatibility name for the skill-distribution subsystem and exi
 | `skill-hub validate-harness <target>` | No | Validate required minimal harness files and report missing pieces. |
 | `skill-hub install <target> --target standard --dry-run` | No | Preview managed installation of every standard skill. |
 | `skill-hub install <target> --target standard --yes` | Yes | Copy every managed standard skill and write `.skill-hub/lock.json`. |
+| `skill-hub init-harness <target> --target standard --dry-run` | No | Preview standard skill installation plus Codex-only root harness files. |
+| `skill-hub init-harness <target> --target standard --yes` | Yes | Install standard skills, write managed root harness files, and validate the harness. |
+| `skill-hub validate-harness <target> --json` | No | Check required harness files, Codex-only boundary, current-state file sizes, and goal-ready task markers. |
+| `skill-hub insight-generate <target> --input file --json` | Yes | Validate a structured source record, write post metadata, adapt through `effective-interact`, and generate public post HTML. |
+| `skill-hub insight-build <target> --json` | Yes | Build `site/index.html`, `site/insights/index.html`, and `site/insights/index.json` from post metadata. |
+| `skill-hub insight-validate <target> --json` | No | Validate UTF-8, source attribution, fact/inference separation, links, excerpt size, indexes, and public artifact boundaries. |
+| `skill-hub insight-publish <target> --dry-run --json` | No | Run Pages publish preflight for workflow, Pages output, source metadata, branch, and worktree state. |
 | `skill-hub status <target>` | No | Compare lock records with current files and hub versions. |
 | `skill-hub update <target> --dry-run` | No | Plan updates for managed skills. |
 | `skill-hub update <target> --yes` | Yes | Update managed, unmodified files. |
@@ -29,7 +38,9 @@ Skill Hub is the compatibility name for the skill-distribution subsystem and exi
 
 Skill Hub has one personal skill install set. No named skill variants exist. The CLI installs the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json` whose source lives under `skills/<name>/`. Confirmed install overwrites same-name skill directories and records the new managed files in `.skill-hub/lock.json`.
 
-Harness components use explicit lifecycle commands. `install` never writes root harness files. `init-harness` owns root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`, and records confirmed writes as harness components in the same lock.
+Harness components use explicit lifecycle commands. `install` never writes root harness files. `init-harness` owns root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `definition-of-done.md`, and `tasks/current-task.md`, and records confirmed writes as harness components in the same lock.
+
+Insight publishing is intentionally outside the managed install set. Its public source lives under Git-only `site/`; ignored local artifacts such as `.skill-hub/reports/` and `skills/effective-interact/artifacts/` are not valid Pages sources.
 
 ## Atomic Capability Candidate Map
 

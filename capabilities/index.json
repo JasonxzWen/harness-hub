@@ -12,9 +12,18 @@
         "repo-harness-initialization",
         "root-agent-instructions",
         "progress-and-handoff-files",
-        "harness-validation"
+        "harness-validation",
+        "codex-dev-harness-bootstrap",
+        "goal-ready-task-state",
+        "session-handoff-continuity",
+        "worktree-task-isolation"
       ],
-      "routing": "Use only through explicit init-harness and validate-harness commands; default skill install must not write root harness files.",
+      "overlapsWith": [
+        "skill:workflow-router",
+        "skill:verification-loop",
+        "skill:handoff"
+      ],
+      "routing": "Use only through explicit init-harness or bootstrap-dev commands; default skill install must not write root harness files.",
       "detects": [
         {
           "path": "AGENTS.md"
@@ -29,6 +38,15 @@
           "path": "session-handoff.md"
         },
         {
+          "path": "clean-state-checklist.md"
+        },
+        {
+          "path": "definition-of-done.md"
+        },
+        {
+          "path": "tasks/current-task.md"
+        },
+        {
           "path": "scripts/harness-validate.mjs"
         }
       ],
@@ -36,7 +54,7 @@
         "standard"
       ],
       "risk": "medium",
-      "recommendation": "Initialize a minimal repo-local harness only when the user explicitly requests root harness files."
+      "recommendation": "Initialize a minimal repo-local harness with Codex-only root state, handoff, task scope, validation, and managed ownership only through an explicit bootstrap command."
     },
     "skill:workflow-router": {
       "kind": "skill",

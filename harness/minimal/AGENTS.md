@@ -1,20 +1,20 @@
-always respond in the user's language
+always respond in Chinese unless the user explicitly asks for another language.
 
-# Repo Harness Instructions
+# Codex Harness
 
-Use this file as the target repository's always-loaded agent contract.
+This repository is prepared for Codex-driven development. Treat the repository as the system of record: current work, validation commands, handoff notes, and completion evidence must be discoverable from tracked files.
 
 ## Operating Rules
 
-1. Inspect the current worktree before relying on assumptions.
-2. Keep implementation scoped to the requested outcome.
-3. Preserve unrelated user changes.
-4. Prefer the repository's existing scripts, tests, and conventions.
-5. Verify changes with the nearest deterministic command before handoff.
+- Keep this file short. Move detailed or historical context to task files, docs, or archives.
+- Use a separate git worktree or branch for each write task.
+- Start from `tasks/current-task.md` before changing files.
+- Respect the task's allowed paths and forbidden paths.
+- Do not run parallel writes against the same file, module, or feature state.
+- Use read-only parallel work only for research, review, log analysis, or validation.
+- Record progress in `progress.md` and leave restart notes in `session-handoff.md`.
+- Run `node scripts/harness-validate.mjs` before handoff.
 
-## Harness Files
+## Required Handoff
 
-- `feature_list.json`: current feature and acceptance inventory.
-- `progress.md`: durable task progress and validation notes.
-- `session-handoff.md`: restart notes for future agent sessions.
-- `scripts/harness-validate.mjs`: local harness file presence check.
+Before ending a session, update `session-handoff.md` with the current status, changed files, validation evidence, blockers, and the next concrete action.
