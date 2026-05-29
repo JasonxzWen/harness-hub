@@ -6,23 +6,25 @@ const root = process.cwd();
 const requiredFiles = [
   'AGENTS.md',
   'feature_list.json',
-  'progress.md',
-  'session-handoff.md',
+  '.harness-hub/.gitignore',
+  '.harness-hub/state/progress.md',
+  '.harness-hub/state/session-handoff.md',
   'clean-state-checklist.md',
   'definition-of-done.md',
-  'tasks/current-task.md',
+  '.harness-hub/state/current-task.md',
   'scripts/harness-validate.mjs',
 ];
 const forbiddenFiles = ['CLAUDE.md'];
 const sizeLimits = {
   'AGENTS.md': 32 * 1024,
-  'progress.md': 16 * 1024,
-  'session-handoff.md': 16 * 1024,
-  'tasks/current-task.md': 16 * 1024,
+  '.harness-hub/state/progress.md': 16 * 1024,
+  '.harness-hub/state/session-handoff.md': 16 * 1024,
+  '.harness-hub/state/current-task.md': 16 * 1024,
 };
 const requiredMarkers = {
   'AGENTS.md': ['Codex', 'worktree', 'session-handoff'],
-  'tasks/current-task.md': [
+  '.harness-hub/.gitignore': ['state/', 'reports/'],
+  '.harness-hub/state/current-task.md': [
     'Goal',
     'Assumptions',
     'Non-goals',
@@ -30,6 +32,7 @@ const requiredMarkers = {
     'Forbidden paths',
     'Acceptance criteria',
     'Validation commands',
+    'Spec updates',
     'Parallel writes',
     'Handoff requirements',
   ],
@@ -81,7 +84,7 @@ for (const [file, markers] of Object.entries(requiredMarkers)) {
 
 const architectureText = [
   'AGENTS.md',
-  'tasks/current-task.md',
+  '.harness-hub/state/current-task.md',
   'feature_list.json',
 ]
   .map((file) => {

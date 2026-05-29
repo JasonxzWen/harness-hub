@@ -6,7 +6,7 @@
       "kind": "harness-template",
       "path": "harness/minimal",
       "dest": ".",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "local",
       "provides": [
         "repo-harness-initialization",
@@ -32,19 +32,22 @@
           "path": "feature_list.json"
         },
         {
-          "path": "progress.md"
+          "path": ".harness-hub/.gitignore"
         },
         {
-          "path": "session-handoff.md"
+          "path": ".harness-hub/state/current-task.md"
+        },
+        {
+          "path": ".harness-hub/state/progress.md"
+        },
+        {
+          "path": ".harness-hub/state/session-handoff.md"
         },
         {
           "path": "clean-state-checklist.md"
         },
         {
           "path": "definition-of-done.md"
-        },
-        {
-          "path": "tasks/current-task.md"
         },
         {
           "path": "scripts/harness-validate.mjs"
@@ -54,7 +57,7 @@
         "standard"
       ],
       "risk": "medium",
-      "recommendation": "Initialize a minimal repo-local harness with Codex-only root state, handoff, task scope, validation, and managed ownership only through an explicit bootstrap command."
+      "recommendation": "Initialize a minimal repo-local harness with stable tracked rules, ignored worktree-local task state, validation, and managed ownership only through an explicit bootstrap command."
     },
     "harness:website-cloner": {
       "kind": "harness-template",

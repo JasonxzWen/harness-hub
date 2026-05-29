@@ -20,6 +20,8 @@ Do not start implementation until the user-visible gates are aligned.
 7. **Test and accept**: run agreed unit, integration, E2E, or deterministic checks.
 8. **Deliver report**: use `effective-interact` for material work, with changes, evidence, validation, risks, and next actions.
 
+During implementation, update the active task's `Spec updates` only for decision-level changes that alter assumptions, acceptance criteria, allowed paths, validation commands, user-visible behavior, or risk. Do not turn it into a progress log; progress belongs in the harness progress file when a repo harness is active.
+
 ## TDD
 
 - Write or identify the failing test before implementation when behavior is testable.

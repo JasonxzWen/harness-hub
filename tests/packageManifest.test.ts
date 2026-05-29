@@ -46,8 +46,10 @@ test('package manifest keeps release validation and source traceability explicit
   expect(artifactPolicy.categories.gitOnly).toContain('site/');
   expect(artifactPolicy.categories.gitOnly).not.toContain('reports/');
   expect(artifactPolicy.categories.ignoredLocal).toContain('reports/');
+  expect(artifactPolicy.categories.ignoredLocal).toContain('.harness-hub/state/');
   expect(artifactPolicy.categories.ignoredLocal).toContain('.codex/');
   expect(artifactPolicy.git.ignored).toContain('reports/');
+  expect(artifactPolicy.git.ignored).toContain('.harness-hub/state/');
   expect(artifactPolicy.git.ignored).toContain('.codex/');
   expect(artifactPolicy.npm.forbidden).toContain('site/');
   expect(artifactPolicy.npm.forbidden).toContain('reports/');
