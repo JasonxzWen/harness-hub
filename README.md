@@ -1,9 +1,9 @@
 # Harness Hub
 
-Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects. It analyzes a target repository, installs the reusable skill set, initializes explicit root-level harness files when requested, validates the resulting harness, and keeps managed files safe through lock-backed lifecycle commands.
+Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects. It has one operating level: `minimal`. Minimal means the target repository gets the full standard skill and routing set plus the small root harness contract needed for continuity, validation, and handoff. It analyzes a target repository, installs the reusable skill set, initializes explicit root-level harness files when requested, validates the resulting harness, and keeps managed files safe through lock-backed lifecycle commands.
 
 
-Most skills can come from upstream sources and keep their upstream style. This repository adds the personal routing overlay, source records, harness templates, and lifecycle tooling needed to analyze, initialize, validate, install, update, status-check, and remove managed agent workflow assets in target projects.
+Most skills can come from upstream sources and keep their upstream style. Third-party projects such as ECC or harness factories are treated as sources to mine for high-ROI workflow ideas, not as extra product tiers. Useful ideas are folded back into the single minimal distribution, routing overlay, source records, harness template, and lifecycle tooling needed to analyze, initialize, validate, install, update, status-check, and remove managed agent workflow assets in target projects.
 
 The repository source of truth is the standard skill layout:
 
@@ -15,8 +15,8 @@ skills/
     scripts/      # optional
     assets/       # optional
 harness/
-  minimal/          # explicit repo harness template source
-  website-cloner/  # explicit authorized website clone smoke scaffold
+  minimal/          # the only supported target bootstrap harness
+  website-cloner/  # explicit authorized website clone smoke scaffold; not a harness level
 .claude-plugin/
   plugin.json
   marketplace.json
@@ -34,9 +34,31 @@ See [Personal Workflow Distribution](docs/personal-workflow-distribution.md) for
 - Documentation, communication, learning, and handoff: `doc-coauthoring`, `internal-comms`, `stop-slop` for narrow English prose AI-tell cleanup, `documentation-lookup`, `feynman-learning-coach`, `handoff`.
 - Web and artifact workflows: `effective-interact` for complex communication, option approval, status/incident reports, architecture/milestone maps, ignored long-task ledgers, HTML handoffs, and report-only aesthetic preflight; `frontend-design`, `design-taste-frontend`, `clone-website`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, and browser testing skills cover adjacent UI/artifact lanes.
 - Platform and extension atoms: `claude-api`, `mcp-builder`, `skill-creator`.
-- Repo harness lifecycle: `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove, minimal root harness templates, and explicit-only website-cloner smoke scaffolds.
-- Harness assessment: `validate-harness` reports required-file checks, five-subsystem structural scoring, HTML assessment output, generic verification-command detection, and a lightweight benchmark summary.
+- Repo harness lifecycle: `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove, the single minimal target bootstrap harness, and explicit-only website-cloner smoke scaffolds.
+- Harness assessment: `validate-harness` reports required-file checks, QA boundary checks, agent architecture boundaries, skill trigger hygiene, five-subsystem structural scoring, HTML assessment output, generic verification-command detection, and a lightweight benchmark summary.
 - Skill maintenance: `hub-maintenance-workflow`, source-project records, capability metadata, and `skill-quality-inventory`.
+
+## One-Step Target Bootstrap
+
+For another project, the intended path is one command:
+
+```powershell
+npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
+```
+
+Run it against a clean target git worktree. If the target already has root harness files, replace `--yes` with `--dry-run --json` first and use `--force --yes` only after inspecting the planned overwrites.
+
+If an agent only has this repository URL instead of the npm package, use the same minimal path from source:
+
+```powershell
+git clone https://github.com/JasonxzWen/harness-hub.git
+cd harness-hub
+bun install
+bun run build
+node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --yes
+```
+
+Both paths write the minimal root harness files, install every standard skill including `workflow-router` and the owner workflows, and record lock-backed ownership. There are no advanced, lite, team, language, or experimental harness levels. When a future source review finds a useful pattern, it should improve this same minimal path instead of adding another tier.
 
 ## CLI
 
@@ -65,7 +87,7 @@ npx @jasonwen/harness-hub remove D:\path\to\target --dry-run --json
 ```
 
 
-There are no named skill install variants. `install` installs every standard Harness Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. `install` does not create root harness files; use explicit `init-harness` for `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`. Legacy host-specific directories are not the distribution shape.
+There are no named skill install variants, harness pack levels, or bundle selectors. `install` installs every standard Harness Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. `install` does not create root harness files; use explicit `init-harness --target standard` for the one-step minimal harness bootstrap. Legacy host-specific directories are not the distribution shape.
 
 `init-harness` is the explicit Codex-only dev bootstrap path. It composes the standard skill install with root harness files such as `AGENTS.md`, `feature_list.json`, `tasks/current-task.md`, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `definition-of-done.md`, and `scripts/harness-validate.mjs`. It records managed ownership in `.harness-hub/lock.json`, blocks dirty git worktrees and existing harness files by default, and leaves low-level `install` skills-only.
 
@@ -109,7 +131,7 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | Path | Purpose |
 |---|---|
 | `skills/` | Platform-neutral skill source of truth |
-| `harness/` | Source-owned repo harness templates and advanced pack metadata |
+| `harness/` | Source-owned minimal bootstrap harness and explicit-only smoke scaffolds |
 | `.claude-plugin/` | Claude plugin and marketplace manifests |
 | `capabilities/index.json` | Skill and harness component metadata, including source-retained components |
 | `site/` | Git-only GitHub Pages output for insight posts |
@@ -118,7 +140,7 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | `scripts/skill-quality-inventory.ts` | Report-only skill quality inventory |
 | `docs/skill-routing.md` | Overlap and routing rules |
 | `docs/personal-workflow-distribution.md` | Personal distribution rules, TODOs, and acceptance criteria |
-| `docs/harness-packs.md` | Harness pack source-review boundary and promotion checklist |
+| `docs/harness-packs.md` | Minimal-only harness policy and source-review boundary |
 | `docs/insight-publishing.md` | Source-to-insight blog workflow, validation, and publish boundary |
 | `docs/source-projects.md` | Upstream source and decision log |
 | `docs/workflow-source-dossier.md` | Reference dossier for SDD, routing, Effective Interact, OpenSpec, Superpowers, ECC, Matt Pocock skills, Vercel, and retired Ralph source notes |

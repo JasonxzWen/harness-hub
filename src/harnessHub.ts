@@ -438,7 +438,15 @@ export interface DevBootstrapPlan {
 }
 
 export interface HarnessValidationCheck {
-  code: 'required-file' | 'codex-only' | 'file-size' | 'required-content' | 'structured-content';
+  code:
+    | 'required-file'
+    | 'codex-only'
+    | 'file-size'
+    | 'required-content'
+    | 'structured-content'
+    | 'qa-boundary'
+    | 'agent-architecture'
+    | 'trigger-hygiene';
   state: 'pass' | 'fail';
   path: string;
   reason: string;
@@ -2477,7 +2485,114 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Handoff requirements',
   ]));
   checks.push(validateFeatureListJson(targetDir));
+  checks.push(validateQaBoundary(targetDir));
+  checks.push(validateAgentArchitectureBoundary(targetDir));
+  checks.push(validateSkillTriggerHygiene(targetDir));
   return checks;
+}
+
+function validateQaBoundary(targetDir: string): HarnessValidationCheck {
+  const relativePath = 'tasks/current-task.md';
+  const markers = [
+    'Goal',
+    'Assumptions',
+    'Non-goals',
+    'Allowed paths',
+    'Forbidden paths',
+    'Acceptance criteria',
+    'Validation commands',
+    'Handoff requirements',
+  ];
+  return validateFileContainsWithCode(
+    targetDir,
+    relativePath,
+    markers,
+    'qa-boundary',
+    'Task QA boundary markers are present.',
+    'Missing task QA boundary markers',
+  );
+}
+
+function validateAgentArchitectureBoundary(targetDir: string): HarnessValidationCheck {
+  const markers = [
+    'worktree_policy',
+    'parallel_write_policy',
+    'read_only_parallel_work',
+    'single integration review point',
+    'non-overlapping',
+  ];
+  const sources = ['AGENTS.md', 'tasks/current-task.md', 'feature_list.json'];
+  const content = sources
+    .map((relativePath) => {
+      const filePath = path.join(targetDir, relativePath);
+      return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+    })
+    .join('\n');
+  const missing = markers.filter((marker) => !content.includes(marker));
+  return {
+    code: 'agent-architecture',
+    state: missing.length === 0 ? 'pass' : 'fail',
+    path: 'AGENTS.md',
+    reason: missing.length === 0
+      ? 'Agent architecture and parallel-work boundaries are documented.'
+      : `Missing agent architecture boundary markers: ${missing.join(', ')}.`,
+    evidence: markers,
+  };
+}
+
+function validateSkillTriggerHygiene(targetDir: string): HarnessValidationCheck {
+  const skillsDir = path.join(targetDir, 'skills');
+  if (!fs.existsSync(skillsDir) || !fs.statSync(skillsDir).isDirectory()) {
+    return {
+      code: 'trigger-hygiene',
+      state: 'pass',
+      path: 'skills',
+      reason: 'No installed skill tree found; trigger hygiene has no skill descriptions to audit.',
+      evidence: ['description frontmatter'],
+    };
+  }
+
+  const issues: string[] = [];
+  const skillDirs = fs.readdirSync(skillsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+  for (const skillName of skillDirs) {
+    const skillPath = path.join(skillsDir, skillName, 'SKILL.md');
+    if (!fs.existsSync(skillPath)) {
+      continue;
+    }
+    const description = parseSkillDescription(fs.readFileSync(skillPath, 'utf8'));
+    if (!description) {
+      issues.push(`${skillName}: missing description`);
+      continue;
+    }
+    if (!/(load when|use when|when|asks|needs|requests|trigger)/i.test(description)) {
+      issues.push(`${skillName}: description lacks an activation condition`);
+    }
+    if (/(always use|every request|all requests|all tasks|any task|whenever possible)/i.test(description)) {
+      issues.push(`${skillName}: description uses broad activation wording`);
+    }
+  }
+
+  return {
+    code: 'trigger-hygiene',
+    state: issues.length === 0 ? 'pass' : 'fail',
+    path: 'skills',
+    reason: issues.length === 0
+      ? 'Installed skill descriptions have bounded activation conditions.'
+      : `Skill trigger hygiene issues detected: ${issues.slice(0, 8).join('; ')}${issues.length > 8 ? `; +${issues.length - 8} more` : ''}.`,
+    evidence: issues.length === 0 ? [`${skillDirs.length} skills scanned`] : issues.slice(0, 8),
+  };
+}
+
+function parseSkillDescription(content: string): string | null {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) {
+    return null;
+  }
+  const descriptionMatch = match[1].match(/^description:\s*(.+)$/m);
+  return descriptionMatch ? descriptionMatch[1].replace(/^['"]|['"]$/g, '').trim() : null;
 }
 
 function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
@@ -2531,10 +2646,28 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function validateFileContains(targetDir: string, relativePath: string, markers: string[]): HarnessValidationCheck {
+  return validateFileContainsWithCode(
+    targetDir,
+    relativePath,
+    markers,
+    'required-content',
+    'Required harness guidance markers are present.',
+    'Missing required harness guidance markers',
+  );
+}
+
+function validateFileContainsWithCode(
+  targetDir: string,
+  relativePath: string,
+  markers: string[],
+  code: HarnessValidationCheck['code'],
+  passReason: string,
+  failReasonPrefix: string,
+): HarnessValidationCheck {
   const filePath = path.join(targetDir, relativePath);
   if (!fs.existsSync(filePath)) {
     return {
-      code: 'required-content',
+      code,
       state: 'fail',
       path: relativePath,
       reason: 'Required content could not be checked because the file is missing.',
@@ -2545,12 +2678,12 @@ function validateFileContains(targetDir: string, relativePath: string, markers: 
   const content = fs.readFileSync(filePath, 'utf8');
   const missing = markers.filter((marker) => !content.includes(marker));
   return {
-    code: 'required-content',
+    code,
     state: missing.length === 0 ? 'pass' : 'fail',
     path: relativePath,
     reason: missing.length === 0
-      ? 'Required harness guidance markers are present.'
-      : `Missing required harness guidance markers: ${missing.join(', ')}.`,
+      ? passReason
+      : `${failReasonPrefix}: ${missing.join(', ')}.`,
     evidence: markers,
   };
 }

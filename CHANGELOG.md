@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.11 - 2026-05-29
+
+- Keep Harness Hub minimal-only: document the single `init-harness --target standard` migration path, including npm and source-clone bootstrap instructions.
+- Record ECC and `revfactory/harness` as source material only, with useful ideas folded into the existing minimal path instead of creating packs or levels.
+- Strengthen `validate-harness` with QA boundary checks, agent architecture boundary checks, and skill trigger-hygiene auditing.
+
 ## 0.1.10 - 2026-05-28
 
 - Rename the project, package, CLI, source entrypoint, docs, specs, and release workflows to Harness Hub.

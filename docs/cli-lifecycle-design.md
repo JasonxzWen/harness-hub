@@ -52,7 +52,7 @@ Insight publishing is also explicit, but it is not a target-repo install lifecyc
 export type AgentName = 'standard';
 
 export interface CapabilityComponent {
-  kind: 'skill' | 'harness-template' | 'harness-pack' | string;
+  kind: 'skill' | 'harness-template' | string;
   path: string;
   version: string;
   source: string;

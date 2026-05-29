@@ -3,7 +3,7 @@
 Harness Hub exposes three surfaces:
 
 - a personal distributed skill set under `skills/`;
-- explicit repo harness templates under `harness/`;
+- one supported target bootstrap harness under `harness/minimal/`;
 - a lifecycle CLI that can analyze, initialize, validate, install, update, status-check, and remove managed target-repo assets.
 
 
@@ -17,12 +17,12 @@ It also owns two explicit higher-level repo capabilities: Codex dev harness boot
 | `harness-hub analyze <target> --harness` | No | Detect repo harness gaps, existing root harness evidence, and initialization recommendations. |
 | `harness-hub init-harness <target> --dry-run` | No | Preview root harness initialization without writing files or lock state. |
 | `harness-hub init-harness <target> --yes` | Yes | Write minimal harness files after blockers pass and record ownership in `.harness-hub/lock.json`. |
-| `harness-hub validate-harness <target>` | No | Validate required minimal harness files, score the five harness subsystems, and report a structural benchmark. |
+| `harness-hub validate-harness <target>` | No | Validate required minimal harness files, QA boundaries, agent architecture boundaries, skill trigger hygiene, the five harness subsystems, and a structural benchmark. |
 | `harness-hub install <target> --target standard --dry-run` | No | Preview managed installation of every standard skill. |
 | `harness-hub install <target> --target standard --yes` | Yes | Copy every managed standard skill and write `.harness-hub/lock.json`. |
 | `harness-hub init-harness <target> --target standard --dry-run` | No | Preview standard skill installation plus Codex-only root harness files. |
 | `harness-hub init-harness <target> --target standard --yes` | Yes | Install standard skills, write managed root harness files, and validate the harness. |
-| `harness-hub validate-harness <target> --json` | No | Check required harness files, Codex-only boundary, current-state file sizes, goal-ready task markers, five-subsystem assessment, project verification detection, and structural benchmark results. |
+| `harness-hub validate-harness <target> --json` | No | Check required harness files, Codex-only boundary, current-state file sizes, QA boundaries, agent architecture boundaries, skill trigger hygiene, five-subsystem assessment, project verification detection, and structural benchmark results. |
 | `harness-hub insight-generate <target> --input file --json` | Yes | Validate a structured source record, write post metadata, adapt through `effective-interact`, and generate public post HTML. |
 | `harness-hub insight-build <target> --json` | Yes | Build `site/index.html`, `site/insights/index.html`, and `site/insights/index.json` from post metadata. |
 | `harness-hub insight-validate <target> --json` | No | Validate UTF-8, source attribution, fact/inference separation, links, excerpt size, indexes, and public artifact boundaries. |
@@ -35,15 +35,15 @@ It also owns two explicit higher-level repo capabilities: Codex dev harness boot
 
 ## Install Surface
 
-Harness Hub has one personal skill install set. No named skill variants exist. The CLI installs the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json` whose source lives under `skills/<name>/`. Confirmed install overwrites same-name skill directories and records the new managed files in `.harness-hub/lock.json`.
+Harness Hub has one personal skill install set and one harness level: `minimal`. No named skill variants exist. No bundle selectors, advanced packs, language-specific harness levels, or team harness levels exist. The CLI installs the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json` whose source lives under `skills/<name>/`. Confirmed install overwrites same-name skill directories and records the new managed files in `.harness-hub/lock.json`.
 
-Harness components use explicit lifecycle commands. `install` never writes root harness files. `init-harness` owns root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `definition-of-done.md`, and `tasks/current-task.md`, and records confirmed writes as harness components in the same lock.
+Harness components use explicit lifecycle commands. `install` never writes root harness files. `init-harness --target standard --yes` is the one-step migration path: it installs the full standard skill and routing surface, writes root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `definition-of-done.md`, and `tasks/current-task.md`, validates the harness, and records confirmed writes as harness components in the same lock.
 
 Insight publishing is intentionally outside the managed install set. Its public source lives under Git-only `site/`; ignored local artifacts such as `.harness-hub/reports/` and `skills/effective-interact/artifacts/` are not valid Pages sources.
 
 ## Atomic Capability Candidate Map
 
-This map separates current installable capabilities from source-backed atom candidates. It is intentionally not an install graph; promote candidates into `capabilities/index.json` only after source review, routing placement, and lifecycle-risk placement.
+This map separates current installable capabilities from source-backed atom candidates. It is intentionally not an install graph or future pack menu. Promote candidates into `capabilities/index.json` only after source review, routing placement, and lifecycle-risk placement. Harness candidates must improve the single minimal path or stay out of the install surface.
 
 | Capability area | Current installable coverage | Source-backed atom candidates | Gap and decision |
 |---|---|---|---|
@@ -53,8 +53,8 @@ This map separates current installable capabilities from source-backed atom cand
 | Frontend and visual artifacts | `frontend-design`, `design-taste-frontend`, `clone-website`, `web-artifacts-builder`, `frontend-slides`, `frontend-patterns`, `effective-interact`, `web-design-guidelines`, `theme-factory`, `slack-gif-creator` | User-selected: `frontend-slides`, Michal Vavra `agent-browser`, `frontend-design`, `html-tools`; Anthropic `algorithmic-art`, `canvas-design`, `frontend-design`, `slack-gif-creator`, `theme-factory`, `web-artifacts-builder`, `webapp-testing`; Leonxlnx `taste-skill`; `JCodesMore/ai-website-cloner-template` | `taste-skill` is now installed as a narrow `design-taste-frontend` taste layer for landing pages, portfolios, marketing pages, and redesigns. `clone-website` covers explicit authorized website reconstruction only; generic frontend creation still routes to `frontend-design`. |
 | Writing, handoff, knowledge, and learning | `doc-coauthoring`, `internal-comms`, `stop-slop`, `handoff`, `feynman-learning-coach`, `answer-workflow`, `documentation-lookup`, `effective-interact` | User-selected: Matt Pocock `writing-beats`, `writing-fragments`, `writing-shape`, `edit-article`, `handoff`; Anthropic `doc-coauthoring`, `internal-comms`, `brand-guidelines`; hardikpandya `stop-slop` | Filled collaborative doc, internal comms, and narrow English prose AI-tell cleanup gaps. `stop-slop` is a strong style editor, not a default rule for specs, status reports, Chinese output, or code explanation. |
 | Documents, spreadsheets, slides, and PDFs | No installable Harness Hub atoms. External app skills exist in this Codex environment, but they are not repo-distributed Harness Hub components. | Anthropic `docx`, `pdf`, `pptx`, `xlsx` | Clear capability gap. Treat as high-value source candidates, but source-available licensing requires review before copying or redistributing. |
-| Agent platform, API, and skill authoring | `hub-maintenance-workflow`, `skill-quality-inventory`, `documentation-lookup`, `claude-api`, `mcp-builder`, `skill-creator` | Anthropic `claude-api`, `mcp-builder`, `skill-creator`; Matt Pocock `write-a-skill`; Superpowers `writing-skills` | Filled MCP, provider-specific Claude API, and skill-authoring gaps with explicit atoms. `claude-api` remains live-doc-first because API details change. |
-| Repo harness initialization and governance | `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove, `harness/website-cloner` as explicit smoke scaffold | `walkinglabs/learn-harness-engineering` and its `harness-creator` as evaluated reference material; `JCodesMore/ai-website-cloner-template` as website reconstruction source | Keep minimal local harness template installable through explicit commands only. The five-subsystem assessment and structural benchmark ideas are adapted into local `validate-harness`. Website-cloner is an explicit high-risk scaffold, not part of default skill install or ordinary frontend routing. |
+| Agent platform, API, and skill authoring | `hub-maintenance-workflow`, `skill-quality-inventory`, `documentation-lookup`, `claude-api`, `mcp-builder`, `skill-creator` | Anthropic `claude-api`, `mcp-builder`, `skill-creator`; Matt Pocock `write-a-skill`; Superpowers `writing-skills`; ECC stocktake and agent-architecture audit patterns | Filled MCP, provider-specific Claude API, and skill-authoring gaps with explicit atoms. `claude-api` remains live-doc-first because API details change. ECC-style stocktake and trigger-noise audits are useful source ideas for minimal-path quality gates, not a separate governance tier. |
+| Repo harness initialization and governance | `analyze --harness`, `init-harness`, `validate-harness`, lock-backed status/update/remove, `harness/website-cloner` as explicit smoke scaffold | `walkinglabs/learn-harness-engineering`, `revfactory/harness`, ECC, and similar harness sources as evaluated reference material; `JCodesMore/ai-website-cloner-template` as website reconstruction source | Keep the minimal local harness template installable through explicit commands only. High-ROI ideas such as five-subsystem assessment, structural benchmarks, team-architecture patterns, QA boundary checks, stocktake workflows, and trigger-noise audits fold into the same minimal path through `validate-harness`; do not create advanced packs or optional levels. Website-cloner is an explicit high-risk scaffold, not part of default skill install or ordinary frontend routing. |
 | External tools and enterprise integrations | Limited; current installable graph avoids credentialed external writes by default. | User-selected: archived Michal Vavra `asncli`, `gogcli`, `snowcli`; CE Slack/release/session candidates from the broader source pool | Keep explicit-only until connector, credential, and side-effect boundaries are specified. |
 
 ## Local Alignment Notes
@@ -62,7 +62,7 @@ This map separates current installable capabilities from source-backed atom cand
 Current strengths:
 
 - Workflow ownership is clear: `workflow-router` selects one owner, then owner workflows call atoms.
-- Repo harness ownership is explicit: root files are initialized only through `init-harness`, not through default skill installation.
+- Repo harness ownership is explicit: root files are initialized only through `init-harness --target standard`, not through default skill installation.
 - Engineering lifecycle coverage is strong: SDD, TDD, diagnosis, review, verification, handoff, and Harness Hub maintenance are all installable.
 - Web/artifact coverage is strong after adding `theme-factory` and `design-taste-frontend`; production UI, frontend taste direction, standalone artifacts, slides, one-off browser checks, and durable E2E have separate lanes. `effective-interact` also has a report-only aesthetic preflight derived from `taste-skill`.
 - Writing coverage is now viable for docs, internal comms, and narrow English prose cleanup after adding `doc-coauthoring`, `internal-comms`, and `stop-slop`.
@@ -71,10 +71,10 @@ Current strengths:
 Known gaps:
 
 - Native document/spreadsheet/PDF/PPT editing remains a distribution gap because Anthropic `docx`, `pdf`, `pptx`, and `xlsx` are source-available, not open source.
-- Advanced harness packs remain a source-review gap until redistribution license, host metadata, and side-effect boundaries are clear. Website-cloner is intentionally explicit and high-risk because it touches external sites, browser evidence, and potential third-party brand assets.
+- External harness, team-architecture, and stocktake ideas still need careful extraction; accepted ideas must improve the minimal path instead of creating another install level. Website-cloner is intentionally explicit and high-risk because it touches external sites, browser evidence, and potential third-party brand assets.
 - Cloud/provider coverage is Vercel-heavy; AWS/GCP/Azure, data/ML operations, security operations, and enterprise SaaS integrations still need additional reviewed sources.
 - Brand workflow remains generic-only; Anthropic `brand-guidelines` was not imported because it is Anthropic-specific.
-- Harness pack promotion is documented in `docs/harness-packs.md`; only `minimal` is currently explicit-init capable.
+- `docs/harness-packs.md` documents the minimal-only policy; only `minimal` is explicit-init capable.
 
 Known redundancies:
 
@@ -88,6 +88,7 @@ Known redundancies:
 - Prefer importing or adapting one bounded skill at a time over importing a repo or plugin bundle.
 - Preserve upstream skill bodies by default; put local routing and safety decisions in the overlay unless the upstream body blocks safe personal distribution.
 - Keep host-specific paths, hooks, UI metadata, and credential assumptions outside local routing/workflow layers.
+- Do not create a new install level, harness pack tier, or selector; fold the idea into the standard minimal path or keep it out.
 - Document skills from `anthropics/skills` fill a real map gap, but `docx`, `pdf`, `pptx`, and `xlsx` require license review before redistribution.
 
 ## Routing Anchors
@@ -117,4 +118,4 @@ Known redundancies:
 
 Do not add host-specific install directories to the capability graph. Packaging for a host belongs in that host's manifest layer, such as `.claude-plugin/`. Local Codex dogfooding uses `scripts/sync-codex-skills.mjs` to generate ignored `.codex/skills/` copies from the standard source tree; `.codex/` stays local and is not installable capability metadata. Subagents and hooks are workflow-owned optimizations: subagents need independent scopes, and hooks stay advisory until reviewed and approved.
 
-Harness components may live under `harness/<name>/`, but they are not part of default standard skill install. They are copied only by explicit harness lifecycle commands and must stay free of host-local runner metadata.
+Harness components currently live under `harness/minimal/`, but they are not part of default standard skill install. They are copied only by explicit harness lifecycle commands and must stay free of host-local runner metadata.

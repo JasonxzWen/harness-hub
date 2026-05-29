@@ -24,13 +24,23 @@ const requiredMarkers = {
   'AGENTS.md': ['Codex', 'worktree', 'session-handoff'],
   'tasks/current-task.md': [
     'Goal',
+    'Assumptions',
+    'Non-goals',
     'Allowed paths',
     'Forbidden paths',
+    'Acceptance criteria',
     'Validation commands',
     'Parallel writes',
     'Handoff requirements',
   ],
 };
+const agentArchitectureMarkers = [
+  'worktree_policy',
+  'parallel_write_policy',
+  'read_only_parallel_work',
+  'single integration review point',
+  'non-overlapping',
+];
 
 const failures = [];
 
@@ -69,6 +79,49 @@ for (const [file, markers] of Object.entries(requiredMarkers)) {
   }
 }
 
+const architectureText = [
+  'AGENTS.md',
+  'tasks/current-task.md',
+  'feature_list.json',
+]
+  .map((file) => {
+    const filePath = path.join(root, file);
+    return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+  })
+  .join('\n');
+const missingArchitectureMarkers = agentArchitectureMarkers.filter((marker) => !architectureText.includes(marker));
+if (missingArchitectureMarkers.length > 0) {
+  failures.push(`agent architecture boundary: missing markers ${missingArchitectureMarkers.join(', ')}`);
+}
+
+const skillsDir = path.join(root, 'skills');
+if (fs.existsSync(skillsDir) && fs.statSync(skillsDir).isDirectory()) {
+  const triggerIssues = [];
+  for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    const skillPath = path.join(skillsDir, entry.name, 'SKILL.md');
+    if (!fs.existsSync(skillPath)) {
+      continue;
+    }
+    const description = parseSkillDescription(fs.readFileSync(skillPath, 'utf8'));
+    if (!description) {
+      triggerIssues.push(`${entry.name}: missing description`);
+      continue;
+    }
+    if (!/(load when|use when|when|asks|needs|requests|trigger)/i.test(description)) {
+      triggerIssues.push(`${entry.name}: description lacks an activation condition`);
+    }
+    if (/(always use|every request|all requests|all tasks|any task|whenever possible)/i.test(description)) {
+      triggerIssues.push(`${entry.name}: description uses broad activation wording`);
+    }
+  }
+  if (triggerIssues.length > 0) {
+    failures.push(`skill trigger hygiene: ${triggerIssues.slice(0, 8).join('; ')}${triggerIssues.length > 8 ? `; +${triggerIssues.length - 8} more` : ''}`);
+  }
+}
+
 const featureStatePath = path.join(root, 'feature_list.json');
 if (fs.existsSync(featureStatePath)) {
   try {
@@ -100,4 +153,13 @@ console.log('Harness validation passed.');
 
 function isRecord(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function parseSkillDescription(content) {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) {
+    return null;
+  }
+  const descriptionMatch = match[1].match(/^description:\s*(.+)$/m);
+  return descriptionMatch ? descriptionMatch[1].replace(/^['"]|['"]$/g, '').trim() : null;
 }

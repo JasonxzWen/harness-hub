@@ -77,6 +77,9 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(validation.assessment.subsystems.instructions.score).toBeGreaterThanOrEqual(4);
   expect(validation.assessment.project.verificationCommands).toContain('node scripts/harness-validate.mjs');
   expect(validation.benchmark.score).toBeGreaterThanOrEqual(90);
+  expect(validation.checks.some((check) => check.code === 'qa-boundary' && check.state === 'pass')).toBe(true);
+  expect(validation.checks.some((check) => check.code === 'agent-architecture' && check.state === 'pass')).toBe(true);
+  expect(validation.checks.some((check) => check.code === 'trigger-hygiene' && check.state === 'pass')).toBe(true);
 
   const cliValidation = await captureCli(['validate-harness', targetDir, '--json']);
   expect(cliValidation.code).toBe(0);
@@ -211,6 +214,31 @@ test('harness validation rejects malformed feature state JSON', () => {
     expect(String((error as { stderr?: Buffer | string }).stderr)).toContain('feature_list.json');
   }
   expect(failed).toBe(true);
+});
+
+test('harness validation audits broad or missing skill triggers', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-trigger-hygiene-'));
+  applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
+  const noisySkillDir = path.join(targetDir, 'skills', 'noisy-skill');
+  fs.mkdirSync(noisySkillDir, { recursive: true });
+  fs.writeFileSync(path.join(noisySkillDir, 'SKILL.md'), [
+    '---',
+    'name: noisy-skill',
+    'description: Always use for every request.',
+    '---',
+    '',
+    '# Noisy Skill',
+    '',
+  ].join('\n'));
+
+  const validation = validateHarness(targetDir);
+
+  expect(validation.exitCode).toBe(3);
+  expect(validation.checks.some((check) => (
+    check.state === 'fail'
+    && check.code === 'trigger-hygiene'
+    && check.reason.includes('broad activation')
+  ))).toBe(true);
 });
 
 async function captureCli(argv: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
