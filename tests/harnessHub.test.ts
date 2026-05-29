@@ -1082,6 +1082,18 @@ test('analyze rejects unsupported profile option as a usage error', async () => 
   expect(profileOption.stderr).toContain("Unsupported option '--profile'");
 });
 
+test('help lists the full public command surface', async () => {
+  const result = await captureCli(['--help']);
+
+  expect(result.code).toBe(0);
+  expect(result.stdout).toContain('harness-hub init-harness');
+  expect(result.stdout).toContain('harness-hub insight-generate');
+  expect(result.stdout).toContain('harness-hub insight-build');
+  expect(result.stdout).toContain('harness-hub insight-validate');
+  expect(result.stdout).toContain('harness-hub insight-publish');
+  expect(result.stdout).toContain('harness-hub migrate-lock');
+});
+
 test('status supports json, html stdout, and explicit output', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-status-cli-'));
   const plan = planInstall({ targetDir, agents: ['standard'] });

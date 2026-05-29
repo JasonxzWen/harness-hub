@@ -16,7 +16,7 @@ It also owns two explicit higher-level repo capabilities: Codex dev harness boot
 | `harness-hub analyze <target>` | No | Detect existing standard skills, missing capabilities, conflicts, and recommendations. |
 | `harness-hub analyze <target> --harness` | No | Detect repo harness gaps, existing root harness evidence, and initialization recommendations. |
 | `harness-hub init-harness <target> --dry-run` | No | Preview root harness initialization without writing files or lock state. |
-| `harness-hub init-harness <target> --yes` | Yes | Write missing minimal harness files and record ownership in `.harness-hub/lock.json`. |
+| `harness-hub init-harness <target> --yes` | Yes | Write minimal harness files after blockers pass and record ownership in `.harness-hub/lock.json`. |
 | `harness-hub validate-harness <target>` | No | Validate required minimal harness files, score the five harness subsystems, and report a structural benchmark. |
 | `harness-hub install <target> --target standard --dry-run` | No | Preview managed installation of every standard skill. |
 | `harness-hub install <target> --target standard --yes` | Yes | Copy every managed standard skill and write `.harness-hub/lock.json`. |

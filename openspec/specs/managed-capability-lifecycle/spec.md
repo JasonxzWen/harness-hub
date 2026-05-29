@@ -203,6 +203,6 @@ The system SHALL update lock-recorded managed harness files from the current har
 - **WHEN** `.harness-hub/lock.json` records an older `harness:minimal` version and current package metadata has a newer version
 - **THEN** `harness-hub update <target> --dry-run --component harness:minimal --json` reports an update without mutating files
 
-#### Scenario: Harness update preserves skipped root files
-- **WHEN** `init-harness` skipped an existing root file because it was not lock-managed
-- **THEN** `harness-hub update <target> --yes --component harness:minimal` does not overwrite that skipped root file
+#### Scenario: Harness update preserves unowned root files
+- **WHEN** a root file exists in the target repository but is not recorded in the `harness:minimal` lock record
+- **THEN** `harness-hub update <target> --yes --component harness:minimal` does not overwrite that unowned root file

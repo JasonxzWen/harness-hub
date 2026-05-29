@@ -15,8 +15,8 @@ The first lifecycle release answers what Harness Hub can recommend, install, tra
 ## CLI Shape
 
 ```powershell
-npx harness-hub analyze D:\path\to\target --agent-readiness --json
-npx harness-hub analyze D:\path\to\target --agent-readiness --html --output D:\tmp\agent-readiness.html
+npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --json
+npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --html --output D:\tmp\agent-readiness.html
 ```
 
 This option remains side-effect free: no `.harness-hub/` creation, no file writes unless `--output` is explicit, no git changes, no memory writes, and no external automation setup.

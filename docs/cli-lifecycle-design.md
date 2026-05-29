@@ -32,12 +32,13 @@ harness-hub insight-validate <target> --json
 harness-hub insight-publish <target> --dry-run --json
 harness-hub status <target> --json
 harness-hub update <target> --dry-run --json
+harness-hub migrate-lock <target> --dry-run --json
 harness-hub remove <target> --dry-run --json
 ```
 
 `--target standard` is the supported skill install target. `install` always selects the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json`. The implementation still stores the selected target in existing `agents` lock fields for schema continuity, but the value is the personal default distribution.
 
-`init-harness` selects explicit harness components such as `harness:minimal`. These components can write root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`, but only after `--yes`. Dry runs must show the exact create/skip/overwrite plan without writing files or lock state.
+`init-harness` selects explicit harness components such as `harness:minimal`. These components can write root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`, but only after `--yes`. Dry runs must show the exact planned files and blockers without writing files or lock state.
 
 `init-harness` is the higher-level Codex-only dev bootstrap command. It composes skill installation with the managed `harness:minimal` template and writes root continuity artifacts only through this explicit path. It blocks dirty git worktrees and existing harness files by default; `--force` is the explicit override policy. The low-level `install` command remains skills-only.
 

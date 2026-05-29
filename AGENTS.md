@@ -94,6 +94,7 @@ Use these verbs for target-repo lifecycle work:
 - `harness-hub install <target> --target standard --yes`
 - `harness-hub status <target> --json`
 - `harness-hub update <target> --dry-run --json`
+- `harness-hub migrate-lock <target> --dry-run --json`
 - `harness-hub remove <target> --dry-run --json`
 
 `install` remains the standard skill install command and must not create root harness files. `init-harness` owns root harness initialization and must stay dry-run/confirmation guarded.
