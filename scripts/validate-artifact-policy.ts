@@ -48,6 +48,9 @@ function hasForbiddenNpmEntry(files: string[], forbidden: string): string | unde
 }
 
 function pathMatchesEntry(file: string, entry: string): boolean {
+  if (entry.startsWith('/')) {
+    return file === entry.slice(1);
+  }
   if (entry.endsWith('/')) {
     return file.startsWith(entry);
   }

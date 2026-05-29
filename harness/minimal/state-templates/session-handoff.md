@@ -12,10 +12,14 @@
 
 - Not run yet.
 
+## Residual Risk
+
+- None recorded.
+
 ## Blockers
 
 - None recorded.
 
 ## Next Action
 
-- Fill `tasks/current-task.md` with a goal-ready task before starting implementation.
+- Fill `.harness-hub/state/current-task.md` with a goal-ready task before starting implementation.

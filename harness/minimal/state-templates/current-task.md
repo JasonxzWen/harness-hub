@@ -32,6 +32,10 @@ State the concrete outcome for the active Codex goal.
 
 - Add commands that must run before handoff.
 
+## Spec updates
+
+- Add only decision-level changes that alter assumptions, acceptance, allowed paths, validation, user-visible behavior, or risk.
+
 ## Parallel writes
 
 - Default: blocked for this task.
@@ -39,6 +43,6 @@ State the concrete outcome for the active Codex goal.
 
 ## Handoff requirements
 
-- Update `progress.md`.
-- Update `session-handoff.md`.
+- Update `.harness-hub/state/progress.md`.
+- Update `.harness-hub/state/session-handoff.md`.
 - Run `node scripts/harness-validate.mjs`.

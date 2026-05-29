@@ -39,6 +39,10 @@
       "vendor/",
       "reports/",
       ".harness-hub/reports/",
+      ".harness-hub/state/",
+      "/progress.md",
+      "/session-handoff.md",
+      "/tasks/current-task.md",
       "skills/effective-interact/artifacts/",
       ".codex/",
       ".learning/"
@@ -106,6 +110,10 @@
       "vendor/EveryInc-compound-engineering-plugin/",
       "reports/",
       ".harness-hub/reports/",
+      ".harness-hub/state/",
+      "/progress.md",
+      "/session-handoff.md",
+      "/tasks/current-task.md",
       "skills/effective-interact/artifacts/",
       ".codex/",
       ".learning/"

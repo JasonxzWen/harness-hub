@@ -87,9 +87,9 @@ npx @jasonwen/harness-hub remove D:\path\to\target --dry-run --json
 ```
 
 
-There are no named skill install variants, harness pack levels, or bundle selectors. `install` installs every standard Harness Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. `install` does not create root harness files; use explicit `init-harness --target standard` for the one-step minimal harness bootstrap. Legacy host-specific directories are not the distribution shape.
+There are no named skill install variants, harness pack levels, or bundle selectors. `install` installs every standard Harness Hub skill into `skills/<name>/` in the target repository and overwrites an existing same-name skill directory on confirmed install. `install` does not create harness files; use explicit `init-harness --target standard` for the one-step minimal harness bootstrap with stable root rules plus ignored worktree-local state under `.harness-hub/state/`. Legacy host-specific directories are not the distribution shape.
 
-`init-harness` is the explicit Codex-only dev bootstrap path. It composes the standard skill install with root harness files such as `AGENTS.md`, `feature_list.json`, `tasks/current-task.md`, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `definition-of-done.md`, and `scripts/harness-validate.mjs`. It records managed ownership in `.harness-hub/lock.json`, blocks dirty git worktrees and existing harness files by default, and leaves low-level `install` skills-only.
+`init-harness` is the explicit Codex-only dev bootstrap path. It composes the standard skill install with stable harness files such as `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, and `scripts/harness-validate.mjs`, plus local state templates at `.harness-hub/state/current-task.md`, `.harness-hub/state/progress.md`, and `.harness-hub/state/session-handoff.md`. It writes `.harness-hub/.gitignore` so state and generated reports stay local, records ownership in `.harness-hub/lock.json`, blocks dirty git worktrees and existing harness files by default, and leaves low-level `install` skills-only.
 
 `validate-harness` is side-effect-free. Its JSON and HTML reports include five-subsystem assessment scores for instructions, state, verification, scope, and lifecycle, plus a structural benchmark recommendation.
 
@@ -146,7 +146,7 @@ The plugin manifest intentionally omits `version`; when installed from Git, Clau
 | `docs/workflow-source-dossier.md` | Reference dossier for SDD, routing, Effective Interact, OpenSpec, Superpowers, ECC, Matt Pocock skills, Vercel, and retired Ralph source notes |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy |
 
-Generated reports, intermediate interaction artifacts, and Codex dogfood copies stay local: `reports/`, `.harness-hub/reports/`, `skills/effective-interact/artifacts/`, and `.codex/` are ignored and must not be committed or published. `site/` is Git-only Pages output and is intentionally excluded from the npm package.
+Generated reports, worktree-local harness state, intermediate interaction artifacts, and Codex dogfood copies stay local: `reports/`, `.harness-hub/reports/`, `.harness-hub/state/`, `skills/effective-interact/artifacts/`, and `.codex/` are ignored and must not be committed or published. `site/` is Git-only Pages output and is intentionally excluded from the npm package.
 
 ## Validation
 

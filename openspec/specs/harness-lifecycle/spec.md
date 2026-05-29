@@ -1,7 +1,7 @@
 # harness-lifecycle Specification
 
 ## Purpose
-Define the explicit repo-local harness lifecycle for planning, initializing, validating, and keeping root harness files separate from the standard skill install path.
+Define the explicit repo-local harness lifecycle for planning, initializing, validating, and keeping harness files separate from the standard skill install path.
 
 ## Requirements
 ### Requirement: Harness gap analysis
@@ -12,11 +12,11 @@ The system SHALL provide an opt-in harness analysis that reports target reposito
 - **THEN** the system reports harness findings without creating `.harness-hub/`, writing reports by default, changing target files, or changing git state
 
 #### Scenario: Existing harness evidence is reported
-- **WHEN** the target repository contains files such as `AGENTS.md`, `feature_list.json`, `progress.md`, `session-handoff.md`, or a Harness Hub lock with harness components
+- **WHEN** the target repository contains files such as `AGENTS.md`, `feature_list.json`, `.harness-hub/state/progress.md`, `.harness-hub/state/session-handoff.md`, or a Harness Hub lock with harness components
 - **THEN** the harness analysis includes those paths as evidence
 
 ### Requirement: Harness initialization planning
-The system SHALL provide a side-effect-free harness initialization plan before writing root-level harness files.
+The system SHALL provide a side-effect-free harness initialization plan before writing stable harness files or worktree-local harness state.
 
 #### Scenario: Preview minimal harness initialization
 - **WHEN** the user runs `harness-hub init-harness <target> --dry-run --json`
@@ -53,8 +53,8 @@ The system SHALL validate the observable target harness contract without mutatin
 - **THEN** the system reports missing files and exits with a non-zero code
 
 ### Requirement: Default skill installation remains separate
-The system SHALL keep root harness initialization separate from standard skill installation.
+The system SHALL keep harness initialization separate from standard skill installation.
 
 #### Scenario: Standard install omits root harness files
 - **WHEN** the user runs `harness-hub install <target> --target standard --yes`
-- **THEN** the system installs standard skill directories and does not create root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, or `session-handoff.md`
+- **THEN** the system installs standard skill directories and does not create harness files such as `AGENTS.md`, `feature_list.json`, `.harness-hub/state/progress.md`, or `.harness-hub/state/session-handoff.md`

@@ -34,6 +34,10 @@ vendor/EveryInc-compound-engineering-plugin/
 # Harness Hub local CLI runtime reports
 reports/
 .harness-hub/reports/
+.harness-hub/state/
+/progress.md
+/session-handoff.md
+/tasks/current-task.md
 
 # Local generated HTML reports and skill interaction artifacts
 skills/effective-interact/artifacts/

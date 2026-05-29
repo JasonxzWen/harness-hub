@@ -130,10 +130,13 @@ export interface AnalysisResult {
   harness?: HarnessReport;
 }
 
+export type ManagedFileRole = 'local-state';
+
 export interface ManagedFileRecord {
   path: string;
   sha256: string;
   size: number;
+  role?: ManagedFileRole;
 }
 
 export interface ManagedComponentRecord {
@@ -686,11 +689,28 @@ const HARNESS_COMPONENT_ID = MINIMAL_HARNESS_COMPONENT_ID;
 const HARNESS_TEMPLATE_KINDS = new Set(['harness-template', 'harness-pack']);
 const HARNESS_DEST = '.';
 const HARNESS_SUBSYSTEMS: HarnessSubsystemName[] = ['instructions', 'state', 'verification', 'scope', 'lifecycle'];
+const HARNESS_STATE_FILES = Object.freeze([
+  '.harness-hub/state/current-task.md',
+  '.harness-hub/state/progress.md',
+  '.harness-hub/state/session-handoff.md',
+]);
+const HARNESS_STATE_FILE_SET = new Set<string>(HARNESS_STATE_FILES);
+const LEGACY_HARNESS_STATE_MIGRATIONS = Object.freeze({
+  'tasks/current-task.md': '.harness-hub/state/current-task.md',
+  'progress.md': '.harness-hub/state/progress.md',
+  'session-handoff.md': '.harness-hub/state/session-handoff.md',
+} satisfies Record<string, string>);
+const HARNESS_TEMPLATE_DESTINATIONS = Object.freeze({
+  'state-templates/gitignore': '.harness-hub/.gitignore',
+  'state-templates/current-task.md': '.harness-hub/state/current-task.md',
+  'state-templates/progress.md': '.harness-hub/state/progress.md',
+  'state-templates/session-handoff.md': '.harness-hub/state/session-handoff.md',
+} satisfies Record<string, string>);
 const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   'AGENTS.md': 32 * 1024,
-  'progress.md': 16 * 1024,
-  'session-handoff.md': 16 * 1024,
-  'tasks/current-task.md': 16 * 1024,
+  '.harness-hub/state/progress.md': 16 * 1024,
+  '.harness-hub/state/session-handoff.md': 16 * 1024,
+  '.harness-hub/state/current-task.md': 16 * 1024,
 });
 const NON_CODEX_PLATFORM_FILES = ['CLAUDE.md'];
 const INSIGHT_SITE_ROOT = 'site';
@@ -1448,7 +1468,10 @@ export function planHarnessInit(options: HarnessPlanOptions = {}): HarnessInitPl
     const dest = assertSafeRelativePath(targetDir, file.relativePath);
     const exists = fs.existsSync(dest);
     const managed = managedFiles.has(file.relativePath);
-    const action: HarnessPlanAction = exists ? (force ? 'overwrite' : 'skip') : 'create';
+    const localState = harnessFileRole(file.relativePath) === 'local-state';
+    const action: HarnessPlanAction = exists
+      ? (localState ? 'skip' : (force ? 'overwrite' : 'skip'))
+      : 'create';
     return {
       componentId: id,
       componentVersion: component.version,
@@ -1460,7 +1483,7 @@ export function planHarnessInit(options: HarnessPlanOptions = {}): HarnessInitPl
       exists,
       managed,
       action,
-      reason: harnessPlanReason(action, exists, managed),
+      reason: harnessPlanReason(action, exists, managed, localState),
     };
   });
 
@@ -1479,6 +1502,11 @@ export function planHarnessInit(options: HarnessPlanOptions = {}): HarnessInitPl
 
 export function applyHarnessInit(plan: HarnessInitPlan): HarnessInitResult {
   const installed = plan.items.filter((item) => item.action === 'create' || item.action === 'overwrite');
+  const lockRecorded = plan.items.filter((item) => (
+    item.action === 'create'
+    || item.action === 'overwrite'
+    || (item.action === 'skip' && item.exists && harnessFileRole(item.relativePath) === 'local-state')
+  ));
   const skipped = plan.items.filter((item) => item.action === 'skip');
 
   assertCanWriteHarnessLock(plan, installed);
@@ -1488,7 +1516,7 @@ export function applyHarnessInit(plan: HarnessInitPlan): HarnessInitResult {
     fs.copyFileSync(item.sourceFile, item.dest);
   }
 
-  const lock = installed.length > 0 ? writeHarnessLock(plan, installed) : readLock(plan.targetDir);
+  const lock = lockRecorded.length > 0 ? writeHarnessLock(plan, lockRecorded) : readLock(plan.targetDir);
   return {
     exitCode: 0,
     targetDir: plan.targetDir,
@@ -1529,11 +1557,16 @@ function listHarnessTemplateFiles(
     throw new Error(`Harness source does not exist: ${component.path}`);
   }
   return listFilesRecursive(source)
-    .map((sourceFile) => ({
-      sourceFile,
-      relativePath: toPortablePath(path.relative(source, sourceFile)),
-    }))
-    .filter((file) => !file.relativePath.startsWith('.'))
+    .map((sourceFile) => {
+      const sourceRelative = toPortablePath(path.relative(source, sourceFile));
+      return {
+        sourceFile,
+        sourceRelative,
+        relativePath: HARNESS_TEMPLATE_DESTINATIONS[sourceRelative as keyof typeof HARNESS_TEMPLATE_DESTINATIONS] || sourceRelative,
+      };
+    })
+    .filter((file) => !file.sourceRelative.startsWith('.'))
+    .map(({ sourceRelative: _sourceRelative, ...file }) => file)
     .sort((left, right) => left.relativePath.localeCompare(right.relativePath));
 }
 
@@ -1589,11 +1622,25 @@ function getManagedFilePaths(lock: LockReadResult | null, componentId?: string):
 function digestManagedFile(targetDir: string, relativePath: string): ManagedFileRecord {
   const filePath = assertSafeRelativePath(targetDir, relativePath);
   const bytes = fs.readFileSync(filePath);
+  const normalized = normalizePortablePath(relativePath);
+  const role = harnessFileRole(normalized);
   return {
-    path: normalizePortablePath(relativePath),
+    path: normalized,
     sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
     size: bytes.byteLength,
+    ...(role ? { role } : {}),
   };
+}
+
+function harnessFileRole(relativePath: string): ManagedFileRole | undefined {
+  return HARNESS_STATE_FILE_SET.has(normalizePortablePath(relativePath)) ? 'local-state' : undefined;
+}
+
+function isHarnessStateFileRecord(file: ManagedFileRecord): boolean {
+  const normalized = normalizePortablePath(file.path);
+  return file.role === 'local-state'
+    || HARNESS_STATE_FILE_SET.has(normalized)
+    || Object.prototype.hasOwnProperty.call(LEGACY_HARNESS_STATE_MIGRATIONS, normalized);
 }
 
 function collectManagedFilesFromSource(targetDir: string, dest: string, source: string): ManagedFileRecord[] {
@@ -1619,58 +1666,80 @@ function relativeDestRoot(targetDir: string, dest: string): string {
   return normalizePortablePath(path.isAbsolute(dest) ? path.relative(targetDir, dest) || '.' : dest);
 }
 
-function joinDestRelativePath(destRoot: string, sourceRelative: string): string {
-  return destRoot === '.'
-    ? sourceRelative
-    : toPortablePath(path.posix.join(destRoot, sourceRelative));
-}
-
-function managedFileSourceRelativePath(targetDir: string, dest: string, managedPath: string): string {
-  const destRoot = relativeDestRoot(targetDir, dest);
-  const normalized = normalizePortablePath(managedPath);
-  if (destRoot === '.') {
-    return normalized;
-  }
-  if (!normalized.startsWith(`${destRoot}/`)) {
-    throw new Error(`Managed file '${managedPath}' is outside destination '${destRoot}'.`);
-  }
-  return normalized.slice(destRoot.length + 1);
-}
-
-function planManagedFileCopies(
+function updateHarnessComponentFiles(
   targetDir: string,
-  currentDest: string,
-  nextDest: string,
-  source: string,
-  managedFiles: ManagedFileRecord[],
-): Array<{ sourceFile: string; targetRelative: string; targetFile: string }> {
-  const nextDestRoot = relativeDestRoot(targetDir, nextDest);
-  return managedFiles.map((file) => {
-    const sourceRelative = managedFileSourceRelativePath(targetDir, currentDest, file.path);
-    const sourceFile = path.join(source, ...sourceRelative.split('/'));
-    if (!fs.existsSync(sourceFile)) {
-      throw new Error(`Component source file does not exist: ${sourceRelative}`);
-    }
-    const targetRelative = joinDestRelativePath(nextDestRoot, sourceRelative);
-    return {
-      sourceFile,
-      targetRelative,
-      targetFile: assertSafeRelativePath(targetDir, targetRelative),
-    };
-  });
-}
-
-function copyManagedFilesFromSource(
-  targetDir: string,
-  copies: Array<{ sourceFile: string; targetRelative: string; targetFile: string }>,
+  hubRoot: string,
+  latest: CapabilityComponent,
+  component: ManagedComponentRecord,
 ): ManagedFileRecord[] {
-  for (const copy of copies) {
-    fs.mkdirSync(path.dirname(copy.targetFile), { recursive: true });
-    fs.copyFileSync(copy.sourceFile, copy.targetFile);
+  const latestFiles = listHarnessTemplateFiles(hubRoot, latest);
+  const latestPathSet = new Set(latestFiles.map((file) => normalizePortablePath(file.relativePath)));
+  const previouslyManaged = new Set(component.files.map((file) => normalizePortablePath(file.path)));
+  const recordPaths = new Set<string>();
+
+  migrateLegacyHarnessStateFiles(targetDir);
+
+  for (const file of component.files) {
+    const oldPath = normalizePortablePath(file.path);
+    if (isHarnessStateFileRecord(file)) {
+      continue;
+    }
+    if (!latestPathSet.has(oldPath)) {
+      const filePath = assertSafeRelativePath(targetDir, oldPath);
+      if (fs.existsSync(filePath)) {
+        fs.rmSync(filePath);
+        pruneEmptyParents(targetDir, path.dirname(filePath));
+      }
+    }
   }
-  return copies
-    .map((copy) => digestManagedFile(targetDir, copy.targetRelative))
+
+  for (const file of latestFiles) {
+    const relativePath = normalizePortablePath(file.relativePath);
+    const dest = assertSafeRelativePath(targetDir, relativePath);
+    const exists = fs.existsSync(dest);
+    const role = harnessFileRole(relativePath);
+    if (role === 'local-state') {
+      if (!exists) {
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.copyFileSync(file.sourceFile, dest);
+      }
+      recordPaths.add(relativePath);
+      continue;
+    }
+
+    if (!previouslyManaged.has(relativePath) && exists) {
+      continue;
+    }
+
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(file.sourceFile, dest);
+    recordPaths.add(relativePath);
+  }
+
+  for (const [oldPath, nextPath] of Object.entries(LEGACY_HARNESS_STATE_MIGRATIONS)) {
+    const legacyPath = assertSafeRelativePath(targetDir, oldPath);
+    const statePath = assertSafeRelativePath(targetDir, nextPath);
+    if (fs.existsSync(legacyPath) && fs.existsSync(statePath)) {
+      fs.rmSync(legacyPath);
+      pruneEmptyParents(targetDir, path.dirname(legacyPath));
+    }
+  }
+
+  return [...recordPaths]
+    .filter((relativePath) => fs.existsSync(assertSafeRelativePath(targetDir, relativePath)))
+    .map((relativePath) => digestManagedFile(targetDir, relativePath))
     .sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function migrateLegacyHarnessStateFiles(targetDir: string): void {
+  for (const [oldPath, nextPath] of Object.entries(LEGACY_HARNESS_STATE_MIGRATIONS)) {
+    const legacyPath = assertSafeRelativePath(targetDir, oldPath);
+    const statePath = assertSafeRelativePath(targetDir, nextPath);
+    if (fs.existsSync(legacyPath) && !fs.existsSync(statePath)) {
+      fs.mkdirSync(path.dirname(statePath), { recursive: true });
+      fs.copyFileSync(legacyPath, statePath);
+    }
+  }
 }
 
 function copyComponentSourceAndCollectManagedFiles(
@@ -1682,7 +1751,7 @@ function copyComponentSourceAndCollectManagedFiles(
   return collectManagedFilesFromSource(targetDir, dest, source);
 }
 
-function harnessPlanReason(action: HarnessPlanAction, exists: boolean, managed: boolean): string {
+function harnessPlanReason(action: HarnessPlanAction, exists: boolean, managed: boolean, localState = false): string {
   if (action === 'create') {
     return 'Harness file is missing and will be created.';
   }
@@ -1690,6 +1759,9 @@ function harnessPlanReason(action: HarnessPlanAction, exists: boolean, managed: 
     return managed
       ? 'Existing lock-managed harness file will be overwritten because --force was provided.'
       : 'Existing unmanaged harness file will be overwritten because --force was provided.';
+  }
+  if (exists && localState) {
+    return 'Existing worktree-local state file will be preserved.';
   }
   return exists
     ? 'Existing target file is skipped by default.'
@@ -1770,18 +1842,17 @@ export function planDevBootstrap(options: PlanInstallOptions = {}): DevBootstrap
     throw new Error(`Harness template source does not exist: ${harnessComponent.path}`);
   }
 
-  const harnessFiles = listFilesRecursive(sourceRoot)
-    .map((source) => {
-      const relativePath = toPortablePath(path.relative(sourceRoot, source));
-      const dest = assertSafeRelativePath(targetDir, relativePath);
-      const size = fs.statSync(source).size;
+  const harnessFiles = listHarnessTemplateFiles(hubRoot, harnessComponent)
+    .map((file) => {
+      const dest = assertSafeRelativePath(targetDir, file.relativePath);
+      const size = fs.statSync(file.sourceFile).size;
       return {
-        relativePath,
-        source,
+        relativePath: file.relativePath,
+        source: file.sourceFile,
         dest,
         exists: fs.existsSync(dest),
         size,
-        sizeLimit: HARNESS_SIZE_LIMITS[relativePath],
+        sizeLimit: HARNESS_SIZE_LIMITS[file.relativePath],
       };
     })
     .sort((left, right) => left.relativePath.localeCompare(right.relativePath));
@@ -1843,8 +1914,11 @@ export function applyDevBootstrap(
   const installResult = applyInstall(refreshedPlan.install, { overwrite: options.overwrite });
   const harnessFilesWritten: string[] = [];
   for (const file of refreshedPlan.harnessFiles) {
-    fs.mkdirSync(path.dirname(file.dest), { recursive: true });
-    fs.copyFileSync(file.source, file.dest);
+    const localState = harnessFileRole(file.relativePath) === 'local-state';
+    if (!(localState && fs.existsSync(file.dest))) {
+      fs.mkdirSync(path.dirname(file.dest), { recursive: true });
+      fs.copyFileSync(file.source, file.dest);
+    }
     harnessFilesWritten.push(file.relativePath);
   }
 
@@ -1923,7 +1997,7 @@ function collectHarnessBlockers(
       reason: `Target git worktree has uncommitted changes at ${entry.path}.`,
     })),
     ...harnessFiles
-      .filter((file) => file.exists)
+      .filter((file) => file.exists && harnessFileRole(file.relativePath) !== 'local-state')
       .map((file) => ({
         code: 'existing-file' as const,
         path: file.relativePath,
@@ -1951,10 +2025,13 @@ function collectManagedFilesForRelativePaths(targetDir: string, relativePaths: s
     .map((relativePath) => {
       const filePath = assertSafeRelativePath(targetDir, relativePath);
       const bytes = fs.readFileSync(filePath);
+      const normalized = normalizePortablePath(relativePath);
+      const role = harnessFileRole(normalized);
       return {
-        path: normalizePortablePath(relativePath),
+        path: normalized,
         sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
         size: bytes.byteLength,
+        ...(role ? { role } : {}),
       };
     })
     .sort((left, right) => left.path.localeCompare(right.path));
@@ -1991,7 +2068,14 @@ function detectDirtyWorktree(targetDir: string): DirtyWorktreePath[] {
         : rawPath;
       return { status, path: normalizePortablePath(cleanPath.replace(/^"|"$/g, '')) };
     })
+    .filter((entry) => !(entry.status === '??' && isUntrackedHarnessRuntimePath(entry.path)))
     .sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function isUntrackedHarnessRuntimePath(relativePath: string): boolean {
+  const normalized = normalizePortablePath(relativePath);
+  return normalized.startsWith('.harness-hub/state/')
+    || normalized.startsWith('.harness-hub/reports/');
 }
 
 export function validateHarness(targetDirInput: string): HarnessValidationResult {
@@ -2078,9 +2162,9 @@ function assessHarness(targetDir: string): HarnessAssessment {
   const text = (relativePath: string): string => files.get(relativePath) || '';
   const agents = text('AGENTS.md') || text('CLAUDE.md');
   const featureList = text('feature_list.json') || text('feature-list.json');
-  const progress = text('progress.md');
-  const handoff = text('session-handoff.md');
-  const currentTask = text('tasks/current-task.md');
+  const progress = text('.harness-hub/state/progress.md');
+  const handoff = text('.harness-hub/state/session-handoff.md');
+  const currentTask = text('.harness-hub/state/current-task.md');
   const validationScript = text('scripts/harness-validate.mjs') || text('init.sh');
   const definitionOfDone = text('definition-of-done.md');
   const cleanState = text('clean-state-checklist.md');
@@ -2092,13 +2176,13 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents, ['Operating Rules', 'Startup Workflow', 'Before writing code', 'Start from'], 'Startup or operating workflow is documented'),
       assessmentTextCheck(agents + definitionOfDone, ['Required Handoff', 'Definition of Done', 'done only when', 'handoff'], 'Completion or handoff gate is documented'),
       assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands', 'test', 'verify'], 'Verification command is discoverable'),
-      assessmentTextCheck(agents, ['feature_list.json', 'progress.md', 'session-handoff.md', 'tasks/current-task.md'], 'State artifacts are routed from instructions'),
+      assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md'], 'State artifacts are routed from instructions'),
     ],
     state: [
       assessmentFileCheck(files, ['feature_list.json', 'feature-list.json'], 'Feature tracker exists'),
       assessmentFeatureListCheck(featureList, 'Feature tracker is valid and has required structure'),
-      assessmentFileCheck(files, ['progress.md'], 'Progress log exists'),
-      assessmentTextCheck(progress, ['Current State', 'Recent Validation', 'Notes', 'Next'], 'Progress log supports restart'),
+      assessmentFileCheck(files, ['.harness-hub/state/progress.md'], 'Progress log exists'),
+      assessmentTextCheck(progress, ['Current State', 'Recent Validation', 'Blockers', 'Next'], 'Progress log supports restart'),
       assessmentTextCheck(handoff, ['Current Status', 'Changed Files', 'Validation Evidence', 'Blockers', 'Next Action'], 'Handoff captures status, files, evidence, blockers, and next action'),
     ],
     verification: [
@@ -2116,11 +2200,11 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentCheck(files.has('feature_list.json') || files.has('feature-list.json'), 'Feature state provides a scope inventory', ['feature_list.json']),
     ],
     lifecycle: [
-      assessmentTextCheck(agents + currentTask, ['Start from', 'Current Task', 'tasks/current-task.md'], 'Startup path points to the active task'),
-      assessmentFileCheck(files, ['session-handoff.md'], 'Session handoff template exists'),
+      assessmentTextCheck(agents + currentTask, ['Start from', 'Current Task', '.harness-hub/state/current-task.md'], 'Startup path points to the active task'),
+      assessmentFileCheck(files, ['.harness-hub/state/session-handoff.md'], 'Session handoff template exists'),
       assessmentTextCheck(progress + handoff, ['Current Status', 'Current State', 'Next Action', 'Recommended Next Step'], 'Session restart markers exist'),
       assessmentFileCheck(files, ['clean-state-checklist.md', 'definition-of-done.md'], 'Clean state and done guidance exists'),
-      assessmentTextCheck(agents + currentTask, ['Update `progress.md`', 'Update `session-handoff.md`', 'handoff'], 'End-of-session update routine is explicit'),
+      assessmentTextCheck(agents + currentTask, ['Update `.harness-hub/state/progress.md`', 'Update `.harness-hub/state/session-handoff.md`', 'handoff'], 'End-of-session update routine is explicit'),
     ],
   };
 
@@ -2192,7 +2276,7 @@ function benchmarkHarness({
       message: 'Feature state JSON is structurally valid',
     },
     {
-      pass: checks.some((check) => check.path === 'tasks/current-task.md' && check.state === 'pass'),
+      pass: checks.some((check) => check.path === '.harness-hub/state/current-task.md' && check.state === 'pass'),
       message: 'Goal-ready current task markers are present',
     },
     {
@@ -2234,11 +2318,12 @@ function loadHarnessAssessmentFiles(targetDir: string): Map<string, string> {
     'CLAUDE.md',
     'feature_list.json',
     'feature-list.json',
-    'progress.md',
-    'session-handoff.md',
+    '.harness-hub/.gitignore',
+    '.harness-hub/state/progress.md',
+    '.harness-hub/state/session-handoff.md',
     'clean-state-checklist.md',
     'definition-of-done.md',
-    'tasks/current-task.md',
+    '.harness-hub/state/current-task.md',
     'scripts/harness-validate.mjs',
     'init.sh',
   ];
@@ -2476,11 +2561,13 @@ function dedupe(values: string[]): string[] {
 function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
   const checks: HarnessValidationCheck[] = [];
   checks.push(validateFileContains(targetDir, 'AGENTS.md', ['Codex', 'worktree', 'session-handoff']));
-  checks.push(validateFileContains(targetDir, 'tasks/current-task.md', [
+  checks.push(validateFileContains(targetDir, '.harness-hub/.gitignore', ['state/', 'reports/']));
+  checks.push(validateFileContains(targetDir, '.harness-hub/state/current-task.md', [
     'Goal',
     'Allowed paths',
     'Forbidden paths',
     'Validation commands',
+    'Spec updates',
     'Parallel writes',
     'Handoff requirements',
   ]));
@@ -2492,7 +2579,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
 }
 
 function validateQaBoundary(targetDir: string): HarnessValidationCheck {
-  const relativePath = 'tasks/current-task.md';
+  const relativePath = '.harness-hub/state/current-task.md';
   const markers = [
     'Goal',
     'Assumptions',
@@ -2521,7 +2608,7 @@ function validateAgentArchitectureBoundary(targetDir: string): HarnessValidation
     'single integration review point',
     'non-overlapping',
   ];
-  const sources = ['AGENTS.md', 'tasks/current-task.md', 'feature_list.json'];
+  const sources = ['AGENTS.md', '.harness-hub/state/current-task.md', 'feature_list.json'];
   const content = sources
     .map((relativePath) => {
       const filePath = path.join(targetDir, relativePath);
@@ -3431,10 +3518,12 @@ function collectManagedFiles(targetDir: string, dest: string): ManagedFileRecord
     const relativePath = toPortablePath(path.relative(targetDir, filePath));
     assertSafeRelativePath(targetDir, relativePath);
     const bytes = fs.readFileSync(filePath);
+    const role = harnessFileRole(relativePath);
     files.push({
       path: relativePath,
       sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
       size: bytes.byteLength,
+      ...(role ? { role } : {}),
     });
   }
 
@@ -3473,10 +3562,12 @@ function inspectManagedFiles(targetDir: string, component: ManagedComponentRecor
       continue;
     }
 
-    const bytes = fs.readFileSync(filePath);
-    const currentHash = crypto.createHash('sha256').update(bytes).digest('hex');
-    if (currentHash !== file.sha256) {
-      modified.push(file.path);
+    if (!isHarnessStateFileRecord(file)) {
+      const bytes = fs.readFileSync(filePath);
+      const currentHash = crypto.createHash('sha256').update(bytes).digest('hex');
+      if (currentHash !== file.sha256) {
+        modified.push(file.path);
+      }
     }
   }
 
@@ -4131,14 +4222,13 @@ export function updateManaged(
     const source = componentSourcePath(hubRoot, latest);
     const nextDest = latestRef.rename ? resolveComponentDest(latest, component.agent) : component.dest;
     const updatesOwnedFilesOnly = isHarnessComponentKind(component.kind) || isHarnessComponentKind(latest.kind);
-    const ownedFileCopies = updatesOwnedFilesOnly
-      ? planManagedFileCopies(targetDir, component.dest, nextDest, source, oldFiles)
-      : [];
-    for (const file of oldFiles) {
-      const filePath = assertSafeRelativePath(targetDir, file.path);
-      if (fs.existsSync(filePath)) {
-        fs.rmSync(filePath);
-        pruneEmptyParents(targetDir, path.dirname(filePath));
+    if (!updatesOwnedFilesOnly) {
+      for (const file of oldFiles) {
+        const filePath = assertSafeRelativePath(targetDir, file.path);
+        if (fs.existsSync(filePath)) {
+          fs.rmSync(filePath);
+          pruneEmptyParents(targetDir, path.dirname(filePath));
+        }
       }
     }
 
@@ -4147,7 +4237,7 @@ export function updateManaged(
       fs.rmSync(dest, { recursive: true, force: true });
     }
     const files = updatesOwnedFilesOnly
-      ? copyManagedFilesFromSource(targetDir, ownedFileCopies)
+      ? updateHarnessComponentFiles(targetDir, hubRoot, latest, component)
       : copyComponentSourceAndCollectManagedFiles(targetDir, dest, source);
     const nextComponentId = latestRef.id;
     const previousVersion = component.version;

@@ -17,11 +17,12 @@ import {
 const REQUIRED_HARNESS_FILES = [
   'AGENTS.md',
   'feature_list.json',
-  'progress.md',
-  'session-handoff.md',
+  '.harness-hub/.gitignore',
+  '.harness-hub/state/current-task.md',
+  '.harness-hub/state/progress.md',
+  '.harness-hub/state/session-handoff.md',
   'clean-state-checklist.md',
   'definition-of-done.md',
-  'tasks/current-task.md',
   'scripts/harness-validate.mjs',
 ] as const;
 
@@ -54,8 +55,11 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   }
   expect(fs.existsSync(path.join(targetDir, 'CLAUDE.md'))).toBe(false);
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Codex');
-  expect(fs.readFileSync(path.join(targetDir, 'tasks', 'current-task.md'), 'utf8')).toContain('Allowed paths');
-  expect(fs.readFileSync(path.join(targetDir, 'tasks', 'current-task.md'), 'utf8')).toContain('Parallel writes');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', '.gitignore'), 'utf8')).toContain('state/');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', '.gitignore'), 'utf8')).toContain('reports/');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Allowed paths');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Spec updates');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Parallel writes');
 
   const lock = readLock(targetDir);
   if (!lock || lock.data.schemaVersion !== 2) {
@@ -96,6 +100,42 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
     encoding: 'utf8',
   });
   expect(scriptOutput).toContain('Harness validation passed.');
+});
+
+test('dev bootstrap keeps worktree-local state ignored by git', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-gitignore-'));
+  execFileSync('git', ['init'], { cwd: targetDir, stdio: 'ignore' });
+
+  const result = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'local progress\n');
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'local task\n');
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'local handoff\n');
+
+  const status = execFileSync('git', ['status', '--porcelain=v1', '--untracked-files=all'], {
+    cwd: targetDir,
+    encoding: 'utf8',
+  });
+
+  expect(result.exitCode).toBe(0);
+  expect(status).toContain('.harness-hub/.gitignore');
+  expect(status).toContain('.harness-hub/lock.json');
+  expect(status).not.toContain('.harness-hub/state/');
+  expect(status).not.toContain('.harness-hub/reports/');
+});
+
+test('dev bootstrap preserves existing worktree-local state', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-preserve-state-'));
+  execFileSync('git', ['init'], { cwd: targetDir, stdio: 'ignore' });
+  const progressPath = path.join(targetDir, '.harness-hub', 'state', 'progress.md');
+  fs.mkdirSync(path.dirname(progressPath), { recursive: true });
+  fs.writeFileSync(progressPath, 'existing local progress\n');
+
+  const result = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
+
+  expect(result.exitCode).toBe(0);
+  expect(fs.readFileSync(progressPath, 'utf8')).toBe('existing local progress\n');
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'))).toBe(true);
 });
 
 test('dev bootstrap blocks existing harness files unless force is explicit', () => {
@@ -175,7 +215,7 @@ test('dev bootstrap blocks non-Codex platform instruction files before writing',
 test('harness validation reports current-state files that exceed size limits', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-size-'));
   applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
-  fs.appendFileSync(path.join(targetDir, 'session-handoff.md'), `\n${'x'.repeat(20_000)}\n`);
+  fs.appendFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), `\n${'x'.repeat(20_000)}\n`);
 
   const validation = validateHarness(targetDir);
 
@@ -183,7 +223,7 @@ test('harness validation reports current-state files that exceed size limits', (
   expect(validation.checks.some((check) => (
     check.state === 'fail'
     && check.code === 'file-size'
-    && check.path === 'session-handoff.md'
+    && check.path === '.harness-hub/state/session-handoff.md'
   ))).toBe(true);
 });
 

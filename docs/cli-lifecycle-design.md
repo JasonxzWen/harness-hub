@@ -38,9 +38,9 @@ harness-hub remove <target> --dry-run --json
 
 `--target standard` is the supported skill install target. `install` always selects the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json`. The implementation still stores the selected target in existing `agents` lock fields for schema continuity, but the value is the personal default distribution.
 
-`init-harness` selects explicit harness components such as `harness:minimal`. These components can write root files such as `AGENTS.md`, `feature_list.json`, `progress.md`, and `session-handoff.md`, but only after `--yes`. Dry runs must show the exact planned files and blockers without writing files or lock state.
+`init-harness` selects explicit harness components such as `harness:minimal`. These components can write stable files such as `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, and `scripts/harness-validate.mjs`, plus ignored worktree-local state under `.harness-hub/state/`, but only after `--yes`. Dry runs must show the exact planned files and blockers without writing files or lock state.
 
-`init-harness` is the higher-level Codex-only dev bootstrap command. It composes skill installation with the managed `harness:minimal` template and writes root continuity artifacts only through this explicit path. It blocks dirty git worktrees and existing harness files by default; `--force` is the explicit override policy. The low-level `install` command remains skills-only.
+`init-harness` is the higher-level Codex-only dev bootstrap command. It composes skill installation with the managed `harness:minimal` template and writes continuity artifacts only through this explicit path. Active task state, progress, session handoff, and generated reports are ignored by `.harness-hub/.gitignore`; stable files and the lock remain visible. It blocks dirty git worktrees and existing harness files by default; `--force` is the explicit override policy. The low-level `install` command remains skills-only.
 
 Local Codex dogfooding is intentionally outside the managed target lifecycle: `scripts/sync-codex-skills.mjs` mirrors `skills/` into ignored `.codex/skills/` copies for this checkout, without adding `.codex/` to the capability graph or lock-backed install targets.
 

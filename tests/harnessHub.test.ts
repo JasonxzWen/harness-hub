@@ -34,10 +34,11 @@ const REQUIRED_HARNESS_FILES = [
   'clean-state-checklist.md',
   'definition-of-done.md',
   'feature_list.json',
-  'progress.md',
+  '.harness-hub/.gitignore',
+  '.harness-hub/state/current-task.md',
+  '.harness-hub/state/progress.md',
+  '.harness-hub/state/session-handoff.md',
   'scripts/harness-validate.mjs',
-  'session-handoff.md',
-  'tasks/current-task.md',
 ] as const;
 
 test('plans default install into standard skill directory', () => {
@@ -248,11 +249,12 @@ test('confirmed harness init writes lock-managed files and validates', async () 
   expect(result.code).toBe(0);
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'feature_list.json'))).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, 'progress.md'))).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, 'session-handoff.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', '.gitignore'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'clean-state-checklist.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'definition-of-done.md'))).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, 'tasks', 'current-task.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'scripts', 'harness-validate.mjs'))).toBe(true);
 
   const lock = readLock(targetDir);
@@ -300,8 +302,8 @@ test('harness init blocks schema version one locks before writing files', () => 
   expect(() => applyHarnessInit(planHarnessInit({ targetDir }))).toThrow('schema version 1 lock');
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, 'feature_list.json'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, 'progress.md'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, 'session-handoff.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, 'scripts', 'harness-validate.mjs'))).toBe(false);
 });
 
@@ -318,10 +320,59 @@ test('harness managed files report modified and missing states', () => {
 
   const missingTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-missing-'));
   applyHarnessInit(planHarnessInit({ targetDir: missingTarget }));
-  fs.rmSync(path.join(missingTarget, 'progress.md'));
+  fs.rmSync(path.join(missingTarget, '.harness-hub', 'state', 'progress.md'));
   const missingStatus = getStatus({ targetDir: missingTarget, index: readCapabilityIndex() });
 
   expect(missingStatus.missing.some((row) => row.id === 'harness:minimal')).toBe(true);
+});
+
+test('harness local state edits do not report managed-file modifications', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-local-state-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'local progress\n');
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'local task\n');
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'local handoff\n');
+
+  const status = getStatus({ targetDir, index: readCapabilityIndex() });
+  const removePreview = getRemovePlan(targetDir);
+
+  expect(status.modified).toEqual([]);
+  expect(status.current.some((row) => row.id === 'harness:minimal')).toBe(true);
+  expect(removePreview.blocked).toEqual([]);
+  expect(removePreview.removed).toContain('.harness-hub/state/progress.md');
+});
+
+test('harness init force preserves existing worktree-local state', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-force-preserve-state-'));
+  const progressPath = path.join(targetDir, '.harness-hub', 'state', 'progress.md');
+  const taskPath = path.join(targetDir, '.harness-hub', 'state', 'current-task.md');
+  const handoffPath = path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md');
+  fs.mkdirSync(path.dirname(progressPath), { recursive: true });
+  fs.writeFileSync(progressPath, 'existing progress\n');
+  fs.writeFileSync(taskPath, 'existing task\n');
+  fs.writeFileSync(handoffPath, 'existing handoff\n');
+
+  const plan = planHarnessInit({ targetDir, force: true });
+  const localStateActions = plan.items
+    .filter((item) => item.relativePath.startsWith('.harness-hub/state/'))
+    .map((item) => item.action);
+  const result = applyHarnessInit(plan);
+
+  expect(localStateActions).toEqual(['skip', 'skip', 'skip']);
+  expect(result.exitCode).toBe(0);
+  expect(fs.readFileSync(progressPath, 'utf8')).toBe('existing progress\n');
+  expect(fs.readFileSync(taskPath, 'utf8')).toBe('existing task\n');
+  expect(fs.readFileSync(handoffPath, 'utf8')).toBe('existing handoff\n');
+  const lock = readLock(targetDir);
+  if (!lock || lock.data.schemaVersion !== 2) {
+    throw new Error('expected schema version 2 lock');
+  }
+  const component = lock.data.components.find((entry) => entry.id === 'harness:minimal');
+  expect(component?.files.filter((file) => file.role === 'local-state').map((file) => file.path).sort()).toEqual([
+    '.harness-hub/state/current-task.md',
+    '.harness-hub/state/progress.md',
+    '.harness-hub/state/session-handoff.md',
+  ]);
 });
 
 test('harness component supports selected update planning', () => {
@@ -354,43 +405,75 @@ test('standard install preserves existing harness lock records', () => {
   expect(getStatus({ targetDir }).current.some((row) => row.id === 'harness:minimal')).toBe(true);
 });
 
-test('harness update only refreshes lock-owned files', () => {
+test('harness update refreshes stable lock-owned files without overwriting local state', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-update-owned-only-'));
   fs.writeFileSync(path.join(targetDir, 'AGENTS.md'), 'user-owned instructions\n');
   applyHarnessInit(planHarnessInit({ targetDir }));
   makeLockComponentStale(targetDir, 'harness:minimal', { version: '0.0.0' });
-  const progressPath = path.join(targetDir, 'progress.md');
-  const oldProgress = 'stale managed progress\n';
-  fs.writeFileSync(progressPath, oldProgress);
-  mutateLock(targetDir, (lock) => {
-    if (lock.schemaVersion !== 2) throw new Error('expected v2');
-    const component = lock.components.find((entry) => entry.id === 'harness:minimal');
-    if (!component) throw new Error('missing harness component');
-    const progress = component.files.find((file) => file.path === 'progress.md');
-    if (!progress) throw new Error('missing progress record');
-    progress.sha256 = hashContent(oldProgress);
-    progress.size = Buffer.byteLength(oldProgress);
-  });
+  const progressPath = path.join(targetDir, '.harness-hub', 'state', 'progress.md');
+  const taskPath = path.join(targetDir, '.harness-hub', 'state', 'current-task.md');
+  const handoffPath = path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md');
+  fs.writeFileSync(progressPath, 'local progress must stay\n');
+  fs.writeFileSync(taskPath, 'local current task must stay\n');
+  fs.writeFileSync(handoffPath, 'local handoff must stay\n');
 
   const result = updateManaged(targetDir, { yes: true, components: ['harness:minimal'] });
 
   expect(result.exitCode).toBe(0);
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toBe('user-owned instructions\n');
-  expect(fs.readFileSync(progressPath, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'harness', 'minimal', 'progress.md'), 'utf8'));
+  expect(fs.readFileSync(progressPath, 'utf8')).toBe('local progress must stay\n');
+  expect(fs.readFileSync(taskPath, 'utf8')).toBe('local current task must stay\n');
+  expect(fs.readFileSync(handoffPath, 'utf8')).toBe('local handoff must stay\n');
   const lock = readLock(targetDir);
   if (!lock || lock.data.schemaVersion !== 2) {
     throw new Error('expected schema version 2 lock');
   }
   const harness = lock.data.components.find((entry) => entry.id === 'harness:minimal');
   expect(harness?.files.map((file) => file.path).sort()).toEqual([
+    '.harness-hub/.gitignore',
+    '.harness-hub/state/current-task.md',
+    '.harness-hub/state/progress.md',
+    '.harness-hub/state/session-handoff.md',
     'clean-state-checklist.md',
     'definition-of-done.md',
     'feature_list.json',
-    'progress.md',
     'scripts/harness-validate.mjs',
-    'session-handoff.md',
-    'tasks/current-task.md',
   ]);
+});
+
+test('harness update migrates legacy root state into ignored local state', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-legacy-state-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  const legacyTask = path.join(targetDir, 'tasks', 'current-task.md');
+  const legacyProgress = path.join(targetDir, 'progress.md');
+  const legacyHandoff = path.join(targetDir, 'session-handoff.md');
+  fs.mkdirSync(path.dirname(legacyTask), { recursive: true });
+  fs.writeFileSync(legacyTask, 'legacy current task\n');
+  fs.writeFileSync(legacyProgress, 'legacy progress\n');
+  fs.writeFileSync(legacyHandoff, 'legacy handoff\n');
+  fs.rmSync(path.join(targetDir, '.harness-hub', 'state'), { recursive: true, force: true });
+  mutateLock(targetDir, (lock) => {
+    if (lock.schemaVersion !== 2) throw new Error('expected v2');
+    const component = lock.components.find((entry) => entry.id === 'harness:minimal');
+    if (!component) throw new Error('missing harness component');
+    component.version = '0.0.0';
+    component.files = [
+      { path: 'tasks/current-task.md', sha256: hashContent('legacy current task\n'), size: Buffer.byteLength('legacy current task\n') },
+      { path: 'progress.md', sha256: hashContent('legacy progress\n'), size: Buffer.byteLength('legacy progress\n') },
+      { path: 'session-handoff.md', sha256: hashContent('legacy handoff\n'), size: Buffer.byteLength('legacy handoff\n') },
+    ];
+  });
+
+  const result = updateManaged(targetDir, { yes: true, components: ['harness:minimal'] });
+
+  expect(result.exitCode).toBe(0);
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toBe('legacy current task\n');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toBe('legacy progress\n');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toBe('legacy handoff\n');
+  expect(fs.existsSync(legacyTask)).toBe(false);
+  expect(fs.existsSync(legacyProgress)).toBe(false);
+  expect(fs.existsSync(legacyHandoff)).toBe(false);
+  expect(getStatus({ targetDir }).modified).toEqual([]);
 });
 
 test('readiness analysis reports unknown states for an empty target repo', async () => {
