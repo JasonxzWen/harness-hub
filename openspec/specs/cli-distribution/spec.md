@@ -7,7 +7,7 @@ Define the release-facing Harness Hub CLI package contract, including Node-compa
 The system SHALL ship a Node-compatible CLI entrypoint so users can run Harness Hub without installing Bun.
 
 #### Scenario: Package entrypoint invokes built CLI
-- **WHEN** the npm package is installed or run with `npx harness-hub`
+- **WHEN** the npm package is installed or run with `npx @jasonwen/harness-hub`
 - **THEN** the `harness-hub` binary loads the built Node-compatible CLI from `dist/`
 
 #### Scenario: Bun remains development-only
@@ -19,7 +19,7 @@ The system SHALL document the stable lifecycle commands and their side effects.
 
 #### Scenario: Help lists lifecycle commands
 - **WHEN** the user runs `harness-hub --help`
-- **THEN** help output includes `analyze`, `install`, `status`, `update --dry-run`, `update --yes`, `update --force --yes`, `update --component <id>`, `migrate-lock`, `remove`, and `components`
+- **THEN** help output includes `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update --dry-run`, `update --yes`, `update --force --yes`, `update --component <id>`, `migrate-lock`, `remove`, `components`, and the `insight-*` commands
 
 #### Scenario: Documentation distinguishes read-only and mutating commands
 - **WHEN** the user reads README command examples

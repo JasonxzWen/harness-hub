@@ -20,18 +20,22 @@ The system SHALL provide a side-effect-free harness initialization plan before w
 
 #### Scenario: Preview minimal harness initialization
 - **WHEN** the user runs `harness-hub init-harness <target> --dry-run --json`
-- **THEN** the system reports the files it would create, skip, or overwrite without writing target files or `.harness-hub/lock.json`
+- **THEN** the system reports the files it would create and any blockers, such as existing harness files or dirty git state, without writing target files or `.harness-hub/lock.json`
 
-#### Scenario: Existing user files are skipped by default
+#### Scenario: Existing user files block by default
 - **WHEN** a planned harness destination already exists and is not managed by the lock
-- **THEN** the dry-run plan marks that file as skipped unless `--force` is provided
+- **THEN** the plan reports an existing-file blocker unless `--force` is provided
 
 ### Requirement: Confirmed harness initialization
 The system SHALL initialize a minimal repo-local harness only when the user confirms mutation.
 
 #### Scenario: Confirm minimal harness initialization
 - **WHEN** the user runs `harness-hub init-harness <target> --yes --json`
-- **THEN** the system writes missing minimal harness files, records the harness component in `.harness-hub/lock.json`, and reports installed and skipped files
+- **THEN** the system writes minimal harness files only when no blockers remain, records the harness component in `.harness-hub/lock.json`, and reports the written files
+
+#### Scenario: Existing user files require force
+- **WHEN** the user runs `harness-hub init-harness <target> --yes --json` and a planned harness destination already exists
+- **THEN** the system exits with code 3, writes no target files, and leaves `.harness-hub/lock.json` absent unless the user provides `--force`
 
 #### Scenario: Unconfirmed harness initialization does not mutate
 - **WHEN** the user runs `harness-hub init-harness <target>` without `--dry-run` or `--yes`
