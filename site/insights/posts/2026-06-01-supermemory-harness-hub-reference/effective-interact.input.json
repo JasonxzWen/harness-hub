@@ -1,0 +1,369 @@
+{
+  "title": "Supermemory 给 Harness Hub 的启发：AI 记忆不是更大的 RAG，而是可治理的上下文基础设施",
+  "summary": "Supermemory 的价值不在于把第三方记忆服务直接塞进默认 harness，而在于给 Harness Hub 提供一组可借鉴的边界：显式/隐式记忆分层、项目与用户作用域、隐私红线、上下文注入、以及用基准测试验证记忆质量。",
+  "status": "draft",
+  "generatedAt": "2026-06-01T04:29:54.756Z",
+  "template": "research-explainer",
+  "renderMode": "fallback-only",
+  "intent": {
+    "audience": "Harness Hub maintainer",
+    "primaryQuestion": "How should external material change Harness Hub iteration?",
+    "decision": "Publish source-backed project insight and iteration records.",
+    "artifactKind": "research",
+    "successCriteria": [
+      "Facts and inferences are separated.",
+      "Every public claim links back to source metadata.",
+      "Project actions are bounded to the current iteration."
+    ]
+  },
+  "sections": [
+    {
+      "type": "markdown",
+      "title": "Source Claims",
+      "group": "evidence",
+      "status": "info",
+      "content": "- **fact** `claim-core-positioning`: Supermemory 将自己定位为 AI 的记忆与上下文层，把记忆抽取、用户画像、混合搜索、连接器和多模态摄取放在同一套上下文栈里。 Source: [supermemoryai/supermemory repository](https://github.com/supermemoryai/supermemory).\n- **fact** `claim-skill-surface`: 上游 `skills/supermemory` 不是单纯命令包装，而是在技能描述中写入了持久记忆、个性化、长期上下文和语义搜索的触发语义。 Source: [supermemory skill in supermemoryai/supermemory](https://github.com/supermemoryai/supermemory/tree/main/skills/supermemory).\n- **fact** `claim-loop`: 官方 quickstart 展示的基本闭环是：生成前取用户画像和相关记忆，生成后把对话内容写回 Supermemory。 Source: [Supermemory Quickstart](https://supermemory.ai/docs/quickstart).\n- **fact** `claim-memory-not-rag`: Supermemory 文档明确区分无状态的文档检索和带时间、用户、关系语义的记忆。 Source: [Memory vs RAG: Understanding the Difference](https://supermemory.ai/docs/concepts/memory-vs-rag).\n- **fact** `claim-mcp-tools`: MCP 实现通过认证服务暴露带副作用的记忆写入/遗忘、召回、身份查询、profile/project 资源和 context prompt。 Source: [Supermemory MCP Server 4.0](https://github.com/supermemoryai/supermemory/tree/main/apps/mcp).\n- **fact** `claim-self-hosting-boundary`: 官方 self-hosting 文档把自托管写成企业路径，需要 Supermemory 团队提供部署包和外部基础设施，而不是普通克隆仓库即可运行。 Source: [Supermemory Self Hosting](https://supermemory.ai/docs/deployment/self-hosting).\n- **fact** `claim-codex-iteration`: `codex-supermemory` 的迭代使用 Codex 生命周期 hooks 做隐式召回/捕获，同时提供显式 skills 做搜索、保存、遗忘和登录。 Source: [supermemoryai/codex-supermemory](https://github.com/supermemoryai/codex-supermemory).\n- **fact** `claim-opencode-iteration`: `opencode-supermemory` 的迭代包含代码库索引、关键词触发保存、用户/项目作用域和 compaction-aware 的记忆保留。 Source: [supermemoryai/opencode-supermemory](https://github.com/supermemoryai/opencode-supermemory).\n- **fact** `claim-smfs-iteration`: `smfs` 把 Supermemory 容器重塑成可挂载文件系统，让普通文件操作和语义 grep 成为 agent 可理解的接口。 Source: [supermemoryai/smfs](https://github.com/supermemoryai/smfs).\n- **fact** `claim-memorybench-iteration`: MemoryBench 把记忆质量视为可评估流水线，包含 checkpointed 阶段、provider 对比和报告输出。 Source: [supermemoryai/memorybench](https://github.com/supermemoryai/memorybench).\n- **project-judgment** `claim-hub-default-risk`: 对 Harness Hub 来说，把 Supermemory 默认启用会引入外部凭证、托管服务依赖和带副作用的自动捕获路径，这与本仓库 minimal、显式、可回滚的生命周期边界冲突。 Source: [Supermemory Self Hosting](https://supermemory.ai/docs/deployment/self-hosting).\n- **project-judgment** `claim-reference-fit`: Supermemory 很适合作为 Harness Hub 未来显式记忆能力的参考，尤其是隐式 hooks 与显式 fallback skills 的分层。 Source: [supermemoryai/codex-supermemory](https://github.com/supermemoryai/codex-supermemory)."
+    },
+    {
+      "type": "markdown",
+      "title": "Viewpoint Extraction",
+      "group": "main",
+      "status": "info",
+      "content": "- `view-what-it-is`: Supermemory 更像 agent 周围的一层托管上下文基底：它存储和更新用户/项目事实，只召回相关上下文，再通过 SDK、MCP、插件和文件系统形态暴露给 agent。 Trace: `claim-core-positioning`, `claim-loop`, `claim-mcp-tools`, `claim-smfs-iteration`.\n- `view-not-default-integration`: Harness Hub 不应导入上游 skill 或默认启用记忆捕获。默认 harness 必须保持本地、显式、可撤销；托管记忆应放在单独的 opt-in 命令或集成说明之后。 Trace: `claim-skill-surface`, `claim-self-hosting-boundary`, `claim-hub-default-risk`.\n- `view-iteration-patterns`: 真正可迁移的是一套可治理的记忆生命周期：按用户和项目划分作用域，遮蔽 private 片段，区分显式记忆命令和隐式 hooks，并在信任召回前验证质量。 Trace: `claim-codex-iteration`, `claim-opencode-iteration`, `claim-memorybench-iteration`.\n- `view-blog-conclusion`: Harness Hub 的正确下一步不是复制 Supermemory，而是先写一个小而显式的记忆能力设计：本地 source ledger 优先，可选 provider adapter 后置，任何自动召回/捕获都必须先有 MemoryBench 式验收。 Trace: `claim-memory-not-rag`, `claim-memorybench-iteration`, `claim-reference-fit`.\n- Assumption: “发布到 GitHub Page”在本仓库语境中指生成并提交 `site/` 输出；实际部署由现有 GitHub Actions 在合并后执行。\n- Assumption: “基于此 repo 的迭代”按 Supermemory 生态内基于主仓库/服务的 Codex、OpenCode、Claude、smfs、MemoryBench 等公开仓库理解。\n- Assumption: 本次目标是研究、记录和发布博客，不实现新的 memory provider。"
+    },
+    {
+      "type": "markdown",
+      "title": "Project Mapping",
+      "group": "impact",
+      "status": "ready",
+      "content": "- Integration: 暂不作为 Harness Hub 默认集成：Supermemory 的生产价值依赖 hosted API、认证、外部数据存储和 hook side effects；这些都不应进入默认 `minimal` harness。\n- Integration: 作为参考非常有价值：它把 agent 记忆拆成 profile、search、capture、project scope、privacy redaction、MCP/skill/tool 多入口、benchmark evaluation，这些正好对应 Harness Hub 未来可能需要治理的上下文能力。\n- Integration: 如果后续要做本项目迭代，应从显式能力开始：先写 `memory-provider`/`context-ledger` 的设计与验收，再考虑可拔插 provider；自动 hooks 只能在安全审查、dry-run、用户显式启用和可撤销状态都完成后进入。\n- **docs/source-projects.md**: 把 `supermemoryai/supermemory` 记录为 reference-only source，保留 commit、MIT 许可和不默认导入的理由。 Action: 本次已新增评估记录，明确未来只作为显式、可验证的 memory/context 能力参考。\n- **workflow-router / hub-maintenance-workflow**: 如果未来用户请求 agent memory、persistent context、MCP memory provider，应先进入 Hub maintenance 或 SDD，而不是直接安装 hosted hooks。 Action: 后续可增加路由案例，但本次不改 routing，避免为一次研究博客扩大触发面。\n- **capabilities/index.json**: 当前不新增 capability，因为没有实现本地可验证、可卸载、无凭证副作用的 memory adapter。 Action: 等有设计和测试后再加 capability；本次只发布理解博客和来源记录。\n- **future-memory-work**: 可参考 codex-supermemory 的 user/project scope、private redaction、explicit fallback skills，以及 opencode-supermemory 的 compaction-aware capture。 Action: 把它们写进博客的迭代章节，作为未来方案的候选约束，而不是现在实现。\n- **validation**: MemoryBench 提供了一个适合借鉴的验收形状：ingest、index、search、answer、evaluate、report，而不是只看召回是否看起来有用。 Action: 未来若实现 memory 能力，应先定义最小 benchmark fixture 和 pass/fail 指标。"
+    },
+    {
+      "type": "markdown",
+      "title": "Iteration Record",
+      "group": "changes",
+      "status": "ready",
+      "content": "### Changed\n- 新增 Supermemory reference-only source record。\n- 生成一篇源证据驱动的 GitHub Pages insight blog。\n- 把 Supermemory 生态的 Codex、OpenCode、Claude、smfs、MemoryBench 迭代写入博客，而不是只总结主仓库。\n\n### Confirmed\n- 不把 Supermemory skill 或插件导入默认 `skills/` 分发。\n- 不在 Harness Hub 默认安装流程中加入 hosted API key、hook capture、远程 memory 写入或自动上下文注入。\n- 不把 RAG 等同于 agent memory；博客明确区分静态知识检索和时间/用户/项目相关的记忆治理。\n\n### Open\n- Harness Hub 是否需要自己的本地 context-ledger 或 memory-provider adapter，还需要单独 SDD。\n- 如果接入 hosted provider，应由哪个命令拥有安装、状态、撤销和隐私检查。\n- 未来 benchmark fixture 应覆盖哪些 repo-harness 记忆任务。\n\n### Watch\n- Supermemory 的 Codex plugin hook API 和 Codex 本身 hook 支持是否稳定。\n- Supermemory 自托管路径是否从企业包变为普通开源可部署。\n- MemoryBench 的 provider API、指标和基准集合是否继续变化。"
+    },
+    {
+      "type": "markdown",
+      "title": "Action Boundary",
+      "group": "next",
+      "status": "ready",
+      "content": "### Now\n- 发布博客到 `site/insights/posts/2026-06-01-supermemory-harness-hub-reference/` 并重建 Pages 索引。\n- 保留 `supermemoryai/supermemory` 的 reference-only 评估记录。\n- 运行 insight validation、publish dry-run、技能校验和必要的仓库校验。\n\n### Observe\n- 观察是否出现用户明确要求的 persistent memory / context provider 需求。\n- 跟踪 codex-supermemory 的 hooks、private redaction 和 custom containers 是否成为稳定模式。\n- 跟踪 MemoryBench 是否可作为本项目未来 memory capability 的验收工具。\n\n### Not Now\n- 不安装或复制 supermemory upstream skill。\n- 不创建 Harness Hub memory capability 或 routing trigger。\n- 不要求用户配置 Supermemory API key，也不写任何自动远程记忆 hook。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "sm-repo",
+      "kind": "source",
+      "label": "supermemoryai/supermemory repository",
+      "value": "Used for the project-level positioning, repo status, license, and monorepo surface.",
+      "status": "info",
+      "sourceUrl": "https://github.com/supermemoryai/supermemory",
+      "sourceTitle": "supermemoryai/supermemory repository",
+      "sourceType": "repository",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    },
+    {
+      "id": "sm-skill",
+      "kind": "source",
+      "label": "supermemory skill in supermemoryai/supermemory",
+      "value": "Used to judge whether a standard skill could be imported or adapted.",
+      "status": "info",
+      "sourceUrl": "https://github.com/supermemoryai/supermemory/tree/main/skills/supermemory",
+      "sourceTitle": "supermemory skill in supermemoryai/supermemory",
+      "sourceType": "skill",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    },
+    {
+      "id": "sm-quickstart",
+      "kind": "source",
+      "label": "Supermemory Quickstart",
+      "value": "Used for the retrieve-before-answer and capture-after-conversation loop.",
+      "status": "info",
+      "sourceUrl": "https://supermemory.ai/docs/quickstart",
+      "sourceTitle": "Supermemory Quickstart",
+      "sourceType": "documentation",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    },
+    {
+      "id": "sm-memory-vs-rag",
+      "kind": "source",
+      "label": "Memory vs RAG: Understanding the Difference",
+      "value": "Used for the conceptual distinction between memory and ordinary retrieval.",
+      "status": "info",
+      "sourceUrl": "https://supermemory.ai/docs/concepts/memory-vs-rag",
+      "sourceTitle": "Memory vs RAG: Understanding the Difference",
+      "sourceType": "documentation",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    },
+    {
+      "id": "sm-mcp",
+      "kind": "source",
+      "label": "Supermemory MCP Server 4.0",
+      "value": "Used for MCP/tool integration shape and side-effect boundaries.",
+      "status": "info",
+      "sourceUrl": "https://github.com/supermemoryai/supermemory/tree/main/apps/mcp",
+      "sourceTitle": "Supermemory MCP Server 4.0",
+      "sourceType": "repository-doc",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    },
+    {
+      "id": "sm-self-hosting",
+      "kind": "source",
+      "label": "Supermemory Self Hosting",
+      "value": "Used for the integration risk that the public repository is not a simple local engine drop-in.",
+      "status": "info",
+      "sourceUrl": "https://supermemory.ai/docs/deployment/self-hosting",
+      "sourceTitle": "Supermemory Self Hosting",
+      "sourceType": "documentation",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    },
+    {
+      "id": "sm-codex",
+      "kind": "source",
+      "label": "supermemoryai/codex-supermemory",
+      "value": "Used for Codex-specific iteration patterns.",
+      "status": "info",
+      "sourceUrl": "https://github.com/supermemoryai/codex-supermemory",
+      "sourceTitle": "supermemoryai/codex-supermemory",
+      "sourceType": "repository",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    },
+    {
+      "id": "sm-opencode",
+      "kind": "source",
+      "label": "supermemoryai/opencode-supermemory",
+      "value": "Used for agent-harness iteration ideas around compaction and codebase indexing.",
+      "status": "info",
+      "sourceUrl": "https://github.com/supermemoryai/opencode-supermemory",
+      "sourceTitle": "supermemoryai/opencode-supermemory",
+      "sourceType": "repository",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    },
+    {
+      "id": "sm-smfs",
+      "kind": "source",
+      "label": "supermemoryai/smfs",
+      "value": "Used for filesystem-shaped memory and agent-friendly local affordance ideas.",
+      "status": "info",
+      "sourceUrl": "https://github.com/supermemoryai/smfs",
+      "sourceTitle": "supermemoryai/smfs",
+      "sourceType": "repository",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    },
+    {
+      "id": "sm-memorybench",
+      "kind": "source",
+      "label": "supermemoryai/memorybench",
+      "value": "Used for Harness Hub validation and benchmark inspiration.",
+      "status": "info",
+      "sourceUrl": "https://github.com/supermemoryai/memorybench",
+      "sourceTitle": "supermemoryai/memorybench",
+      "sourceType": "repository",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-supermemory-harness-hub-reference"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-core-positioning",
+      "statement": "[fact] Supermemory 将自己定位为 AI 的记忆与上下文层，把记忆抽取、用户画像、混合搜索、连接器和多模态摄取放在同一套上下文栈里。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-repo"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-skill-surface",
+      "statement": "[fact] 上游 `skills/supermemory` 不是单纯命令包装，而是在技能描述中写入了持久记忆、个性化、长期上下文和语义搜索的触发语义。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-skill"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-loop",
+      "statement": "[fact] 官方 quickstart 展示的基本闭环是：生成前取用户画像和相关记忆，生成后把对话内容写回 Supermemory。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-quickstart"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-memory-not-rag",
+      "statement": "[fact] Supermemory 文档明确区分无状态的文档检索和带时间、用户、关系语义的记忆。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-memory-vs-rag"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-mcp-tools",
+      "statement": "[fact] MCP 实现通过认证服务暴露带副作用的记忆写入/遗忘、召回、身份查询、profile/project 资源和 context prompt。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-mcp"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-self-hosting-boundary",
+      "statement": "[fact] 官方 self-hosting 文档把自托管写成企业路径，需要 Supermemory 团队提供部署包和外部基础设施，而不是普通克隆仓库即可运行。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-self-hosting"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-codex-iteration",
+      "statement": "[fact] `codex-supermemory` 的迭代使用 Codex 生命周期 hooks 做隐式召回/捕获，同时提供显式 skills 做搜索、保存、遗忘和登录。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-codex"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-opencode-iteration",
+      "statement": "[fact] `opencode-supermemory` 的迭代包含代码库索引、关键词触发保存、用户/项目作用域和 compaction-aware 的记忆保留。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-opencode"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-smfs-iteration",
+      "statement": "[fact] `smfs` 把 Supermemory 容器重塑成可挂载文件系统，让普通文件操作和语义 grep 成为 agent 可理解的接口。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-smfs"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-memorybench-iteration",
+      "statement": "[fact] MemoryBench 把记忆质量视为可评估流水线，包含 checkpointed 阶段、provider 对比和报告输出。",
+      "kind": "conclusion",
+      "evidenceIds": [
+        "sm-memorybench"
+      ],
+      "confidence": "high",
+      "knownLimits": [
+        "Original claim kind: fact"
+      ]
+    },
+    {
+      "id": "claim-hub-default-risk",
+      "statement": "[project-judgment] 对 Harness Hub 来说，把 Supermemory 默认启用会引入外部凭证、托管服务依赖和带副作用的自动捕获路径，这与本仓库 minimal、显式、可回滚的生命周期边界冲突。",
+      "kind": "recommendation",
+      "evidenceIds": [
+        "sm-self-hosting"
+      ],
+      "confidence": "medium",
+      "knownLimits": [
+        "Original claim kind: project-judgment"
+      ]
+    },
+    {
+      "id": "claim-reference-fit",
+      "statement": "[project-judgment] Supermemory 很适合作为 Harness Hub 未来显式记忆能力的参考，尤其是隐式 hooks 与显式 fallback skills 的分层。",
+      "kind": "recommendation",
+      "evidenceIds": [
+        "sm-codex"
+      ],
+      "confidence": "medium",
+      "knownLimits": [
+        "Original claim kind: project-judgment"
+      ]
+    }
+  ],
+  "nextActions": [
+    "发布博客到 `site/insights/posts/2026-06-01-supermemory-harness-hub-reference/` 并重建 Pages 索引。",
+    "保留 `supermemoryai/supermemory` 的 reference-only 评估记录。",
+    "运行 insight validation、publish dry-run、技能校验和必要的仓库校验。"
+  ]
+}

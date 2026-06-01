@@ -39,6 +39,7 @@ This file records upstream projects reviewed for Harness Hub. The install rule i
 | Anthropic `brand-guidelines` | Reference-only | Apache 2.0, but it encodes Anthropic's own brand rather than a reusable customer brand workflow. |
 | Anthropic `algorithmic-art` and `canvas-design` | Reference-only | Creative and useful as inspiration, but niche, heavier, and partially oriented around host artifact behavior. Keep out of distribution until a user need justifies a bounded standard skill. |
 | Anthropic `frontend-design`, `web-artifacts-builder`, `webapp-testing` | Already covered | Existing local Harness Hub versions already cover these surfaces; do not add duplicates. |
+| `supermemoryai/supermemory` | Reference-only | Reviewed at `253a82bdb757fdaa45c7705880f3c85ebdd8b686`; MIT. Useful as source material for agent memory architecture, explicit memory skills, project/user scoping, private-redaction rules, and MemoryBench-style evaluation. Do not import or enable by default yet: the practical integration path depends on hosted Supermemory credentials, hook side effects, and host-specific plugin surfaces such as `codex-supermemory`, `claude-supermemory`, and `opencode-supermemory`. Keep any future Harness Hub memory work explicit, opt-in, and validation-backed. |
 
 ## Current Policy
 
