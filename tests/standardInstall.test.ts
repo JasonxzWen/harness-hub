@@ -68,6 +68,7 @@ test('default standard install writes lock-backed status for the full skill set'
   expect(fs.existsSync(path.join(targetDir, 'skills', 'webapp-testing', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, 'feature_list.json'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'decisions.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, 'progress.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, 'session-handoff.md'))).toBe(false);
 

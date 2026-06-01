@@ -691,23 +691,28 @@ const HARNESS_DEST = '.';
 const HARNESS_SUBSYSTEMS: HarnessSubsystemName[] = ['instructions', 'state', 'verification', 'scope', 'lifecycle'];
 const HARNESS_STATE_FILES = Object.freeze([
   '.harness-hub/state/current-task.md',
+  '.harness-hub/state/decisions.md',
   '.harness-hub/state/progress.md',
   '.harness-hub/state/session-handoff.md',
 ]);
 const HARNESS_STATE_FILE_SET = new Set<string>(HARNESS_STATE_FILES);
 const LEGACY_HARNESS_STATE_MIGRATIONS = Object.freeze({
   'tasks/current-task.md': '.harness-hub/state/current-task.md',
+  'decisions.md': '.harness-hub/state/decisions.md',
+  'decision-log.md': '.harness-hub/state/decisions.md',
   'progress.md': '.harness-hub/state/progress.md',
   'session-handoff.md': '.harness-hub/state/session-handoff.md',
 } satisfies Record<string, string>);
 const HARNESS_TEMPLATE_DESTINATIONS = Object.freeze({
   'state-templates/gitignore': '.harness-hub/.gitignore',
   'state-templates/current-task.md': '.harness-hub/state/current-task.md',
+  'state-templates/decisions.md': '.harness-hub/state/decisions.md',
   'state-templates/progress.md': '.harness-hub/state/progress.md',
   'state-templates/session-handoff.md': '.harness-hub/state/session-handoff.md',
 } satisfies Record<string, string>);
 const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   'AGENTS.md': 32 * 1024,
+  '.harness-hub/state/decisions.md': 16 * 1024,
   '.harness-hub/state/progress.md': 16 * 1024,
   '.harness-hub/state/session-handoff.md': 16 * 1024,
   '.harness-hub/state/current-task.md': 16 * 1024,
@@ -2162,6 +2167,7 @@ function assessHarness(targetDir: string): HarnessAssessment {
   const text = (relativePath: string): string => files.get(relativePath) || '';
   const agents = text('AGENTS.md') || text('CLAUDE.md');
   const featureList = text('feature_list.json') || text('feature-list.json');
+  const decisions = text('.harness-hub/state/decisions.md');
   const progress = text('.harness-hub/state/progress.md');
   const handoff = text('.harness-hub/state/session-handoff.md');
   const currentTask = text('.harness-hub/state/current-task.md');
@@ -2176,11 +2182,13 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents, ['Operating Rules', 'Startup Workflow', 'Before writing code', 'Start from'], 'Startup or operating workflow is documented'),
       assessmentTextCheck(agents + definitionOfDone, ['Required Handoff', 'Definition of Done', 'done only when', 'handoff'], 'Completion or handoff gate is documented'),
       assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands', 'test', 'verify'], 'Verification command is discoverable'),
-      assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md'], 'State artifacts are routed from instructions'),
+      assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/decisions.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md'], 'State artifacts are routed from instructions'),
     ],
     state: [
       assessmentFileCheck(files, ['feature_list.json', 'feature-list.json'], 'Feature tracker exists'),
       assessmentFeatureListCheck(featureList, 'Feature tracker is valid and has required structure'),
+      assessmentFileCheck(files, ['.harness-hub/state/decisions.md'], 'Decision log exists'),
+      assessmentTextCheck(decisions, ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'], 'Decision log captures rationale and status'),
       assessmentFileCheck(files, ['.harness-hub/state/progress.md'], 'Progress log exists'),
       assessmentTextCheck(progress, ['Current State', 'Recent Validation', 'Blockers', 'Next'], 'Progress log supports restart'),
       assessmentTextCheck(handoff, ['Current Status', 'Changed Files', 'Validation Evidence', 'Blockers', 'Next Action'], 'Handoff captures status, files, evidence, blockers, and next action'),
@@ -2196,15 +2204,16 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents + currentTask, ['one git worktree', 'one feature', 'Allowed paths', 'Forbidden paths'], 'Work is scoped to a task, branch, worktree, or allowed paths'),
       assessmentTextCheck(currentTask, ['Allowed paths', 'Forbidden paths'], 'Allowed and forbidden paths are explicit'),
       assessmentTextCheck(currentTask + definitionOfDone, ['Acceptance criteria', 'Definition of Done'], 'Acceptance or done criteria are explicit'),
+      assessmentTextCheck(decisions + currentTask, ['Decision log', 'decision-level', 'Rationale', 'Status'], 'Decision boundary is documented'),
       assessmentTextCheck(agents + currentTask + featureList, ['Parallel writes', 'parallel_write_policy', 'non-overlapping'], 'Parallel write boundary is documented'),
       assessmentCheck(files.has('feature_list.json') || files.has('feature-list.json'), 'Feature state provides a scope inventory', ['feature_list.json']),
     ],
     lifecycle: [
       assessmentTextCheck(agents + currentTask, ['Start from', 'Current Task', '.harness-hub/state/current-task.md'], 'Startup path points to the active task'),
       assessmentFileCheck(files, ['.harness-hub/state/session-handoff.md'], 'Session handoff template exists'),
-      assessmentTextCheck(progress + handoff, ['Current Status', 'Current State', 'Next Action', 'Recommended Next Step'], 'Session restart markers exist'),
+      assessmentTextCheck(progress + decisions + handoff, ['Current Status', 'Current State', 'Next Action', 'Recommended Next Step', 'Active Decisions'], 'Session restart markers exist'),
       assessmentFileCheck(files, ['clean-state-checklist.md', 'definition-of-done.md'], 'Clean state and done guidance exists'),
-      assessmentTextCheck(agents + currentTask, ['Update `.harness-hub/state/progress.md`', 'Update `.harness-hub/state/session-handoff.md`', 'handoff'], 'End-of-session update routine is explicit'),
+      assessmentTextCheck(agents + currentTask, ['Update `.harness-hub/state/progress.md`', 'Update `.harness-hub/state/decisions.md`', 'Update `.harness-hub/state/session-handoff.md`', 'handoff'], 'End-of-session update routine is explicit'),
     ],
   };
 
@@ -2319,6 +2328,7 @@ function loadHarnessAssessmentFiles(targetDir: string): Map<string, string> {
     'feature_list.json',
     'feature-list.json',
     '.harness-hub/.gitignore',
+    '.harness-hub/state/decisions.md',
     '.harness-hub/state/progress.md',
     '.harness-hub/state/session-handoff.md',
     'clean-state-checklist.md',
@@ -2560,14 +2570,23 @@ function dedupe(values: string[]): string[] {
 
 function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
   const checks: HarnessValidationCheck[] = [];
-  checks.push(validateFileContains(targetDir, 'AGENTS.md', ['Codex', 'worktree', 'session-handoff']));
+  checks.push(validateFileContains(targetDir, 'AGENTS.md', ['Codex', 'worktree', 'decisions.md', 'session-handoff']));
   checks.push(validateFileContains(targetDir, '.harness-hub/.gitignore', ['state/', 'reports/']));
+  checks.push(validateFileContains(targetDir, '.harness-hub/state/decisions.md', [
+    'Active Decisions',
+    'Resolved Decisions',
+    'Decision',
+    'Rationale',
+    'Status',
+    'Follow-up',
+  ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/current-task.md', [
     'Goal',
     'Allowed paths',
     'Forbidden paths',
     'Validation commands',
     'Spec updates',
+    'Decision log',
     'Parallel writes',
     'Handoff requirements',
   ]));

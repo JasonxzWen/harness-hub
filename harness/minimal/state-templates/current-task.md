@@ -36,6 +36,10 @@ State the concrete outcome for the active Codex goal.
 
 - Add only decision-level changes that alter assumptions, acceptance, allowed paths, validation, user-visible behavior, or risk.
 
+## Decision log
+
+- Update `.harness-hub/state/decisions.md` for durable decisions that should survive a session restart.
+
 ## Parallel writes
 
 - Default: blocked for this task.
@@ -44,5 +48,6 @@ State the concrete outcome for the active Codex goal.
 ## Handoff requirements
 
 - Update `.harness-hub/state/progress.md`.
+- Update `.harness-hub/state/decisions.md` when decision-level changes occurred.
 - Update `.harness-hub/state/session-handoff.md`.
 - Run `node scripts/harness-validate.mjs`.

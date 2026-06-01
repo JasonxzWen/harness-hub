@@ -40,7 +40,7 @@ harness-hub remove <target> --dry-run --json
 
 `init-harness` selects explicit harness components such as `harness:minimal`. These components can write stable files such as `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, and `scripts/harness-validate.mjs`, plus ignored worktree-local state under `.harness-hub/state/`, but only after `--yes`. Dry runs must show the exact planned files and blockers without writing files or lock state.
 
-`init-harness` is the higher-level Codex-only dev bootstrap command. It composes skill installation with the managed `harness:minimal` template and writes continuity artifacts only through this explicit path. Active task state, progress, session handoff, and generated reports are ignored by `.harness-hub/.gitignore`; stable files and the lock remain visible. It blocks dirty git worktrees and existing harness files by default; `--force` is the explicit override policy. The low-level `install` command remains skills-only.
+`init-harness` is the higher-level Codex-only dev bootstrap command. It composes skill installation with the managed `harness:minimal` template and writes continuity artifacts only through this explicit path. Active task state, progress, decision log, session handoff, and generated reports are ignored by `.harness-hub/.gitignore`; stable files and the lock remain visible. It blocks dirty git worktrees and existing harness files by default; `--force` is the explicit override policy. The low-level `install` command remains skills-only.
 
 Local Codex dogfooding is intentionally outside the managed target lifecycle: `scripts/sync-codex-skills.mjs` mirrors `skills/` into ignored `.codex/skills/` copies for this checkout, without adding `.codex/` to the capability graph or lock-backed install targets. Codex worktree setup should call the repo-relative command `node scripts/sync-codex-skills.mjs` or the equivalent `bun run codex:worktree-setup` from the worktree root; host-local absolute paths must stay out of the project design.
 
@@ -72,7 +72,7 @@ Recognized portable signals include `AGENTS.md`, `skills/`, `docs/skill-routing.
 
 ## Harness Analysis
 
-`--harness` is a read-only `analyze` extension. It reports whether a target repository already exposes root agent instructions, feature inventory, progress tracking, session handoff, validation commands, and lock-managed harness files. It can compose with `--agent-readiness`, but it must not create `.harness-hub/`, write target files, or change git state.
+`--harness` is a read-only `analyze` extension. It reports whether a target repository already exposes root agent instructions, feature inventory, progress tracking, decision logging, session handoff, validation commands, and lock-managed harness files. It can compose with `--agent-readiness`, but it must not create `.harness-hub/`, write target files, or change git state.
 
 
 ## Release Gates

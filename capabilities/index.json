@@ -6,12 +6,13 @@
       "kind": "harness-template",
       "path": "harness/minimal",
       "dest": ".",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "source": "local",
       "provides": [
         "repo-harness-initialization",
         "root-agent-instructions",
         "progress-and-handoff-files",
+        "decision-log",
         "harness-validation",
         "codex-dev-harness-bootstrap",
         "goal-ready-task-state",
@@ -36,6 +37,9 @@
         },
         {
           "path": ".harness-hub/state/current-task.md"
+        },
+        {
+          "path": ".harness-hub/state/decisions.md"
         },
         {
           "path": ".harness-hub/state/progress.md"
