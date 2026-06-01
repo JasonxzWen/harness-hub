@@ -8,6 +8,7 @@ const skillQualityGuide = fs.readFileSync('docs/skill-quality-guide.md', 'utf8')
 const skillEvaluationPolicy = fs.readFileSync('docs/skill-evaluation-policy.md', 'utf8');
 const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
 const sourceSkillInventory = fs.readFileSync('docs/source-skill-inventory.md', 'utf8');
+const harnessVocabulary = fs.readFileSync('docs/harness-vocabulary.md', 'utf8');
 
 test('personal distribution contract is the project positioning source', () => {
   expect(personalDistribution).toContain('personal workflow distribution and repo-harness layer');
@@ -30,6 +31,26 @@ test('imported skills are governed by routing overlay, not style rewrites', () =
   expect(skillEvaluationPolicy).toContain('Preserve upstream body text unless');
   expect(sourceProjects).toContain('Prefer preserving upstream skill bodies over local style rewrites');
   expect(sourceProjects).toContain('Use selective adaptation only when');
+});
+
+test('local vocabulary governs concept boundaries without rewriting imported skills', () => {
+  expect(sourceProjects).toContain('mattpocock/dictionary-of-ai-coding');
+  expect(sourceProjects).toContain('Reference-only');
+  expect(sourceProjects).toContain('do not copy dictionary entry text');
+  expect(sourceProjects).toContain('no license file or `package.json` license field');
+
+  expect(skillQualityGuide).toContain('Vocabulary And Concept Boundary');
+  expect(skillQualityGuide).toContain('docs/harness-vocabulary.md');
+  expect(skillQualityGuide).toContain('Do not rewrite imported skill bodies merely because');
+  expect(skillQualityGuide).toContain('Do not copy external glossary text into local skills');
+
+  expect(harnessVocabulary).toContain('local-original wording');
+  expect(harnessVocabulary).toContain('Do not rewrite imported skill bodies only to match this vocabulary');
+  expect(harnessVocabulary).toContain('`skill`');
+  expect(harnessVocabulary).toContain('`tool`');
+  expect(harnessVocabulary).toContain('`automated check`');
+  expect(harnessVocabulary).toContain('`automated review`');
+  expect(harnessVocabulary).toContain('Effective Interact Explainer Shape');
 });
 
 test('package metadata reflects personal distribution scope', () => {

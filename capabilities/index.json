@@ -421,7 +421,7 @@
     "skill:effective-interact": {
       "kind": "skill",
       "path": "skills/effective-interact",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "source": "local",
       "provides": [
         "complex-communication-briefs",
@@ -440,6 +440,7 @@
         "validated-interaction-artifacts",
         "long-task-session-ledgers",
         "option-comparison-artifacts",
+        "vocabulary-boundary-explainers",
         "explorable-explainers",
         "disposable-export-editors"
       ],

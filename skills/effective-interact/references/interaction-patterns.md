@@ -103,7 +103,7 @@ Use these Case-Derived Patterns as a routing and design checklist before choosin
 | `pr-writeup` | The author needs a reviewer-facing artifact, not just findings. | Lead with motivation, before/after, file tour, review focus, test plan, and rollout notes. | Do not replace the code review skill; this is the author-side handoff. |
 | `module-map` | The user needs to understand a codebase area, architecture, trust boundary, or call path. | Show boxes/arrows, entry points, hot path, source anchors, and gotchas. | Use Mermaid or inline SVG only when the map is faster than prose. |
 | `flow-drilldown` | A process, deploy path, incident path, request path, or state machine has steps and failure branches. | Show the route first, then step details, timings, failures, and owner/action metadata. | Avoid decorative diagrams without drilldown value. |
-| `explorable-explainer` | A concept or feature is easier to learn by toggling parameters, comparing examples, or seeing a live model. | Keep a readable TL;DR, then add controls, examples, glossary, and citations. | The page must still make sense without interaction or CDN runtime success. |
+| `explorable-explainer` | A concept or feature is easier to learn by comparing adjacent terms, toggling parameters, inspecting examples, or seeing a live model. | Keep a readable TL;DR, then add definition cards, adjacent-concept boundaries, avoid/use-instead notes, usage scenarios, examples, glossary, and citations. | The page must still make sense without interaction or CDN runtime success. Do not copy external glossary text into the artifact. |
 | `status-dashboard` | Recurring status, release, or milestone work needs quick scanning. | Use metric cards, timeline, risk/follow-up table, and owner/status filters only when useful. | Do not invent unsourced metrics or hide slipped work. |
 | `incident-report` | The user needs impact, timeline, root cause, mitigations, and follow-ups in one place. | Keep times concrete, facts/inferences separated, and actions owner-linked. | Do not overstate root cause if evidence is incomplete. |
 | `disposable-export-editor` | The user needs to sort, triage, toggle, tune, or fill a small structured decision surface. | Every editor-like artifact must end with an export path: Markdown, JSON, diff, or checklist text in a visible fallback. | Never write files, call network APIs, store secrets, or mutate third-party resources from the page. |
@@ -125,7 +125,7 @@ Use the closest asset and delete sections that do not apply:
 | `assets/templates/conclusion-dashboard.html` | A non-trivial task is complete and the user needs the conclusion, files, verification, and next actions in one place. | conclusion strip, metric cards, timeline, file evidence, highlighted snippet, Mermaid/SVG diagram slot |
 | `assets/templates/implementation-plan.html` | Implementation planning needs milestones, dependencies, acceptance gates, risks, and owner/action alignment. | plan summary, milestone timeline, dependency diagram, gate table, open questions |
 | `assets/templates/review-findings.html` | A PR/code/doc review has multiple findings, severity levels, or reviewer focus areas. | severity filters, finding cards, annotated code panel, file tour, action export |
-| `assets/templates/research-explainer.html` | Research, architecture, or module understanding needs citations, diagrams, examples, and a glossary. | TL;DR grid, rendered rich-text sections, tabbed examples, diagram panel, source rail |
+| `assets/templates/research-explainer.html` | Research, architecture, module understanding, or local vocabulary explanation needs citations, diagrams, examples, and a glossary. | TL;DR grid, definition/boundary cards, rendered rich-text sections, tabbed examples, diagram panel, source rail |
 | `assets/templates/decision-matrix.html` | Multiple options, product choices, or implementation approaches need trade-off comparison. | option cards, recommendation, risk notes, confirmation questions |
 | `assets/templates/visual-exploration.html` | Visual directions, design-system references, component variants, or SVG illustration options need inspection before approval. | artboards, token chips, variant grid, rationale, risk notes |
 | `assets/templates/editor-workbench.html` | A small local triage, feature-flag, or prompt-tuning surface needs visible text export. | filters/toggles, preview panel, export area, copy controls, no persistence |
@@ -133,6 +133,8 @@ Use the closest asset and delete sections that do not apply:
 | `assets/components/interaction-ui.js` | A custom page needs simple interactions. | filters, tabs, search, copy/export buttons, evidence spotlight, data-table row/column hover, selected-state focus |
 | `assets/components/rich-render-runtime.css` | An artifact needs runtime-rendered Markdown, Mermaid, or highlighted code. | rendered Markdown styling, Mermaid fallback styling, highlight token affordances |
 | `assets/components/rich-render-runtime.js` | An artifact needs runtime-rendered Markdown, Mermaid, or highlighted code. | Marked + DOMPurify bridge, per-diagram Mermaid `render`, highlight.js tokenization, status badges |
+
+For Harness Hub vocabulary explainers, use `docs/harness-vocabulary.md` as the local term source. Keep definitions local-original, show adjacent-concept contrasts, and cite glossary-like upstream repositories only as structure inspiration.
 
 ## Static Component Boundary
 
@@ -364,7 +366,7 @@ Generator and validator scripts are internal `effective-interact` assets. Do not
 | Code understanding | module boxes + arrows + entry point list | highlight hot path |
 | Design reference | swatches + type scale + component contact sheet | copy token, state tabs |
 | Decision prototype | isolated interaction or animation inside the artifact | sliders, toggles, reset, visible export |
-| Research | TL;DR + tabs + glossary + citations | search, expand all |
+| Research | TL;DR + definition/boundary cards + tabs + glossary + citations | search, expand all |
 | Status update | summary cards + chart + timeline | filter by status |
 | Incident timeline | minute-by-minute timeline + logs + follow-ups | severity tags, owner filters |
 | Custom editor | board/form/table for a specific decision | export Markdown/JSON/diff |
