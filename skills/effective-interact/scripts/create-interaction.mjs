@@ -1223,11 +1223,11 @@ function renderHeroDecisionGrid(intent) {
     : "";
   return `<div class="hero-decision-grid" data-report-intent data-primary-question="${escapeAttr(intent.primaryQuestion)}" data-time-budget="${escapeAttr(intent.timeBudget)}" data-artifact-kind="${escapeAttr(intent.artifactKind)}">
     <article class="hero-decision-card">
-      <div class="meta">漏点</div>
+      <div class="meta">读者问题</div>
       <strong>${escapeHtml(intent.primaryQuestion)}</strong>
     </article>
     <article class="hero-decision-card">
-      <div class="meta">修复</div>
+      <div class="meta">本文结论</div>
       <strong>${escapeHtml(intent.decision)}</strong>
     </article>
     <article class="hero-decision-card">

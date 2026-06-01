@@ -1105,7 +1105,7 @@
     "skill:source-to-insight-blog": {
       "kind": "skill",
       "path": "skills/source-to-insight-blog",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "local-original",
       "provides": [
         "source-backed-blog-authoring",
@@ -1133,7 +1133,7 @@
         "standard"
       ],
       "risk": "medium",
-      "recommendation": "Use as a bounded source-to-public-blog workflow that preserves source evidence, media references, and iteration decisions without turning effective-interact reports or copyrighted source text into the main post."
+      "recommendation": "Use as a bounded source-to-public-blog workflow that preserves source evidence, media references, and iteration decisions while forcing reader-first article flow; do not turn effective-interact reports, source ledgers, or copyrighted source text into the main post."
     },
     "skill:doc-coauthoring": {
       "kind": "skill",

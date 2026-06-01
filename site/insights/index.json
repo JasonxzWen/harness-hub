@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-01T07:21:58.396Z",
+  "generatedAt": "2026-06-01T09:32:13.403Z",
   "posts": [
     {
       "slug": "2026-06-01-trustworthy-third-party-evals-harness-hub",
@@ -8,6 +8,13 @@
       "date": "2026-06-01",
       "summary": "对 OpenAI 可信第三方评估 playbook 的高保真中文重建：评估报告必须同时说明 claim、harness、预算、elicitation、validity hazards 和证据；Harness Hub 本次把该流程固化为 source-to-insight-blog skill。",
       "href": "posts/2026-06-01-trustworthy-third-party-evals-harness-hub/"
+    },
+    {
+      "slug": "2026-06-01-ai-coding-dictionary-harness-vocabulary",
+      "title": "AI Coding Dictionary 中文译注：从术语到 Harness Hub 迭代",
+      "date": "2026-06-01",
+      "summary": "判断：上游是 62 个术语的 7 层词典；本地变更有用，但要收敛展示层。",
+      "href": "posts/2026-06-01-ai-coding-dictionary-harness-vocabulary/"
     },
     {
       "slug": "2026-06-01-supermemory-harness-hub-reference",

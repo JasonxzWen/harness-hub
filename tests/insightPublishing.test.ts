@@ -81,6 +81,7 @@ test('insight post generation writes JSON source, source ledger, effective-inter
   expect(fs.existsSync(result.postJsonPath)).toBe(true);
   expect(fs.existsSync(result.sourceLedgerPath)).toBe(true);
   expect(fs.existsSync(result.effectiveInteractInputPath)).toBe(true);
+  expect(fs.existsSync(result.effectiveInteractSummaryPath)).toBe(true);
   expect(fs.existsSync(result.htmlPath)).toBe(true);
   expect(result.htmlPath.replaceAll(path.sep, '/')).toContain('site/insights/posts/2026-05-28-codex-self-improving-loop-and-harness-hub/index.html');
 
@@ -90,22 +91,48 @@ test('insight post generation writes JSON source, source ledger, effective-inter
 
   const adapter = JSON.parse(fs.readFileSync(result.effectiveInteractInputPath, 'utf8')) as {
     template: string;
-    sections: Array<{ title: string; content?: string }>;
+    renderMode: string;
+    sections: Array<{ title: string; type: string; rows?: unknown[]; cards?: unknown[]; items?: unknown[]; tabs?: unknown[] }>;
     evidence: Array<{ id?: string; sourceUrl?: string }>;
   };
   expect(adapter.template).toBe('research-explainer');
+  expect(adapter.renderMode).toBe('pre-rendered');
   expect(adapter.sections.map((section) => section.title)).toEqual(expect.arrayContaining([
-    'Source Claims',
-    'Viewpoint Extraction',
-    'Project Mapping',
-    'Iteration Record',
-    'Action Boundary',
+    '先读这三点',
+    '阅读路径',
+    '授权与发布边界',
+    '术语地图',
+    '项目映射',
+    'Harness Hub 已做的迭代',
+    '读者可怎么用',
+    '来源声明',
   ]));
+  expect(adapter.sections.some((section) => section.type === 'summary-cards' && Boolean(section.cards?.length))).toBe(true);
+  expect(adapter.sections.some((section) => section.type === 'data-table' && section.title === '阅读路径' && Boolean(section.rows?.length))).toBe(true);
+  expect(adapter.sections.some((section) => section.type === 'timeline' && Boolean(section.items?.length))).toBe(true);
+  expect(adapter.sections.some((section) => section.type === 'tabs' && Boolean(section.tabs?.length))).toBe(true);
   expect(adapter.evidence.some((item) => item.id === 'openai-tax-agents' && item.sourceUrl?.startsWith('https://'))).toBe(true);
 
   const html = fs.readFileSync(result.htmlPath, 'utf8');
   expect(html).toContain('<meta charset="utf-8">');
-  expect(html).toContain('effective-interact create-interaction.mjs');
+  expect(html).toContain('data-insight-blog');
+  expect(html).toContain('原仓库导读');
+  expect(html).toContain('本地变更');
+  expect(html).toContain('反思结论');
+  expect(html).toContain('effective-interact-summary.html');
+  expect(html).not.toContain('data-html-work-report');
+  expect(html).not.toContain('effective-interact create-interaction.mjs');
+
+  const summaryHtml = fs.readFileSync(result.effectiveInteractSummaryPath, 'utf8');
+  expect(summaryHtml).toContain('effective-interact create-interaction.mjs');
+
+  const interactionValidation = execFileSync(process.execPath, [
+    path.join(process.cwd(), 'skills', 'effective-interact', 'scripts', 'validate-interaction.mjs'),
+    result.effectiveInteractSummaryPath,
+    '--json',
+    '--skip-browser',
+  ], { encoding: 'utf8' });
+  expect(JSON.parse(interactionValidation).ok).toBe(true);
 });
 
 test('insight validation blocks missing fact/inference separation, unsafe links, and oversized source excerpts', () => {
