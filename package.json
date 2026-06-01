@@ -47,6 +47,7 @@
     "skill:quality-inventory": "bun ./scripts/skill-quality-inventory.ts",
     "bootstrap:codex-skills": "node ./scripts/sync-codex-skills.mjs",
     "bootstrap:codex-skills:dry-run": "node ./scripts/sync-codex-skills.mjs --dry-run",
+    "codex:worktree-setup": "node ./scripts/sync-codex-skills.mjs",
     "smoke:managed-update": "powershell -ExecutionPolicy Bypass -File ./scripts/smoke-managed-update.ps1",
     "typecheck": "tsc --noEmit",
     "validate:artifact-policy": "bun ./scripts/validate-artifact-policy.ts",

@@ -105,6 +105,29 @@ bun run bootstrap:codex-skills
 
 This mirrors `skills/<name>/` into `.codex/skills/<name>/` and writes a `.harness-hub-managed` marker in each generated copy. `.codex/` is ignored by Git and is not published; edit the source skill under `skills/` and rerun the bootstrap command. For host activation smoke, use `workflow-router` with executable `workflow-check.mjs` before owner workflows.
 
+For Codex worktree mode, configure the worktree setup command to run from the worktree root:
+
+```powershell
+node scripts/sync-codex-skills.mjs
+```
+
+The equivalent package script is:
+
+```powershell
+bun run codex:worktree-setup
+```
+
+Do not hard-code a machine path in the setup command. The script derives the repository root from its own location, so each fresh worktree can generate its own ignored `.codex/skills/` copy without committing host-local files.
+
+Worktree setup smoke:
+
+```powershell
+Test-Path .codex\skills\workflow-router\SKILL.md
+node scripts\sync-codex-skills.mjs
+Test-Path .codex\skills\workflow-router\SKILL.md
+git check-ignore -v .codex\skills\workflow-router\SKILL.md
+```
+
 ## Claude Plugin Publishing
 
 This repository can be loaded directly as a Claude Code plugin because it has root-level `.claude-plugin/plugin.json` and `skills/`.
