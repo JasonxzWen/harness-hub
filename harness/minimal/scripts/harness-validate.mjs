@@ -7,6 +7,7 @@ const requiredFiles = [
   'AGENTS.md',
   'feature_list.json',
   '.harness-hub/.gitignore',
+  '.harness-hub/state/decisions.md',
   '.harness-hub/state/progress.md',
   '.harness-hub/state/session-handoff.md',
   'clean-state-checklist.md',
@@ -17,13 +18,15 @@ const requiredFiles = [
 const forbiddenFiles = ['CLAUDE.md'];
 const sizeLimits = {
   'AGENTS.md': 32 * 1024,
+  '.harness-hub/state/decisions.md': 16 * 1024,
   '.harness-hub/state/progress.md': 16 * 1024,
   '.harness-hub/state/session-handoff.md': 16 * 1024,
   '.harness-hub/state/current-task.md': 16 * 1024,
 };
 const requiredMarkers = {
-  'AGENTS.md': ['Codex', 'worktree', 'session-handoff'],
+  'AGENTS.md': ['Codex', 'worktree', 'decisions.md', 'session-handoff'],
   '.harness-hub/.gitignore': ['state/', 'reports/'],
+  '.harness-hub/state/decisions.md': ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'],
   '.harness-hub/state/current-task.md': [
     'Goal',
     'Assumptions',
@@ -33,6 +36,7 @@ const requiredMarkers = {
     'Acceptance criteria',
     'Validation commands',
     'Spec updates',
+    'Decision log',
     'Parallel writes',
     'Handoff requirements',
   ],

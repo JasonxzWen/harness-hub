@@ -7,7 +7,7 @@ harness-hub init-harness <target> --target standard --dry-run
 harness-hub init-harness <target> --target standard --yes
 ```
 
-`minimal` is the complete personal migration path: it writes the root harness files, installs the full standard skill and routing surface, validates the target, and records ownership in `.harness-hub/lock.json`.
+`minimal` is the complete personal migration path: it writes the root harness files, installs the full standard skill and routing surface, creates progress, decision, and handoff state, validates the target, and records ownership in `.harness-hub/lock.json`.
 
 `website-cloner` is a local explicit-only smoke scaffold used with the `clone-website` skill for authorized clone/report artifacts. It is not a harness level, not part of default install, and not a target bootstrap alternative.
 

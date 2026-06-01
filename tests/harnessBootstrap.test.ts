@@ -19,6 +19,7 @@ const REQUIRED_HARNESS_FILES = [
   'feature_list.json',
   '.harness-hub/.gitignore',
   '.harness-hub/state/current-task.md',
+  '.harness-hub/state/decisions.md',
   '.harness-hub/state/progress.md',
   '.harness-hub/state/session-handoff.md',
   'clean-state-checklist.md',
@@ -59,7 +60,9 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', '.gitignore'), 'utf8')).toContain('reports/');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Allowed paths');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Spec updates');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Decision log');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Parallel writes');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'decisions.md'), 'utf8')).toContain('Rationale');
 
   const lock = readLock(targetDir);
   if (!lock || lock.data.schemaVersion !== 2) {
@@ -109,6 +112,7 @@ test('dev bootstrap keeps worktree-local state ignored by git', () => {
   const result = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
   fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'local progress\n');
   fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'local task\n');
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'decisions.md'), 'local decisions\n');
   fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'local handoff\n');
 
   const status = execFileSync('git', ['status', '--porcelain=v1', '--untracked-files=all'], {
@@ -127,13 +131,31 @@ test('dev bootstrap preserves existing worktree-local state', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-preserve-state-'));
   execFileSync('git', ['init'], { cwd: targetDir, stdio: 'ignore' });
   const progressPath = path.join(targetDir, '.harness-hub', 'state', 'progress.md');
+  const decisionsPath = path.join(targetDir, '.harness-hub', 'state', 'decisions.md');
   fs.mkdirSync(path.dirname(progressPath), { recursive: true });
   fs.writeFileSync(progressPath, 'existing local progress\n');
+  const decisionsContent = [
+    '# Decisions',
+    '',
+    '## Active Decisions',
+    '',
+    '- Decision: keep local decision state',
+    '- Rationale: preserve existing local state',
+    '- Status: accepted',
+    '- Follow-up: none',
+    '',
+    '## Resolved Decisions',
+    '',
+    '- None recorded.',
+    '',
+  ].join('\n');
+  fs.writeFileSync(decisionsPath, decisionsContent);
 
   const result = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
 
   expect(result.exitCode).toBe(0);
   expect(fs.readFileSync(progressPath, 'utf8')).toBe('existing local progress\n');
+  expect(fs.readFileSync(decisionsPath, 'utf8')).toBe(decisionsContent);
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'))).toBe(true);
 });
