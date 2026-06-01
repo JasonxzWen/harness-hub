@@ -12,6 +12,8 @@ const requiredFiles = [
   '.harness-hub/state/session-handoff.md',
   'clean-state-checklist.md',
   'definition-of-done.md',
+  'evaluator-rubric.md',
+  'quality-document.md',
   '.harness-hub/state/current-task.md',
   'scripts/harness-validate.mjs',
 ];
@@ -24,9 +26,11 @@ const sizeLimits = {
   '.harness-hub/state/current-task.md': 16 * 1024,
 };
 const requiredMarkers = {
-  'AGENTS.md': ['Codex', 'worktree', 'decisions.md', 'session-handoff'],
+  'AGENTS.md': ['Codex', 'Initialization Gate', 'harness-validate.mjs', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff'],
   '.harness-hub/.gitignore': ['state/', 'reports/'],
   '.harness-hub/state/decisions.md': ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'],
+  '.harness-hub/state/progress.md': ['Recent Validation', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Review Feedback To Rules'],
+  '.harness-hub/state/session-handoff.md': ['Validation Evidence', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Review Feedback To Rules'],
   '.harness-hub/state/current-task.md': [
     'Goal',
     'Assumptions',
@@ -34,12 +38,20 @@ const requiredMarkers = {
     'Allowed paths',
     'Forbidden paths',
     'Acceptance criteria',
+    'Standard startup path',
     'Validation commands',
+    'Validation tiers',
+    'Runtime signals',
+    'Checkpoint policy',
     'Spec updates',
     'Decision log',
     'Parallel writes',
     'Handoff requirements',
   ],
+  'clean-state-checklist.md': ['Standard startup path', 'Runtime signals', 'Review Feedback', 'evaluator-rubric.md', 'quality-document.md'],
+  'definition-of-done.md': ['Static checks', 'runtime checks', 'end-to-end', 'Standard startup path', 'Runtime logs', 'evaluator rubric', 'quality snapshot'],
+  'evaluator-rubric.md': ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Handoff readiness', 'Verdict'],
+  'quality-document.md': ['Quality Snapshot', 'Rating Standard', 'Product Areas', 'Architecture Layers', 'Change History'],
 };
 const agentArchitectureMarkers = [
   'worktree_policy',
@@ -137,8 +149,20 @@ if (fs.existsSync(featureStatePath)) {
     if (!isRecord(featureState) || !Array.isArray(featureState.features)) {
       missing.push('features array');
     }
+    if (!isRecord(featureState) || !isRecord(featureState.feature_state_policy)) {
+      missing.push('feature_state_policy object');
+    }
     if (!isRecord(featureState) || !isRecord(featureState.parallel_write_policy)) {
       missing.push('parallel_write_policy object');
+    }
+    if (isRecord(featureState) && Array.isArray(featureState.features)) {
+      const invalidFeatures = featureState.features
+        .map((feature, index) => ({ feature, index }))
+        .filter(({ feature }) => !isValidFeatureRecord(feature))
+        .map(({ index }) => `features[${index}]`);
+      if (invalidFeatures.length > 0) {
+        missing.push(`valid feature records ${invalidFeatures.join(', ')}`);
+      }
     }
     if (missing.length > 0) {
       failures.push(`feature_list.json: missing required structure ${missing.join(', ')}`);
@@ -169,4 +193,18 @@ function parseSkillDescription(content) {
   }
   const descriptionMatch = match[1].match(/^description:\s*(.+)$/m);
   return descriptionMatch ? descriptionMatch[1].replace(/^['"]|['"]$/g, '').trim() : null;
+}
+
+function isValidFeatureRecord(value) {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return typeof value.id === 'string'
+    && value.id.trim().length > 0
+    && typeof value.behavior === 'string'
+    && value.behavior.trim().length > 0
+    && typeof value.status === 'string'
+    && Object.prototype.hasOwnProperty.call(value, 'acceptance')
+    && Object.prototype.hasOwnProperty.call(value, 'validation')
+    && Object.prototype.hasOwnProperty.call(value, 'evidence');
 }

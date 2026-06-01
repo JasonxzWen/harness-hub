@@ -2174,15 +2174,17 @@ function assessHarness(targetDir: string): HarnessAssessment {
   const validationScript = text('scripts/harness-validate.mjs') || text('init.sh');
   const definitionOfDone = text('definition-of-done.md');
   const cleanState = text('clean-state-checklist.md');
+  const evaluatorRubric = text('evaluator-rubric.md');
+  const qualityDocument = text('quality-document.md');
   const allText = [...files.entries()].map(([relativePath, content]) => `${relativePath}\n${content}`).join('\n\n');
 
   const subsystemChecks: Record<HarnessSubsystemName, HarnessAssessmentCheck[]> = {
     instructions: [
       assessmentFileCheck(files, ['AGENTS.md', 'CLAUDE.md'], 'Agent instruction file exists'),
-      assessmentTextCheck(agents, ['Operating Rules', 'Startup Workflow', 'Before writing code', 'Start from'], 'Startup or operating workflow is documented'),
+      assessmentTextCheck(agents, ['Initialization Gate', 'Operating Rules', 'Startup Workflow', 'Before writing code', 'Start from'], 'Startup or operating workflow is documented'),
       assessmentTextCheck(agents + definitionOfDone, ['Required Handoff', 'Definition of Done', 'done only when', 'handoff'], 'Completion or handoff gate is documented'),
       assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands', 'test', 'verify'], 'Verification command is discoverable'),
-      assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/decisions.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md'], 'State artifacts are routed from instructions'),
+      assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/decisions.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md', 'quality-document.md', 'evaluator-rubric.md'], 'State artifacts are routed from instructions'),
     ],
     state: [
       assessmentFileCheck(files, ['feature_list.json', 'feature-list.json'], 'Feature tracker exists'),
@@ -2190,20 +2192,25 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentFileCheck(files, ['.harness-hub/state/decisions.md'], 'Decision log exists'),
       assessmentTextCheck(decisions, ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'], 'Decision log captures rationale and status'),
       assessmentFileCheck(files, ['.harness-hub/state/progress.md'], 'Progress log exists'),
-      assessmentTextCheck(progress, ['Current State', 'Recent Validation', 'Blockers', 'Next'], 'Progress log supports restart'),
-      assessmentTextCheck(handoff, ['Current Status', 'Changed Files', 'Validation Evidence', 'Blockers', 'Next Action'], 'Handoff captures status, files, evidence, blockers, and next action'),
+      assessmentTextCheck(progress, ['Current State', 'Recent Validation', 'Validation Records', 'Runtime Signals', 'Review Feedback To Rules', 'Blockers', 'Next'], 'Progress log supports restart'),
+      assessmentTextCheck(handoff, ['Current Status', 'Changed Files', 'Validation Evidence', 'Validation Records', 'Runtime Signals', 'Review Feedback To Rules', 'Blockers', 'Next Action'], 'Handoff captures status, files, evidence, blockers, and next action'),
+      assessmentFileCheck(files, ['quality-document.md'], 'Quality snapshot exists'),
+      assessmentTextCheck(qualityDocument, ['Quality Snapshot', 'Product Areas', 'Architecture Layers', 'Change History'], 'Quality snapshot captures areas, layers, and history'),
     ],
     verification: [
       assessmentFileCheck(files, ['scripts/harness-validate.mjs', 'init.sh'], 'Verification entrypoint exists'),
       assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands'], 'Verification entrypoint is referenced by the harness'),
       assessmentTextCheck(validationScript, ['process.exit', 'set -e', 'failures'], 'Verification entrypoint can fail the run'),
-      assessmentTextCheck(progress + handoff + currentTask, ['Validation Evidence', 'Recent Validation', 'command', 'output'], 'Validation evidence has a durable place to be recorded'),
+      assessmentTextCheck(progress + handoff + currentTask, ['Validation Evidence', 'Recent Validation', 'Command', 'Status', 'Passed', 'Failed', 'Evidence', 'Commit'], 'Validation evidence has a durable place to be recorded'),
+      assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'Static', 'Runtime', 'User flow', 'Runtime Signals', 'Standard startup path'], 'Static, runtime, startup, and user-flow validation tiers are represented'),
+      assessmentFileCheck(files, ['evaluator-rubric.md'], 'Evaluator rubric exists'),
+      assessmentTextCheck(evaluatorRubric, ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Handoff readiness', 'Verdict'], 'Evaluator rubric covers correctness, evidence, scope, reliability, and handoff readiness'),
       assessmentCheck(project.verificationCommands.length > 0, 'Project verification command is detected', project.verificationCommands),
     ],
     scope: [
-      assessmentTextCheck(agents + currentTask, ['one git worktree', 'one feature', 'Allowed paths', 'Forbidden paths'], 'Work is scoped to a task, branch, worktree, or allowed paths'),
+      assessmentTextCheck(agents + currentTask, ['one git worktree', 'one feature', 'Allowed paths', 'Forbidden paths', 'Checkpoint policy'], 'Work is scoped to a task, branch, worktree, or allowed paths'),
       assessmentTextCheck(currentTask, ['Allowed paths', 'Forbidden paths'], 'Allowed and forbidden paths are explicit'),
-      assessmentTextCheck(currentTask + definitionOfDone, ['Acceptance criteria', 'Definition of Done'], 'Acceptance or done criteria are explicit'),
+      assessmentTextCheck(currentTask + definitionOfDone, ['Acceptance criteria', 'Definition of Done', 'end-to-end', 'Standard startup path'], 'Acceptance or done criteria are explicit'),
       assessmentTextCheck(decisions + currentTask, ['Decision log', 'decision-level', 'Rationale', 'Status'], 'Decision boundary is documented'),
       assessmentTextCheck(agents + currentTask + featureList, ['Parallel writes', 'parallel_write_policy', 'non-overlapping'], 'Parallel write boundary is documented'),
       assessmentCheck(files.has('feature_list.json') || files.has('feature-list.json'), 'Feature state provides a scope inventory', ['feature_list.json']),
@@ -2211,8 +2218,8 @@ function assessHarness(targetDir: string): HarnessAssessment {
     lifecycle: [
       assessmentTextCheck(agents + currentTask, ['Start from', 'Current Task', '.harness-hub/state/current-task.md'], 'Startup path points to the active task'),
       assessmentFileCheck(files, ['.harness-hub/state/session-handoff.md'], 'Session handoff template exists'),
-      assessmentTextCheck(progress + decisions + handoff, ['Current Status', 'Current State', 'Next Action', 'Recommended Next Step', 'Active Decisions'], 'Session restart markers exist'),
-      assessmentFileCheck(files, ['clean-state-checklist.md', 'definition-of-done.md'], 'Clean state and done guidance exists'),
+      assessmentTextCheck(progress + decisions + handoff, ['Current Status', 'Current State', 'Next Action', 'Recommended Next Step', 'Active Decisions', 'Runtime Signals'], 'Session restart markers exist'),
+      assessmentFileCheck(files, ['clean-state-checklist.md', 'definition-of-done.md', 'quality-document.md', 'evaluator-rubric.md'], 'Clean state, quality, review, and done guidance exists'),
       assessmentTextCheck(agents + currentTask, ['Update `.harness-hub/state/progress.md`', 'Update `.harness-hub/state/decisions.md`', 'Update `.harness-hub/state/session-handoff.md`', 'handoff'], 'End-of-session update routine is explicit'),
     ],
   };
@@ -2333,6 +2340,8 @@ function loadHarnessAssessmentFiles(targetDir: string): Map<string, string> {
     '.harness-hub/state/session-handoff.md',
     'clean-state-checklist.md',
     'definition-of-done.md',
+    'evaluator-rubric.md',
+    'quality-document.md',
     '.harness-hub/state/current-task.md',
     'scripts/harness-validate.mjs',
     'init.sh',
@@ -2365,8 +2374,9 @@ function assessmentFeatureListCheck(text: string, message: string): HarnessAsses
     const parsed = JSON.parse(text) as unknown;
     const pass = isRecord(parsed)
       && Array.isArray(parsed.features)
+      && isRecord(parsed.feature_state_policy)
       && isRecord(parsed.parallel_write_policy);
-    return assessmentCheck(pass, message, ['features array', 'parallel_write_policy object']);
+    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'parallel_write_policy object']);
   } catch {
     return assessmentCheck(false, message, ['valid JSON']);
   }
@@ -2570,7 +2580,17 @@ function dedupe(values: string[]): string[] {
 
 function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
   const checks: HarnessValidationCheck[] = [];
-  checks.push(validateFileContains(targetDir, 'AGENTS.md', ['Codex', 'worktree', 'decisions.md', 'session-handoff']));
+  checks.push(validateFileContains(targetDir, 'AGENTS.md', [
+    'Codex',
+    'Initialization Gate',
+    'harness-validate.mjs',
+    'current-task.md',
+    'checkpoint commit',
+    'quality snapshot',
+    'worktree',
+    'decisions.md',
+    'session-handoff',
+  ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/.gitignore', ['state/', 'reports/']));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/decisions.md', [
     'Active Decisions',
@@ -2580,15 +2600,79 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Status',
     'Follow-up',
   ]));
+  checks.push(validateFileContains(targetDir, '.harness-hub/state/progress.md', [
+    'Recent Validation',
+    'Validation Records',
+    'Command',
+    'Status',
+    'Exit code',
+    'Passed',
+    'Failed',
+    'Evidence',
+    'Commit',
+    'Runtime Signals',
+    'Review Feedback To Rules',
+  ]));
+  checks.push(validateFileContains(targetDir, '.harness-hub/state/session-handoff.md', [
+    'Validation Evidence',
+    'Validation Records',
+    'Command',
+    'Status',
+    'Exit code',
+    'Passed',
+    'Failed',
+    'Evidence',
+    'Commit',
+    'Runtime Signals',
+    'Review Feedback To Rules',
+  ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/current-task.md', [
     'Goal',
+    'Assumptions',
+    'Non-goals',
     'Allowed paths',
     'Forbidden paths',
+    'Acceptance criteria',
+    'Standard startup path',
     'Validation commands',
+    'Validation tiers',
+    'Runtime signals',
+    'Checkpoint policy',
     'Spec updates',
     'Decision log',
     'Parallel writes',
     'Handoff requirements',
+  ]));
+  checks.push(validateFileContains(targetDir, 'clean-state-checklist.md', [
+    'Standard startup path',
+    'Runtime signals',
+    'Review Feedback',
+    'evaluator-rubric.md',
+    'quality-document.md',
+  ]));
+  checks.push(validateFileContains(targetDir, 'definition-of-done.md', [
+    'Static checks',
+    'runtime checks',
+    'end-to-end',
+    'Standard startup path',
+    'Runtime logs',
+    'evaluator rubric',
+    'quality snapshot',
+  ]));
+  checks.push(validateFileContains(targetDir, 'evaluator-rubric.md', [
+    'Correctness',
+    'Verification',
+    'Scope discipline',
+    'Runtime reliability',
+    'Handoff readiness',
+    'Verdict',
+  ]));
+  checks.push(validateFileContains(targetDir, 'quality-document.md', [
+    'Quality Snapshot',
+    'Rating Standard',
+    'Product Areas',
+    'Architecture Layers',
+    'Change History',
   ]));
   checks.push(validateFeatureListJson(targetDir));
   checks.push(validateQaBoundary(targetDir));
@@ -2606,7 +2690,11 @@ function validateQaBoundary(targetDir: string): HarnessValidationCheck {
     'Allowed paths',
     'Forbidden paths',
     'Acceptance criteria',
+    'Standard startup path',
     'Validation commands',
+    'Validation tiers',
+    'Runtime signals',
+    'Checkpoint policy',
     'Handoff requirements',
   ];
   return validateFileContainsWithCode(
@@ -2704,7 +2792,7 @@ function parseSkillDescription(content: string): string | null {
 function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   const relativePath = 'feature_list.json';
   const filePath = path.join(targetDir, relativePath);
-  const evidence = ['features array', 'parallel_write_policy object'];
+  const evidence = ['features array', 'feature_state_policy object', 'parallel_write_policy object'];
   if (!fs.existsSync(filePath)) {
     return {
       code: 'structured-content',
@@ -2732,8 +2820,20 @@ function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   if (!isRecord(data) || !Array.isArray(data.features)) {
     missing.push('features array');
   }
+  if (!isRecord(data) || !isRecord(data.feature_state_policy)) {
+    missing.push('feature_state_policy object');
+  }
   if (!isRecord(data) || !isRecord(data.parallel_write_policy)) {
     missing.push('parallel_write_policy object');
+  }
+  if (isRecord(data) && Array.isArray(data.features)) {
+    const invalidFeatures = data.features
+      .map((feature, index) => ({ feature, index }))
+      .filter(({ feature }) => !isValidFeatureRecord(feature))
+      .map(({ index }) => `features[${index}]`);
+    if (invalidFeatures.length > 0) {
+      missing.push(`valid feature records ${invalidFeatures.join(', ')}`);
+    }
   }
 
   return {
@@ -2745,6 +2845,20 @@ function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
       : `Feature state JSON is missing required structure: ${missing.join(', ')}.`,
     evidence,
   };
+}
+
+function isValidFeatureRecord(value: unknown): boolean {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return typeof value.id === 'string'
+    && value.id.trim().length > 0
+    && typeof value.behavior === 'string'
+    && value.behavior.trim().length > 0
+    && typeof value.status === 'string'
+    && Object.prototype.hasOwnProperty.call(value, 'acceptance')
+    && Object.prototype.hasOwnProperty.call(value, 'validation')
+    && Object.prototype.hasOwnProperty.call(value, 'evidence');
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

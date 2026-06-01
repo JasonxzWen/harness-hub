@@ -10,7 +10,21 @@
 
 ## Validation Evidence
 
-- Not run yet.
+## Validation Records
+
+| Command | Status | Exit code | Passed | Failed | Evidence | Commit |
+| --- | --- | --- | --- | --- | --- | --- |
+| Not run yet. | skipped | n/a | n/a | n/a | No validation output recorded yet. | none |
+
+## Runtime Signals
+
+| Signal | Status | Evidence | Follow-up |
+| --- | --- | --- | --- |
+| Standard startup path | not run | No startup evidence recorded yet. | Fill current task first. |
+
+## Review Feedback To Rules
+
+- Nothing recorded yet.
 
 ## Residual Risk
 

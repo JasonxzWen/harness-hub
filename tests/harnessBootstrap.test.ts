@@ -24,6 +24,8 @@ const REQUIRED_HARNESS_FILES = [
   '.harness-hub/state/session-handoff.md',
   'clean-state-checklist.md',
   'definition-of-done.md',
+  'evaluator-rubric.md',
+  'quality-document.md',
   'scripts/harness-validate.mjs',
 ] as const;
 
@@ -59,10 +61,19 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', '.gitignore'), 'utf8')).toContain('state/');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', '.gitignore'), 'utf8')).toContain('reports/');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Allowed paths');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Checkpoint policy');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Spec updates');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Decision log');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Parallel writes');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'decisions.md'), 'utf8')).toContain('Rationale');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Validation Records');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Passed');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Failed');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Initialization Gate');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('checkpoint commit');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('feature_state_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Runtime reliability');
+  expect(fs.readFileSync(path.join(targetDir, 'quality-document.md'), 'utf8')).toContain('Quality Snapshot');
 
   const lock = readLock(targetDir);
   if (!lock || lock.data.schemaVersion !== 2) {
@@ -133,7 +144,41 @@ test('dev bootstrap preserves existing worktree-local state', () => {
   const progressPath = path.join(targetDir, '.harness-hub', 'state', 'progress.md');
   const decisionsPath = path.join(targetDir, '.harness-hub', 'state', 'decisions.md');
   fs.mkdirSync(path.dirname(progressPath), { recursive: true });
-  fs.writeFileSync(progressPath, 'existing local progress\n');
+  const progressContent = [
+    '# Progress',
+    '',
+    '## Current State',
+    '',
+    '- Existing local progress.',
+    '',
+    '## Recent Validation',
+    '',
+    '## Validation Records',
+    '',
+    '| Command | Status | Exit code | Passed | Failed | Evidence | Commit |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+    '| existing | pass | 0 | n/a | 0 | existing output | abc123 |',
+    '',
+    '## Runtime Signals',
+    '',
+    '| Signal | Status | Evidence | Follow-up |',
+    '| --- | --- | --- | --- |',
+    '| Standard startup path | pass | existing startup | none |',
+    '',
+    '## Review Feedback To Rules',
+    '',
+    '- Nothing recorded yet.',
+    '',
+    '## Blockers',
+    '',
+    '- None recorded.',
+    '',
+    '## Next',
+    '',
+    '- Continue.',
+    '',
+  ].join('\n');
+  fs.writeFileSync(progressPath, progressContent);
   const decisionsContent = [
     '# Decisions',
     '',
@@ -154,7 +199,7 @@ test('dev bootstrap preserves existing worktree-local state', () => {
   const result = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
 
   expect(result.exitCode).toBe(0);
-  expect(fs.readFileSync(progressPath, 'utf8')).toBe('existing local progress\n');
+  expect(fs.readFileSync(progressPath, 'utf8')).toBe(progressContent);
   expect(fs.readFileSync(decisionsPath, 'utf8')).toBe(decisionsContent);
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'))).toBe(true);
@@ -276,6 +321,45 @@ test('harness validation rejects malformed feature state JSON', () => {
     expect(String((error as { stderr?: Buffer | string }).stderr)).toContain('feature_list.json');
   }
   expect(failed).toBe(true);
+});
+
+test('harness validation requires durable validation records and feature evidence policy', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-records-'));
+  applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), [
+    '# Progress',
+    '',
+    '## Current State',
+    '',
+    '- No validation ledger.',
+    '',
+  ].join('\n'));
+  fs.writeFileSync(path.join(targetDir, 'feature_list.json'), `${JSON.stringify({
+    schema_version: 1,
+    features: [
+      {
+        id: 'demo',
+        status: 'passing',
+      },
+    ],
+    parallel_write_policy: {},
+  }, null, 2)}\n`);
+
+  const validation = validateHarness(targetDir);
+
+  expect(validation.exitCode).toBe(3);
+  expect(validation.checks.some((check) => (
+    check.state === 'fail'
+    && check.code === 'required-content'
+    && check.path === '.harness-hub/state/progress.md'
+  ))).toBe(true);
+  expect(validation.checks.some((check) => (
+    check.state === 'fail'
+    && check.code === 'structured-content'
+    && check.path === 'feature_list.json'
+    && check.reason.includes('feature_state_policy object')
+    && check.reason.includes('valid feature records features[0]')
+  ))).toBe(true);
 });
 
 test('harness validation audits broad or missing skill triggers', () => {

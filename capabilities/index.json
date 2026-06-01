@@ -6,7 +6,7 @@
       "kind": "harness-template",
       "path": "harness/minimal",
       "dest": ".",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "source": "local",
       "provides": [
         "repo-harness-initialization",
@@ -17,7 +17,13 @@
         "codex-dev-harness-bootstrap",
         "goal-ready-task-state",
         "session-handoff-continuity",
-        "worktree-task-isolation"
+        "worktree-task-isolation",
+        "durable-validation-records",
+        "checkpoint-commit-policy",
+        "feature-state-evidence-policy",
+        "runtime-signal-capture",
+        "evaluator-rubric",
+        "quality-snapshot"
       ],
       "overlapsWith": [
         "skill:workflow-router",
@@ -52,6 +58,12 @@
         },
         {
           "path": "definition-of-done.md"
+        },
+        {
+          "path": "evaluator-rubric.md"
+        },
+        {
+          "path": "quality-document.md"
         },
         {
           "path": "scripts/harness-validate.mjs"

@@ -4,6 +4,16 @@ always respond in Chinese unless the user explicitly asks for another language.
 
 This repository is prepared for Codex-driven development. Treat tracked harness files as the stable rules, and use ignored local state under `.harness-hub/state/` for the active task, progress, decisions, and handoff.
 
+## Initialization Gate
+
+Do not start implementation until the harness is fully landed and the active task is goal-ready.
+
+- Required files must exist: `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, and `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}`.
+- If any required file is missing, stop and run the approved harness init path before coding.
+- Run `node scripts/harness-validate.mjs`; fix harness failures before changing product files.
+- Fill `.harness-hub/state/current-task.md` with goal, assumptions, non-goals, allowed paths, forbidden paths, acceptance criteria, validation tiers, runtime signals, standard startup path, and checkpoint policy before editing.
+- Review recent progress, decisions, handoff, feature state, quality snapshot, branch/worktree, and `git status --short`.
+
 ## Operating Rules
 
 - Keep this file short. Move detailed or historical context to task files, docs, or archives.
@@ -13,6 +23,8 @@ This repository is prepared for Codex-driven development. Treat tracked harness 
 - Respect the task's allowed paths and forbidden paths.
 - Do not run parallel writes against the same file, module, or feature state.
 - Use read-only parallel work only for research, review, log analysis, or validation.
+- Use verified checkpoint commits for completed atomic work units when the task permits commits. Do not commit failing, unrelated, or half-done work. Record each checkpoint commit hash, or the reason commits were skipped, in progress and handoff state.
+- Promote repeated review feedback into a harness rule, validation command, or documented follow-up instead of relying on memory.
 - Record progress in `.harness-hub/state/progress.md` and leave restart notes in `.harness-hub/state/session-handoff.md`.
 - Record decision-level changes in `.harness-hub/state/decisions.md`.
 - Run `node scripts/harness-validate.mjs` before handoff.

@@ -99,6 +99,14 @@ Use these verbs for target-repo lifecycle work:
 
 `install` remains the standard skill install command and must not create root harness files. `init-harness` owns root harness initialization and must stay dry-run/confirmation guarded.
 
+Harness initialization is a hard gate for target repositories:
+- Use `init-harness`, not `install`, when root harness files are needed.
+- Do not start implementation in a target repo until `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, and `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}` exist.
+- Fill `.harness-hub/state/current-task.md` with goal, non-goals, allowed paths, forbidden paths, acceptance criteria, validation commands, and checkpoint policy before coding.
+- Run `node scripts/harness-validate.mjs` or `harness-hub validate-harness <target> --json`; fix harness failures before product edits.
+- Record validation command status, passed/failed counts when available, evidence, and checkpoint commit state in progress and handoff state.
+- Use verified checkpoint commits for completed atomic units when the task permits commits; otherwise record the skip reason.
+
 Before release-oriented CLI changes, run `bun run validate`, `git diff --check`, and the relevant smoke flow.
 
 ## Third-Party Skill Evaluation

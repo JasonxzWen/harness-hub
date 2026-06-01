@@ -1,6 +1,31 @@
 {
   "schema_version": 1,
   "features": [],
+  "feature_state_policy": {
+    "required_fields": [
+      "id",
+      "behavior",
+      "status",
+      "acceptance",
+      "validation",
+      "evidence"
+    ],
+    "allowed_statuses": [
+      "not_started",
+      "active",
+      "blocked",
+      "ready_for_validation",
+      "passing",
+      "failing",
+      "deferred"
+    ],
+    "passing_requires": [
+      "validation command",
+      "pass/fail result",
+      "evidence summary or path",
+      "checkpoint commit or skip reason"
+    ]
+  },
   "worktree_policy": {
     "write_task_isolation": "Use one git worktree or branch per write task.",
     "code_organization": "Keep source code organized by project architecture, not by agent task folders."

@@ -12,7 +12,7 @@ The system SHALL provide an opt-in harness analysis that reports target reposito
 - **THEN** the system reports harness findings without creating `.harness-hub/`, writing reports by default, changing target files, or changing git state
 
 #### Scenario: Existing harness evidence is reported
-- **WHEN** the target repository contains files such as `AGENTS.md`, `feature_list.json`, `.harness-hub/state/progress.md`, `.harness-hub/state/session-handoff.md`, or a Harness Hub lock with harness components
+- **WHEN** the target repository contains files such as `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `.harness-hub/state/current-task.md`, `.harness-hub/state/progress.md`, `.harness-hub/state/session-handoff.md`, `scripts/harness-validate.mjs`, or a Harness Hub lock with harness components
 - **THEN** the harness analysis includes those paths as evidence
 
 ### Requirement: Harness initialization planning
@@ -31,7 +31,8 @@ The system SHALL initialize a minimal repo-local harness only when the user conf
 
 #### Scenario: Confirm minimal harness initialization
 - **WHEN** the user runs `harness-hub init-harness <target> --yes --json`
-- **THEN** the system writes minimal harness files only when no blockers remain, records the harness component in `.harness-hub/lock.json`, and reports the written files
+- **THEN** the system writes minimal harness files only when no blockers remain, including agent instructions, feature state, clean-state and done guidance, evaluator and quality documents, validation script, and local current-task, decision, progress, and handoff state
+- **AND** the system records the harness component in `.harness-hub/lock.json` and reports the written files
 
 #### Scenario: Existing user files require force
 - **WHEN** the user runs `harness-hub init-harness <target> --yes --json` and a planned harness destination already exists
@@ -46,7 +47,7 @@ The system SHALL validate the observable target harness contract without mutatin
 
 #### Scenario: Validate complete harness
 - **WHEN** the user runs `harness-hub validate-harness <target> --json` after successful harness initialization
-- **THEN** the system reports required harness files as present and exits successfully
+- **THEN** the system reports required harness files as present, verifies the minimal content markers for validation records, checkpoint policy, feature evidence, runtime signals, evaluator rubric, and quality snapshot, and exits successfully
 
 #### Scenario: Validate incomplete harness
 - **WHEN** the target repository is missing required minimal harness files
@@ -57,4 +58,4 @@ The system SHALL keep harness initialization separate from standard skill instal
 
 #### Scenario: Standard install omits root harness files
 - **WHEN** the user runs `harness-hub install <target> --target standard --yes`
-- **THEN** the system installs standard skill directories and does not create harness files such as `AGENTS.md`, `feature_list.json`, `.harness-hub/state/progress.md`, or `.harness-hub/state/session-handoff.md`
+- **THEN** the system installs standard skill directories and does not create harness files such as `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `.harness-hub/state/progress.md`, or `.harness-hub/state/session-handoff.md`
