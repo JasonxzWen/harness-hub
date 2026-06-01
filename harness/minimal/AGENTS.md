@@ -23,6 +23,8 @@ Do not start implementation until the harness is fully landed and the active tas
 - Respect the task's allowed paths and forbidden paths.
 - Do not run parallel writes against the same file, module, or feature state.
 - Use read-only parallel work only for research, review, log analysis, or validation.
+- Use P0/P1/P2 validation priorities for implementation tasks: P0 must pass before handoff, P1 is run or risk-assessed for affected boundaries, and P2 is hardening that may be deferred with a reason.
+- For Web user-visible changes, record and run agent-run browser acceptance against the local app before handoff, including URL, scenario, viewport, console or network findings, and screenshot or trace evidence when useful.
 - Use verified checkpoint commits for completed atomic work units when the task permits commits. Do not commit failing, unrelated, or half-done work. Record each checkpoint commit hash, or the reason commits were skipped, in progress and handoff state.
 - Promote repeated review feedback into a harness rule, validation command, or documented follow-up instead of relying on memory.
 - Record progress in `.harness-hub/state/progress.md` and leave restart notes in `.harness-hub/state/session-handoff.md`.

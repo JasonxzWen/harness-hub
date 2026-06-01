@@ -48,7 +48,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Use `theme-factory` after an artifact exists or when the request is specifically about theme selection; use `frontend-design` when layout, UX, and implementation are the primary task.
 - Use `slack-gif-creator` only for Slack GIFs; use image/video generation or frontend/artifact skills for other visual media.
 - Use `clone-website` only for explicit authorized site cloning or reverse engineering; use `frontend-design` for new production pages, `design-taste-frontend` for visual direction, and `web-artifacts-builder` for standalone artifacts that do not require live-site reconstruction.
-- Use `webapp-testing` for one-off local browser inspection; use `e2e-testing` for durable Playwright suites.
+- Use `webapp-testing` for one-off local browser inspection and Web browser acceptance against a dev server; use `e2e-testing` for durable Playwright suites.
 - Use `doc-coauthoring` for durable docs, `internal-comms` for organizational updates, and `stop-slop` only for strong English prose anti-AI-tell editing; use `answer-workflow` for ordinary explanatory answers.
 - Use `source-to-insight-blog` when a source must become a public blog with source fidelity, media references, effective-interact summary, and project iteration review; use `answer-workflow` for ordinary summaries, `doc-coauthoring` for internal durable docs, and `frontend-design` for production site design.
 - Use `claude-api` only for Anthropic provider work; use `documentation-lookup` for general library/API facts and other providers.
@@ -80,7 +80,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `web-artifacts-builder` loads for complex standalone React/Tailwind/shadcn browser artifacts.
 - `frontend-slides` loads for HTML presentations, slide decks, talk or pitch slides, and PPT/PPTX-to-web conversion.
 - `frontend-patterns` loads for React or Next.js frontend logic, state, forms, routing, accessibility, or responsive behavior.
-- `webapp-testing` loads for one-off local web app inspection, screenshots, console logs, or UI reproduction.
+- `webapp-testing` loads for one-off local web app inspection, screenshots, console logs, UI reproduction, or agent-run Web browser acceptance.
 - `web-design-guidelines` loads for UI, UX, accessibility, or web interface guideline compliance review.
 - `e2e-testing` loads for durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy.
 - `grill-me` loads when the user says "grill me", asks to be challenged, or wants assumptions surfaced one question at a time.

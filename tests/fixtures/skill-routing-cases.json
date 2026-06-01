@@ -431,7 +431,7 @@
       "kind": "positive",
       "prompt": "Do a one-off browser inspection of the running dev server and capture screenshots and console logs.",
       "expectedSkill": "webapp-testing",
-      "docsBoundary": "`webapp-testing` loads for one-off local web app inspection, screenshots, console logs, or UI reproduction."
+      "docsBoundary": "`webapp-testing` loads for one-off local web app inspection, screenshots, console logs, UI reproduction, or agent-run Web browser acceptance."
     },
     {
       "id": "web-design-guidelines-positive-ui-audit",
@@ -711,7 +711,7 @@
       "kind": "forbidden-load",
       "prompt": "Create a durable Playwright E2E suite with Page Object models for the checkout flow.",
       "expectedSkill": "e2e-testing",
-      "docsBoundary": "`webapp-testing` loads for one-off local web app inspection, screenshots, console logs, or UI reproduction."
+      "docsBoundary": "`webapp-testing` loads for one-off local web app inspection, screenshots, console logs, UI reproduction, or agent-run Web browser acceptance."
     },
     {
       "id": "web-design-guidelines-forbidden-production-ui",

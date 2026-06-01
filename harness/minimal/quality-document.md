@@ -13,9 +13,9 @@ Update after material sessions, before a new phase, or when validation evidence 
 
 ## Product Areas
 
-| Area | Rating | Validation status | Agent readability | Test stability | Key gaps | Last updated |
-| --- | --- | --- | --- | --- | --- | --- |
-| Add area | - | - | - | - | - | - |
+| Area | Rating | P0/P1/P2 validation status | Browser acceptance status | Agent readability | Test stability | Key gaps | Last updated |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Add area | - | - | - | - | - | - | - |
 
 ## Architecture Layers
 

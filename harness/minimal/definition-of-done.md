@@ -5,7 +5,9 @@ A Codex task is done only when the worktree proves it.
 - The goal and non-goals are stated in `.harness-hub/state/current-task.md`.
 - Acceptance criteria are satisfied by direct evidence.
 - Changed files stay within allowed paths and avoid forbidden paths.
+- P0 validation has passed before handoff; P1 checks are run or risk-assessed; P2 hardening is run or explicitly deferred.
 - Static checks, runtime checks, and the relevant user-flow or end-to-end path have been run when relevant.
+- Web user-visible changes include agent-run browser acceptance against the local app, with URL, scenario, viewport, console/network findings, and screenshot or trace evidence when useful.
 - Standard startup path still works or has an explicit, recorded blocker.
 - Validation evidence records each command's status, exit code, passed/failed counts when available, output summary or path, and related checkpoint commit.
 - Runtime logs, health checks, or failure messages that informed the result are captured in progress or handoff state.

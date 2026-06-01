@@ -63,8 +63,8 @@ Current strengths:
 
 - Workflow ownership is clear: `workflow-router` selects one owner, then owner workflows call atoms.
 - Repo harness ownership is explicit: root files are initialized only through `init-harness --target standard`, not through default skill installation.
-- Engineering lifecycle coverage is strong: SDD, TDD, diagnosis, review, verification, handoff, and Harness Hub maintenance are all installable.
-- Web/artifact coverage is strong after adding `theme-factory` and `design-taste-frontend`; production UI, frontend taste direction, standalone artifacts, slides, one-off browser checks, and durable E2E have separate lanes. `effective-interact` also has a report-only aesthetic preflight derived from `taste-skill`.
+- Engineering lifecycle coverage is strong: SDD, TDD, P0/P1/P2 validation priorities, Web browser acceptance, diagnosis, review, verification, handoff, and Harness Hub maintenance are all installable.
+- Web/artifact coverage is strong after adding `theme-factory` and `design-taste-frontend`; production UI, frontend taste direction, standalone artifacts, slides, one-off browser checks, agent-run Web browser acceptance, and durable E2E have separate lanes. `effective-interact` also has a report-only aesthetic preflight derived from `taste-skill`.
 - Writing coverage is now viable for docs, internal comms, and narrow English prose cleanup after adding `doc-coauthoring`, `internal-comms`, and `stop-slop`.
 - Platform-extension coverage now has explicit atoms for Claude API, MCP servers, and skill authoring.
 
@@ -99,6 +99,7 @@ Known redundancies:
 - `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, `claude-api`, `mcp-builder`, `skill-creator`, and `slack-gif-creator` are helper atoms, not top-level workflow owners.
 - `diagnose` owns unknown runtime bugs and performance regressions.
 - `tdd-workflow` owns known behavior changes that should be implemented through tests.
+- `webapp-testing` owns one-off local browser inspection and agent-run Web browser acceptance evidence; `e2e-testing` owns durable Playwright suites.
 - `prototype` owns disposable learning artifacts only.
 - `verification-loop` owns final command gates.
 - `compound-code-review` owns deep review reports.
