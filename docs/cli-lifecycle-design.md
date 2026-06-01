@@ -42,7 +42,7 @@ harness-hub remove <target> --dry-run --json
 
 `init-harness` is the higher-level Codex-only dev bootstrap command. It composes skill installation with the managed `harness:minimal` template and writes continuity artifacts only through this explicit path. Active task state, progress, session handoff, and generated reports are ignored by `.harness-hub/.gitignore`; stable files and the lock remain visible. It blocks dirty git worktrees and existing harness files by default; `--force` is the explicit override policy. The low-level `install` command remains skills-only.
 
-Local Codex dogfooding is intentionally outside the managed target lifecycle: `scripts/sync-codex-skills.mjs` mirrors `skills/` into ignored `.codex/skills/` copies for this checkout, without adding `.codex/` to the capability graph or lock-backed install targets.
+Local Codex dogfooding is intentionally outside the managed target lifecycle: `scripts/sync-codex-skills.mjs` mirrors `skills/` into ignored `.codex/skills/` copies for this checkout, without adding `.codex/` to the capability graph or lock-backed install targets. Codex worktree setup should call the repo-relative command `node scripts/sync-codex-skills.mjs` or the equivalent `bun run codex:worktree-setup` from the worktree root; host-local absolute paths must stay out of the project design.
 
 Insight publishing is also explicit, but it is not a target-repo install lifecycle. `post.json` is the editable source of truth, `effective-interact.input.json` is the generation adapter, and `site/` is the Git-only GitHub Pages output. Local publish is preflight-only; `.github/workflows/publish-insights.yml` owns the actual Pages deployment after review.
 
