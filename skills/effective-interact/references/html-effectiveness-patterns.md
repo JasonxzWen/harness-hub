@@ -9,6 +9,7 @@ Use this reference when a request resembles the linked HTML effectiveness exampl
 - Keep production UI, full app building, slide decks, and long-lived prototypes in their own skills.
 - Use HTML only when navigation, side-by-side comparison, visual inspection, drilldown, filtering, local controls, or export makes the next decision faster.
 - Keep artifacts source-backed: claims should trace to files, commands, explicit assumptions, or linked sources.
+- For glossary-like sources, borrow the communication structure only. Write local-original definitions, preserve license boundaries, and make adjacent-term contrasts explicit.
 
 ## Source-Derived Case Families
 
@@ -26,8 +27,8 @@ Use this reference when a request resembles the linked HTML effectiveness exampl
 | Prototype interaction approval | Try a tiny interaction model and export the decision. | `prototype-approval` | drag/toggle controls, state list, export checklist | Never persist hidden state or mutate repo data. |
 | SVG illustration options | Compare explanatory illustrations or header visuals. | `illustration-gallery` | SVG panels, palette chips, usage notes | Do not create a production brand system here. |
 | Annotated flowchart | Explain a process with branches, gates, owners, or failure paths. | `flow-drilldown` | flow diagram, step cards, failure notes, owner/action table | One simple linear flow can stay as visual Markdown. |
-| Feature research explainer | Explain a feature or internal mechanism with citations and examples. | `explorable-explainer` | TL;DR cards, tabs, source rail, code/config examples | Do not overclaim beyond evidence. |
-| Concept research explainer | Teach a concept with a small interactive model. | `explorable-explainer` | sliders/toggles, glossary, example states, fallback explanation | The page must make sense without controls. |
+| Feature research explainer | Explain a feature or internal mechanism with citations and examples. | `explorable-explainer` | TL;DR cards, definition/boundary notes, tabs, source rail, code/config examples | Do not overclaim beyond evidence. |
+| Concept research explainer | Teach a concept or vocabulary boundary with examples and optional interaction. | `explorable-explainer` | definition cards, adjacent-term contrast, avoid/use-instead notes, glossary, example states, fallback explanation | The page must make sense without controls and must not copy external glossary text. |
 | Engineering status report | Show current state, progress, risks, owners, and next actions. | `status-dashboard` | metric cards, risk table, timeline, owner/status filters | Do not invent metrics or greenwash blockers. |
 | Incident report | Explain timeline, impact, root cause, mitigations, and follow-ups. | `incident-report` | timeline, impact cards, action item table, diff/config evidence | Keep dates/times concrete and distinguish facts from assumptions. |
 | Triage board editor | Sort or filter a small work queue and export decisions. | `triage-board-editor` | board, filters, priority chips, Markdown export | No network writes or hidden persistence. |
@@ -66,7 +67,7 @@ Selective source: `Leonxlnx/taste-skill` at `3c7017d636c3a4aad378433ea6d0cfa6c92
 | `implementation-plan` | implementation plan, milestone/dependency planning | Separates plan, gates, risks, and owner/action details. |
 | `review-findings` | PR review, review evidence tours | Keeps findings filterable and code evidence adjacent. |
 | `implementation-handoff` | PR writeup, completed implementation handoff | Author-side story, file tour, test plan, rollout notes. |
-| `research-explainer` | code understanding, feature/concept research, flow drilldown | Explains mechanisms with citations, diagrams, examples, and glossary. |
+| `research-explainer` | code understanding, feature/concept research, vocabulary boundary, flow drilldown | Explains mechanisms and terms with definitions, adjacent-concept contrasts, citations, diagrams, examples, and glossary. |
 | `conclusion-dashboard` | status report, incident report, release acceptance | Fast scan of current state, timeline, risks, and follow-ups. |
 | `editor-workbench` | triage board, feature flags, prompt tuner | Local-only interaction plus visible Markdown, JSON, diff, or prompt export. |
 

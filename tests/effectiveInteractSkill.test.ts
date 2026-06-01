@@ -344,6 +344,8 @@ test('effective-interact keeps detailed patterns in references', () => {
   expect(skill).toContain('\u4e0d\u8981\u5916\u663e Source fallback');
   expect(patterns).toContain('Interaction Workflow');
   expect(patterns).toContain('Pattern Selection');
+  expect(patterns).toContain('docs/harness-vocabulary.md');
+  expect(patterns).toContain('local-original');
   expect(patterns).toContain('Do not build credential or token tools');
   expect(patterns).not.toContain('Current Limits To Correct');
   expect(patterns).not.toContain('Source Inspiration');
@@ -386,6 +388,9 @@ test('effective-interact generalizes HTML effectiveness source cases without ove
 
   expect(sourcePatterns).toContain('Anti-Overfit Rules');
   expect(sourcePatterns).toContain('Trigger on reader need');
+  expect(sourcePatterns).toContain('glossary-like sources');
+  expect(sourcePatterns).toContain('local-original definitions');
+  expect(sourcePatterns).toContain('adjacent-term contrasts');
   expect(sourcePatterns).toContain('Warm neutral base');
   expect(sourcePatterns).toContain('Clay accent');
   expect(sourcePatterns).toContain('Taste-Derived Aesthetic Preflight');
@@ -394,6 +399,7 @@ test('effective-interact generalizes HTML effectiveness source cases without ove
   expect(sourcePatterns).toContain('Layout diversity check');
   expect(skill).toContain('references/html-aesthetic-preflight.md');
   expect(sourcePatterns).toContain('Template Mapping');
+  expect(sourcePatterns).toContain('vocabulary boundary');
   expect(sourcePatterns).toContain('HTML Escalation Checklist');
   expect(sourcePatterns).toContain('Stay in chat or Markdown');
 });
@@ -555,6 +561,7 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
     `${skillDir}/assets/fixtures/communication-mode-cases.json`,
     `${skillDir}/assets/fixtures/skill-structure-map-report.json`,
     `${skillDir}/assets/fixtures/html-effectiveness-pattern-library-report.json`,
+    `${skillDir}/assets/fixtures/harness-vocabulary-explainer-report.json`,
     `${skillDir}/assets/fixtures/session-ledger-report.json`,
     `${skillDir}/evals/routing-cases.json`,
   ];
@@ -735,6 +742,57 @@ test('effective-interact HTML effectiveness fixture renders source-derived patte
   expect(html).toContain('swatch-chip');
   expect(html).toContain('#D97757');
   expect(html).toContain('data-report-data-table');
+
+  const validation = spawnSync(process.execPath, [
+    validateInteractionScript,
+    payload.outputPath,
+    '--json',
+    '--skip-browser',
+  ], { encoding: 'utf8' });
+  expect(validation.status, validation.stderr).toBe(0);
+  expect(JSON.parse(validation.stdout).ok).toBe(true);
+});
+
+test('effective-interact harness vocabulary fixture renders concept boundaries without copied glossary text', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-harness-vocabulary-'));
+  const result = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    `${skillDir}/assets/fixtures/harness-vocabulary-explainer-report.json`,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'harness-vocabulary',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  const payload = JSON.parse(result.stdout);
+  const html = fs.readFileSync(payload.outputPath, 'utf8');
+
+  expect(html).toContain('data-template="research-explainer"');
+  expect(html).toContain('Harness vocabulary explainer');
+  expect(html).toContain('Definition');
+  expect(html).toContain('Adjacent concept');
+  expect(html).toContain('Avoid / use instead');
+  expect(html).toContain('Usage scenario');
+  expect(html).toContain('Acceptance boundary');
+  expect(html).toContain('docs/harness-vocabulary.md');
+  expect(html).toContain('reference-only');
+  expect(html).toContain('local-original definitions');
+  expect(html).toContain('data-section-type="tabs"');
+
+  const fixture = JSON.parse(fs.readFileSync(`${skillDir}/assets/fixtures/harness-vocabulary-explainer-report.json`, 'utf8'));
+  const sourceRegistryRefs = [
+    ...fixture.sections.flatMap((section: any) => section.items || []),
+    ...fixture.evidence,
+  ].filter((item: any) => item.filePath === 'docs/source-projects.md');
+  expect(sourceRegistryRefs.length).toBeGreaterThanOrEqual(2);
+  for (const item of sourceRegistryRefs) {
+    const sourceLine = fs.readFileSync(item.filePath, 'utf8').split(/\r?\n/)[item.line - 1] || '';
+    expect(sourceLine).toContain('mattpocock/dictionary-of-ai-coding');
+    expect(sourceLine).toContain('Reference-only');
+  }
 
   const validation = spawnSync(process.execPath, [
     validateInteractionScript,

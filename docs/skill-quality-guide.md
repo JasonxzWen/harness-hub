@@ -78,6 +78,20 @@ Imported descriptions can keep upstream wording. Change them only when the wordi
 
 Changing a local routing-sensitive description is a routing change. It requires positive, negative, and forbidden-load evaluation coverage before merge unless the edit is purely mechanical and leaves trigger meaning unchanged.
 
+## Vocabulary And Concept Boundary
+
+Use `docs/harness-vocabulary.md` as the local concept boundary for Harness Hub-owned text. This applies to locally authored or deeply adapted skills, owner workflows, root harness docs, validation reports, and `effective-interact` explainers.
+
+The vocabulary rule is semantic, not stylistic:
+
+- Prefer the local terms for concepts that affect routing, safety, validation, lifecycle ownership, or handoff meaning.
+- Keep `model`, `agent`, `harness`, `skill`, `tool`, `context window`, `context pointer`, `workflow owner`, `helper atom`, `automated check`, `automated review`, `human review`, and `handoff artifact` distinct.
+- Do not rewrite imported skill bodies merely because their wording or voice differs from `docs/harness-vocabulary.md`.
+- Do not copy external glossary text into local skills. Record reference-only sources in `docs/source-projects.md` and write local-original definitions.
+- Put long concept explanations in docs or references; keep `SKILL.md` focused on behavior the agent would otherwise get wrong.
+
+When a local skill uses a term differently from the vocabulary, fix it only if the mismatch can change trigger choice, execution boundary, validation claims, or the user's handoff understanding. Otherwise leave the upstream or local prose alone.
+
 ## Body Standard
 
 Locally authored `SKILL.md` bodies should stay short and high-signal. A useful target is under 5,000 tokens; local tests may use byte or word-count proxies when token counting is not available. Imported bodies are allowed to keep upstream structure unless they create excessive context cost in normal routing.
@@ -155,6 +169,7 @@ Use this checklist when reviewing a new or changed skill:
 5. Are scripts/assets/references reusable rather than copied into the body?
 6. Are gotchas concrete and failure-derived?
 7. Are source, license, and upstream version recorded somewhere durable?
-8. Are routing docs and capability metadata updated?
-9. Are positive, negative, and forbidden evals present or explicitly planned?
-10. Did validation pass?
+8. Do locally owned terms match `docs/harness-vocabulary.md` where the distinction affects routing, safety, validation, or handoff meaning?
+9. Are routing docs and capability metadata updated?
+10. Are positive, negative, and forbidden evals present or explicitly planned?
+11. Did validation pass?

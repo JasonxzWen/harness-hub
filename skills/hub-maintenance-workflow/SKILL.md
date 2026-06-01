@@ -24,6 +24,7 @@ Use repo-local source records and deterministic project files instead of delegat
 
 - `docs/personal-workflow-distribution.md` for the personal distribution rules, TODOs, and acceptance criteria.
 - `docs/source-projects.md` for upstream URLs, versions, license notes, import decisions, and reference-only candidates.
+- `docs/harness-vocabulary.md` for local concept boundaries when maintaining Harness Hub-owned skills, reports, or validation language.
 - `docs/workflow-source-dossier.md` for lifecycle-stage comparisons across Matt Pocock skills, Superpowers, ECC, OpenSpec, Effective Interact, Vercel, retired Ralph source notes, and local docs.
 - `docs/skill-routing.md` for overlap and trigger decisions.
 - `capabilities/index.json` for the installable component surface.
