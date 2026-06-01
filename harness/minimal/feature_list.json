@@ -26,6 +26,41 @@
       "checkpoint commit or skip reason"
     ]
   },
+  "validation_priority_policy": {
+    "P0": [
+      "new or changed behavior test",
+      "nearest relevant suite",
+      "required static or runtime gate",
+      "web browser acceptance when Web user-visible behavior changes"
+    ],
+    "P1": [
+      "affected module, integration, system, API, data-flow, or cross-boundary checks",
+      "risk assessment when a P1 check is skipped"
+    ],
+    "P2": [
+      "broader regression, repeated runs, cross-browser or mobile viewport, accessibility, or performance hardening",
+      "explicit defer reason when not run"
+    ]
+  },
+  "web_acceptance_policy": {
+    "applies_to": [
+      "Web UI",
+      "routing",
+      "forms",
+      "interaction state",
+      "user-visible browser behavior"
+    ],
+    "required_evidence": [
+      "local URL",
+      "scenario",
+      "viewport",
+      "agent-run browser result",
+      "console or network findings",
+      "screenshot, trace, video, log, or explicit skip reason"
+    ],
+    "default_tool_boundary": "Use webapp-testing for one-off local acceptance; use e2e-testing only for durable Playwright suites.",
+    "safety_boundary": "Do not use production accounts, real payments, or external writes unless explicitly approved."
+  },
   "worktree_policy": {
     "write_task_isolation": "Use one git worktree or branch per write task.",
     "code_organization": "Keep source code organized by project architecture, not by agent task folders."

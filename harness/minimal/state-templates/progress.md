@@ -26,6 +26,12 @@
 | --- | --- | --- | --- |
 | Standard startup path | not run | No startup evidence recorded yet. | Fill current task first. |
 
+## Web browser acceptance
+
+| URL | Scenario | Viewport | Status | Console/network | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| Not required yet. | n/a | n/a | skipped | n/a | Fill current task first. |
+
 ## Review Feedback To Rules
 
 - Nothing recorded yet.

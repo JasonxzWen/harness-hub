@@ -6,7 +6,7 @@
       "kind": "harness-template",
       "path": "harness/minimal",
       "dest": ".",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "source": "local",
       "provides": [
         "repo-harness-initialization",
@@ -21,6 +21,8 @@
         "durable-validation-records",
         "checkpoint-commit-policy",
         "feature-state-evidence-policy",
+        "validation-priority-policy",
+        "web-browser-acceptance-policy",
         "runtime-signal-capture",
         "evaluator-rubric",
         "quality-snapshot"
@@ -869,12 +871,13 @@
       "version": "0.1.0",
       "source": "anthropic-builtins-adapted",
       "provides": [
-        "one-off-browser-debugging"
+        "one-off-browser-debugging",
+        "web-browser-acceptance"
       ],
       "overlapsWith": [
         "skill:e2e-testing"
       ],
-      "routing": "Use for one-off local web app inspection, screenshots, console logs, or UI reproduction; use e2e-testing for durable Playwright suites.",
+      "routing": "Use for one-off local web app inspection, screenshots, console logs, UI reproduction, or agent-run Web browser acceptance; use e2e-testing for durable Playwright suites.",
       "detects": [
         {
           "path": "skills/webapp-testing/SKILL.md"
@@ -884,7 +887,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "One-off local browser inspection."
+      "recommendation": "One-off local browser inspection and agent-run Web browser acceptance."
     },
     "skill:web-design-guidelines": {
       "kind": "skill",

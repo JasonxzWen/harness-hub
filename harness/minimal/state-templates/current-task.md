@@ -38,9 +38,24 @@ State the concrete outcome for the active Codex goal.
 
 ## Validation tiers
 
+- P0: Must pass before handoff. Include the new or changed behavior test, nearest relevant suite, required static/runtime gates, and Web browser acceptance when this task changes Web user-visible behavior.
+- P1: Run or risk-assess affected module, integration, system, API, data-flow, or cross-boundary checks.
+- P2: Hardening checks such as broader regression, repeated runs, cross-browser/mobile viewport, accessibility, or performance. Defer only with a recorded reason.
 - Static: lint, typecheck, format, or structural checks.
 - Runtime: tests, build, startup, smoke, or health checks.
 - User flow: end-to-end, integration, browser, CLI, or scenario checks.
+
+## Web browser acceptance
+
+- Required: yes/no.
+- Dev server command:
+- Local URL:
+- agent-run browser path: `webapp-testing` for one-off local acceptance; `e2e-testing` only for durable Playwright suites.
+- Scenario:
+- Viewports:
+- Console/network checks:
+- Evidence: screenshot, trace, video, log, or explicit skip reason.
+- Production/credential boundary: do not use production accounts, real payments, or external writes unless explicitly approved.
 
 ## Runtime signals
 
