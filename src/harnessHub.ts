@@ -572,6 +572,7 @@ export interface InsightPostResult {
   postJsonPath: string;
   sourceLedgerPath: string;
   effectiveInteractInputPath: string;
+  effectiveInteractSummaryPath: string;
   htmlPath: string;
   validation: InsightValidationResult;
   reason: string;
@@ -2918,6 +2919,7 @@ export function createInsightPost(
   const postJsonPath = path.join(postDir, 'post.json');
   const sourceLedgerPath = path.join(postDir, 'source-ledger.json');
   const effectiveInteractInputPath = path.join(postDir, 'effective-interact.input.json');
+  const effectiveInteractSummaryPath = path.join(postDir, 'effective-interact-summary.html');
   const htmlPath = path.join(postDir, 'index.html');
   const validation = validateInsightPostInput(input, repoRoot);
   const generatedAt = new Date().toISOString();
@@ -2932,6 +2934,7 @@ export function createInsightPost(
       postJsonPath,
       sourceLedgerPath,
       effectiveInteractInputPath,
+      effectiveInteractSummaryPath,
       htmlPath,
       validation,
       reason: 'Insight post generation skipped because source validation failed.',
@@ -2951,13 +2954,14 @@ export function createInsightPost(
     '--out-dir',
     postDir,
     '--slug',
-    'index',
+    'effective-interact-summary',
     '--json',
   ], {
     cwd: repoRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+  fs.writeFileSync(htmlPath, renderInsightArticleHtml(post, slug, generatedAt), 'utf8');
 
   return {
     schemaVersion: 1,
@@ -2968,6 +2972,7 @@ export function createInsightPost(
     postJsonPath,
     sourceLedgerPath,
     effectiveInteractInputPath,
+    effectiveInteractSummaryPath,
     htmlPath,
     validation,
     reason: 'Insight post generated from structured source truth.',
@@ -3267,6 +3272,273 @@ function makeInsightValidationResult(targetDir: string, checks: InsightValidatio
   };
 }
 
+function renderInsightArticleHtml(input: InsightPostInput, slug: string, generatedAt: string): string {
+  const dictionaryInsight = isAiCodingDictionaryInsight(input);
+  const sourceGuide = dictionaryInsight
+    ? renderAiDictionarySourceGuide(input)
+    : renderDefaultInsightSourceGuide(input);
+  const localChanges = input.projectMapping.map((item) => `
+        <li>
+          <strong>${escapeHtml(item.area)}</strong>
+          <p>${escapeHtml(item.impact)}</p>
+          <p class="action">${escapeHtml(item.action)}</p>
+        </li>`).join('');
+  const sources = input.sources.slice(0, 6).map((source) => `
+        <li><a href="${escapeAttr(source.url)}">${escapeHtml(source.title)}</a><span>${escapeHtml(source.type)} · ${escapeHtml(source.accessedAt)}</span></li>`).join('');
+
+  return `<!doctype html>
+<html lang="zh-CN" data-insight-blog data-source-to-insight-blog>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="${escapeAttr(trimInsightPrefix(input.summary))}">
+  <title>${escapeHtml(input.title)}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #faf9f6;
+      --paper: #ffffff;
+      --ink: #232320;
+      --muted: #68635b;
+      --line: #ded8ce;
+      --accent: #0f6f72;
+      --accent-soft: #e5f3f1;
+      --warn: #9b5c00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.72;
+    }
+    main {
+      width: min(940px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 44px 0 56px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      max-width: 780px;
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+    .summary {
+      max-width: 760px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 22px 0 0;
+    }
+    nav a {
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      padding: 6px 12px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 650;
+    }
+    section {
+      padding: 28px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 26px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    p { margin: 0 0 12px; }
+    ul { margin: 10px 0 0; padding-left: 22px; }
+    li { margin: 8px 0; }
+    a { color: var(--accent); }
+    pre {
+      margin: 16px 0;
+      padding: 18px;
+      overflow-x: auto;
+      background: #f0eee8;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .lead {
+      font-size: 19px;
+      color: #34332f;
+    }
+    .change-list, .source-list {
+      list-style: none;
+      padding: 0;
+    }
+    .change-list li, .verdict {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .change-list strong, .verdict strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+    .action {
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+    .verdicts {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .verdict.warn { border-left: 4px solid var(--warn); }
+    .verdict.next { border-left: 4px solid var(--accent); }
+    .validation {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .source-list li {
+      display: grid;
+      gap: 2px;
+      margin: 10px 0;
+    }
+    .source-list span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    footer {
+      padding-top: 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    @media (max-width: 640px) {
+      main { width: min(100% - 24px, 940px); padding-top: 28px; }
+      h1 { font-size: 34px; }
+      .summary, .lead { font-size: 17px; }
+      pre { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Source-backed insight · ${escapeHtml(input.date)}</p>
+      <h1>${escapeHtml(input.title)}</h1>
+      <p class="summary">${escapeHtml(trimInsightPrefix(input.summary))}</p>
+      <nav aria-label="文章结构">
+        <a href="#source-guide">原仓库导读</a>
+        <a href="#local-changes">本地变更</a>
+        <a href="#reflection">反思结论</a>
+      </nav>
+    </header>
+
+    <section id="source-guide">
+      <h2>1. 原仓库导读</h2>
+      ${sourceGuide}
+    </section>
+
+    <section id="local-changes">
+      <h2>2. 本地变更</h2>
+      <p class="lead">这些变更的共同点是：借上游字典的结构启发，收紧 Harness Hub 自己的术语边界和发布边界，而不是复制上游词条。</p>
+      <ul class="change-list">${localChanges}</ul>
+    </section>
+
+    <section id="reflection">
+      <h2>3. 反思结论</h2>
+      <div class="verdicts">
+        <article class="verdict">
+          <strong>部分有效</strong>
+          <p>effective-interact 的生成和验证链路有价值：它能把来源、判断、验证材料组织成可检查产物。但它不适合直接承担 blog 正文；上一版的问题正是公开页面太像交互报告，读者需要先理解组件和证据结构，才看得到结论。</p>
+        </article>
+        <article class="verdict warn">
+          <strong>冗余风险</strong>
+          <p>继续扩成完整中文 glossary、CMS，或把正文写成 source-ledger 式审计页，都不值得。上游授权不明，本项目也没有高频维护双语词典的证据；扩写只会增加维护面和阅读成本。</p>
+        </article>
+        <article class="verdict next">
+          <strong>下一步优化</strong>
+          <p>保留术语边界和验证链路。公开文章只保留“原仓库导读、本地变更、反思结论”。除非上游补充授权，或本项目出现高频术语维护需求，否则不继续扩写。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="sources">
+      <h2>来源与验证</h2>
+      <p class="validation">这部分只保留审计入口，不作为正文展开。事实、推断、项目判断仍在机器可读文件中保留。</p>
+      <ul class="source-list">${sources}</ul>
+      <p class="validation">
+        验证链路：
+        <a href="post.json">post.json</a> ·
+        <a href="source-ledger.json">source-ledger.json</a> ·
+        <a href="effective-interact.input.json">effective-interact.input.json</a> ·
+        <a href="effective-interact-summary.html">effective-interact-summary.html</a>
+      </p>
+    </section>
+
+    <footer>
+      Generated ${escapeHtml(generatedAt)} from <code>post.json</code>. Canonical slug: <code>${escapeHtml(slug)}</code>.
+    </footer>
+  </main>
+</body>
+</html>
+`;
+}
+
+function renderAiDictionarySourceGuide(input: InsightPostInput): string {
+  const purpose = firstMatchingInsightStatement(input, ['术语不透明', '白话解释'])
+    || '它把 AI coding 中容易混淆的基础术语整理成读者能快速建立边界的词典。';
+  const boundary = firstMatchingInsightStatement(input, ['LICENSE', '全文翻译', 'reference-only'])
+    || '当前没有足够授权证据，所以本文只做结构导读和项目反思，不发布完整中文词条。';
+
+  return `
+      <h3>一分钟结论</h3>
+      <p class="lead">${escapeHtml(trimInsightPrefix(input.summary))}</p>
+      <p>${escapeHtml(purpose)}</p>
+      <p>${escapeHtml(boundary)}</p>
+      <h3>原仓库内容树</h3>
+      <pre><code>${escapeHtml(buildAiDictionaryTreeText())}</code></pre>
+      <h3>核心读法</h3>
+      <ul>
+        <li><strong>model 不是 agent。</strong>model 负责生成；agent 是 model 加上下文、工具、权限和运行环境。</li>
+        <li><strong>context 是预算。</strong>context window、attention budget、compaction 和 handoff 都在处理模型一次能看多少、能忠实处理多少。</li>
+        <li><strong>tool 是边界。</strong>tool call、MCP、sandbox、permission 决定 agent 能否触碰文件、终端和外部系统。</li>
+        <li><strong>失败模式要转成动作。</strong>幻觉、迎合、知识截止和注意力衰减分别对应查证、反驳、加载新材料、清理或交接上下文。</li>
+      </ul>`;
+}
+
+function renderDefaultInsightSourceGuide(input: InsightPostInput): string {
+  return `
+      <h3>一分钟结论</h3>
+      <p class="lead">${escapeHtml(trimInsightPrefix(input.summary))}</p>
+      <p>${escapeHtml(input.viewpoints[0]?.statement || input.integration[0] || '这篇文章只保留读者理解项目判断所需的来源结构和本地影响。')}</p>
+      <h3>来源结构</h3>
+      <ul>${input.sources.slice(0, 6).map((source) => `<li>${escapeHtml(source.title)}：${escapeHtml(source.notes || source.excerpt || source.type)}</li>`).join('')}</ul>`;
+}
+
 function buildInsightSourceLedger(input: InsightPostInput, slug: string, generatedAt: string): Record<string, unknown> {
   return {
     schemaVersion: 1,
@@ -3282,61 +3554,36 @@ function buildInsightSourceLedger(input: InsightPostInput, slug: string, generat
 }
 
 function adaptInsightToEffectiveInteract(input: InsightPostInput, slug: string, generatedAt: string): Record<string, unknown> {
+  const dictionaryInsight = isAiCodingDictionaryInsight(input);
   return {
     title: input.title,
     summary: input.summary,
-    status: 'draft',
+    status: 'complete',
     generatedAt,
     template: 'research-explainer',
-    renderMode: 'fallback-only',
+    renderMode: 'pre-rendered',
     intent: {
-      audience: 'Harness Hub maintainer',
-      primaryQuestion: 'How should external material change Harness Hub iteration?',
-      decision: 'Publish source-backed project insight and iteration records.',
+      audience: '中文读者与 Harness Hub maintainer',
+      primaryQuestion: dictionaryInsight
+        ? '原仓库讲了什么，本地改了什么，改得值不值？'
+        : '读者如何快速理解这篇译注和本项目迭代？',
+      decision: dictionaryInsight
+        ? '原仓库是 62 个术语的 7 层词典；本地只该借结构、边界和验证语言。'
+        : '只借结构，不复制正文；把术语边界落到本地迭代。',
       artifactKind: 'research',
-      successCriteria: [
-        'Facts and inferences are separated.',
-        'Every public claim links back to source metadata.',
-        'Project actions are bounded to the current iteration.',
-      ],
+      successCriteria: dictionaryInsight
+        ? [
+          '简单概括原仓库核心思想，并用树形结构组织内容。',
+          '梳理本地已根据该仓库做出的变更。',
+          '反思变更是否有效、冗余，以及下一步优化。',
+        ]
+        : [
+          '首屏先给结论、边界和项目落点。',
+          '用表格和时间线降低读者组装成本。',
+          '事实、推断和项目判断仍能追溯到来源 metadata。',
+        ],
     },
-    sections: [
-      {
-        type: 'markdown',
-        title: 'Source Claims',
-        group: 'evidence',
-        status: 'info',
-        content: formatSourceClaimsMarkdown(input),
-      },
-      {
-        type: 'markdown',
-        title: 'Viewpoint Extraction',
-        group: 'main',
-        status: 'info',
-        content: formatViewpointsMarkdown(input),
-      },
-      {
-        type: 'markdown',
-        title: 'Project Mapping',
-        group: 'impact',
-        status: 'ready',
-        content: formatProjectMappingMarkdown(input),
-      },
-      {
-        type: 'markdown',
-        title: 'Iteration Record',
-        group: 'changes',
-        status: 'ready',
-        content: formatIterationRecordMarkdown(input.iterationRecord),
-      },
-      {
-        type: 'markdown',
-        title: 'Action Boundary',
-        group: 'next',
-        status: 'ready',
-        content: formatActionBoundaryMarkdown(input.actionBoundary),
-      },
-    ],
+    sections: dictionaryInsight ? buildAiCodingDictionarySections(input) : buildDefaultInsightSections(input),
     evidence: input.sources.map((source) => ({
       id: source.id,
       kind: 'source',
@@ -3353,68 +3600,475 @@ function adaptInsightToEffectiveInteract(input: InsightPostInput, slug: string, 
         `Canonical post slug: ${slug}`,
       ],
     })),
-    claims: input.sourceClaims.map((claim) => ({
-      id: claim.id,
-      statement: `[${claim.kind}] ${claim.statement}`,
-      kind: mapInsightClaimKind(claim.kind),
-      evidenceIds: [claim.sourceId],
-      confidence: claim.kind === 'fact' ? 'high' : 'medium',
-      knownLimits: [`Original claim kind: ${claim.kind}`],
-    })),
     nextActions: input.actionBoundary.now,
   };
 }
 
-function mapInsightClaimKind(kind: InsightClaimKind): string {
-  if (kind === 'fact') return 'conclusion';
-  if (kind === 'assumption') return 'assumption';
-  if (kind === 'inference') return 'recommendation';
-  return 'recommendation';
+function buildDefaultInsightSections(input: InsightPostInput): Array<Record<string, unknown>> {
+  return [
+    {
+      type: 'summary-cards',
+      title: '先读这三点',
+      group: 'summary',
+      status: 'complete',
+      summary: '先回答读者最关心的结论、边界、项目落点和验证方式。',
+      cards: buildInsightSummaryCards(input),
+    },
+    {
+      type: 'data-table',
+      title: '阅读路径',
+      group: 'main',
+      status: 'info',
+      summary: '按这个顺序读，不需要先进入来源审计细节。',
+      columns: [
+        { key: 'order', label: '顺序', width: '12ch' },
+        { key: 'question', label: '读者问题', width: '24ch' },
+        { key: 'answer', label: '答案' },
+      ],
+      rows: buildInsightReadingPathRows(input),
+    },
+    {
+      type: 'data-table',
+      title: '授权与发布边界',
+      group: 'decision',
+      status: 'ready',
+      summary: '先把能做、不能做、为什么能公开讲清楚。',
+      columns: [
+        { key: 'issue', label: '问题', width: '18ch' },
+        { key: 'judgment', label: '判断', width: '28ch' },
+        { key: 'impact', label: '对本文的影响' },
+      ],
+      rows: buildInsightBoundaryRows(input),
+    },
+    {
+      type: 'data-table',
+      title: '术语地图',
+      group: 'diagrams',
+      status: 'ready',
+      summary: '把上游字典的价值翻译成工程阅读地图，而不是逐条搬运词条。',
+      columns: [
+        { key: 'layer', label: '层', width: '16ch' },
+        { key: 'readerTranslation', label: '中文读法', width: '34ch' },
+        { key: 'why', label: '为什么重要' },
+      ],
+      rows: buildInsightConceptMapRows(input),
+    },
+    {
+      type: 'data-table',
+      title: '项目映射',
+      group: 'impact',
+      status: 'ready',
+      summary: '每个落点都对应一个本项目已有文件或发布链路。',
+      columns: [
+        { key: 'area', label: '位置', width: '24ch' },
+        { key: 'impact', label: '读者应理解' },
+        { key: 'action', label: '本项目动作' },
+      ],
+      rows: buildInsightProjectRows(input),
+    },
+    {
+      type: 'timeline',
+      title: 'Harness Hub 已做的迭代',
+      group: 'changes',
+      status: 'ready',
+      summary: '把“之前根据这个项目做过什么”放到时间线上读。',
+      items: buildInsightIterationTimeline(input.iterationRecord),
+    },
+    {
+      type: 'tabs',
+      title: '读者可怎么用',
+      group: 'next',
+      status: 'ready',
+      summary: '不同读者直接看自己关心的行动面。',
+      tabs: buildInsightReaderTabs(input),
+    },
+    {
+      type: 'markdown',
+      title: '来源声明',
+      group: 'evidence',
+      status: 'info',
+      content: formatSourceClaimsMarkdown(input),
+    },
+  ];
+}
+
+function buildAiCodingDictionarySections(input: InsightPostInput): Array<Record<string, unknown>> {
+  return [
+    {
+      type: 'markdown',
+      title: '一分钟读完',
+      group: 'summary',
+      status: 'complete',
+      summary: '先用正常文章语言回答：它是什么，为什么值得看，本项目为什么要管它。',
+      content: buildAiDictionaryIntroMarkdown(input),
+    },
+    {
+      type: 'code',
+      title: '原仓库内容树',
+      group: 'main',
+      status: 'ready',
+      summary: '树只保留读者需要的骨架，完整词条留给上游 README。',
+      language: 'text',
+      content: buildAiDictionaryTreeText(),
+    },
+    {
+      type: 'markdown',
+      title: '核心思想',
+      group: 'main',
+      status: 'ready',
+      summary: '把词典翻成一个读者能带走的判断框架。',
+      content: buildAiDictionaryCoreMarkdown(),
+    },
+    {
+      type: 'markdown',
+      title: '本地已做的变更',
+      group: 'changes',
+      status: 'ready',
+      summary: '只列和 dictionary-of-ai-coding 直接相关的本地变化。',
+      content: buildAiDictionaryLocalChangesMarkdown(input),
+    },
+    {
+      type: 'data-table',
+      title: '反思结果',
+      group: 'decision',
+      status: 'review',
+      summary: '直接回答：有效吗、冗余吗、下一步怎么收敛。',
+      columns: [
+        { key: 'item', label: '对象', width: '24ch' },
+        { key: 'assessment', label: '结论' },
+        { key: 'redundancy', label: '冗余判断' },
+        { key: 'next', label: '下一步' },
+      ],
+      rows: buildAiDictionaryReflectionRows(),
+    },
+    {
+      type: 'markdown',
+      title: '下一步优化',
+      group: 'next',
+      status: 'ready',
+      summary: '优化方向不是继续加内容，而是删掉读者不需要先看的复杂度。',
+      content: buildAiDictionaryNextMarkdown(input),
+    },
+    {
+      type: 'markdown',
+      title: '来源声明',
+      group: 'evidence',
+      status: 'info',
+      content: formatSourceClaimsMarkdown(input),
+    },
+  ];
+}
+
+function buildAiDictionaryIntroMarkdown(input: InsightPostInput): string {
+  return [
+    `**结论：${trimInsightPrefix(input.summary)}**`,
+    '',
+    '原仓库 `mattpocock/dictionary-of-ai-coding` 不是一个可安装工具，也不是一套工作流。它是一份 AI coding 术语词典：把初学者经常听到、但很难定位的词，按实际使用场景分组解释。',
+    '',
+    '这篇文章只回答三个问题：',
+    '',
+    '- 原仓库到底讲了什么：62 个术语，分成 7 个层次。',
+    '- 本项目根据它做了什么：补了本地术语边界、来源策略、解释器约束和发布记录。',
+    '- 这些改动值不值：大部分有效，但展示层已经显得过重，应该收敛。',
+  ].join('\n');
+}
+
+function buildAiDictionaryTreeText(): string {
+  return [
+    'AI Coding Dictionary',
+    '|',
+    '|-- 1. The Model',
+    '|   `-- 模型、参数、训练、推理、token、provider、harness、缓存与成本',
+    '|',
+    '|-- 2. Sessions, Context Windows & Turns',
+    '|   `-- context、context window、agent、system prompt、session、turn',
+    '|',
+    '|-- 3. Tools & Environment',
+    '|   `-- environment、filesystem、tool call/result、MCP、permission、sandbox',
+    '|',
+    '|-- 4. Failure Modes',
+    '|   `-- sycophancy、hallucination、knowledge cutoff、attention budget/degradation',
+    '|',
+    '|-- 5. Handoffs',
+    '|   `-- clearing、handoff、handoff artifact、spec、ticket、compaction',
+    '|',
+    '|-- 6. Memory and Steering',
+    '|   `-- memory system、AGENTS.md、progressive disclosure、context pointer、skill、subagent',
+    '|',
+    '`-- 7. Patterns of Work',
+    '    `-- human-in-the-loop、AFK、automated check/review、human review、vibe coding、grilling',
+  ].join('\n');
+}
+
+function buildAiDictionaryCoreMarkdown(): string {
+  return [
+    '读者不用背词条，先抓住这几条线：',
+    '',
+    '- **model 不是 agent**：model 只生成文本；agent 是 model 加上上下文、工具、权限和运行环境。',
+    '- **context 是预算**：上下文窗口、attention budget、compaction、handoff 都是在处理“模型一次能看多少、能忠实处理多少”。',
+    '- **tool 是边界**：tool call、MCP、sandbox、permission 决定 agent 能不能碰文件、终端和外部系统。',
+    '- **失败模式要转成动作**：幻觉、迎合、知识截止、注意力衰减，分别对应查证、反驳、加载新文档、清理或交接上下文。',
+    '- **自动化检查和人审不能混用**：test/typecheck 是 deterministic check；agent review 是判断；human review 是人看真实 diff 或产物。',
+  ].join('\n');
+}
+
+function buildAiDictionaryLocalChangesMarkdown(input: InsightPostInput): string {
+  const rows = input.projectMapping.length > 0 ? input.projectMapping : [
+    {
+      area: 'docs/harness-vocabulary.md',
+      impact: '把外部术语启发改成本项目自己的边界语言。',
+      action: '保留本地原创定义。',
+    },
+  ];
+
+  return rows.map((item) => (
+    `- **${item.area}**：${item.impact}`
+  )).join('\n');
+}
+
+function buildAiDictionaryReflectionRows(): Array<Record<string, string>> {
+  return [
+    {
+      item: 'source-projects reference-only 记录',
+      assessment: '有效。它把授权不明和用途边界写清楚，避免误复制上游正文。',
+      redundancy: '低。它是后续所有使用的约束入口。',
+      next: '保留；若上游许可证变化，再重新评估能否扩大引用方式。',
+    },
+    {
+      item: 'docs/harness-vocabulary.md',
+      assessment: '有效。它解决本项目最容易混淆的术语：model、agent、harness、skill、tool、review。',
+      redundancy: '中。若继续扩写成完整 glossary，就会重复上游词典。',
+      next: '只在影响 routing、safety、validation 或 handoff 时新增术语。',
+    },
+    {
+      item: 'effective-interact 解释器和 fixture',
+      assessment: '部分有效。它把术语解释变成可验证产物，但展示层容易过度。',
+      redundancy: '中高。上一版 blog 的问题就是交互组件多于读者问题。',
+      next: '保留结构化生成和验证；公开文章优先导读、变更、反思。',
+    },
+    {
+      item: 'skill-quality-guide 术语治理',
+      assessment: '有效。它防止为了统一风格去改 imported skill body。',
+      redundancy: '低。它是维护政策，不是正文内容。',
+      next: '继续作为审查规则；不要把它扩成第二套词典。',
+    },
+    {
+      item: 'Pages insight post',
+      assessment: '当前版本需要收敛。发布链路有效，但文章结构必须服务读者。',
+      redundancy: '中。若每篇都生成 source-ledger 式报告，会不像 blog。',
+      next: '固定本文三段式：原仓库导读、本地变更、有效性反思。',
+    },
+  ];
+}
+
+function buildAiDictionaryNextMarkdown(input: InsightPostInput): string {
+  return [
+    '**现在该做：**',
+    ...input.actionBoundary.now.map((action) => `- ${action}`),
+    '',
+    '**继续观察：**',
+    ...input.actionBoundary.observe.map((action) => `- ${action}`),
+    '',
+    '**暂时不做：**',
+    ...input.actionBoundary.notNow.map((action) => `- ${action}`),
+  ].join('\n');
+}
+
+function buildInsightSummaryCards(input: InsightPostInput): Array<Record<string, string>> {
+  const landing = input.projectMapping
+    .map((item) => item.area)
+    .slice(0, 3)
+    .join(' / ');
+  return [
+    { label: '结论', value: trimInsightPrefix(input.summary) },
+    { label: '边界', value: input.actionBoundary.notNow[0] || '不复制来源正文，保留来源追溯。' },
+    { label: '落点', value: landing || '项目映射见下方表格。' },
+    { label: '验证', value: `${input.sources.length} 个来源 / ${input.sourceClaims.length} 条 claim / source-ledger 可审计` },
+  ];
+}
+
+function buildInsightReadingPathRows(input: InsightPostInput): Array<Record<string, string>> {
+  return [
+    {
+      order: '1',
+      question: '这篇到底说什么？',
+      answer: trimInsightPrefix(input.summary),
+    },
+    {
+      order: '2',
+      question: '这是全文翻译吗？',
+      answer: input.actionBoundary.notNow[0] || '不是。本文只做本地原创解释和项目映射。',
+    },
+    {
+      order: '3',
+      question: '上游值得借什么？',
+      answer: firstMatchingInsightStatement(input, ['层译法', '术语', 'taxonomy'])
+        || '借术语分层和概念边界，不复制条目正文。',
+    },
+    {
+      order: '4',
+      question: '本项目改了什么？',
+      answer: input.iterationRecord.changed[0] || '改动见项目映射和迭代时间线。',
+    },
+  ];
+}
+
+function buildInsightBoundaryRows(input: InsightPostInput): Array<Record<string, string>> {
+  return [
+    {
+      issue: '上游授权',
+      judgment: firstMatchingInsightStatement(input, ['无许可证', 'reference-only'])
+        || '未确认可再分发授权前，按 reference-only 来源处理。',
+      impact: '不发布全文翻译，也不逐条复制上游 entry。',
+    },
+    {
+      issue: '公开内容',
+      judgment: '发布本地原创中文译注、项目映射和迭代记录。',
+      impact: '读者拿到的是工程判断，不是上游正文镜像。',
+    },
+    {
+      issue: '证据追溯',
+      judgment: 'post.json、source-ledger.json 和 generated HTML 一起保留。',
+      impact: '事实、推断和项目判断可以回查到来源 metadata。',
+    },
+    {
+      issue: '后续触发',
+      judgment: input.iterationRecord.open[0] || '上游授权或项目需求变化后再评估扩展范围。',
+      impact: '避免为了完整性提前引入 glossary、CMS 或新发布框架。',
+    },
+  ];
+}
+
+function buildInsightConceptMapRows(input: InsightPostInput): Array<Record<string, string>> {
+  if (!isAiCodingDictionaryInsight(input)) {
+    return input.projectMapping.map((item) => ({
+      layer: item.area,
+      readerTranslation: item.impact,
+      why: item.action,
+    }));
+  }
+
+  return [
+    {
+      layer: '模型层',
+      readerTranslation: 'model / provider / token / latency / cost / temperature / embedding',
+      why: '解释生成边界：成本、非确定性、供应商差异。不要把 model 误写成 agent。',
+    },
+    {
+      layer: '会话层',
+      readerTranslation: 'context window / turn / session / attention budget',
+      why: '解释长会话为什么会衰减，何时压缩、清空或交接。',
+    },
+    {
+      layer: '工具层',
+      readerTranslation: 'tool call / tool result / MCP / sandbox / permission',
+      why: '说明 agent 如何接触仓库、终端和外部系统，以及权限边界。',
+    },
+    {
+      layer: '失败模式',
+      readerTranslation: 'hallucination / sycophancy / knowledge cutoff / context rot',
+      why: '把“看起来对”拆成事实、上下文忠实度和时效性。',
+    },
+    {
+      layer: '交接层',
+      readerTranslation: 'handoff / compaction / ticket / spec / acceptance criteria',
+      why: '让跨会话续作有依据，不靠重新解释整段历史。',
+    },
+    {
+      layer: '记忆与引导',
+      readerTranslation: 'AGENTS / skill / context pointer / progressive disclosure',
+      why: '把长期规则、局部技能和可加载证据分层。',
+    },
+    {
+      layer: '工作模式',
+      readerTranslation: 'automated check / automated review / human review / vibe coding',
+      why: '区分确定性检查、模型判断和人审，不夸大自动化结论。',
+    },
+  ];
+}
+
+function buildInsightProjectRows(input: InsightPostInput): Array<Record<string, string>> {
+  return input.projectMapping.map((item) => ({
+    area: item.area,
+    impact: item.impact,
+    action: item.action,
+  }));
+}
+
+function buildInsightIterationTimeline(record: InsightIterationRecord): Array<Record<string, string>> {
+  const changed = record.changed.length > 0 ? record.changed : record.confirmed;
+  return changed.map((item, index) => {
+    const match = item.match(/^(\d{4}-\d{2}-\d{2})\s+(.+)$/);
+    return {
+      label: match ? match[1] : `迭代 ${index + 1}`,
+      detail: match ? match[2] : item,
+    };
+  });
+}
+
+function buildInsightReaderTabs(input: InsightPostInput): Array<Record<string, string>> {
+  return [
+    {
+      label: '快速读者',
+      content: [
+        '- 先看“先读这三点”和“阅读路径”。',
+        `- 结论：${trimInsightPrefix(input.summary)}`,
+        `- 重点边界：${input.actionBoundary.notNow[0] || '不复制来源正文。'}`,
+      ].join('\n'),
+    },
+    {
+      label: '维护者',
+      content: [
+        ...input.projectMapping.slice(0, 4).map((item) => `- **${item.area}**：${item.action}`),
+      ].join('\n'),
+    },
+    {
+      label: '审阅者',
+      content: [
+        '- 核对 source-ledger.json 是否覆盖事实、推断和项目判断。',
+        `- 核对“不做”边界：${input.actionBoundary.notNow.join('；') || '无'}`,
+        `- 核对后续开放项：${input.iterationRecord.open.join('；') || '无'}`,
+      ].join('\n'),
+    },
+  ];
+}
+
+function isAiCodingDictionaryInsight(input: InsightPostInput): boolean {
+  const haystack = [
+    input.title,
+    ...input.sources.map((source) => `${source.title} ${source.url}`),
+  ].join(' ').toLowerCase();
+  return haystack.includes('dictionary-of-ai-coding') || haystack.includes('ai coding dictionary');
+}
+
+function firstMatchingInsightStatement(input: InsightPostInput, needles: string[]): string {
+  const statements = [
+    ...input.viewpoints.map((item) => item.statement),
+    ...input.sourceClaims.map((item) => item.statement),
+    ...input.integration,
+  ];
+  const lowerNeedles = needles.map((needle) => needle.toLowerCase());
+  return statements.find((statement) => lowerNeedles.some((needle) => statement.toLowerCase().includes(needle))) || '';
+}
+
+function trimInsightPrefix(value: string): string {
+  return value.replace(/^(?:结论|判断)[:：]\s*/, '');
+}
+
+function formatInsightClaimKindLabel(kind: InsightClaimKind): string {
+  if (kind === 'fact') return '事实';
+  if (kind === 'inference') return '推断';
+  if (kind === 'assumption') return '假设';
+  return '项目判断';
 }
 
 function formatSourceClaimsMarkdown(input: InsightPostInput): string {
   return input.sourceClaims
     .map((claim) => {
       const source = input.sources.find((item) => item.id === claim.sourceId);
-      return `- **${claim.kind}** \`${claim.id}\`: ${claim.statement} Source: ${source ? `[${source.title}](${source.url})` : claim.sourceId}.`;
+      return `- **${formatInsightClaimKindLabel(claim.kind)}** \`${claim.id}\`: ${claim.statement}\n  - 来源：${source ? `[${source.title}](${source.url})` : claim.sourceId}`;
     })
     .join('\n');
-}
-
-function formatViewpointsMarkdown(input: InsightPostInput): string {
-  const viewpoints = input.viewpoints.map((viewpoint) => (
-    `- \`${viewpoint.id}\`: ${viewpoint.statement} Trace: ${viewpoint.sourceClaimIds.map((id) => `\`${id}\``).join(', ')}.`
-  ));
-  const assumptions = (input.assumptions || []).map((item) => `- Assumption: ${item}`);
-  return [...viewpoints, ...assumptions].join('\n');
-}
-
-function formatProjectMappingMarkdown(input: InsightPostInput): string {
-  return [
-    ...input.integration.map((item) => `- Integration: ${item}`),
-    ...input.projectMapping.map((item) => `- **${item.area}**: ${item.impact} Action: ${item.action}`),
-  ].join('\n');
-}
-
-function formatIterationRecordMarkdown(record: InsightIterationRecord): string {
-  return [
-    `### Changed\n${formatMarkdownList(record.changed)}`,
-    `### Confirmed\n${formatMarkdownList(record.confirmed)}`,
-    `### Open\n${formatMarkdownList(record.open)}`,
-    `### Watch\n${formatMarkdownList(record.watch)}`,
-  ].join('\n\n');
-}
-
-function formatActionBoundaryMarkdown(boundary: InsightActionBoundary): string {
-  return [
-    `### Now\n${formatMarkdownList(boundary.now)}`,
-    `### Observe\n${formatMarkdownList(boundary.observe)}`,
-    `### Not Now\n${formatMarkdownList(boundary.notNow)}`,
-  ].join('\n\n');
-}
-
-function formatMarkdownList(values: string[]): string {
-  return values.length > 0 ? values.map((value) => `- ${value}`).join('\n') : '- None.';
 }
 
 function collectInsightPostSummaries(repoRoot: string): InsightBuildResult['posts'] {

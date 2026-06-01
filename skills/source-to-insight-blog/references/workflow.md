@@ -26,16 +26,17 @@ For third-party copyrighted material, do not publish a full article repost or fu
 
 The public post should be reader-first:
 
-1. direct conclusion and source boundary;
-2. source metadata and media ledger;
-3. detailed Chinese reconstruction in the source order;
-4. original tables or lists reconstructed in Chinese with attribution;
-5. glossary and footnotes;
-6. effective-interact summary/visualization layer;
-7. project-iteration review;
-8. verification and source ledger links.
+1. direct one-minute answer: what the source is, why it matters, and why this repo cares;
+2. source structure: a tree, outline, compact table, or section map that lets the reader orient;
+3. core ideas or Chinese reconstruction in the source order, depending on the user's requested depth;
+4. local iteration: what this repo already changed, what should change now, and what stays out of scope;
+5. reflection: whether the change is effective, where it is redundant, and what to optimize next;
+6. source metadata, copyright boundary, media ledger, glossary, footnotes, and verification links;
+7. effective-interact summary/visualization layer only if it lowers decision cost.
 
 Do not put generated raw Markdown/code fallback blocks in the main reading path.
+Do not put source ledger, authorization mechanics, or validation output before the reader understands the source. If the page opens like an audit log, rewrite it as an article.
+Do not use repeated dashboards for article sections. One early tree or visual map is usually enough; use tables only for comparable rows.
 
 ## 4. Effective-Interact Layer
 
@@ -55,6 +56,10 @@ Validate the artifact and link it from the blog.
 
 Answer these explicitly:
 
+- Which changes already happened because of the source?
+- Were those changes effective for this repo?
+- Which parts are redundant or overbuilt?
+- What should be optimized or removed next?
 - Which ideas should change the repo now?
 - Which ideas should become later SDD/spec work?
 - Which ideas are rejected or out of scope?
@@ -65,6 +70,7 @@ Answer these explicitly:
 
 - Source metadata, links, media, footnotes, glossary, and access limitations are present.
 - Chinese reconstruction follows the original structure and preserves material information.
+- The public article passes the 60-second reader test: source identity, source structure, local change, and effectiveness verdict are clear without opening the source ledger.
 - Copyright boundary is explicit.
 - Effective-interact summary exists and is not the main blog body.
 - Project-iteration decision is present.
