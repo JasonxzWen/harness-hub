@@ -33,6 +33,8 @@ const REQUIRED_HARNESS_FILES = [
   'AGENTS.md',
   'clean-state-checklist.md',
   'definition-of-done.md',
+  'evaluator-rubric.md',
+  'quality-document.md',
   'feature_list.json',
   '.harness-hub/.gitignore',
   '.harness-hub/state/current-task.md',
@@ -256,6 +258,8 @@ test('confirmed harness init writes lock-managed files and validates', async () 
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'clean-state-checklist.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'definition-of-done.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'evaluator-rubric.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'quality-document.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'scripts', 'harness-validate.mjs'))).toBe(true);
 
@@ -448,7 +452,9 @@ test('harness update refreshes stable lock-owned files without overwriting local
     '.harness-hub/state/session-handoff.md',
     'clean-state-checklist.md',
     'definition-of-done.md',
+    'evaluator-rubric.md',
     'feature_list.json',
+    'quality-document.md',
     'scripts/harness-validate.mjs',
   ]);
 });

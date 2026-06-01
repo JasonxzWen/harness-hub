@@ -13,11 +13,11 @@ harness-hub init-harness <target> --target standard --yes
 
 ## Source Review Boundary
 
-Third-party harness projects remain useful as source material. `walkinglabs/learn-harness-engineering`, `revfactory/harness`, ECC, and similar sources can contribute ideas such as structural assessment, team-architecture patterns, QA boundary checks, stocktake workflows, or trigger-noise audits.
+Third-party harness projects remain useful as source material. `walkinglabs/learn-harness-engineering`, `revfactory/harness`, ECC, and similar sources can contribute ideas such as structural assessment, durable validation records, checkpoint commits, runtime signal capture, evaluator rubrics, quality snapshots, team-architecture patterns, QA boundary checks, stocktake workflows, or trigger-noise audits.
 
 Those ideas must be evaluated by ROI and folded into the existing minimal path. They must not create additional pack levels, optional install tiers, host-specific harness trees, or new default side effects.
 
-The local `validate-harness` command already adapts source ideas: five-subsystem assessment, HTML report surface, structural benchmark framing, generic verification-command detection, QA boundary checks, agent architecture boundary checks, and trigger-hygiene checks. It does not copy or activate upstream writers, host metadata, or generated advanced packs.
+The local `validate-harness` command already adapts source ideas: five-subsystem assessment, HTML report surface, structural benchmark framing, generic verification-command detection, durable validation records, checkpoint-commit policy, feature-state evidence, runtime signal capture, evaluator rubric, quality snapshot, QA boundary checks, agent architecture boundary checks, and trigger-hygiene checks. It does not copy or activate upstream writers, host metadata, or generated advanced packs.
 
 ## Non-Goals
 
