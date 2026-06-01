@@ -39,6 +39,7 @@ const optionalDemoSkills = [
   'claude-api',
   'mcp-builder',
   'skill-creator',
+  'source-to-insight-blog',
   'doc-coauthoring',
   'internal-comms',
   'stop-slop',

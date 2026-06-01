@@ -241,8 +241,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'branded product landing',
     'html/css layouts',
     'landing page',
+    'marketing blog site',
     'polished saas dashboard',
     'product ui',
+    'production marketing',
     'production dashboard',
     'production-grade visual',
     'react components',
@@ -397,6 +399,18 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'skill authoring',
     'update a skill',
   ]);
+  const sourceToInsightBlogSignal = includesAny(text, [
+    'external openai article',
+    'preserve figures and links',
+    'source-backed insight blog',
+    'source-backed blog',
+    'turn this external',
+  ]) && includesAny(text, [
+    'article',
+    'blog',
+    'effective-interact summary',
+    'repo should change',
+  ]);
   const docCoauthoringSignal = includesAny(text, [
     'collaboratively draft',
     'decision record',
@@ -514,6 +528,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
 
   if (skillCreatorSignal && canLoad(metadata, 'skill-creator', ['standard agent skill'])) {
     return 'skill-creator';
+  }
+
+  if (sourceToInsightBlogSignal && canLoad(metadata, 'source-to-insight-blog', ['source-backed insight blog'])) {
+    return 'source-to-insight-blog';
   }
 
   if (openspecArchiveSignal && canLoad(metadata, 'openspec-archive-change', ['archive a completed openspec change'])) {

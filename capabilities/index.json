@@ -1090,6 +1090,39 @@
       "risk": "low",
       "recommendation": "Add a skill authoring atom for local skills and routing evaluation without host-specific eval runners."
     },
+    "skill:source-to-insight-blog": {
+      "kind": "skill",
+      "path": "skills/source-to-insight-blog",
+      "version": "0.1.0",
+      "source": "local-original",
+      "provides": [
+        "source-backed-blog-authoring",
+        "chinese-fidelity-reconstruction",
+        "media-reference-ledgers",
+        "effective-interact-summary-layer",
+        "project-iteration-review"
+      ],
+      "overlapsWith": [
+        "skill:answer-workflow",
+        "skill:effective-interact",
+        "skill:doc-coauthoring",
+        "skill:frontend-design"
+      ],
+      "routing": "Load when turning external articles, blogs, release notes, interviews, or reports into source-backed insight blog posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; do not use for ordinary summaries, full copyrighted reposts, or production site design.",
+      "detects": [
+        {
+          "path": "skills/source-to-insight-blog/SKILL.md"
+        },
+        {
+          "path": "skills/source-to-insight-blog/scripts/validate-source-blog.mjs"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "medium",
+      "recommendation": "Use as a bounded source-to-public-blog workflow that preserves source evidence, media references, and iteration decisions without turning effective-interact reports or copyrighted source text into the main post."
+    },
     "skill:doc-coauthoring": {
       "kind": "skill",
       "path": "skills/doc-coauthoring",

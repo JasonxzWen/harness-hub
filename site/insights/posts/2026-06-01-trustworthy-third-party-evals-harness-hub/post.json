@@ -1,248 +1,202 @@
 {
-  "title": "可信第三方评估为什么是 Harness 问题",
+  "title": "可信第三方评估：为什么 Harness 是评估结果的一部分",
   "date": "2026-06-01",
-  "summary": "OpenAI 的可信第三方评估 playbook 不是一个可直接集成的 SDK，而是一套评估报告契约：说明评估主张、harness、预算、有效性风险和证据。Harness Hub 已有 validate-harness、agent-readiness 和 insight-* 基础，可以把它吸收为类似能力的报告准则。",
+  "summary": "对 OpenAI 可信第三方评估 playbook 的高保真中文重建：评估报告必须同时说明 claim、harness、预算、elicitation、validity hazards 和证据；Harness Hub 本次把该流程固化为 source-to-insight-blog skill。",
   "slug": "2026-06-01-trustworthy-third-party-evals-harness-hub",
   "sources": [
     {
       "id": "openai-playbook",
       "title": "A shared playbook for trustworthy third party evaluations",
       "url": "https://openai.com/index/trustworthy-third-party-evaluations-foundations/",
-      "type": "blog",
+      "type": "primary",
+      "author": "OpenAI",
+      "publishedAt": "2026-05-29",
       "accessedAt": "2026-06-01",
-      "excerpt": "The post frames frontier evaluation around claim type, harness choices, budgets, and visible validity checks.",
-      "notes": "OpenAI primary source, published 2026-05-29. Used as methodology source, not copied as article text."
+      "notes": "主源。自动化直接抓取 canonical 页面时遇到站点挑战，因此以搜索索引可读版本核对正文，并保留 canonical URL。"
     },
     {
-      "id": "harness-hub-readme",
-      "title": "Harness Hub README",
-      "url": "https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/README.md",
-      "type": "repo-doc",
+      "id": "aisi-budget-scaling",
+      "title": "UK AISI cyber range evaluation / token budget scaling context",
+      "url": "https://arxiv.org/",
+      "type": "source-reference",
       "accessedAt": "2026-06-01",
-      "excerpt": "Harness Hub is documented as a personal repo harness toolkit with minimal lifecycle, standard skills, validation, and insight publishing.",
-      "notes": "Repo-local role and lifecycle source at current fetched main commit."
+      "notes": "OpenAI 原文引用的预算扩展示例：10M 到 100M tokens 可使 cyber range 表现最高提升 59%。"
     },
     {
-      "id": "insight-publishing-doc",
-      "title": "Insight Publishing",
-      "url": "https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/insight-publishing.md",
-      "type": "repo-doc",
+      "id": "aisi-gpt55-cyber",
+      "title": "Our evaluation of OpenAI's GPT-5.5 cyber capabilities",
+      "url": "https://www.aisi.gov.uk/blog/our-evaluation-of-openais-gpt-5-5-cyber-capabilities",
+      "type": "source-reference",
       "accessedAt": "2026-06-01",
-      "excerpt": "Insight publishing turns source material into a source-backed project insight post and GitHub Pages output.",
-      "notes": "Defines post.json, source-ledger.json, effective-interact input, validation, and publish boundary."
+      "notes": "OpenAI 原文引用的 GPT-5.5 cyber safeguards 与 universal jailbreak 讨论。"
     },
     {
-      "id": "agent-readiness-doc",
-      "title": "Agent Readiness Analysis",
-      "url": "https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/agent-readiness-analysis.md",
-      "type": "repo-doc",
+      "id": "metr-time-horizon",
+      "title": "METR time-horizon evaluation",
+      "url": "https://metr.org/",
+      "type": "source-reference",
       "accessedAt": "2026-06-01",
-      "excerpt": "Agent readiness is a read-only analysis of context, outcomes, verification, routing, automation candidates, and learning capture.",
-      "notes": "Shows the existing read-only assessment surface that can absorb evaluation-readiness ideas."
+      "notes": "OpenAI 原文引用的标准化评估设置和 time horizon 方法。"
     },
     {
-      "id": "capability-map-doc",
-      "title": "Capability Map",
-      "url": "https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/capability-map.md",
-      "type": "repo-doc",
+      "id": "apollo-gpt55",
+      "title": "Apollo GPT-5.5 evaluation",
+      "url": "https://deploymentsafety.openai.com/gpt-5-5/gpt-5-5.pdf",
+      "type": "source-reference",
       "accessedAt": "2026-06-01",
-      "excerpt": "Harness Hub exposes a skill set, one minimal bootstrap harness, lifecycle CLI, and explicit insight publishing capability.",
-      "notes": "Used to keep integration proposals within the existing minimal-only architecture."
+      "notes": "OpenAI 原文引用的 sandbagging 与 evaluation awareness 证据。"
+    },
+    {
+      "id": "nist",
+      "title": "NIST AI standards context",
+      "url": "https://www.nist.gov/",
+      "type": "standards-context",
+      "accessedAt": "2026-06-01",
+      "notes": "OpenAI 原文点名的国家标准语境。"
+    },
+    {
+      "id": "iso",
+      "title": "ISO AI standards context",
+      "url": "https://www.iso.org/",
+      "type": "standards-context",
+      "accessedAt": "2026-06-01",
+      "notes": "OpenAI 原文点名的国际标准语境。"
+    },
+    {
+      "id": "harness-hub-repo",
+      "title": "Harness Hub repository",
+      "url": "https://github.com/JasonxzWen/harness-hub",
+      "type": "repo",
+      "accessedAt": "2026-06-01",
+      "notes": "用于判断本文思想是否应进入 Harness Hub 的路由、技能和发布流程。"
+    }
+  ],
+  "media": [
+    {
+      "id": "agentic-workflow-diagram",
+      "type": "image/svg+xml",
+      "url": "https://images.ctfassets.net/kftzwdyauwt9/6j7k1nkpvfMF46bn1tD7eS/a4c334212260ce893f67bcaf37b6f5c7/diagram1-desktop-light.svg?q=90&w=3840",
+      "alt": "图示对比简单提示-回答流程与 agentic 任务流程，后者包含控制循环、工具、上下文、预算和 safeguard。",
+      "caption": "图 1：OpenAI 用这张图说明 frontier model 的评估不再只是提示和回答，agentic 任务需要 harness 支撑自主执行。",
+      "placement": "原文开头，解释 harness 为什么会改变评估对象。"
+    },
+    {
+      "id": "metr-time-horizon-chart",
+      "type": "image/webp",
+      "url": "https://images.ctfassets.net/kftzwdyauwt9/7nO5WpPa0GDm8Dls6FS8o4/a4cb02d049e078be75df88f1289fc34f/extracted_graph_gpt5-4.png?fm=webp&q=90&w=3840",
+      "alt": "METR 图表显示在考虑 reward hacking 调整后，GPT-5.4 xhigh 的 50% time horizon 估计约为 5.7 小时。",
+      "caption": "图 2：OpenAI 引用 METR 的结果说明 reward hacking 会显著改变 headline score 的解释。",
+      "placement": "原文 validity hazards 章节，reward hacking 小节。"
     }
   ],
   "sourceClaims": [
     {
-      "id": "claim-openai-role",
+      "id": "claim-harness-matters",
       "sourceId": "openai-playbook",
-      "statement": "OpenAI frames trustworthy third-party evaluation as evidence for claims about frontier model capabilities and safeguards, not as a standalone benchmark score.",
-      "kind": "fact"
+      "kind": "fact",
+      "statement": "Frontier model 的评估表现取决于模型，也取决于 harness、工具、状态、上下文、预算和 safeguard。"
     },
     {
-      "id": "claim-openai-claim-types",
+      "id": "claim-three-claim-types",
       "sourceId": "openai-playbook",
-      "statement": "OpenAI separates evaluation claims into capability elicitation, safeguard performance, and comparison, and recommends reporting what claim the setup is meant to support.",
-      "kind": "fact"
+      "kind": "fact",
+      "statement": "原文把评估 claim 分为 capability elicitation、safeguard performance 和 comparison。"
     },
     {
-      "id": "claim-openai-harness",
+      "id": "claim-validity-hazards",
       "sourceId": "openai-playbook",
-      "statement": "OpenAI uses harness to mean the model-facing setup around a task, including prompts, tools, interfaces, control logic, memory, retries, validators, and related structures.",
-      "kind": "fact"
+      "kind": "fact",
+      "statement": "Reward hacking、refusals、contamination、broken problems 和 sandbagging 都可能扭曲评估结果。"
     },
     {
-      "id": "claim-openai-budget",
+      "id": "claim-standards",
       "sourceId": "openai-playbook",
-      "statement": "OpenAI argues that reports should expose budget details such as turns, tokens, retries, time, cost, and expected cost per successful solve where applicable.",
-      "kind": "fact"
+      "kind": "fact",
+      "statement": "未来评估标准应要求报告 claim、evaluation content、tested system、budget、elicitation methods 和 validity checks。"
     },
     {
-      "id": "claim-openai-validity",
-      "sourceId": "openai-playbook",
-      "statement": "OpenAI lists reward hacking, refusals, contamination, broken problems, and sandbagging as validity hazards that can distort evaluation results.",
-      "kind": "fact"
-    },
-    {
-      "id": "claim-openai-codex-floor",
-      "sourceId": "openai-playbook",
-      "statement": "For OpenAI capability evaluations, the article says evaluators are asked to use Codex as a common floor so tests run through an agentic interface users are likely to rely on.",
-      "kind": "fact"
-    },
-    {
-      "id": "claim-hh-role",
-      "sourceId": "harness-hub-readme",
-      "statement": "Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects through analysis, skill installation, harness initialization, validation, and lifecycle commands.",
-      "kind": "fact"
-    },
-    {
-      "id": "claim-hh-validate",
-      "sourceId": "harness-hub-readme",
-      "statement": "Harness Hub's validate-harness surface already checks required files, QA boundaries, agent architecture boundaries, trigger hygiene, five subsystems, verification detection, and benchmark summary.",
-      "kind": "fact"
-    },
-    {
-      "id": "claim-hh-insight",
-      "sourceId": "insight-publishing-doc",
-      "statement": "Harness Hub insight publishing keeps post.json, source-ledger.json, effective-interact input, and generated Pages HTML together with source attribution and fact/inference validation.",
-      "kind": "fact"
-    },
-    {
-      "id": "claim-hh-readiness",
-      "sourceId": "agent-readiness-doc",
-      "statement": "Harness Hub agent-readiness analysis is read-only and reports context budget, outcomes, verification, routing, automation candidates, and learning capture instead of writing automation.",
-      "kind": "fact"
-    },
-    {
-      "id": "claim-hh-minimal-boundary",
-      "sourceId": "capability-map-doc",
-      "statement": "Harness Hub's capability map keeps one minimal harness level and says new source ideas should improve that path rather than create new install tiers.",
-      "kind": "fact"
-    },
-    {
-      "id": "claim-integration-shape",
-      "sourceId": "openai-playbook",
-      "statement": "For this repo, the practical integration is a reporting rubric for claim class, harness setup, resource budget, and validity checks, not a direct package dependency.",
-      "kind": "project-judgment"
-    },
-    {
-      "id": "claim-existing-primitives",
-      "sourceId": "harness-hub-readme",
-      "statement": "Harness Hub already has enough primitives to iterate toward evaluation-ready reporting: source-backed insight posts, harness validation, agent readiness, and Effective Interact reports.",
-      "kind": "project-judgment"
+      "id": "claim-project-iteration",
+      "sourceId": "harness-hub-repo",
+      "kind": "project-judgment",
+      "statement": "Harness Hub 应把外部 source-to-blog 的正确流程固化为 skill，而不是把 raw interaction report 当博客正文。"
     }
   ],
   "viewpoints": [
     {
-      "id": "view-role",
-      "statement": "这个 OpenAI 项目的核心作用是给第三方评估报告定结构：先说明主张，再说明 harness、预算和有效性检查，最后让读者判断结论能泛化到哪里。",
+      "id": "view-source-first",
+      "statement": "源材料保真必须先于摘要和可视化。",
       "sourceClaimIds": [
-        "claim-openai-role",
-        "claim-openai-claim-types",
-        "claim-openai-validity"
+        "claim-harness-matters",
+        "claim-project-iteration"
       ]
     },
     {
-      "id": "view-harness-fit",
-      "statement": "它与 Harness Hub 的方向高度吻合，因为两边都把模型表现看成模型加运行环境的结果，而不是模型名本身的结果。",
+      "id": "view-eval-rubric",
+      "statement": "OpenAI playbook 可作为 Harness Hub 后续评估报告的 rubric 参考，但不应无 spec 直接改变 CLI。",
       "sourceClaimIds": [
-        "claim-openai-harness",
-        "claim-hh-role",
-        "claim-hh-validate"
-      ]
-    },
-    {
-      "id": "view-integrate-as-rubric",
-      "statement": "可集成点应该是报告 schema 和验证门，而不是新增一个可安装 skill 套餐：给 validate-harness、agent-readiness 或 insight post 增加 claim、harness、budget、validity hazard 维度。",
-      "sourceClaimIds": [
-        "claim-openai-budget",
-        "claim-integration-shape",
-        "claim-hh-minimal-boundary"
-      ]
-    },
-    {
-      "id": "view-current-iteration",
-      "statement": "本次博客本身就是一次 repo 迭代：它用 insight-* 把外部来源、项目判断和后续行动边界保存到 GitHub Pages，而不是只在会话里做口头总结。",
-      "sourceClaimIds": [
-        "claim-hh-insight",
-        "claim-existing-primitives"
-      ]
-    },
-    {
-      "id": "view-not-enough-for-real-eval",
-      "statement": "如果要真的评测 agent 或模型，还缺任务集、评分器、预算、轨迹日志、人审策略和污染检查；当前最稳妥的下一步是文档化评估准备度，而不是声称已经能做第三方安全评估。",
-      "sourceClaimIds": [
-        "claim-openai-validity",
-        "claim-hh-readiness",
-        "claim-integration-shape"
+        "claim-standards"
       ]
     }
   ],
   "integration": [
-    "把 OpenAI playbook 作为 Harness Hub 的 eval-report rubric 候选：claim type、tested system、harness、budget、elicitation、validity checks、evidence trail。",
-    "把该 rubric 优先映射到既有 surfaces：validate-harness 负责 repo harness 结构，agent-readiness 负责评估准备度，insight-* 负责公开来源账本和项目判断。",
-    "保持 minimal-only 架构：不新增 advanced/eval harness tier，不把第三方评估变成默认安装能力，先通过 source-backed blog 和后续 spec 收敛验收标准。"
+    "重做 public blog：source-fidelity 文章在前，Effective Interact 摘要在后。",
+    "新增 source-to-insight-blog skill，保存已调试的工作流。",
+    "延后 CLI schema 或 validate-harness 扩展，等待单独 SDD。"
   ],
   "projectMapping": [
     {
-      "area": "validate-harness",
-      "impact": "可以在未来增加 evaluation-report readiness 视角，检查目标 repo 是否能公开说明 harness、预算、scorer、日志和有效性风险。",
-      "action": "若要实现，先写 SDD/spec 和测试；当前博客只记录参考价值，不改 CLI 行为。"
-    },
-    {
-      "area": "agent-readiness",
-      "impact": "现有只读 categories 可扩展出 eval-readiness 解释层，判断 repo 是否具备可重复评测 agent 的上下文、结果、验证和学习沉淀。",
-      "action": "把 OpenAI 的 claim/budget/validity 清单作为后续 report schema 候选。"
-    },
-    {
-      "area": "insight-publishing",
-      "impact": "当前流程已经符合来源账本、事实/推断分离、Pages 输出和发布预检的需求。",
-      "action": "用本篇博客验证 source-backed insight path，并把项目判断写入 post.json 与 source-ledger.json。"
+      "area": "source-to-insight-blog",
+      "impact": "新增 workflow skill 和 validator。",
+      "action": "未来外部文章转 insight blog 时默认使用。"
     },
     {
       "area": "effective-interact",
-      "impact": "它可以作为评估报告的可读 HTML 层，把 claim、evidence、validation 和 next action 放在同一读者界面。",
-      "action": "若后续做真实评估报告模板，再添加专门输入 fixture 和 validator。"
+      "impact": "定位为摘要/可视化层。",
+      "action": "不得替代源材料重建层。"
     },
     {
-      "area": "workflow-router",
-      "impact": "第三方评估相关请求应先路由到一个 owner，再由 owner 选择 answer、review、hub-maintenance 或 SDD；避免 broad trigger 噪声。",
-      "action": "本次仅手动记录路由低置信问题，不扩大 workflow-router 规则。"
+      "area": "insight-publishing",
+      "impact": "当前 insight CLI 可继续索引和发布。",
+      "action": "暂不扩大 schema，先用 post-local ledger。"
+    },
+    {
+      "area": "validate-harness / agent-readiness",
+      "impact": "OpenAI rubric 提供评估报告参考。",
+      "action": "以后如要产品化，先写 SDD。"
     }
   ],
-  "iterationRecord": {
-    "changed": [
-      "新增一篇 source-backed insight blog，将 OpenAI 可信第三方评估 playbook 映射到 Harness Hub。",
-      "本次工作正式运行 Codex skills 自举脚本，将 42 个标准 skills 同步到本地 .codex/skills/。"
-    ],
-    "confirmed": [
-      "OpenAI 文章适合作为 Harness Hub 类似能力的参考框架，但不是直接集成的运行时依赖。",
-      "Harness Hub 现有 insight-*、validate-harness、agent-readiness 和 effective-interact 已经覆盖了部分评估报告基础设施。"
-    ],
-    "open": [
-      "是否新增 eval-readiness 报告维度，需要先明确目标读者、被评估对象、任务集、评分器和人审边界。",
-      "workflow-router 对中文 source-to-blog 维护请求的自动分类仍然偏弱；本次按仓库规则手动归入 hub-maintenance-workflow。"
-    ],
-    "watch": [
-      "OpenAI 后续第三方评估标准化建议以及 NIST、ISO 的 frontier AI evaluation reporting 进展。",
-      "Codex CLI 或其他开源 agent harness 是否继续成为跨模型固定控制循环的实际基线。"
-    ]
-  },
   "actionBoundary": {
     "now": [
-      "生成 GitHub Pages insight post、source ledger、effective-interact input 和站点索引。",
-      "运行 insight-build、insight-validate、insight-publish --dry-run 以及必要的 repo 校验。"
+      "发布修复后的 blog。",
+      "新增 source-to-insight-blog skill、routing 和 smoke coverage。"
     ],
-    "observe": [
-      "后续如果要做真实 eval-readiness 功能，先用 SDD 明确 schema、tests 和报告读者。",
-      "观察本篇博客的 source-ledger 是否足够支持读者区分事实、推断和项目判断。"
+    "later": [
+      "考虑 insight-* schema 是否内建 media ledger/source fidelity。",
+      "考虑 eval-readiness rubric 是否进入 harness analysis。"
     ],
     "notNow": [
-      "不新增 harness tier、skill bundle 或默认安装项。",
-      "不声称 Harness Hub 已经能进行第三方安全评估；当前只是把评估报告方法论吸收到项目迭代候选。",
-      "不自动推送、发布或触发外部写入；Pages 部署仍由主分支 workflow 接管。"
+      "不发布第三方全文逐句翻译。",
+      "不把 OpenAI playbook 直接变成 CLI 行为。"
     ]
   },
   "assumptions": [
-    "这里的“这个项目”指 OpenAI 文章提出的第三方评估方法论，而不是一个可安装代码仓库。",
-    "这里的“发布到 GitHub Page”指生成并提交 site/ 下的 GitHub Pages 内容；实际部署仍需合并或推送到触发 Pages workflow 的分支。"
-  ]
+    "公开发布采用高保真中文重建而非完整逐句翻译，以避免第三方版权全文镜像。",
+    "原文正文关键素材是两处图像；OpenAI 页尾推荐卡片属于站点导航内容。"
+  ],
+  "iterationRecord": {
+    "changed": [
+      "重建 insight post 为 source-fidelity 中文文章，而不是 raw Effective Interact 报告。",
+      "新增 source-to-insight-blog skill、validator、routing/capability/test 覆盖。"
+    ],
+    "confirmed": [
+      "OpenAI playbook 是评估报告方法参考，不是 Harness Hub 的直接运行时依赖。",
+      "Effective Interact 应作为摘要/可视化层，不能替代源材料重建。"
+    ],
+    "open": [
+      "是否把 media ledger/source-fidelity 检查提升为 insight-* CLI schema，需要另开 SDD。"
+    ],
+    "watch": [
+      "NIST、ISO、OpenAI、METR、Apollo、AISI 后续评估报告标准和实践。"
+    ]
+  }
 }

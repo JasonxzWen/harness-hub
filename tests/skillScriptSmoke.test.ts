@@ -81,6 +81,12 @@ const smokes: ScriptSmoke[] = [
     args: ['-B', 'skills/mcp-builder/scripts/evaluation.py', '--help'],
     expected: 'Evaluate MCP servers using test questions',
   },
+  {
+    name: 'source-to-insight-blog validate',
+    command: process.execPath,
+    args: ['skills/source-to-insight-blog/scripts/validate-source-blog.mjs', '--help'],
+    expected: 'Validates a source-backed insight blog',
+  },
 ];
 
 test('skill script entrypoints expose help without optional runtime dependencies', () => {

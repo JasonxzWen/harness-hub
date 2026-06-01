@@ -490,6 +490,14 @@
       "docsBoundary": "`skill-creator` loads for creating, updating, adapting, or evaluating standard agent skills."
     },
     {
+      "id": "source-to-insight-blog-positive-source-blog",
+      "skill": "source-to-insight-blog",
+      "kind": "positive",
+      "prompt": "Turn this external OpenAI article into a Chinese source-backed insight blog, preserve figures and links, add an effective-interact summary, and decide whether the repo should change.",
+      "expectedSkill": "source-to-insight-blog",
+      "docsBoundary": "`source-to-insight-blog` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed insight blog posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
+    },
+    {
       "id": "doc-coauthoring-positive-prd",
       "skill": "doc-coauthoring",
       "kind": "positive",
@@ -760,6 +768,22 @@
       "prompt": "Continue maintaining Harness Hub routing and capability metadata; inspect the current repo evidence first.",
       "expectedSkill": null,
       "docsBoundary": "`skill-creator` loads for creating, updating, adapting, or evaluating standard agent skills."
+    },
+    {
+      "id": "source-to-insight-blog-negative-simple-summary",
+      "skill": "source-to-insight-blog",
+      "kind": "negative",
+      "prompt": "Summarize this article in five bullets without creating a public blog or repo artifact.",
+      "expectedSkill": null,
+      "docsBoundary": "`source-to-insight-blog` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed insight blog posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
+    },
+    {
+      "id": "source-to-insight-blog-forbidden-production-site",
+      "skill": "source-to-insight-blog",
+      "kind": "forbidden-load",
+      "prompt": "Design and implement a polished production marketing blog site with responsive layout and custom interactions.",
+      "expectedSkill": "frontend-design",
+      "docsBoundary": "`source-to-insight-blog` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed insight blog posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
     },
     {
       "id": "doc-coauthoring-forbidden-implementation",
