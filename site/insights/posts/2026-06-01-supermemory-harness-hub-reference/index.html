@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="harness-hub reader article">
+  <meta name="generated-at" content="2026-06-01T04:29:54.756Z">
+  <title>Supermemory 给 Harness Hub 的启发：AI 记忆不是更大的 RAG，而是可治理的上下文基础设施</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f4;
+      --paper: #ffffff;
+      --ink: #162018;
+      --muted: #5f6d64;
+      --line: #d8ded7;
+      --accent: #1c6b4f;
+      --accent-2: #9a4f1f;
+      --soft: #eef5f1;
+      --warn: #fff4e6;
+      --code: #f3f5f2;
+      --shadow: 0 16px 42px rgba(18, 32, 24, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.72;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    code {
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--code);
+      padding: 0.05rem 0.32rem;
+      font-family: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+      font-size: 0.91em;
+    }
+
+    .shell {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    .back {
+      display: inline-flex;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 0.93rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    article {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 34px 40px 28px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbf8 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent-2);
+      font-size: 0.82rem;
+      font-weight: 760;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 860px;
+      margin: 0;
+      font-size: clamp(2rem, 4.8vw, 4.2rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .dek {
+      max-width: 840px;
+      margin: 20px 0 0;
+      color: #2c3a31;
+      font-size: clamp(1.06rem, 1.4vw, 1.22rem);
+      line-height: 1.66;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .meta span {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      padding: 4px 10px;
+    }
+
+    .content {
+      padding: 34px 40px 42px;
+    }
+
+    .lead-box {
+      margin: 0 0 30px;
+      border: 1px solid #c9d8ce;
+      border-left: 5px solid var(--accent);
+      border-radius: 9px;
+      background: var(--soft);
+      padding: 18px 20px;
+    }
+
+    .lead-box h2 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+      line-height: 1.35;
+    }
+
+    h2 {
+      margin: 36px 0 12px;
+      font-size: 1.62rem;
+      line-height: 1.22;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 24px 0 8px;
+      font-size: 1.12rem;
+      line-height: 1.35;
+    }
+
+    p {
+      margin: 12px 0;
+    }
+
+    ul,
+    ol {
+      padding-left: 1.25rem;
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .decision-grid,
+    .pattern-grid,
+    .source-grid {
+      display: grid;
+      gap: 14px;
+      margin: 18px 0 26px;
+    }
+
+    .decision-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .pattern-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .source-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tile {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .tile .label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent-2);
+      font-size: 0.78rem;
+      font-weight: 760;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .tile strong {
+      display: block;
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+
+    .tile p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.56;
+    }
+
+    table {
+      width: 100%;
+      margin: 18px 0 28px;
+      border-collapse: collapse;
+      font-size: 0.96rem;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f0f4f1;
+      font-weight: 720;
+    }
+
+    tr:nth-child(even) td {
+      background: #fbfcfb;
+    }
+
+    .warning {
+      margin: 20px 0;
+      border: 1px solid #eed7b9;
+      border-radius: 9px;
+      background: var(--warn);
+      padding: 15px 18px;
+    }
+
+    .toc {
+      position: sticky;
+      top: 20px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(18, 32, 24, 0.06);
+    }
+
+    .toc strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 0.92rem;
+    }
+
+    .toc a {
+      display: block;
+      padding: 6px 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 620;
+      text-decoration: none;
+    }
+
+    .toc a:hover {
+      color: var(--accent);
+    }
+
+    .source-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .self-check {
+      margin-top: 34px;
+      border-top: 1px solid var(--line);
+      padding-top: 22px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 880px) {
+      .layout,
+      .decision-grid,
+      .pattern-grid,
+      .source-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toc {
+        position: static;
+        order: -1;
+      }
+
+      .hero,
+      .content {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <a class="back" href="../../">返回 Harness Hub Insights</a>
+    <div class="layout">
+      <article>
+        <header class="hero">
+          <p class="eyebrow">项目研究 · 2026-06-01</p>
+          <h1>Supermemory 给 Harness Hub 的启发：AI 记忆不是更大的 RAG，而是可治理的上下文基础设施</h1>
+          <p class="dek">这篇文章回答一个很具体的问题：<strong>Harness Hub 是否应该集成 Supermemory，或者把它作为迭代同类能力的参考？</strong>我的结论是：不进默认集成，但应该作为未来显式记忆能力的高价值参考。</p>
+          <div class="meta">
+            <span>来源：10 个主源</span>
+            <span>结论：reference-only</span>
+            <span>风险：外部凭证与自动捕获</span>
+          </div>
+        </header>
+
+        <div class="content">
+          <section class="lead-box" id="answer">
+            <h2>结论：不默认集成，只作为高价值参考</h2>
+            <p>Supermemory 是一个围绕 AI agent 的托管记忆与上下文层。它的工程价值很高，但它不是 Harness Hub 默认安装路径应该直接携带的东西。对这个仓库来说，正确做法是记录为 reference-only：吸收它的作用域、隐私、显式/隐式记忆分层和评估方法，而不是默认安装 hosted hook 或要求用户配置 API key。</p>
+          </section>
+
+          <section id="what">
+            <h2>Supermemory 到底是什么</h2>
+            <p>如果只把它理解成“一个向量库”或“一个 RAG 服务”，就会错过它真正有价值的部分。Supermemory 在主仓库和文档里把自己描述为 AI 的 memory and context layer：它不是只保存文档块，而是把对话、文件、连接器数据和用户事实处理成可召回、可更新、可作用域隔离的上下文。</p>
+            <p>它的核心闭环很短：先用 <code>profile</code> 或 search 取出静态画像、动态近况和相关记忆，把这些上下文注入模型；对话结束后再把新的内容写回。这个闭环和 Harness Hub 关心的 agent harness 很接近，因为两者都在处理同一个问题：下一次 agent 开始工作时，怎样拿到足够准确、足够少、又不会越界的上下文。</p>
+
+            <div class="decision-grid">
+              <div class="tile">
+                <span class="label">Memory</span>
+                <strong>记住用户和项目状态</strong>
+                <p>用户偏好、项目决策、近期活动、过期或被新事实覆盖的信息。</p>
+              </div>
+              <div class="tile">
+                <span class="label">RAG</span>
+                <strong>检索静态知识</strong>
+                <p>文档、代码、网页和连接器同步来的资料，适合回答“资料里有什么”。</p>
+              </div>
+              <div class="tile">
+                <span class="label">Profile</span>
+                <strong>压缩成可注入上下文</strong>
+                <p>把长期事实和短期动态拆开，避免每次都塞完整历史。</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="why-not">
+            <h2>为什么不直接集成进 Harness Hub 默认路径</h2>
+            <p>默认集成的标准不是“有没有用”，而是“是否符合 Harness Hub 的最小、显式、可回滚、可验证边界”。Supermemory 在产品上有价值，但默认接入会引入四类新责任。</p>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>责任</th>
+                  <th>具体问题</th>
+                  <th>对 Harness Hub 的影响</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>凭证</td>
+                  <td>需要 Supermemory API key 或 OAuth。</td>
+                  <td>默认 harness 不应该把外部凭证变成安装前提。</td>
+                </tr>
+                <tr>
+                  <td>远程写入</td>
+                  <td>自动 capture 会把对话或项目知识发到托管服务。</td>
+                  <td>这必须是明确选择，而不是安装技能后的隐式副作用。</td>
+                </tr>
+                <tr>
+                  <td>作用域</td>
+                  <td>用户记忆、项目记忆、团队记忆需要严格隔离。</td>
+                  <td>一旦作用域错配，记忆污染比普通检索错误更难排查。</td>
+                </tr>
+                <tr>
+                  <td>部署边界</td>
+                  <td>官方 self-hosting 文档是企业部署路径，需要部署包和外部基础设施。</td>
+                  <td>不能把主仓库误读成“可本地直接托管的记忆引擎”。</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="warning">
+              <strong>项目判断：</strong>默认分发里放一个会自动远程写记忆的 hook，和 Harness Hub 当前的 lifecycle policy 冲突。它可以成为 opt-in 集成，但不能变成 minimal harness 的一部分。
+            </div>
+          </section>
+
+          <section id="reference">
+            <h2>真正值得借鉴的不是代码，而是记忆治理结构</h2>
+            <p>Supermemory 生态里已经有针对不同 agent host 的迭代：<code>codex-supermemory</code>、<code>opencode-supermemory</code>、<code>claude-supermemory</code>、<code>smfs</code> 和 <code>MemoryBench</code>。这些项目比主仓库更能说明它对 Harness Hub 的启发。</p>
+
+            <div class="pattern-grid">
+              <div class="tile">
+                <span class="label">Codex plugin</span>
+                <strong>隐式 hooks + 显式 fallback skills</strong>
+                <p>自动召回和自动捕获解决连续性；手动 search/save/forget/login 给用户保留控制权。</p>
+              </div>
+              <div class="tile">
+                <span class="label">OpenCode plugin</span>
+                <strong>项目记忆、代码库索引、压缩前保存</strong>
+                <p>把 compaction 当成记忆边界事件，而不是等上下文丢失后再补救。</p>
+              </div>
+              <div class="tile">
+                <span class="label">smfs</span>
+                <strong>把记忆暴露成文件系统</strong>
+                <p>agent 已经会读写文件和 grep；把记忆做成文件接口，学习成本比新工具低。</p>
+              </div>
+              <div class="tile">
+                <span class="label">MemoryBench</span>
+                <strong>把记忆质量变成可跑的评估</strong>
+                <p>ingest、index、search、answer、evaluate、report，比“看起来召回到了”更接近工程验收。</p>
+              </div>
+            </div>
+
+            <p>这些模式可以转成 Harness Hub 的未来约束：如果要做 memory provider，必须先定义用户/项目作用域、private redaction、dry-run、卸载、状态检查和 benchmark fixture。否则“持久记忆”会从能力变成不可解释的上下文污染源。</p>
+          </section>
+
+          <section id="how">
+            <h2>如果 Harness Hub 以后要做类似能力，应该从哪里开始</h2>
+            <p>不是从安装 Supermemory hook 开始，而是从一个本地、可读、可验证的 context ledger 开始。这个 ledger 可以先记录来源、结论、作用域、过期条件和证据，再决定是否接入远程 provider。</p>
+
+            <ol>
+              <li><strong>第一步：写设计，不写 hook。</strong>定义哪些内容能成为记忆、谁能读、多久过期、如何撤销、如何审计。</li>
+              <li><strong>第二步：做本地 provider。</strong>先用本地 JSONL 或 SQLite 验证作用域、召回和遗忘语义，避免凭证和远程依赖干扰。</li>
+              <li><strong>第三步：加 benchmark fixture。</strong>用几组真实 repo-harness 场景测试召回是否帮忙，而不是只测试 API 成功。</li>
+              <li><strong>第四步：再做 opt-in remote adapter。</strong>Supermemory 可以是候选 provider，但安装必须显式、可 dry-run、可 status、可 uninstall。</li>
+            </ol>
+          </section>
+
+          <section id="decision">
+            <h2>落到这次仓库决策</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>问题</th>
+                  <th>决策</th>
+                  <th>理由</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>是否导入上游 <code>skills/supermemory</code></td>
+                  <td>不导入</td>
+                  <td>触发面太宽，并且会把 hosted memory 推荐变成默认技能行为。</td>
+                </tr>
+                <tr>
+                  <td>是否把 Supermemory 加进默认安装</td>
+                  <td>不加入</td>
+                  <td>默认安装不能要求外部凭证，也不能隐式远程写入上下文。</td>
+                </tr>
+                <tr>
+                  <td>是否作为参考来源记录</td>
+                  <td>加入 reference-only</td>
+                  <td>MIT 主仓库和生态插件提供了可借鉴的记忆治理模式。</td>
+                </tr>
+                <tr>
+                  <td>是否立刻实现 Harness Hub memory capability</td>
+                  <td>不实现</td>
+                  <td>还缺设计、验收、隐私边界和最小 benchmark。</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="sources">
+            <h2>主要证据</h2>
+            <p class="source-note">下面是这篇文章实际使用的主源。所有判断都来自这些来源的项目结构、README、官方文档或生态仓库，而不是第三方评论。</p>
+            <div class="source-grid">
+              <div class="tile">
+                <strong><a href="https://github.com/supermemoryai/supermemory">supermemoryai/supermemory</a></strong>
+                <p>主仓库、MIT 许可、monorepo 结构、Memory API、MCP、SDK、docs 和 skill。</p>
+              </div>
+              <div class="tile">
+                <strong><a href="https://supermemory.ai/docs/concepts/memory-vs-rag">Memory vs RAG</a></strong>
+                <p>用于区分静态文档检索和带时间/用户/关系语义的记忆。</p>
+              </div>
+              <div class="tile">
+                <strong><a href="https://github.com/supermemoryai/codex-supermemory">codex-supermemory</a></strong>
+                <p>Codex hooks、自动召回/捕获、显式 fallback skills、private redaction。</p>
+              </div>
+              <div class="tile">
+                <strong><a href="https://github.com/supermemoryai/opencode-supermemory">opencode-supermemory</a></strong>
+                <p>代码库索引、关键词保存、项目/用户作用域、compaction-aware preservation。</p>
+              </div>
+              <div class="tile">
+                <strong><a href="https://github.com/supermemoryai/smfs">smfs</a></strong>
+                <p>把记忆容器映射成文件系统，并用语义 grep 降低 agent 接入成本。</p>
+              </div>
+              <div class="tile">
+                <strong><a href="https://github.com/supermemoryai/memorybench">MemoryBench</a></strong>
+                <p>用可复现 pipeline 比较 memory provider 的质量、延迟和上下文成本。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="self-check" id="self-check">
+            <h2>可读性自检</h2>
+            <ul>
+              <li>读者进入首屏 30 秒内能得到结论：不默认集成，reference-only，未来可作为显式 memory 能力参考。</li>
+              <li>每一节只回答一个问题：是什么、为什么不默认集成、可借鉴什么、如果以后做该怎么做、这次仓库如何决策。</li>
+              <li>避免把证据台账当正文；证据放到“主要证据”，正文负责解释判断。</li>
+              <li>保留高信息密度：具体到 Codex hooks、OpenCode compaction、smfs filesystem、MemoryBench pipeline、自托管企业边界和 Harness Hub lifecycle 风险。</li>
+            </ul>
+          </section>
+        </div>
+      </article>
+
+      <nav class="toc" aria-label="文章目录">
+        <strong>阅读路径</strong>
+        <a href="#answer">结论</a>
+        <a href="#what">Supermemory 是什么</a>
+        <a href="#why-not">为什么不默认集成</a>
+        <a href="#reference">值得借鉴的模式</a>
+        <a href="#how">未来怎么做</a>
+        <a href="#decision">本次决策</a>
+        <a href="#sources">主要证据</a>
+        <a href="#self-check">可读性自检</a>
+      </nav>
+    </div>
+  </main>
+</body>
+</html>
