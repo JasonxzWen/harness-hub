@@ -1,5 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-05-28T06:09:02.441Z",
-  "posts": []
+  "generatedAt": "2026-06-01T04:27:28.911Z",
+  "posts": [
+    {
+      "slug": "2026-06-01-trustworthy-third-party-evals-harness-hub",
+      "title": "可信第三方评估为什么是 Harness 问题",
+      "date": "2026-06-01",
+      "summary": "OpenAI 的可信第三方评估 playbook 不是一个可直接集成的 SDK，而是一套评估报告契约：说明评估主张、harness、预算、有效性风险和证据。Harness Hub 已有 validate-harness、agent-readiness 和 insight-* 基础，可以把它吸收为类似能力的报告准则。",
+      "href": "posts/2026-06-01-trustworthy-third-party-evals-harness-hub/"
+    }
+  ]
 }

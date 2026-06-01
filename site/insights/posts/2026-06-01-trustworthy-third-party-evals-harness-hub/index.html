@@ -1,0 +1,2002 @@
+<!doctype html>
+<html lang="zh-CN" data-html-work-report data-render-mode="fallback-only" data-template="research-explainer" data-runtime-state="not-runtime">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="effective-interact create-interaction.mjs">
+  <meta name="generated-at" content="2026-06-01T04:27:25.413Z">
+  <meta name="render-mode" content="fallback-only">
+  <title>可信第三方评估为什么是 Harness 问题</title>
+  <style>/* Use case: shared visual primitives for static Effective reports. The generator inlines this into the final <style> block. */
+:root {
+  color-scheme: light;
+  --bg: #faf9f5;
+  --panel: #ffffff;
+  --panel-soft: #f0eee6;
+  --ink: #3d3d3a;
+  --muted: #87867f;
+  --line: #d1cfc5;
+  --line-strong: #9c9a93;
+  --accent: #d97757; /* visual token reference: #D97757 */
+  --accent-soft: #fbf1ec;
+  --ok: #788c5d;
+  --warn: #a67c52;
+  --danger: #b04a3f;
+  --info: #3d6e6e;
+  --code-bg: #141413;
+  --code-panel: #1f1e1b;
+  --code-line: #e8e6de;
+  --code-muted: #9c9a93;
+  --code-border: #3d3d3a;
+  --code-font: "Cascadia Code", "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --shadow: 0 14px 40px rgba(61, 61, 58, 0.12);
+  --focus: 0 0 0 3px rgba(217, 119, 87, 0.24);
+}
+
+* {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.42;
+}
+
+a {
+  color: var(--accent);
+}
+
+p,
+ul,
+ol {
+  margin-block: 8px;
+}
+
+.rendered-markdown ul,
+.rendered-markdown ol,
+.panel > ul,
+.action-list,
+.claim-limits {
+  margin: 12px 0 0;
+  padding-left: 24px;
+  line-height: 1.62;
+}
+
+.rendered-markdown li + li,
+.panel > ul li + li,
+.action-list li + li,
+.claim-limits li + li {
+  margin-top: 4px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 680;
+  line-height: 1.16;
+  letter-spacing: 0;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+h3 {
+  font-size: 15px;
+}
+
+.report-hero strong,
+.rendered-markdown strong,
+.report-data-table strong,
+.evidence-card > strong {
+  color: #8a3b1e;
+  font-weight: 760;
+}
+
+.rendered-markdown em,
+.report-data-table em {
+  color: #5f5d57;
+  font-style: italic;
+  font-weight: 520;
+}
+
+.rendered-markdown mark.text-highlight,
+.report-data-table mark.text-highlight,
+.report-hero mark.text-highlight {
+  padding: 0 0.18em;
+  border-radius: 4px;
+  background: #f7dfae;
+  color: #3d2a12;
+  box-decoration-break: clone;
+}
+
+.report-shell {
+  width: min(1280px, calc(100vw - 28px));
+  margin: 0 auto;
+  padding: 22px 0 40px;
+}
+
+.report-shell [id] {
+  scroll-margin-top: 86px;
+}
+
+.report-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+  margin-top: 14px;
+}
+
+.report-hero,
+.panel,
+.finding,
+.evidence-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 1px 0 rgba(61, 61, 58, 0.04);
+}
+
+.panel {
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.panel:target,
+.section-focus {
+  border-color: color-mix(in srgb, var(--accent) 56%, var(--line));
+  background: linear-gradient(180deg, #ffffff, #fbf1ec);
+  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.14), var(--shadow);
+}
+
+.section-focus {
+  animation: section-focus-pulse 900ms ease-out 1;
+}
+
+@keyframes section-focus-pulse {
+  from {
+    box-shadow: 0 0 0 7px rgba(217, 119, 87, 0.22), var(--shadow);
+  }
+
+  to {
+    box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.14), var(--shadow);
+  }
+}
+
+.report-hero {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.eyebrow,
+.meta,
+.chip,
+.status-pill {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.title-row,
+.toolbar,
+.split-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.report-title {
+  margin: 2px 0 0;
+  flex: 1 1 560px;
+  font-size: 34px;
+  line-height: 1.08;
+  max-width: 920px;
+  overflow-wrap: anywhere;
+}
+
+.hero-brief {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.9fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.hero-summary-text {
+  display: flex;
+  align-items: center;
+  min-height: 72px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #fbf1ec);
+  color: #8a3b1e;
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.45;
+}
+
+.hero-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+.hero-stat {
+  display: grid;
+  gap: 2px;
+  min-height: 72px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.hero-stat span,
+.hero-stat small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.hero-stat strong {
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.hero-decision-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr 1fr;
+  gap: 10px;
+}
+
+.hero-decision-card {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-height: 92px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.hero-decision-card strong {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.hero-criteria-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-criteria-list li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: #8a3b1e;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.eyebrow,
+.meta,
+.panel,
+.finding,
+.evidence-card,
+.hero-brief,
+.hero-decision-card,
+.lede-grid > *,
+.metric-grid > *,
+.section-heading,
+.section-summary {
+  overflow-wrap: anywhere;
+}
+
+.lede-grid,
+.metric-grid,
+.evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.supplemental-panel {
+  padding: 20px;
+}
+
+.supplemental-panel > .section-heading {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.claims-grid {
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 14px;
+}
+
+.report-section-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.panel,
+.finding,
+.evidence-card {
+  padding: 16px;
+}
+
+.section-heading {
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.section-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.section-summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.evidence-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.evidence-card h3 {
+  line-height: 1.42;
+}
+
+.evidence-card p {
+  margin: 0;
+  color: #5f5d57;
+  line-height: 1.52;
+}
+
+.interactive-card {
+  transition: opacity 140ms ease, filter 140ms ease, border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.interactive-card:hover,
+.interactive-card:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
+  box-shadow: var(--shadow);
+}
+
+.evidence-spotlight {
+  position: relative;
+  overflow: hidden;
+  --spotlight-x: 50%;
+  --spotlight-y: 0%;
+}
+
+.evidence-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--spotlight-x) var(--spotlight-y), rgba(217, 119, 87, 0.12), transparent 54%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.evidence-spotlight:hover::before,
+.evidence-spotlight:focus-within::before {
+  opacity: 1;
+}
+
+.focus-field:has(.interactive-card:hover) .interactive-card:not(:hover),
+.focus-field.has-filter .interactive-card[hidden] {
+  opacity: 0.42;
+  filter: grayscale(0.45);
+}
+
+.chip,
+.status-pill,
+.file-chip,
+.rich-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 26px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-soft);
+  color: var(--ink);
+  text-transform: none;
+  white-space: normal;
+}
+
+.card-tags,
+.swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.swatch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-soft);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.swatch-chip > span {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  border: 1px solid color-mix(in srgb, var(--ink) 16%, var(--line));
+  border-radius: 999px;
+  background: var(--swatch, var(--accent));
+}
+
+.mini-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.mini-metrics div {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.mini-metrics dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.mini-metrics dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-ok,
+.rich-status[data-state="ready"] {
+  border-color: color-mix(in srgb, var(--ok) 42%, var(--line));
+  color: var(--ok);
+  background: #e4e9dc;
+}
+
+.status-warn,
+.rich-status[data-state="pending"],
+.rich-status[data-state="degraded"],
+.rich-status[data-state="fallback"] {
+  border-color: color-mix(in srgb, var(--warn) 42%, var(--line));
+  color: var(--warn);
+  background: #fbf1ec;
+}
+
+.status-danger,
+.rich-status[data-state="failed"],
+.rich-status[data-state="error"] {
+  border-color: color-mix(in srgb, var(--danger) 42%, var(--line));
+  color: var(--danger);
+  background: #f3d9cc;
+}
+
+.status-info {
+  border-color: color-mix(in srgb, var(--info) 38%, var(--line));
+  color: var(--info);
+  background: #e8efeb;
+}
+
+.source-link {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  color: inherit;
+  font-family: var(--code-font);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.source-link::before {
+  content: "#";
+  color: var(--accent);
+}
+
+button,
+.button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  padding: 6px 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+button:hover,
+.button:hover,
+button[aria-pressed="true"],
+button[aria-selected="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.panel > .toolbar[role="toolbar"],
+.panel > .toolbar[role="tablist"] {
+  justify-content: flex-start;
+  gap: 0;
+  overflow-x: auto;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.panel > .toolbar[role="toolbar"] button,
+.panel > .toolbar[role="tablist"] button {
+  flex: 0 0 auto;
+  margin: 0;
+  border-radius: 0;
+}
+
+.panel > .toolbar[role="toolbar"] button + button,
+.panel > .toolbar[role="tablist"] button + button {
+  margin-left: -1px;
+}
+
+.panel > .toolbar[role="toolbar"] button:first-child,
+.panel > .toolbar[role="tablist"] button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.panel > .toolbar[role="toolbar"] button:last-child,
+.panel > .toolbar[role="tablist"] button:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+button[data-copy-state="success"] {
+  border-color: color-mix(in srgb, var(--ok) 58%, var(--line));
+  background: #e4e9dc;
+  color: var(--ok);
+}
+
+button[data-copy-state="failed"] {
+  border-color: color-mix(in srgb, var(--danger) 58%, var(--line));
+  background: #f3d9cc;
+  color: var(--danger);
+}
+
+button:focus-visible,
+.button:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+
+.report-nav {
+  position: sticky;
+  top: 8px;
+  z-index: 4;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+}
+
+.report-nav-title {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--ink);
+}
+
+.report-nav-group {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0;
+  overflow: hidden;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.report-nav-group:first-of-type {
+  border-top: 0;
+}
+
+.report-nav-group-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.report-nav a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.report-nav a + a {
+  border-left-color: var(--line);
+}
+
+.report-nav a:first-of-type {
+  border-radius: 6px 0 0 6px;
+}
+
+.report-nav a:last-of-type {
+  border-radius: 0 6px 6px 0;
+}
+
+.report-nav a span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-nav a small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.report-nav a:hover,
+.report-nav a[aria-current="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.code-panel,
+.diff-panel {
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--code-border);
+  background: var(--code-panel);
+  color: var(--code-line);
+}
+
+.code-panel header,
+.diff-panel header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--code-border);
+  background: var(--code-panel);
+  color: #d1cfc5;
+}
+
+.code-panel header > div,
+.diff-panel header > div {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.diff-panel h2 {
+  color: #faf9f5;
+  font-size: 16px;
+}
+
+.code-panel pre,
+.diff-panel pre,
+.fallback-source-block,
+.rich-render-source pre,
+.mermaid-source pre {
+  overflow: auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px;
+  background: var(--code-bg);
+  color: var(--code-line);
+  font: 500 13px/1.35 var(--code-font);
+  tab-size: 2;
+}
+
+.rich-render-source,
+.mermaid-source {
+  margin-top: 10px;
+}
+
+.rich-render-source summary,
+.mermaid-source summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.code-line,
+.line-hot,
+.diff-line {
+  display: block;
+  min-width: max-content;
+  margin-inline: -12px;
+  padding-inline: 58px 12px;
+  position: relative;
+  line-height: 1.35;
+  white-space: pre;
+}
+
+.code-line::before,
+.line-hot::before,
+.diff-line::before {
+  content: attr(data-line);
+  position: absolute;
+  left: 12px;
+  width: 36px;
+  color: var(--code-muted);
+  text-align: right;
+  user-select: none;
+}
+
+.line-hot {
+  background: rgba(217, 119, 87, 0.24);
+}
+
+.diff-added {
+  background: rgba(120, 140, 93, 0.24);
+  color: #dce4d2;
+}
+
+.diff-removed {
+  background: rgba(176, 74, 63, 0.25);
+  color: #f3d9cc;
+}
+
+.diff-hunk {
+  color: #f3d9cc;
+  background: rgba(217, 119, 87, 0.22);
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-name {
+  color: #e0897a;
+  font-weight: 750;
+}
+
+.hljs-string,
+.hljs-title,
+.hljs-section {
+  color: #b8c99d;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #9c9a93;
+  font-style: italic;
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-attr {
+  color: #f0c36d;
+}
+
+.hljs-variable,
+.hljs-template-variable {
+  color: #e8c9ba;
+}
+
+.hljs-type,
+.hljs-class,
+.hljs-title.class_,
+.hljs-title.function_,
+.hljs-function {
+  color: #c9b98a;
+  font-weight: 720;
+}
+
+.hljs-property,
+.hljs-attribute,
+.hljs-params,
+.hljs-subst {
+  color: #8cb6a3;
+}
+
+.hljs-meta,
+.hljs-doctag,
+.hljs-tag,
+.hljs-template-tag {
+  color: #d97757;
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-regexp,
+.hljs-link,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: #a67c52;
+}
+
+.hljs-addition {
+  color: #b8c99d;
+}
+
+.hljs-deletion {
+  color: #e0897a;
+}
+
+.diagram-panel,
+.mermaid-evidence {
+  border-left: 4px solid var(--accent);
+}
+
+.mermaid-rendered,
+[data-rich-mermaid-target] {
+  display: block;
+  min-height: 180px;
+  max-height: 620px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.diagram-panel svg,
+.mermaid-rendered svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.table-caption {
+  margin: -2px 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.report-data-table {
+  width: 100%;
+  min-width: 640px;
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: 13px;
+  line-height: 1.38;
+}
+
+.report-data-table th,
+.report-data-table td {
+  position: relative;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  background: #ffffff;
+  color: var(--ink);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease;
+}
+
+.report-data-table thead th {
+  z-index: 2;
+  background: #f0eee6;
+  color: #8a3b1e;
+  font-weight: 760;
+}
+
+.report-data-table th:last-child,
+.report-data-table td:last-child {
+  border-right: 0;
+}
+
+.report-data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.report-data-table [data-align="center"] {
+  text-align: center;
+}
+
+.report-data-table [data-align="right"] {
+  text-align: right;
+}
+
+.report-data-table [data-table-cell] {
+  outline: 0;
+}
+
+.report-data-table [data-table-cell]:focus-visible {
+  box-shadow: var(--focus);
+  z-index: 4;
+}
+
+.report-data-table .table-row-highlight {
+  background: color-mix(in srgb, var(--accent-soft) 58%, #ffffff);
+}
+
+.report-data-table .table-column-highlight {
+  background: color-mix(in srgb, #d9f7f1 62%, #ffffff);
+}
+
+.report-data-table .table-row-highlight.table-column-highlight {
+  background:
+    linear-gradient(135deg, rgba(217, 119, 87, 0.16), rgba(61, 110, 110, 0.16)),
+    #ffffff;
+}
+
+.report-data-table .table-cell-highlight {
+  z-index: 5;
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+  transform: scale(1.045);
+  box-shadow: 0 10px 24px rgba(61, 61, 58, 0.16);
+}
+
+.table-cell-list,
+.table-cell-map {
+  margin: 0;
+  padding-left: 17px;
+}
+
+.table-cell-map {
+  display: grid;
+  gap: 5px;
+  padding-left: 0;
+}
+
+.table-cell-map div {
+  display: grid;
+  grid-template-columns: minmax(70px, 0.45fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.table-cell-map dt {
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.table-cell-map dd {
+  margin: 0;
+}
+
+.claim-card {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 18px;
+}
+
+.claim-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.claim-card-title {
+  max-width: 58ch;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 760;
+  line-height: 1.46;
+}
+
+.claim-evidence-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 0;
+}
+
+.claim-evidence-links a,
+.chart-bar-status {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-soft);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.chart-panel figure {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.chart-panel figcaption {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+}
+
+.chart-panel figcaption strong {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.chart-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.chart-bar-row {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.7fr) minmax(120px, 2fr) minmax(42px, auto) minmax(72px, auto);
+  gap: 8px;
+  align-items: center;
+}
+
+.chart-bar-label,
+.chart-bar-value {
+  font-weight: 650;
+}
+
+.chart-bar-track {
+  display: block;
+  height: 14px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+
+.chart-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.34) 0 5px, transparent 5px 10px),
+    var(--accent);
+}
+
+.chart-line {
+  width: 100%;
+  min-height: 160px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--accent);
+  background: #ffffff;
+}
+
+.chart-line text {
+  fill: var(--ink);
+  font-size: 12px;
+}
+
+.chart-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.chart-matrix-cell,
+.chart-degraded {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.chart-degraded {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.chart-source-row {
+  margin: 0;
+}
+
+.chart-table-fallback {
+  margin-top: 2px;
+}
+
+.runtime-panel .source-link::before {
+  content: "";
+}
+
+.tab-panel[hidden],
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .hero-brief,
+  .hero-decision-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .report-shell {
+    width: min(100vw - 18px, 1280px);
+    padding-top: 12px;
+  }
+
+  .split-row,
+  .code-panel header,
+  .diff-panel header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .report-hero {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .title-row {
+    align-items: flex-start;
+  }
+
+  .toolbar {
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .report-title {
+    flex-basis: auto;
+    font-size: 24px;
+  }
+
+  .hero-summary-text {
+    min-height: auto;
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .hero-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hero-stat {
+    min-height: 58px;
+    padding: 8px;
+  }
+
+  .hero-stat strong {
+    font-size: 19px;
+  }
+
+  .hero-decision-card {
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .hero-decision-card strong {
+    font-size: 13px;
+  }
+
+  .chip,
+  .status-pill,
+  .file-chip {
+    white-space: normal;
+  }
+
+  .report-data-table {
+    min-width: 560px;
+  }
+
+  .chart-bar-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  .report-data-table .table-cell-highlight {
+    transform: none;
+  }
+}
+
+
+table{width:100%;border-collapse:collapse;margin:10px 0;min-width:520px}th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}.rendered-markdown table{display:table}.timeline{display:grid;gap:10px}.step{display:grid;grid-template-columns:minmax(90px,140px) minmax(0,1fr);gap:10px;padding:10px;border-left:3px solid var(--accent);background:#f9fafc;border-radius:6px;min-width:0}.unsafe-link{color:var(--danger);font-weight:700}.tab-panel{margin-top:10px}@media(max-width:720px){.step{grid-template-columns:1fr}}</style>
+</head>
+<body>
+  <main class="report-shell">
+    <header id="report-top" class="report-hero" data-report-region="hero" data-report-intent data-primary-question="How should external material change Harness Hub iteration?" data-time-budget="30s" data-artifact-kind="research">
+      <div class="title-row">
+        <div>
+          <div class="eyebrow">研究解释 | 研究综合、架构 walkthrough、有来源支撑的解释和图表</div>
+          <h1 class="report-title">可信第三方评估为什么是 Harness 问题</h1>
+        </div>
+        <div class="toolbar"><span class="status-pill status-info">状态：草稿</span></div>
+      </div>
+      <div class="hero-brief">
+        <p class="hero-summary-text">OpenAI 的可信第三方评估 playbook 不是一个可直接集成的 SDK，而是一套评估报告契约：说明评估主张、harness、预算、有效性风险和证据。Harness Hub 已有 validate-harness、agent-readiness 和 insight-* 基础，可以把它吸收为类似能力的报告准则。</p>
+        <div class="hero-stat-grid" aria-label="报告摘要指标">
+    <div class="hero-stat"><span>证据</span><strong>5</strong><small>条</small></div>
+<div class="hero-stat"><span>行动</span><strong>2</strong><small>项</small></div>
+  </div>
+      </div>
+      <div class="hero-decision-grid" data-report-intent data-primary-question="How should external material change Harness Hub iteration?" data-time-budget="30s" data-artifact-kind="research">
+    <article class="hero-decision-card">
+      <div class="meta">漏点</div>
+      <strong>How should external material change Harness Hub iteration?</strong>
+    </article>
+    <article class="hero-decision-card">
+      <div class="meta">修复</div>
+      <strong>Publish source-backed project insight and iteration records.</strong>
+    </article>
+    <article class="hero-decision-card">
+      <div class="meta">验收口径</div>
+      <ul class="hero-criteria-list"><li>Facts and inferences are separated.</li><li>Every public claim links back to source metadata.</li><li>Project actions are bounded to the current iteration.</li></ul>
+    </article>
+  </div>
+    </header>
+
+    <div class="report-layout">
+      <nav class="report-nav" data-report-nav data-nav-order="dom" data-report-region="navigation" aria-label="报告速览">
+    <div class="report-nav-title">速览</div>
+    <div class="report-nav-group" data-nav-group="reading-order">
+      <div class="report-nav-group-title">阅读顺序</div>
+      <a href="#report-top" title="返回总览" data-nav-link data-nav-home data-nav-index="0" data-nav-group-name="overview" data-nav-status="info"><span>总览</span></a>
+      <a href="#section-source-claims-1" title="Source Claims" data-nav-link data-nav-index="1" data-nav-group-name="evidence" data-nav-status="info"><span>Source Claims</span></a>
+<a href="#section-viewpoint-extraction-2" title="Viewpoint Extraction" data-nav-link data-nav-index="2" data-nav-group-name="main" data-nav-status="info"><span>Viewpoint Extraction</span></a>
+<a href="#section-project-mapping-3" title="Project Mapping" data-nav-link data-nav-index="3" data-nav-group-name="impact" data-nav-status="ready"><span>Project Mapping</span></a>
+<a href="#section-iteration-record-4" title="Iteration Record" data-nav-link data-nav-index="4" data-nav-group-name="changes" data-nav-status="ready"><span>Iteration Record</span></a>
+<a href="#section-action-boundary-5" title="Action Boundary" data-nav-link data-nav-index="5" data-nav-group-name="next" data-nav-status="ready"><span>Action Boundary</span></a>
+<a href="#claims" title="关键判断" data-nav-link data-nav-index="6" data-nav-group-name="claims" data-nav-status="info"><span>关键判断</span></a>
+<a href="#evidence" title="证据" data-nav-link data-nav-index="7" data-nav-group-name="evidence" data-nav-status="info"><span>证据</span></a>
+<a href="#next-actions" title="下一步" data-nav-link data-nav-index="8" data-nav-group-name="next" data-nav-status="info"><span>下一步</span></a>
+    </div>
+  </nav>
+      <div class="report-section-stack" data-report-region="sections">
+        <section class="panel rich-section" id="section-source-claims-1" data-section-type="markdown" data-section-group="evidence" data-section-status="info" data-trust-level="mixed-trust" data-rich-section data-rich-kind="markdown" data-render-state="degraded" data-source-fallback>
+    <div class="section-heading split-row">
+    <div>
+      <p class="meta">证据</p>
+      <h2>Source Claims</h2>
+
+    </div>
+    <span class="status-pill status-warn">降级</span>
+  </div>
+    <pre class="fallback-source-block">- **fact** `claim-openai-role`: OpenAI frames trustworthy third-party evaluation as evidence for claims about frontier model capabilities and safeguards, not as a standalone benchmark score. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-claim-types`: OpenAI separates evaluation claims into capability elicitation, safeguard performance, and comparison, and recommends reporting what claim the setup is meant to support. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-harness`: OpenAI uses harness to mean the model-facing setup around a task, including prompts, tools, interfaces, control logic, memory, retries, validators, and related structures. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-budget`: OpenAI argues that reports should expose budget details such as turns, tokens, retries, time, cost, and expected cost per successful solve where applicable. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-validity`: OpenAI lists reward hacking, refusals, contamination, broken problems, and sandbagging as validity hazards that can distort evaluation results. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-codex-floor`: For OpenAI capability evaluations, the article says evaluators are asked to use Codex as a common floor so tests run through an agentic interface users are likely to rely on. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-hh-role`: Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects through analysis, skill installation, harness initialization, validation, and lifecycle commands. Source: [Harness Hub README](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/README.md).
+- **fact** `claim-hh-validate`: Harness Hub&#39;s validate-harness surface already checks required files, QA boundaries, agent architecture boundaries, trigger hygiene, five subsystems, verification detection, and benchmark summary. Source: [Harness Hub README](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/README.md).
+- **fact** `claim-hh-insight`: Harness Hub insight publishing keeps post.json, source-ledger.json, effective-interact input, and generated Pages HTML together with source attribution and fact/inference validation. Source: [Insight Publishing](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/insight-publishing.md).
+- **fact** `claim-hh-readiness`: Harness Hub agent-readiness analysis is read-only and reports context budget, outcomes, verification, routing, automation candidates, and learning capture instead of writing automation. Source: [Agent Readiness Analysis](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/agent-readiness-analysis.md).
+- **fact** `claim-hh-minimal-boundary`: Harness Hub&#39;s capability map keeps one minimal harness level and says new source ideas should improve that path rather than create new install tiers. Source: [Capability Map](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/capability-map.md).
+- **project-judgment** `claim-integration-shape`: For this repo, the practical integration is a reporting rubric for claim class, harness setup, resource budget, and validity checks, not a direct package dependency. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **project-judgment** `claim-existing-primitives`: Harness Hub already has enough primitives to iterate toward evaluation-ready reporting: source-backed insight posts, harness validation, agent readiness, and Effective Interact reports. Source: [Harness Hub README](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/README.md).</pre>
+    <template data-rich-source data-source-fallback>- **fact** `claim-openai-role`: OpenAI frames trustworthy third-party evaluation as evidence for claims about frontier model capabilities and safeguards, not as a standalone benchmark score. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-claim-types`: OpenAI separates evaluation claims into capability elicitation, safeguard performance, and comparison, and recommends reporting what claim the setup is meant to support. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-harness`: OpenAI uses harness to mean the model-facing setup around a task, including prompts, tools, interfaces, control logic, memory, retries, validators, and related structures. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-budget`: OpenAI argues that reports should expose budget details such as turns, tokens, retries, time, cost, and expected cost per successful solve where applicable. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-validity`: OpenAI lists reward hacking, refusals, contamination, broken problems, and sandbagging as validity hazards that can distort evaluation results. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-openai-codex-floor`: For OpenAI capability evaluations, the article says evaluators are asked to use Codex as a common floor so tests run through an agentic interface users are likely to rely on. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **fact** `claim-hh-role`: Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects through analysis, skill installation, harness initialization, validation, and lifecycle commands. Source: [Harness Hub README](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/README.md).
+- **fact** `claim-hh-validate`: Harness Hub&#39;s validate-harness surface already checks required files, QA boundaries, agent architecture boundaries, trigger hygiene, five subsystems, verification detection, and benchmark summary. Source: [Harness Hub README](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/README.md).
+- **fact** `claim-hh-insight`: Harness Hub insight publishing keeps post.json, source-ledger.json, effective-interact input, and generated Pages HTML together with source attribution and fact/inference validation. Source: [Insight Publishing](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/insight-publishing.md).
+- **fact** `claim-hh-readiness`: Harness Hub agent-readiness analysis is read-only and reports context budget, outcomes, verification, routing, automation candidates, and learning capture instead of writing automation. Source: [Agent Readiness Analysis](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/agent-readiness-analysis.md).
+- **fact** `claim-hh-minimal-boundary`: Harness Hub&#39;s capability map keeps one minimal harness level and says new source ideas should improve that path rather than create new install tiers. Source: [Capability Map](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/capability-map.md).
+- **project-judgment** `claim-integration-shape`: For this repo, the practical integration is a reporting rubric for claim class, harness setup, resource budget, and validity checks, not a direct package dependency. Source: [A shared playbook for trustworthy third party evaluations](https://openai.com/index/trustworthy-third-party-evaluations-foundations/).
+- **project-judgment** `claim-existing-primitives`: Harness Hub already has enough primitives to iterate toward evaluation-ready reporting: source-backed insight posts, harness validation, agent readiness, and Effective Interact reports. Source: [Harness Hub README](https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/README.md).</template>
+  </section>
+<section class="panel rich-section" id="section-viewpoint-extraction-2" data-section-type="markdown" data-section-group="main" data-section-status="info" data-trust-level="mixed-trust" data-rich-section data-rich-kind="markdown" data-render-state="degraded" data-source-fallback>
+    <div class="section-heading split-row">
+    <div>
+      <p class="meta">正文</p>
+      <h2>Viewpoint Extraction</h2>
+
+    </div>
+    <span class="status-pill status-warn">降级</span>
+  </div>
+    <pre class="fallback-source-block">- `view-role`: 这个 OpenAI 项目的核心作用是给第三方评估报告定结构：先说明主张，再说明 harness、预算和有效性检查，最后让读者判断结论能泛化到哪里。 Trace: `claim-openai-role`, `claim-openai-claim-types`, `claim-openai-validity`.
+- `view-harness-fit`: 它与 Harness Hub 的方向高度吻合，因为两边都把模型表现看成模型加运行环境的结果，而不是模型名本身的结果。 Trace: `claim-openai-harness`, `claim-hh-role`, `claim-hh-validate`.
+- `view-integrate-as-rubric`: 可集成点应该是报告 schema 和验证门，而不是新增一个可安装 skill 套餐：给 validate-harness、agent-readiness 或 insight post 增加 claim、harness、budget、validity hazard 维度。 Trace: `claim-openai-budget`, `claim-integration-shape`, `claim-hh-minimal-boundary`.
+- `view-current-iteration`: 本次博客本身就是一次 repo 迭代：它用 insight-* 把外部来源、项目判断和后续行动边界保存到 GitHub Pages，而不是只在会话里做口头总结。 Trace: `claim-hh-insight`, `claim-existing-primitives`.
+- `view-not-enough-for-real-eval`: 如果要真的评测 agent 或模型，还缺任务集、评分器、预算、轨迹日志、人审策略和污染检查；当前最稳妥的下一步是文档化评估准备度，而不是声称已经能做第三方安全评估。 Trace: `claim-openai-validity`, `claim-hh-readiness`, `claim-integration-shape`.
+- Assumption: 这里的“这个项目”指 OpenAI 文章提出的第三方评估方法论，而不是一个可安装代码仓库。
+- Assumption: 这里的“发布到 GitHub Page”指生成并提交 site/ 下的 GitHub Pages 内容；实际部署仍需合并或推送到触发 Pages workflow 的分支。</pre>
+    <template data-rich-source data-source-fallback>- `view-role`: 这个 OpenAI 项目的核心作用是给第三方评估报告定结构：先说明主张，再说明 harness、预算和有效性检查，最后让读者判断结论能泛化到哪里。 Trace: `claim-openai-role`, `claim-openai-claim-types`, `claim-openai-validity`.
+- `view-harness-fit`: 它与 Harness Hub 的方向高度吻合，因为两边都把模型表现看成模型加运行环境的结果，而不是模型名本身的结果。 Trace: `claim-openai-harness`, `claim-hh-role`, `claim-hh-validate`.
+- `view-integrate-as-rubric`: 可集成点应该是报告 schema 和验证门，而不是新增一个可安装 skill 套餐：给 validate-harness、agent-readiness 或 insight post 增加 claim、harness、budget、validity hazard 维度。 Trace: `claim-openai-budget`, `claim-integration-shape`, `claim-hh-minimal-boundary`.
+- `view-current-iteration`: 本次博客本身就是一次 repo 迭代：它用 insight-* 把外部来源、项目判断和后续行动边界保存到 GitHub Pages，而不是只在会话里做口头总结。 Trace: `claim-hh-insight`, `claim-existing-primitives`.
+- `view-not-enough-for-real-eval`: 如果要真的评测 agent 或模型，还缺任务集、评分器、预算、轨迹日志、人审策略和污染检查；当前最稳妥的下一步是文档化评估准备度，而不是声称已经能做第三方安全评估。 Trace: `claim-openai-validity`, `claim-hh-readiness`, `claim-integration-shape`.
+- Assumption: 这里的“这个项目”指 OpenAI 文章提出的第三方评估方法论，而不是一个可安装代码仓库。
+- Assumption: 这里的“发布到 GitHub Page”指生成并提交 site/ 下的 GitHub Pages 内容；实际部署仍需合并或推送到触发 Pages workflow 的分支。</template>
+  </section>
+<section class="panel rich-section" id="section-project-mapping-3" data-section-type="markdown" data-section-group="impact" data-section-status="ready" data-trust-level="mixed-trust" data-rich-section data-rich-kind="markdown" data-render-state="degraded" data-source-fallback>
+    <div class="section-heading split-row">
+    <div>
+      <p class="meta">影响</p>
+      <h2>Project Mapping</h2>
+
+    </div>
+    <span class="status-pill status-warn">降级</span>
+  </div>
+    <pre class="fallback-source-block">- Integration: 把 OpenAI playbook 作为 Harness Hub 的 eval-report rubric 候选：claim type、tested system、harness、budget、elicitation、validity checks、evidence trail。
+- Integration: 把该 rubric 优先映射到既有 surfaces：validate-harness 负责 repo harness 结构，agent-readiness 负责评估准备度，insight-* 负责公开来源账本和项目判断。
+- Integration: 保持 minimal-only 架构：不新增 advanced/eval harness tier，不把第三方评估变成默认安装能力，先通过 source-backed blog 和后续 spec 收敛验收标准。
+- **validate-harness**: 可以在未来增加 evaluation-report readiness 视角，检查目标 repo 是否能公开说明 harness、预算、scorer、日志和有效性风险。 Action: 若要实现，先写 SDD/spec 和测试；当前博客只记录参考价值，不改 CLI 行为。
+- **agent-readiness**: 现有只读 categories 可扩展出 eval-readiness 解释层，判断 repo 是否具备可重复评测 agent 的上下文、结果、验证和学习沉淀。 Action: 把 OpenAI 的 claim/budget/validity 清单作为后续 report schema 候选。
+- **insight-publishing**: 当前流程已经符合来源账本、事实/推断分离、Pages 输出和发布预检的需求。 Action: 用本篇博客验证 source-backed insight path，并把项目判断写入 post.json 与 source-ledger.json。
+- **effective-interact**: 它可以作为评估报告的可读 HTML 层，把 claim、evidence、validation 和 next action 放在同一读者界面。 Action: 若后续做真实评估报告模板，再添加专门输入 fixture 和 validator。
+- **workflow-router**: 第三方评估相关请求应先路由到一个 owner，再由 owner 选择 answer、review、hub-maintenance 或 SDD；避免 broad trigger 噪声。 Action: 本次仅手动记录路由低置信问题，不扩大 workflow-router 规则。</pre>
+    <template data-rich-source data-source-fallback>- Integration: 把 OpenAI playbook 作为 Harness Hub 的 eval-report rubric 候选：claim type、tested system、harness、budget、elicitation、validity checks、evidence trail。
+- Integration: 把该 rubric 优先映射到既有 surfaces：validate-harness 负责 repo harness 结构，agent-readiness 负责评估准备度，insight-* 负责公开来源账本和项目判断。
+- Integration: 保持 minimal-only 架构：不新增 advanced/eval harness tier，不把第三方评估变成默认安装能力，先通过 source-backed blog 和后续 spec 收敛验收标准。
+- **validate-harness**: 可以在未来增加 evaluation-report readiness 视角，检查目标 repo 是否能公开说明 harness、预算、scorer、日志和有效性风险。 Action: 若要实现，先写 SDD/spec 和测试；当前博客只记录参考价值，不改 CLI 行为。
+- **agent-readiness**: 现有只读 categories 可扩展出 eval-readiness 解释层，判断 repo 是否具备可重复评测 agent 的上下文、结果、验证和学习沉淀。 Action: 把 OpenAI 的 claim/budget/validity 清单作为后续 report schema 候选。
+- **insight-publishing**: 当前流程已经符合来源账本、事实/推断分离、Pages 输出和发布预检的需求。 Action: 用本篇博客验证 source-backed insight path，并把项目判断写入 post.json 与 source-ledger.json。
+- **effective-interact**: 它可以作为评估报告的可读 HTML 层，把 claim、evidence、validation 和 next action 放在同一读者界面。 Action: 若后续做真实评估报告模板，再添加专门输入 fixture 和 validator。
+- **workflow-router**: 第三方评估相关请求应先路由到一个 owner，再由 owner 选择 answer、review、hub-maintenance 或 SDD；避免 broad trigger 噪声。 Action: 本次仅手动记录路由低置信问题，不扩大 workflow-router 规则。</template>
+  </section>
+<section class="panel rich-section" id="section-iteration-record-4" data-section-type="markdown" data-section-group="changes" data-section-status="ready" data-trust-level="mixed-trust" data-rich-section data-rich-kind="markdown" data-render-state="degraded" data-source-fallback>
+    <div class="section-heading split-row">
+    <div>
+      <p class="meta">变更</p>
+      <h2>Iteration Record</h2>
+
+    </div>
+    <span class="status-pill status-warn">降级</span>
+  </div>
+    <pre class="fallback-source-block">### Changed
+- 新增一篇 source-backed insight blog，将 OpenAI 可信第三方评估 playbook 映射到 Harness Hub。
+- 本次工作正式运行 Codex skills 自举脚本，将 42 个标准 skills 同步到本地 .codex/skills/。
+
+### Confirmed
+- OpenAI 文章适合作为 Harness Hub 类似能力的参考框架，但不是直接集成的运行时依赖。
+- Harness Hub 现有 insight-*、validate-harness、agent-readiness 和 effective-interact 已经覆盖了部分评估报告基础设施。
+
+### Open
+- 是否新增 eval-readiness 报告维度，需要先明确目标读者、被评估对象、任务集、评分器和人审边界。
+- workflow-router 对中文 source-to-blog 维护请求的自动分类仍然偏弱；本次按仓库规则手动归入 hub-maintenance-workflow。
+
+### Watch
+- OpenAI 后续第三方评估标准化建议以及 NIST、ISO 的 frontier AI evaluation reporting 进展。
+- Codex CLI 或其他开源 agent harness 是否继续成为跨模型固定控制循环的实际基线。</pre>
+    <template data-rich-source data-source-fallback>### Changed
+- 新增一篇 source-backed insight blog，将 OpenAI 可信第三方评估 playbook 映射到 Harness Hub。
+- 本次工作正式运行 Codex skills 自举脚本，将 42 个标准 skills 同步到本地 .codex/skills/。
+
+### Confirmed
+- OpenAI 文章适合作为 Harness Hub 类似能力的参考框架，但不是直接集成的运行时依赖。
+- Harness Hub 现有 insight-*、validate-harness、agent-readiness 和 effective-interact 已经覆盖了部分评估报告基础设施。
+
+### Open
+- 是否新增 eval-readiness 报告维度，需要先明确目标读者、被评估对象、任务集、评分器和人审边界。
+- workflow-router 对中文 source-to-blog 维护请求的自动分类仍然偏弱；本次按仓库规则手动归入 hub-maintenance-workflow。
+
+### Watch
+- OpenAI 后续第三方评估标准化建议以及 NIST、ISO 的 frontier AI evaluation reporting 进展。
+- Codex CLI 或其他开源 agent harness 是否继续成为跨模型固定控制循环的实际基线。</template>
+  </section>
+<section class="panel rich-section" id="section-action-boundary-5" data-section-type="markdown" data-section-group="next" data-section-status="ready" data-trust-level="mixed-trust" data-rich-section data-rich-kind="markdown" data-render-state="degraded" data-source-fallback>
+    <div class="section-heading split-row">
+    <div>
+      <p class="meta">下一步</p>
+      <h2>Action Boundary</h2>
+
+    </div>
+    <span class="status-pill status-warn">降级</span>
+  </div>
+    <pre class="fallback-source-block">### Now
+- 生成 GitHub Pages insight post、source ledger、effective-interact input 和站点索引。
+- 运行 insight-build、insight-validate、insight-publish --dry-run 以及必要的 repo 校验。
+
+### Observe
+- 后续如果要做真实 eval-readiness 功能，先用 SDD 明确 schema、tests 和报告读者。
+- 观察本篇博客的 source-ledger 是否足够支持读者区分事实、推断和项目判断。
+
+### Not Now
+- 不新增 harness tier、skill bundle 或默认安装项。
+- 不声称 Harness Hub 已经能进行第三方安全评估；当前只是把评估报告方法论吸收到项目迭代候选。
+- 不自动推送、发布或触发外部写入；Pages 部署仍由主分支 workflow 接管。</pre>
+    <template data-rich-source data-source-fallback>### Now
+- 生成 GitHub Pages insight post、source ledger、effective-interact input 和站点索引。
+- 运行 insight-build、insight-validate、insight-publish --dry-run 以及必要的 repo 校验。
+
+### Observe
+- 后续如果要做真实 eval-readiness 功能，先用 SDD 明确 schema、tests 和报告读者。
+- 观察本篇博客的 source-ledger 是否足够支持读者区分事实、推断和项目判断。
+
+### Not Now
+- 不新增 harness tier、skill bundle 或默认安装项。
+- 不声称 Harness Hub 已经能进行第三方安全评估；当前只是把评估报告方法论吸收到项目迭代候选。
+- 不自动推送、发布或触发外部写入；Pages 部署仍由主分支 workflow 接管。</template>
+  </section>
+
+        <section class="panel supplemental-panel" id="claims" data-section-type="claims" data-section-group="claims" data-report-region="claims"><div class="section-heading split-row">
+    <div>
+
+      <h2>关键判断</h2>
+      <p class="section-summary">每条判断都保留证据入口和可信度。</p>
+    </div>
+
+  </div><div class="evidence-grid claims-grid" data-claims>
+    <article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-openai-role" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] OpenAI frames trustworthy third-party evaluation as evidence for claims about frontier model capabilities and safeguards, not as a standalone benchmark score.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#openai-playbook" data-claim-evidence-id="openai-playbook">openai-playbook</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-openai-claim-types" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] OpenAI separates evaluation claims into capability elicitation, safeguard performance, and comparison, and recommends reporting what claim the setup is meant to support.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#openai-playbook" data-claim-evidence-id="openai-playbook">openai-playbook</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-openai-harness" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] OpenAI uses harness to mean the model-facing setup around a task, including prompts, tools, interfaces, control logic, memory, retries, validators, and related structures.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#openai-playbook" data-claim-evidence-id="openai-playbook">openai-playbook</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-openai-budget" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] OpenAI argues that reports should expose budget details such as turns, tokens, retries, time, cost, and expected cost per successful solve where applicable.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#openai-playbook" data-claim-evidence-id="openai-playbook">openai-playbook</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-openai-validity" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] OpenAI lists reward hacking, refusals, contamination, broken problems, and sandbagging as validity hazards that can distort evaluation results.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#openai-playbook" data-claim-evidence-id="openai-playbook">openai-playbook</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-openai-codex-floor" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] For OpenAI capability evaluations, the article says evaluators are asked to use Codex as a common floor so tests run through an agentic interface users are likely to rely on.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#openai-playbook" data-claim-evidence-id="openai-playbook">openai-playbook</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-hh-role" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects through analysis, skill installation, harness initialization, validation, and lifecycle commands.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#harness-hub-readme" data-claim-evidence-id="harness-hub-readme">harness-hub-readme</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-hh-validate" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] Harness Hub&#39;s validate-harness surface already checks required files, QA boundaries, agent architecture boundaries, trigger hygiene, five subsystems, verification detection, and benchmark summary.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#harness-hub-readme" data-claim-evidence-id="harness-hub-readme">harness-hub-readme</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-hh-insight" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] Harness Hub insight publishing keeps post.json, source-ledger.json, effective-interact input, and generated Pages HTML together with source attribution and fact/inference validation.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#insight-publishing-doc" data-claim-evidence-id="insight-publishing-doc">insight-publishing-doc</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-hh-readiness" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] Harness Hub agent-readiness analysis is read-only and reports context budget, outcomes, verification, routing, automation candidates, and learning capture instead of writing automation.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#agent-readiness-doc" data-claim-evidence-id="agent-readiness-doc">agent-readiness-doc</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-hh-minimal-boundary" data-claim-kind="conclusion" data-claim-confidence="high">
+        <div class="claim-card-header"><span class="meta">结论</span><span class="status-pill status-info">可信度：高</span></div>
+        <h3 class="claim-card-title">[fact] Harness Hub&#39;s capability map keeps one minimal harness level and says new source ideas should improve that path rather than create new install tiers.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#capability-map-doc" data-claim-evidence-id="capability-map-doc">capability-map-doc</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: fact</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-integration-shape" data-claim-kind="recommendation" data-claim-confidence="medium">
+        <div class="claim-card-header"><span class="meta">建议</span><span class="status-pill status-info">可信度：中</span></div>
+        <h3 class="claim-card-title">[project-judgment] For this repo, the practical integration is a reporting rubric for claim class, harness setup, resource budget, and validity checks, not a direct package dependency.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#openai-playbook" data-claim-evidence-id="openai-playbook">openai-playbook</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: project-judgment</li></ul>
+      </article>
+<article class="interactive-card evidence-card claim-card evidence-spotlight" data-evidence-spotlight data-claim-id="claim-existing-primitives" data-claim-kind="recommendation" data-claim-confidence="medium">
+        <div class="claim-card-header"><span class="meta">建议</span><span class="status-pill status-info">可信度：中</span></div>
+        <h3 class="claim-card-title">[project-judgment] Harness Hub already has enough primitives to iterate toward evaluation-ready reporting: source-backed insight posts, harness validation, agent readiness, and Effective Interact reports.</h3>
+
+        <div class="claim-evidence-links" data-claim-evidence>
+    <a href="#harness-hub-readme" data-claim-evidence-id="harness-hub-readme">harness-hub-readme</a>
+  </div>
+        <ul class="claim-limits"><li>Original claim kind: project-judgment</li></ul>
+      </article>
+  </div></section>
+        <section class="panel supplemental-panel" id="evidence" data-section-type="evidence" data-section-group="evidence" data-report-region="evidence"><div class="section-heading split-row">
+    <div>
+
+      <h2>证据</h2>
+      <p class="section-summary">文件、命令和验证来源集中在这里。</p>
+    </div>
+
+  </div><div class="evidence-grid" data-evidence>
+    <article class="interactive-card evidence-card evidence-spotlight" id="openai-playbook" data-evidence-spotlight data-evidence-id="openai-playbook" data-evidence-kind="source" data-trust-level="mixed-trust">
+      <div class="split-row"><span class="meta">来源</span><span class="status-pill status-info">信息</span></div>
+      <h3>A shared playbook for trustworthy third party evaluations</h3>
+      <p>OpenAI primary source, published 2026-05-29. Used as methodology source, not copied as article text. | A shared playbook for trustworthy third party evaluations</p>
+      <a class="source-link" href="https://openai.com/index/trustworthy-third-party-evaluations-foundations/" rel="noreferrer">A shared playbook for trustworthy third party evaluations</a>
+      <ul class="claim-limits"><li>Source text is used for attribution and bounded excerpts only.</li><li>Canonical post slug: 2026-06-01-trustworthy-third-party-evals-harness-hub</li></ul>
+    </article>
+<article class="interactive-card evidence-card evidence-spotlight" id="harness-hub-readme" data-evidence-spotlight data-evidence-id="harness-hub-readme" data-evidence-kind="source" data-trust-level="mixed-trust">
+      <div class="split-row"><span class="meta">来源</span><span class="status-pill status-info">信息</span></div>
+      <h3>Harness Hub README</h3>
+      <p>Repo-local role and lifecycle source at current fetched main commit. | Harness Hub README</p>
+      <a class="source-link" href="https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/README.md" rel="noreferrer">Harness Hub README</a>
+      <ul class="claim-limits"><li>Source text is used for attribution and bounded excerpts only.</li><li>Canonical post slug: 2026-06-01-trustworthy-third-party-evals-harness-hub</li></ul>
+    </article>
+<article class="interactive-card evidence-card evidence-spotlight" id="insight-publishing-doc" data-evidence-spotlight data-evidence-id="insight-publishing-doc" data-evidence-kind="source" data-trust-level="mixed-trust">
+      <div class="split-row"><span class="meta">来源</span><span class="status-pill status-info">信息</span></div>
+      <h3>Insight Publishing</h3>
+      <p>Defines post.json, source-ledger.json, effective-interact input, validation, and publish boundary. | Insight Publishing</p>
+      <a class="source-link" href="https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/insight-publishing.md" rel="noreferrer">Insight Publishing</a>
+      <ul class="claim-limits"><li>Source text is used for attribution and bounded excerpts only.</li><li>Canonical post slug: 2026-06-01-trustworthy-third-party-evals-harness-hub</li></ul>
+    </article>
+<article class="interactive-card evidence-card evidence-spotlight" id="agent-readiness-doc" data-evidence-spotlight data-evidence-id="agent-readiness-doc" data-evidence-kind="source" data-trust-level="mixed-trust">
+      <div class="split-row"><span class="meta">来源</span><span class="status-pill status-info">信息</span></div>
+      <h3>Agent Readiness Analysis</h3>
+      <p>Shows the existing read-only assessment surface that can absorb evaluation-readiness ideas. | Agent Readiness Analysis</p>
+      <a class="source-link" href="https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/agent-readiness-analysis.md" rel="noreferrer">Agent Readiness Analysis</a>
+      <ul class="claim-limits"><li>Source text is used for attribution and bounded excerpts only.</li><li>Canonical post slug: 2026-06-01-trustworthy-third-party-evals-harness-hub</li></ul>
+    </article>
+<article class="interactive-card evidence-card evidence-spotlight" id="capability-map-doc" data-evidence-spotlight data-evidence-id="capability-map-doc" data-evidence-kind="source" data-trust-level="mixed-trust">
+      <div class="split-row"><span class="meta">来源</span><span class="status-pill status-info">信息</span></div>
+      <h3>Capability Map</h3>
+      <p>Used to keep integration proposals within the existing minimal-only architecture. | Capability Map</p>
+      <a class="source-link" href="https://github.com/JasonxzWen/harness-hub/blob/0a815b5694e5663095fb3f59ebfc2a54da49637a/docs/capability-map.md" rel="noreferrer">Capability Map</a>
+      <ul class="claim-limits"><li>Source text is used for attribution and bounded excerpts only.</li><li>Canonical post slug: 2026-06-01-trustworthy-third-party-evals-harness-hub</li></ul>
+    </article>
+  </div></section>
+
+        <section class="panel supplemental-panel" id="next-actions" data-section-type="actions" data-section-group="next" data-report-region="actions"><div class="section-heading split-row"><div><h2>下一步</h2><p class="section-summary">只保留后续会真正改变行为的动作。</p></div><button data-copy-from="#next-action-list">复制行动项</button></div><ul id="next-action-list" class="action-list"><li>生成 GitHub Pages insight post、source ledger、effective-interact input 和站点索引。</li><li>运行 insight-build、insight-validate、insight-publish --dry-run 以及必要的 repo 校验。</li></ul></section>
+      </div>
+    </div>
+  </main>
+
+  <script>/* Use case: small local interactions for self-contained Effective reports. The generator inlines this into the final <script> block. */
+(function () {
+  var sectionFocusTimer = null;
+  var lastActiveNavId = "";
+
+  function setCopyButtonState(button, label, state) {
+    if (!button) return;
+    if (!button.getAttribute("data-copy-label")) {
+      button.setAttribute("data-copy-label", button.textContent);
+    }
+    if (button.getAttribute("data-copy-timer")) {
+      clearTimeout(Number(button.getAttribute("data-copy-timer")));
+    }
+    button.textContent = label;
+    button.setAttribute("data-copy-state", state);
+    button.setAttribute("aria-live", "polite");
+    var timer = setTimeout(function () {
+      button.textContent = button.getAttribute("data-copy-label") || label;
+      button.removeAttribute("data-copy-state");
+      button.removeAttribute("data-copy-timer");
+    }, 1100);
+    button.setAttribute("data-copy-timer", String(timer));
+  }
+
+  function fallbackCopyText(text) {
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.left = "-1000px";
+    area.style.top = "0";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    area.setSelectionRange(0, area.value.length);
+    try {
+      return document.execCommand("copy");
+    } finally {
+      document.body.removeChild(area);
+    }
+  }
+
+  function copyText(text, button) {
+    var value = String(text || "").trim();
+    if (!value) {
+      setCopyButtonState(button, "无内容", "empty");
+      return;
+    }
+    var done = function () {
+      setCopyButtonState(button, "已复制", "success");
+    };
+    var fail = function () {
+      setCopyButtonState(button, "复制失败", "failed");
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(value).then(done, function () {
+        if (fallbackCopyText(value)) done();
+        else fail();
+      });
+      return;
+    }
+
+    if (fallbackCopyText(value)) done();
+    else fail();
+  }
+
+  function copySourceText(source) {
+    if (!source) return "";
+    if (source.matches("ul, ol")) {
+      return Array.prototype.slice.call(source.querySelectorAll("li"))
+        .map(function (item) { return "- " + (item.innerText || item.textContent || "").trim(); })
+        .filter(Boolean)
+        .join("\n");
+    }
+    return (source.innerText || source.textContent || "").trim();
+  }
+
+  function applyFilter(button) {
+    var target = button.getAttribute("data-filter-target");
+    var value = button.getAttribute("data-filter-value");
+    if (!target || !value) return;
+
+    document.querySelectorAll("[data-filter-target='" + target + "']").forEach(function (item) {
+      var match = value === "all" || item.getAttribute("data-filter-value") === value;
+      item.hidden = !match;
+    });
+
+    document.querySelectorAll("button[data-filter-target='" + target + "']").forEach(function (peer) {
+      peer.setAttribute("aria-pressed", String(peer === button));
+    });
+
+    var field = document.querySelector("[data-focus-field='" + target + "']");
+    if (field) {
+      field.classList.toggle("has-filter", value !== "all");
+    }
+  }
+
+  function activateTab(button) {
+    var group = button.getAttribute("data-tab-group");
+    var panel = button.getAttribute("data-tab");
+    if (!group || !panel) return;
+
+    document.querySelectorAll("[data-tab-group='" + group + "'][data-tab]").forEach(function (peer) {
+      peer.setAttribute("aria-selected", String(peer === button));
+    });
+
+    document.querySelectorAll("[data-tab-panel-group='" + group + "']").forEach(function (item) {
+      item.hidden = item.id !== panel;
+    });
+  }
+
+  function applySearch(input) {
+    var target = input.getAttribute("data-search-for");
+    var query = input.value.trim().toLowerCase();
+    if (!target) return;
+
+    document.querySelectorAll("[data-search-target='" + target + "']").forEach(function (item) {
+      item.hidden = Boolean(query) && !item.textContent.toLowerCase().includes(query);
+    });
+  }
+
+  function updateEvidenceSpotlight(card, event) {
+    var rect = card.getBoundingClientRect();
+    card.style.setProperty("--spotlight-x", event.clientX - rect.left + "px");
+    card.style.setProperty("--spotlight-y", event.clientY - rect.top + "px");
+  }
+
+  function clearDataTableHighlight(table) {
+    if (!table) return;
+    table.removeAttribute("data-hover-row");
+    table.removeAttribute("data-hover-column");
+    table.querySelectorAll(".table-row-highlight, .table-column-highlight, .table-cell-highlight").forEach(function (cell) {
+      cell.classList.remove("table-row-highlight", "table-column-highlight", "table-cell-highlight");
+    });
+  }
+
+  function applyDataTableHighlight(cell) {
+    var table = cell.closest("[data-report-data-table]");
+    if (!table) return;
+    var row = cell.getAttribute("data-table-row");
+    var column = cell.getAttribute("data-table-column");
+    clearDataTableHighlight(table);
+    if (!row || !column) return;
+
+    table.setAttribute("data-hover-row", row);
+    table.setAttribute("data-hover-column", column);
+
+    table.querySelectorAll("[data-table-row='" + row + "']").forEach(function (peer) {
+      peer.classList.add("table-row-highlight");
+    });
+    table.querySelectorAll("[data-table-column='" + column + "']").forEach(function (peer) {
+      peer.classList.add("table-column-highlight");
+    });
+    cell.classList.add("table-cell-highlight");
+  }
+
+  function hashTargetId() {
+    if (!window.location.hash || window.location.hash === "#") return "";
+    var raw = window.location.hash.slice(1);
+    try {
+      return decodeURIComponent(raw);
+    } catch (_) {
+      return raw;
+    }
+  }
+
+  function reportSectionForId(id) {
+    if (!id) return null;
+    var target = document.getElementById(id);
+    if (!target) return null;
+    if (target.matches("#report-top, [data-report-region='hero']")) {
+      return target;
+    }
+    if (target.matches("[id][data-section-type], #evidence, #verification, #next-actions")) {
+      return target;
+    }
+    return target.closest("#report-top, [data-report-region='hero'], [id][data-section-type], #evidence, #verification, #next-actions");
+  }
+
+  function sectionIsVisible(section) {
+    if (!section) return false;
+    var rect = section.getBoundingClientRect();
+    return rect.bottom > 80 && rect.top < window.innerHeight;
+  }
+
+  function highlightTargetSection(id) {
+    document.querySelectorAll(".section-focus").forEach(function (section) {
+      section.classList.remove("section-focus");
+    });
+    if (sectionFocusTimer) {
+      clearTimeout(sectionFocusTimer);
+      sectionFocusTimer = null;
+    }
+
+    var section = reportSectionForId(id);
+    if (!section) return;
+    section.classList.add("section-focus");
+    sectionFocusTimer = setTimeout(function () {
+      section.classList.remove("section-focus");
+      sectionFocusTimer = null;
+    }, 1600);
+  }
+
+  function updateActiveNavigation() {
+    var sections = Array.prototype.slice.call(document.querySelectorAll("#report-top, [id][data-section-type], #evidence, #verification, #next-actions"));
+    var hashSection = reportSectionForId(hashTargetId());
+    var active = sections
+      .map(function (section) {
+        var rect = section.getBoundingClientRect();
+        return { id: section.id, section: section, top: Math.abs(rect.top - 96), visible: sectionIsVisible(section) };
+      })
+      .filter(function (item) { return item.visible; })
+      .sort(function (a, b) { return a.top - b.top; })[0];
+    if (hashSection && sectionIsVisible(hashSection)) {
+      active = { id: hashSection.id, section: hashSection, top: 0, visible: true };
+    }
+
+    var activeLink = null;
+    document.querySelectorAll("[data-nav-link]").forEach(function (link) {
+      var isActive = Boolean(active && link.getAttribute("href") === "#" + active.id);
+      link.setAttribute("aria-current", isActive ? "true" : "false");
+      if (isActive) activeLink = link;
+    });
+
+    if (active && active.id !== lastActiveNavId && activeLink && activeLink.scrollIntoView) {
+      try {
+        activeLink.scrollIntoView({ block: "nearest", inline: "nearest" });
+      } catch (_) {
+        activeLink.scrollIntoView();
+      }
+    }
+    lastActiveNavId = active ? active.id : "";
+  }
+
+  document.addEventListener("click", function (event) {
+    var navLink = event.target.closest("[data-nav-link]");
+    if (navLink) {
+      var href = navLink.getAttribute("href") || "";
+      if (href.charAt(0) === "#") {
+        window.setTimeout(function () {
+          highlightTargetSection(hashTargetId());
+          updateActiveNavigation();
+        }, 80);
+      }
+    }
+
+    var button = event.target.closest("button");
+    if (!button) return;
+
+    if (button.matches("[data-copy-text]")) {
+      copyText(button.getAttribute("data-copy-text"), button);
+    }
+
+    if (button.matches("[data-copy-from]")) {
+      var source = document.querySelector(button.getAttribute("data-copy-from"));
+      copyText(source ? (source.content ? source.content.textContent : copySourceText(source)) : "", button);
+    }
+
+    if (button.matches("[data-filter-target][data-filter-value]")) {
+      applyFilter(button);
+    }
+
+    if (button.matches("[data-tab-group][data-tab]")) {
+      activateTab(button);
+    }
+  });
+
+  document.addEventListener("input", function (event) {
+    if (event.target.matches("[data-search-for]")) {
+      applySearch(event.target);
+    }
+  });
+
+  document.addEventListener("pointermove", function (event) {
+    var card = event.target.closest("[data-evidence-spotlight]");
+    if (card) {
+      updateEvidenceSpotlight(card, event);
+    }
+  });
+
+  document.addEventListener("pointerover", function (event) {
+    var cell = event.target.closest("[data-table-cell]");
+    if (cell) {
+      applyDataTableHighlight(cell);
+    }
+  });
+
+  document.addEventListener("pointerout", function (event) {
+    var table = event.target.closest("[data-report-data-table]");
+    if (table && !table.contains(event.relatedTarget)) {
+      clearDataTableHighlight(table);
+    }
+  });
+
+  document.addEventListener("focusin", function (event) {
+    if (event.target.matches("[data-table-cell]")) {
+      applyDataTableHighlight(event.target);
+    }
+  });
+
+  document.addEventListener("focusout", function (event) {
+    var table = event.target.closest("[data-report-data-table]");
+    if (table && !table.contains(event.relatedTarget)) {
+      clearDataTableHighlight(table);
+    }
+  });
+
+  document.addEventListener("scroll", updateActiveNavigation, { passive: true });
+  window.addEventListener("resize", updateActiveNavigation);
+  window.addEventListener("hashchange", function () {
+    highlightTargetSection(hashTargetId());
+    updateActiveNavigation();
+  });
+  highlightTargetSection(hashTargetId());
+  updateActiveNavigation();
+})();
+
+</script>
+</body>
+</html>
