@@ -29,10 +29,11 @@ Do not start implementation until the harness is fully landed and the active tas
 - Do not merge a PR unless the user explicitly asks for that remote mutation.
 - Use verified checkpoint commits for completed atomic work units when the task permits commits. Do not commit failing, unrelated, or half-done work. Record each checkpoint commit hash, or the reason commits were skipped, in progress and handoff state.
 - Promote repeated review feedback into a harness rule, validation command, or documented follow-up instead of relying on memory.
+- After creating or updating a PR, record the PR URL or number, branch, base, commit, validation status, skipped checks, residual risk, and next action in progress and handoff state.
 - Record progress in `.harness-hub/state/progress.md` and leave restart notes in `.harness-hub/state/session-handoff.md`.
 - Record decision-level changes in `.harness-hub/state/decisions.md`.
 - Run `node scripts/harness-validate.mjs` before handoff.
 
 ## Required Handoff
 
-Before ending a session, update `.harness-hub/state/session-handoff.md` with the current status, changed files, validation evidence, PR status when a PR was created or updated, blockers, and the next concrete action. Update `.harness-hub/state/decisions.md` when assumptions, acceptance criteria, allowed paths, validation, user-visible behavior, or risk changed.
+Before ending a session, update `.harness-hub/state/session-handoff.md` with the current status, changed files, validation evidence, PR status and PR handoff details when a PR was created or updated, blockers, and the next concrete action. Update `.harness-hub/state/decisions.md` when assumptions, acceptance criteria, allowed paths, validation, user-visible behavior, or risk changed.

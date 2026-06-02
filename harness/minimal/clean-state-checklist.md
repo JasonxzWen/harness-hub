@@ -18,6 +18,7 @@ Use this checklist before handoff.
 - Review Feedback To Rules entries are updated when a repeated comment should become a durable harness rule.
 - Repeated review feedback has been promoted to a rule, validation command, or explicit follow-up.
 - Each completed atomic work unit has a verified checkpoint commit when commits are permitted, or the skip reason is recorded.
+- If a PR was created or updated, progress and handoff state record the PR URL or number, branch, base, commit, validation status, skipped checks, residual risk, and next action.
 - `evaluator-rubric.md` and `quality-document.md` were updated when material validation or quality evidence changed.
 - `.harness-hub/state/decisions.md` records decision-level changes or explicitly remains unchanged.
 - `.harness-hub/state/progress.md` and `.harness-hub/state/session-handoff.md` reflect the current state.

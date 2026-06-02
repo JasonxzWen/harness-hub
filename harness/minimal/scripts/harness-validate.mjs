@@ -26,7 +26,7 @@ const sizeLimits = {
   '.harness-hub/state/current-task.md': 16 * 1024,
 };
 const requiredMarkers = {
-  'AGENTS.md': ['Codex', 'Initialization Gate', 'harness-validate.mjs', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'mergeability', 'CI/check-run'],
+  'AGENTS.md': ['Codex', 'Initialization Gate', 'harness-validate.mjs', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run'],
   '.harness-hub/.gitignore': ['state/', 'reports/'],
   '.harness-hub/state/decisions.md': ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'],
   '.harness-hub/state/progress.md': ['Recent Validation', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Review Feedback To Rules'],
@@ -56,7 +56,7 @@ const requiredMarkers = {
     'Parallel writes',
     'Handoff requirements',
   ],
-  'clean-state-checklist.md': ['Standard startup path', 'Runtime signals', 'P0', 'P1', 'P2', 'Web browser acceptance', 'PR status', 'mergeability', 'CI/check-run', 'Review Feedback', 'evaluator-rubric.md', 'quality-document.md'],
+  'clean-state-checklist.md': ['Standard startup path', 'Runtime signals', 'P0', 'P1', 'P2', 'Web browser acceptance', 'PR status', 'PR URL', 'mergeability', 'CI/check-run', 'Review Feedback', 'evaluator-rubric.md', 'quality-document.md'],
   'definition-of-done.md': ['Static checks', 'runtime checks', 'end-to-end', 'P0', 'P1', 'P2', 'agent-run browser', 'Standard startup path', 'Runtime logs', 'PR status', 'mergeability', 'CI/check-run', 'evaluator rubric', 'quality snapshot'],
   'evaluator-rubric.md': ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Handoff readiness', 'Verdict'],
   'quality-document.md': ['Quality Snapshot', 'Rating Standard', 'Product Areas', 'P0/P1/P2 validation status', 'Browser acceptance status', 'Architecture Layers', 'Change History'],

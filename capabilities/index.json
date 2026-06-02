@@ -6,7 +6,7 @@
       "kind": "harness-template",
       "path": "harness/minimal",
       "dest": ".",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "source": "local",
       "provides": [
         "repo-harness-initialization",
@@ -26,7 +26,8 @@
         "pr-status-closeout-policy",
         "runtime-signal-capture",
         "evaluator-rubric",
-        "quality-snapshot"
+        "quality-snapshot",
+        "pr-handoff-policy"
       ],
       "overlapsWith": [
         "skill:workflow-router",
@@ -283,12 +284,13 @@
     "skill:delivery-workflow": {
       "kind": "skill",
       "path": "skills/delivery-workflow",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "local",
       "provides": [
         "delivery-owner-workflow",
         "validation-handoff-cleanup",
-        "post-pr-status-triage"
+        "post-pr-status-triage",
+        "pr-closeout-handoff"
       ],
       "overlapsWith": [
         "skill:verification-loop",
@@ -304,7 +306,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Close accepted work with validation, PR mergeability and CI/check-run status when a PR was created or updated, cleanup, residual-risk notes, and handoff."
+      "recommendation": "Close accepted work and PR updates with validation, PR mergeability and CI/check-run status, in-scope blocker fixes, cleanup, residual-risk notes, and handoff."
     },
     "skill:hub-maintenance-workflow": {
       "kind": "skill",

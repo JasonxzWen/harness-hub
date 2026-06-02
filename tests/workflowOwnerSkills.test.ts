@@ -81,6 +81,18 @@ test('read-only workflow owners block mutation by default', () => {
   expect(review).toContain('Findings first');
 });
 
+test('delivery workflow captures PR closeout without remote side effects', () => {
+  const delivery = read('skills/delivery-workflow/SKILL.md');
+
+  expect(delivery).toContain('check remote PR state after push');
+  expect(delivery).toContain('mergeability');
+  expect(delivery).toContain('CI/check runs');
+  expect(delivery).toContain('Resolve actionable PR blockers in scope');
+  expect(delivery).toContain('PR URL or number');
+  expect(delivery).toContain('Do not mark a PR ready');
+  expect(delivery).toContain('resolve review threads');
+});
+
 test('workflow owners mark UI helper skills as conditional', () => {
   const diagnosis = read('skills/diagnosis-workflow/SKILL.md');
   const review = read('skills/review-workflow/SKILL.md');
