@@ -74,15 +74,19 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Validation Records');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Passed');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Web browser acceptance');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('PR Status');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Failed');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Web browser acceptance');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('PR Status');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Initialization Gate');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('checkpoint commit');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('P0/P1/P2');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('agent-run browser');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('PR status');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('feature_state_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('validation_priority_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('web_acceptance_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('pr_closeout_policy');
   expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Runtime reliability');
   expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Browser acceptance');
   expect(fs.readFileSync(path.join(targetDir, 'quality-document.md'), 'utf8')).toContain('Quality Snapshot');
@@ -182,6 +186,12 @@ test('dev bootstrap preserves existing worktree-local state', () => {
     '| URL | Scenario | Viewport | Status | Console/network | Evidence |',
     '| --- | --- | --- | --- | --- | --- |',
     '| Not required. | n/a | n/a | skipped | n/a | existing skip reason |',
+    '',
+    '## PR Status',
+    '',
+    '| PR | Head | Mergeability | CI/check runs | Conflicts | Branch protection | Action taken | Blocker |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
+    '| Not created. | n/a | skipped | skipped | n/a | n/a | none | none |',
     '',
     '## Review Feedback To Rules',
     '',
@@ -378,6 +388,7 @@ test('harness validation requires durable validation records and feature evidenc
     && check.reason.includes('feature_state_policy object')
     && check.reason.includes('validation_priority_policy object')
     && check.reason.includes('web_acceptance_policy object')
+    && check.reason.includes('pr_closeout_policy object')
     && check.reason.includes('valid feature records features[0]')
   ))).toBe(true);
 });

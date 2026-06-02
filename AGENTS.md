@@ -26,6 +26,13 @@ Keep every distributed skill in the standard layout under `skills/<skill-name>/S
    - Define success criteria before broad changes.
    - Verify with the nearest tests and validation gates before handoff.
 
+5. PR closeout is part of delivery.
+   - After creating or updating a pull request, check the remote PR state before declaring the task complete.
+   - Verify mergeability and review the CI/check-run status after the pushed head settles.
+   - If the PR is not clean because of conflicts, failed CI, or another actionable issue, diagnose and resolve it, rerun relevant validation, and push the fix.
+   - Stop and ask the user only when the blocker requires a user decision, credential, permission, reviewer action, protected-branch override, or external service recovery.
+   - Do not merge the PR unless the user explicitly asks for that remote mutation.
+
 ## Personal Distribution Policy
 
 - Do not rewrite imported skill bodies solely for house style, description format, progressive-loading style, or platform-neutral wording.

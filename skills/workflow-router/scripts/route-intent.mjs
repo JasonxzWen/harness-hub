@@ -58,7 +58,7 @@ const STATE_CONFIG = Object.freeze({
     owner: 'delivery-workflow',
     mutationAllowed: true,
     requiredGates: ['clean-unneeded-files', 'test-and-accept', 'deliver-report'],
-    nextGate: 'Verify acceptance and residual risks before declaring done.',
+    nextGate: 'Verify acceptance, PR status when relevant, and residual risks before declaring done.',
     helpers: ['verification-loop', 'effective-interact', 'handoff'],
     effectiveInteract: 'required',
   },
@@ -250,6 +250,23 @@ const SIGNALS = Object.freeze({
     'closeout',
     'accepted',
     'final',
+    'create pr',
+    'open pr',
+    'create pull request',
+    'open pull request',
+    'post-pr',
+    'after pr',
+    'after the pr',
+    'pr status',
+    'pull request status',
+    'mergeability',
+    'mergeable',
+    'merge state',
+    'mergestatestatus',
+    'status checks',
+    'check runs',
+    'ci status',
+    'merge conflict',
     '\u5b8c\u6210',
     '\u6536\u5c3e',
     '\u9a8c\u8bc1',
@@ -257,6 +274,55 @@ const SIGNALS = Object.freeze({
     '\u4ea4\u4ed8',
     '\u53d1\u5e03\u8bf4\u660e',
     '\u603b\u7ed3',
+    '\u63d0pr',
+    '\u63d0 pr',
+    '\u521b\u5efapr',
+    '\u521b\u5efa pr',
+    '\u6253\u5f00pr',
+    '\u6253\u5f00 pr',
+    '\u63d0 pull request',
+    '\u521b\u5efa pull request',
+    '\u63d0\u4ea4pr',
+    '\u63d0\u4ea4 pr',
+    '\u5408\u5e76\u72b6\u6001',
+    '\u53ef\u5408\u5e76',
+    '\u68c0\u67e5\u72b6\u6001',
+    '\u68c0\u67e5\u8fd0\u884c',
+    'ci \u72b6\u6001',
+    '\u5408\u5e76\u51b2\u7a81',
+  ],
+  prCloseout: [
+    'create pr',
+    'open pr',
+    'create pull request',
+    'open pull request',
+    'post-pr',
+    'after pr',
+    'after the pr',
+    'pr status',
+    'pull request status',
+    'mergeability',
+    'mergeable',
+    'merge state',
+    'mergestatestatus',
+    'status checks',
+    'check runs',
+    'ci status',
+    'merge conflict',
+    '\u63d0pr',
+    '\u63d0 pr',
+    '\u521b\u5efapr',
+    '\u521b\u5efa pr',
+    '\u6253\u5f00pr',
+    '\u6253\u5f00 pr',
+    '\u63d0 pull request',
+    '\u521b\u5efa pull request',
+    '\u63d0\u4ea4pr',
+    '\u63d0\u4ea4 pr',
+    '\u5408\u5e76\u72b6\u6001',
+    '\u53ef\u5408\u5e76',
+    'ci \u72b6\u6001',
+    '\u5408\u5e76\u51b2\u7a81',
   ],
   hubMaintenance: [
     'harness hub',
@@ -421,6 +487,7 @@ export function classifyIntent(prompt) {
   const changeSignal = includesAny(text, SIGNALS.sddChange);
   const diagnosisSignal = includesAny(text, SIGNALS.diagnosis);
   const deliverySignal = includesAny(text, SIGNALS.delivery);
+  const prCloseoutSignal = includesAny(text, SIGNALS.prCloseout);
   const hubSignal = includesAny(text, SIGNALS.hubMaintenance);
   const hubActionSignal = includesAny(text, SIGNALS.hubMaintenanceAction);
   const explicitOwner = hasExplicitOwner(text);
@@ -447,6 +514,10 @@ export function classifyIntent(prompt) {
 
   if (explicitOwner) {
     return makeResult(explicitOwner.state, 'high', `The user explicitly referenced ${explicitOwner.owner}.`);
+  }
+
+  if (prCloseoutSignal && !changeSignal) {
+    return makeResult('delivery', 'high', 'The user asked for PR creation, mergeability, CI status, conflict triage, or post-PR closeout.');
   }
 
   if (diagnosisSignal) {

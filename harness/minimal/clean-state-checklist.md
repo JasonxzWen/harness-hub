@@ -14,6 +14,7 @@ Use this checklist before handoff.
 - P1 checks are run or risk-assessed for affected module, integration, system, API, data-flow, or cross-boundary behavior.
 - P2 hardening checks are run or explicitly deferred with a reason.
 - Web browser acceptance records local URL, scenario, viewport, console/network findings, and screenshot or trace evidence when the task touches Web user-visible behavior.
+- PR status is checked and recorded after any PR creation or update, including mergeability, CI/check-run status, conflicts, branch-protection blockers, fixes pushed, validation reruns, and any user/external blocker.
 - Review Feedback To Rules entries are updated when a repeated comment should become a durable harness rule.
 - Repeated review feedback has been promoted to a rule, validation command, or explicit follow-up.
 - Each completed atomic work unit has a verified checkpoint commit when commits are permitted, or the skip reason is recorded.

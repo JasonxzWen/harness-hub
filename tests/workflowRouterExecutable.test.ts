@@ -110,6 +110,7 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   const maintenance = await classify('\u79fb\u9664\u6240\u6709 profile\uff0c\u9ed8\u8ba4\u5168\u91cf\u5b89\u88c5\u5e76\u8986\u76d6\u540c\u540d skill\uff0c\u540c\u65f6\u9a8c\u8bc1 intent classifier \u548c host activation smoke\u3002');
   const pureChineseMaintenance = await classify('\u7ee7\u7eed\u6536\u655b\u6280\u80fd\u8d28\u91cf\u548c\u89e6\u53d1\u8fb9\u754c\uff0c\u8865\u9f50\u53ef\u6267\u884c\u95e8\u7981\u3002');
   const pureChineseDelivery = await classify('\u6536\u5c3e\uff1a\u8fd0\u884c\u9a8c\u8bc1\u3001\u6e05\u7406\u4ea7\u7269\u5e76\u4ea4\u4ed8\u603b\u7ed3\u3002');
+  const prCloseoutDelivery = await classify('\u63d0 PR \u540e\u68c0\u67e5\u5408\u5e76\u72b6\u6001\u548c CI \u72b6\u6001\uff0c\u6709\u51b2\u7a81\u5c31\u5904\u7406\u3002');
 
   expect(review.state).toBe('review');
   expect(review.owner).toBe('review-workflow');
@@ -123,6 +124,8 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   expect(pureChineseMaintenance.owner).toBe('hub-maintenance-workflow');
   expect(pureChineseDelivery.state).toBe('delivery');
   expect(pureChineseDelivery.owner).toBe('delivery-workflow');
+  expect(prCloseoutDelivery.state).toBe('delivery');
+  expect(prCloseoutDelivery.owner).toBe('delivery-workflow');
 });
 
 test('workflow-router modules can be imported without CLI argv', () => {

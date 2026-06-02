@@ -2187,6 +2187,7 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands', 'test', 'verify'], 'Verification command is discoverable'),
       assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/decisions.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md', 'quality-document.md', 'evaluator-rubric.md'], 'State artifacts are routed from instructions'),
       assessmentTextCheck(agents + currentTask, ['P0/P1/P2', 'agent-run browser', 'Web browser acceptance'], 'Validation priority and browser acceptance rules are discoverable'),
+      assessmentTextCheck(agents + currentTask + definitionOfDone, ['PR status', 'mergeability', 'CI/check-run'], 'PR closeout gate is documented'),
     ],
     state: [
       assessmentFileCheck(files, ['feature_list.json', 'feature-list.json'], 'Feature tracker exists'),
@@ -2194,8 +2195,8 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentFileCheck(files, ['.harness-hub/state/decisions.md'], 'Decision log exists'),
       assessmentTextCheck(decisions, ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'], 'Decision log captures rationale and status'),
       assessmentFileCheck(files, ['.harness-hub/state/progress.md'], 'Progress log exists'),
-      assessmentTextCheck(progress, ['Current State', 'Recent Validation', 'Validation Records', 'Runtime Signals', 'Web browser acceptance', 'Review Feedback To Rules', 'Blockers', 'Next'], 'Progress log supports restart'),
-      assessmentTextCheck(handoff, ['Current Status', 'Changed Files', 'Validation Evidence', 'Validation Records', 'Runtime Signals', 'Web browser acceptance', 'Review Feedback To Rules', 'Blockers', 'Next Action'], 'Handoff captures status, files, evidence, blockers, and next action'),
+      assessmentTextCheck(progress, ['Current State', 'Recent Validation', 'Validation Records', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Review Feedback To Rules', 'Blockers', 'Next'], 'Progress log supports restart'),
+      assessmentTextCheck(handoff, ['Current Status', 'Changed Files', 'Validation Evidence', 'Validation Records', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Review Feedback To Rules', 'Blockers', 'Next Action'], 'Handoff captures status, files, evidence, blockers, and next action'),
       assessmentFileCheck(files, ['quality-document.md'], 'Quality snapshot exists'),
       assessmentTextCheck(qualityDocument, ['Quality Snapshot', 'Product Areas', 'P0/P1/P2 validation status', 'Browser acceptance status', 'Architecture Layers', 'Change History'], 'Quality snapshot captures areas, browser acceptance, layers, and history'),
     ],
@@ -2204,7 +2205,7 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands'], 'Verification entrypoint is referenced by the harness'),
       assessmentTextCheck(validationScript, ['process.exit', 'set -e', 'failures'], 'Verification entrypoint can fail the run'),
       assessmentTextCheck(progress + handoff + currentTask, ['Validation Evidence', 'Recent Validation', 'Command', 'Status', 'Passed', 'Failed', 'Evidence', 'Commit'], 'Validation evidence has a durable place to be recorded'),
-      assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'P0', 'P1', 'P2', 'Static', 'Runtime', 'User flow', 'Web browser acceptance', 'Runtime Signals', 'Standard startup path'], 'Static, runtime, startup, user-flow, and priority validation tiers are represented'),
+      assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'P0', 'P1', 'P2', 'Static', 'Runtime', 'User flow', 'Web browser acceptance', 'Runtime Signals', 'Standard startup path', 'PR Status', 'Mergeability', 'CI/check'], 'Static, runtime, startup, user-flow, priority, and PR closeout tiers are represented'),
       assessmentFileCheck(files, ['evaluator-rubric.md'], 'Evaluator rubric exists'),
       assessmentTextCheck(evaluatorRubric, ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Handoff readiness', 'Verdict'], 'Evaluator rubric covers correctness, evidence, scope, reliability, browser acceptance, and handoff readiness'),
       assessmentCheck(project.verificationCommands.length > 0, 'Project verification command is detected', project.verificationCommands),
@@ -2379,8 +2380,9 @@ function assessmentFeatureListCheck(text: string, message: string): HarnessAsses
       && isRecord(parsed.feature_state_policy)
       && isRecord(parsed.validation_priority_policy)
       && isRecord(parsed.web_acceptance_policy)
+      && isRecord(parsed.pr_closeout_policy)
       && isRecord(parsed.parallel_write_policy);
-    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'parallel_write_policy object']);
+    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'parallel_write_policy object']);
   } catch {
     return assessmentCheck(false, message, ['valid JSON']);
   }
@@ -2596,6 +2598,9 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'session-handoff',
     'P0/P1/P2',
     'agent-run browser',
+    'PR status',
+    'mergeability',
+    'CI/check-run',
   ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/.gitignore', ['state/', 'reports/']));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/decisions.md', [
@@ -2618,6 +2623,9 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Commit',
     'Runtime Signals',
     'Web browser acceptance',
+    'PR Status',
+    'Mergeability',
+    'CI/check runs',
     'Review Feedback To Rules',
   ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/session-handoff.md', [
@@ -2632,6 +2640,9 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Commit',
     'Runtime Signals',
     'Web browser acceptance',
+    'PR Status',
+    'Mergeability',
+    'CI/check runs',
     'Review Feedback To Rules',
   ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/current-task.md', [
@@ -2650,6 +2661,9 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Web browser acceptance',
     'agent-run browser',
     'Runtime signals',
+    'PR closeout',
+    'Mergeability',
+    'CI/check-run status',
     'Checkpoint policy',
     'Spec updates',
     'Decision log',
@@ -2663,6 +2677,9 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'P1',
     'P2',
     'Web browser acceptance',
+    'PR status',
+    'mergeability',
+    'CI/check-run',
     'Review Feedback',
     'evaluator-rubric.md',
     'quality-document.md',
@@ -2677,6 +2694,9 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'agent-run browser',
     'Standard startup path',
     'Runtime logs',
+    'PR status',
+    'mergeability',
+    'CI/check-run',
     'evaluator rubric',
     'quality snapshot',
   ]));
@@ -2816,7 +2836,7 @@ function parseSkillDescription(content: string): string | null {
 function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   const relativePath = 'feature_list.json';
   const filePath = path.join(targetDir, relativePath);
-  const evidence = ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'parallel_write_policy object'];
+  const evidence = ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'parallel_write_policy object'];
   if (!fs.existsSync(filePath)) {
     return {
       code: 'structured-content',
@@ -2852,6 +2872,9 @@ function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   }
   if (!isRecord(data) || !isRecord(data.web_acceptance_policy)) {
     missing.push('web_acceptance_policy object');
+  }
+  if (!isRecord(data) || !isRecord(data.pr_closeout_policy)) {
+    missing.push('pr_closeout_policy object');
   }
   if (!isRecord(data) || !isRecord(data.parallel_write_policy)) {
     missing.push('parallel_write_policy object');

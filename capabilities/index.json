@@ -23,6 +23,7 @@
         "feature-state-evidence-policy",
         "validation-priority-policy",
         "web-browser-acceptance-policy",
+        "pr-status-closeout-policy",
         "runtime-signal-capture",
         "evaluator-rubric",
         "quality-snapshot"
@@ -286,13 +287,14 @@
       "source": "local",
       "provides": [
         "delivery-owner-workflow",
-        "validation-handoff-cleanup"
+        "validation-handoff-cleanup",
+        "post-pr-status-triage"
       ],
       "overlapsWith": [
         "skill:verification-loop",
         "skill:effective-interact"
       ],
-      "routing": "Use when accepted work needs validation closeout, cleanup, handoff, release notes, or local environment reset.",
+      "routing": "Use when accepted work needs validation closeout, PR status triage, cleanup, handoff, release notes, or local environment reset.",
       "detects": [
         {
           "path": "skills/delivery-workflow/SKILL.md"
@@ -302,7 +304,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Close accepted work with validation, cleanup, residual-risk notes, and handoff."
+      "recommendation": "Close accepted work with validation, PR mergeability and CI/check-run status when a PR was created or updated, cleanup, residual-risk notes, and handoff."
     },
     "skill:hub-maintenance-workflow": {
       "kind": "skill",
