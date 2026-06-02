@@ -586,6 +586,36 @@
       "risk": "low",
       "recommendation": "General implementation quality."
     },
+    "skill:karpathy-guidelines": {
+      "kind": "skill",
+      "path": "skills/karpathy-guidelines",
+      "version": "0.1.0",
+      "source": "multica-ai/andrej-karpathy-skills",
+      "provides": [
+        "coding-behavior-baseline",
+        "assumption-surfacing",
+        "surgical-change-discipline",
+        "verifiable-success-criteria"
+      ],
+      "overlapsWith": [
+        "skill:coding-standards",
+        "skill:sdd-workflow",
+        "skill:tdd-workflow",
+        "skill:review-workflow",
+        "skill:grill-me"
+      ],
+      "routing": "Use when a workflow-router-selected owner workflow needs a coding behavior baseline for writing, reviewing, or refactoring code; do not use as a top-level owner, requirements workflow, TDD workflow, or code review workflow.",
+      "detects": [
+        {
+          "path": "skills/karpathy-guidelines/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Use as a helper baseline for assumption surfacing, simple implementation, surgical diffs, and verification criteria inside the selected owner workflow."
+    },
     "skill:tdd-workflow": {
       "kind": "skill",
       "path": "skills/tdd-workflow",

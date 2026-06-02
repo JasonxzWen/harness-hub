@@ -1,6 +1,6 @@
 # Workflow Source Dossier
 
-Date: 2026-05-21
+Date: 2026-06-01
 
 This dossier reorganizes the source projects already referenced by this repository around the canonical work lifecycle. It records what to study, what to keep as imported style, what to adapt, what to reject, and what must remain reference-only before maintaining the workflow-router overlay.
 
@@ -32,6 +32,7 @@ The workflow system must serve this order:
 | Harness Hub CLI lifecycle | Implemented and documented locally. | Lock-backed install/status/update/remove and safe cleanup ownership. | Preserve as mandatory distribution and cleanup boundary. |
 | Vercel/Web/React skills | `web-design-guidelines` remains active; other Vercel Web/React skills are source-retained only. | Frontend implementation and UI quality for target repos that need it. | Helper/reference sources only; not top-level lifecycle owners. |
 | Anthropic skills | Selective atoms installed or locally wrapped: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, `slack-gif-creator`. | Provider API, MCP server, skill authoring, doc/comms, visual theme, and Slack GIF atoms. | Helper atoms under owner workflows; document four-pack remains reference-only due licensing. |
+| Karpathy Guidelines | `karpathy-guidelines` installed as a helper baseline. | Coding behavior discipline: state assumptions, keep implementation simple, preserve surgical diffs, and define verifiable success criteria. | Use only under a selected owner workflow; do not let it replace SDD, TDD, review, or pressure-test owners. |
 | Ralph | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` retired on 2026-05-22. | Historical autonomous story-loop reference. | Source evidence only; native Codex and Claude Code goal/story workflows now cover this lane. |
 | Learn Harness / Learn FASTER | Narrow local adaptations. | Historical harness templates and learning lifecycle ideas. | Keep learning coach only; repo harness templates are removed from distribution. |
 
@@ -92,6 +93,7 @@ The workflow system must serve this order:
 | `tdd-workflow` | Write failing tests or deterministic gates before implementation. | TDD must not compete with SDD as top-level workflow. | Embed TDD inside accepted SDD spec. |
 | Matt `tdd` | Reinforces test-first habit. | Rejected by local routing due to overlap with installed TDD/OpenSpec surfaces. | Reference-only; do not install by default. |
 | ECC coding standards | General code quality and conservative edits. | Avoid duplicating root project instructions inside every skill. | Keep as helper/library behavior. |
+| Karpathy Guidelines | Assumption surfacing, anti-overengineering, surgical-change discipline, and explicit verification criteria. | Do not turn a behavioral baseline into another lifecycle owner, and do not import host-specific rule packaging into standard skills. | Install `karpathy-guidelines` as a narrow helper under SDD/TDD/review work. |
 | Anthropic `claude-api`, `mcp-builder`, `skill-creator` | Provider-specific API guidance, MCP server design/eval, and skill authoring patterns. | Avoid copying volatile API tables or host-specific skill-eval runners. | Use explicit helper atoms under SDD or Harness Hub maintenance. |
 | OpenSpec apply | Task-by-task implementation from formal change artifacts. | Explicit formal lifecycle only. | Use when an OpenSpec change already exists. |
 
@@ -119,7 +121,7 @@ The workflow system must serve this order:
 | Decision | Sources | Local behavior |
 |---|---|---|
 | Adopt | Effective Interact, Harness Hub CLI lifecycle, local AGENTS constraints. | Make them high-priority local infrastructure. |
-| Adapt | Matt `grill-me`/`diagnose`/`prototype`, Compound `ce-code-review`, selected Vercel/Web guidance, selected Anthropic atoms. | Keep bounded helper lanes with local routing. |
+| Adapt | Matt `grill-me`/`diagnose`/`prototype`, Compound `ce-code-review`, selected Vercel/Web guidance, selected Anthropic atoms, Karpathy Guidelines. | Keep bounded helper lanes with local routing. |
 | Reference-only | Superpowers full pack, ECC broad system, OpenSpec formal lifecycle, Matt `grill-with-docs`, CE doc review, frontend-slides upstream, Anthropic document four-pack and creative-heavy examples. | Study specific ideas without default installation. |
 | Reject for default | Full Superpowers, full CE plugin, Matt issue/triage/setup flows, side-effect-heavy PR/publish/credential workflows. | Prevent trigger noise and unsafe external actions. |
 

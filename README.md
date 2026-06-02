@@ -30,6 +30,7 @@ See [Personal Workflow Distribution](docs/personal-workflow-distribution.md) for
 
 - Workflow routing and SDD: `workflow-router`, owner workflow skills, `product-capability`, embedded `tdd-workflow`, and `effective-interact` handoffs.
 - Planning and pressure testing: `grill-me`, OpenSpec helpers.
+- Engineering behavior baseline: `karpathy-guidelines` for assumption surfacing, simple implementation, surgical diffs, and verifiable success criteria inside the selected owner workflow.
 - Runtime diagnosis and implementation quality: `diagnose`, `tdd-workflow`, `verification-loop`, `compound-code-review`, `security-review`.
 - Documentation, communication, learning, and handoff: `doc-coauthoring`, `internal-comms`, `stop-slop` for narrow English prose AI-tell cleanup, `documentation-lookup`, `feynman-learning-coach`, `handoff`.
 - Web and artifact workflows: `effective-interact` for complex communication, option approval, status/incident reports, architecture/milestone maps, ignored long-task ledgers, HTML handoffs, and report-only aesthetic preflight; `frontend-design`, `design-taste-frontend`, `clone-website`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`, and browser testing skills cover adjacent UI/artifact lanes.

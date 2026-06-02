@@ -82,7 +82,7 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'complex communication',
     'copyable action items',
     'copyable prompt',
-    'dependency',
+    'dependency map',
     'design system',
     'effective interaction',
     'export editor',
@@ -150,7 +150,7 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'returns 500',
     'root cause',
     'timeout',
-  ]) && !includesAny(text, ['failing test first', 'incident report', 'review artifact']);
+  ]) && !includesAny(text, ['failing behavior test first', 'failing test first', 'incident report', 'review artifact', 'test first']);
   const securitySignal = includesAny(text, [
     'auth',
     'authentication',
@@ -458,7 +458,25 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
   const codingStandardsSignal = includesAny(text, [
     'code quality conventions',
     'coding standards',
+    'cross-project naming',
     'cross-project code quality',
+    'layering conventions',
+  ]);
+  const karpathyGuidelinesSignal = includesAny(text, [
+    'avoid overcomplication',
+    'coding behavior baseline',
+    'karpathy',
+    'simple, surgical',
+    'surgical',
+    'verifiable success',
+  ]) && includesAny(text, [
+    'implementation scope',
+    'owner workflow',
+    'patch',
+    'refactor',
+    'review',
+    'scope',
+    'selected',
   ]);
   const handoffSignal = includesAny(text, [
     'compact this conversation',
@@ -516,6 +534,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
 
   if (codingStandardsSignal && canLoad(metadata, 'coding-standards', ['code quality conventions'])) {
     return 'coding-standards';
+  }
+
+  if (karpathyGuidelinesSignal && canLoad(metadata, 'karpathy-guidelines', ['coding behavior baseline', 'verifiable success'])) {
+    return 'karpathy-guidelines';
   }
 
   if (documentationLookupSignal && canLoad(metadata, 'documentation-lookup', ['current library', 'documentation'])) {
