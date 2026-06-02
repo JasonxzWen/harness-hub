@@ -61,6 +61,34 @@
     "default_tool_boundary": "Use webapp-testing for one-off local acceptance; use e2e-testing only for durable Playwright suites.",
     "safety_boundary": "Do not use production accounts, real payments, or external writes unless explicitly approved."
   },
+  "pr_closeout_policy": {
+    "applies_after": [
+      "PR creation",
+      "PR update",
+      "branch push for review"
+    ],
+    "required_checks": [
+      "PR URL and head commit",
+      "mergeability or merge-state status",
+      "CI/check-run status",
+      "conflict status",
+      "branch-protection blockers"
+    ],
+    "actionable_resolution": [
+      "resolve in-scope conflicts",
+      "fix failing checks that are within the accepted task scope",
+      "rerun relevant validation",
+      "push updates before handoff"
+    ],
+    "stop_conditions": [
+      "user decision",
+      "credential or permission boundary",
+      "reviewer action",
+      "protected-branch override",
+      "external service recovery"
+    ],
+    "merge_boundary": "Do not merge a PR unless the user explicitly requests that remote mutation."
+  },
   "worktree_policy": {
     "write_task_isolation": "Use one git worktree or branch per write task.",
     "code_organization": "Keep source code organized by project architecture, not by agent task folders."

@@ -64,6 +64,19 @@ State the concrete outcome for the active Codex goal.
 - Health checks:
 - Failure messages to preserve:
 
+## PR closeout
+
+- PR expected: yes/no.
+- PR URL:
+- Remote status command:
+- Mergeability:
+- CI/check-run status:
+- Conflict status:
+- Branch-protection blockers:
+- In-scope fix policy: resolve conflicts, failing checks, or other actionable blockers; rerun relevant validation and push updates.
+- Stop policy: ask the user only for decisions, credentials, permissions, reviewer action, protected-branch overrides, or external outages.
+- Merge policy: do not merge unless explicitly requested.
+
 ## Checkpoint policy
 
 - Commits permitted: yes/no.
@@ -91,5 +104,5 @@ State the concrete outcome for the active Codex goal.
 - Update `quality-document.md` when validation evidence changes the quality snapshot.
 - Fill `evaluator-rubric.md` for material implementation or review work.
 - Record validation command status, passed/failed counts when available, output location or summary, and checkpoint commit state.
-- Record standard startup status, runtime signals, and review feedback that should become a rule or follow-up.
+- Record standard startup status, runtime signals, PR status when a PR was created or updated, and review feedback that should become a rule or follow-up.
 - Run `node scripts/harness-validate.mjs`.

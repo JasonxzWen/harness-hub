@@ -88,6 +88,20 @@
       "docsBoundary": "The user asks for acceptance, handoff, cleanup, release notes, validation closeout, or environment reset."
     },
     {
+      "id": "delivery-positive-pr-closeout",
+      "kind": "positive",
+      "prompt": "Open the PR, check mergeability and CI status, resolve conflicts or failing checks if possible, then clean local artifacts.",
+      "expectedState": "delivery",
+      "expectedOwner": "delivery-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "clean-unneeded-files",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks for post-PR status, mergeability, CI/check-run triage, conflict resolution, or branch-protection blocker handling after accepted work has been pushed."
+    },
+    {
       "id": "hub-maintenance-positive-source-dossier",
       "kind": "positive",
       "prompt": "Maintain Harness Hub by evaluating referenced upstream skill repos, updating routing docs, and preserving npm update/remove behavior.",
