@@ -262,6 +262,8 @@ test('confirmed harness init writes lock-managed files and validates', async () 
   expect(fs.existsSync(path.join(targetDir, 'quality-document.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'scripts', 'harness-validate.mjs'))).toBe(true);
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('PR handoff');
+  expect(fs.readFileSync(path.join(targetDir, 'clean-state-checklist.md'), 'utf8')).toContain('PR URL');
 
   const lock = readLock(targetDir);
   expect(lock?.data.schemaVersion).toBe(2);
@@ -435,6 +437,7 @@ test('harness update refreshes stable lock-owned files without overwriting local
 
   expect(result.exitCode).toBe(0);
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toBe('user-owned instructions\n');
+  expect(fs.readFileSync(path.join(targetDir, 'clean-state-checklist.md'), 'utf8')).toContain('PR URL');
   expect(fs.readFileSync(progressPath, 'utf8')).toBe('local progress must stay\n');
   expect(fs.readFileSync(taskPath, 'utf8')).toBe('local current task must stay\n');
   expect(fs.readFileSync(decisionsPath, 'utf8')).toBe('local decisions must stay\n');

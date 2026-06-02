@@ -14,7 +14,8 @@ Use this owner after work has been accepted or implemented and needs closure.
 3. Run agreed validation commands and acceptance checks.
 4. Record failures, skipped checks, and residual risk honestly.
 5. Produce release notes, handoff, or environment cleanup notes as requested.
-6. Use `effective-interact` for material handoffs with changes, evidence, validation, cleanup, and next actions.
+6. When a pull request has been opened or updated, report the PR URL or number, branch, target base, commit, validation status, skipped checks, residual risk, and next action.
+7. Use `effective-interact` for material handoffs with changes, evidence, validation, cleanup, and next actions.
 
 ## Helper Atoms
 
@@ -27,5 +28,6 @@ Use this owner after work has been accepted or implemented and needs closure.
 - Do not start new feature work.
 - Do not hide failed or skipped verification.
 - Do not push, publish, merge, post, or mutate third-party resources unless the user explicitly asks.
+- Do not mark a PR ready, merge it, resolve review threads, or reply on the remote unless the user explicitly asks.
 - Use lock-backed ownership for Harness Hub managed cleanup.
 - Follow `workflow-router/references/orchestration-policy.md` for any subagent verification or advisory hook checks; the main agent owns the final handoff.
