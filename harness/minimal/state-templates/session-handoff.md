@@ -28,6 +28,12 @@
 | --- | --- | --- | --- | --- | --- |
 | Not required yet. | n/a | n/a | skipped | n/a | Fill current task first. |
 
+## PR Status
+
+| PR | Head | Mergeability | CI/check runs | Conflicts | Branch protection | Action taken | Blocker |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Not created yet. | n/a | skipped | skipped | n/a | n/a | none | none |
+
 ## Review Feedback To Rules
 
 - Nothing recorded yet.

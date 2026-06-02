@@ -88,6 +88,7 @@ test('default distributed imported skills have source registry coverage', () => 
     'Leonxlnx/taste-skill': 'Leonxlnx/taste-skill',
     'learn-faster-kit-inspired-local': 'hluaguo/learn-faster-kit',
     'mattpocock-skills-adapted': 'mattpocock/skills',
+    'multica-ai/andrej-karpathy-skills': 'multica-ai/andrej-karpathy-skills',
     openspec: 'Fission-AI/OpenSpec',
     'vercel-agent-skills': 'vercel-labs/agent-skills',
   };

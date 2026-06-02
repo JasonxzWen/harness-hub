@@ -394,6 +394,22 @@
       "docsBoundary": "`coding-standards` loads for cross-project code quality conventions after an owner workflow has selected scope."
     },
     {
+      "id": "karpathy-guidelines-positive-behavior-baseline",
+      "skill": "karpathy-guidelines",
+      "kind": "positive",
+      "prompt": "After sdd-workflow has selected the implementation scope, apply the Karpathy coding guidelines so the patch stays simple, surgical, assumption-aware, and verifiable.",
+      "expectedSkill": "karpathy-guidelines",
+      "docsBoundary": "`karpathy-guidelines` loads after a workflow owner has selected implementation, review, or refactor scope and the agent needs behavior guardrails for assumptions, simplicity, surgical diffs, or verifiable success; it is not a top-level workflow, requirements workflow, TDD workflow, or review workflow."
+    },
+    {
+      "id": "karpathy-guidelines-negative-quality-conventions",
+      "skill": "karpathy-guidelines",
+      "kind": "negative",
+      "prompt": "After scope is selected, review this module against our cross-project naming, dependency, and layering conventions.",
+      "expectedSkill": "coding-standards",
+      "docsBoundary": "`karpathy-guidelines` loads after a workflow owner has selected implementation, review, or refactor scope and the agent needs behavior guardrails for assumptions, simplicity, surgical diffs, or verifiable success; it is not a top-level workflow, requirements workflow, TDD workflow, or review workflow."
+    },
+    {
       "id": "documentation-lookup-positive-current-docs",
       "skill": "documentation-lookup",
       "kind": "positive",
@@ -672,6 +688,14 @@
       "prompt": "Review this auth endpoint only for secrets, injection, and unsafe input handling.",
       "expectedSkill": "security-review",
       "docsBoundary": "`coding-standards` loads for cross-project code quality conventions after an owner workflow has selected scope."
+    },
+    {
+      "id": "karpathy-guidelines-forbidden-test-first-implementation",
+      "skill": "karpathy-guidelines",
+      "kind": "forbidden-load",
+      "prompt": "Fix the duplicate-score sorting bug by writing a failing behavior test first, making it pass, and refactoring after green.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`karpathy-guidelines` loads after a workflow owner has selected implementation, review, or refactor scope and the agent needs behavior guardrails for assumptions, simplicity, surgical diffs, or verifiable success; it is not a top-level workflow, requirements workflow, TDD workflow, or review workflow."
     },
     {
       "id": "documentation-lookup-forbidden-repo-evidence",

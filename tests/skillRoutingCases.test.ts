@@ -25,6 +25,7 @@ const requiredHighOverlapSkills = [
 const optionalDemoSkills = [
   'feynman-learning-coach',
   'coding-standards',
+  'karpathy-guidelines',
   'documentation-lookup',
   'design-taste-frontend',
   'clone-website',

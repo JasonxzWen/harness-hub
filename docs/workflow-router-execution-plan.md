@@ -21,7 +21,7 @@ Every non-trivial change request should move through this order. The implementat
 | 5 | Clean unneeded files | Removal or demotion plan for obsolete skills, docs, generated files, capability entries, or managed assets. | Only approved, owned, lock-backed, or clearly obsolete files are removed; unrelated/user-owned files are preserved. |
 | 6 | Implement | Minimal scoped code, docs, and capability changes following the accepted plan. | Every changed line traces to the accepted spec, cleanup, or test plan. |
 | 7 | Test and accept | Unit/integration/E2E/deterministic checks plus manual acceptance where needed. | The agreed acceptance criteria are satisfied or residual gaps are reported. |
-| 8 | Deliver report | `effective-interact` handoff with changes, evidence, validation, decisions, risks, and next actions. | The user can understand outcome and remaining decisions without reading the whole diff. |
+| 8 | Deliver report | `effective-interact` handoff with changes, evidence, validation, PR status when a PR was created or updated, decisions, risks, and next actions. | The user can understand outcome and remaining decisions without reading the whole diff. |
 
 ## Release Strategy
 
@@ -46,6 +46,7 @@ Implementation status: the router skill, owner skills, routing fixture tests, an
 | Packaging | `capabilities/index.json`, `README.md`, `docs/capability-map.md`, `tests/harnessHub.test.ts` | Single standard skill install set without retired Ralph goal-loop helpers. | Install/status/update/remove remain lock-backed and hash-aware. |
 | Hooks and subagents | `skills/workflow-router/references/orchestration-policy.md`, optional host packaging guidance | Advisory hooks and host-native subagent mappings only after core routing is stable. | No hook dispatches agents or performs remote writes; subagents are parent-workflow controlled. |
 | Handoff artifacts | `skills/effective-interact/assets/fixtures/`, ignored local `reports/` outputs | Fixture JSON is the durable source; generated HTML reports are local inspection outputs for routing choice, SDD alignment, review, and delivery. | Generated artifacts validate with `validate-interaction.mjs --require-browser` when handed off, but HTML outputs are not committed. |
+| PR closeout | `skills/delivery-workflow/`, `docs/skill-routing.md`, `tests/fixtures/workflow-router-cases.json` | Post-PR mergeability, CI/check-run, conflict, branch-protection, and remote blocker triage belongs to delivery after a requested PR is created or updated. | A task is not declared complete on local validation alone when the PR is dirty, failing checks, or blocked by an actionable remote state. |
 
 ## Milestones
 
@@ -219,6 +220,8 @@ Use this order as the default local gate:
 4. `powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExternal`
 5. `bun run validate` when TypeScript, tests, capability metadata, or CLI behavior changes
 6. disposable target smoke tests before publishing install-surface changes
+
+After a requested PR is created or updated, add a remote PR closeout gate: inspect mergeability, CI/check-run status, conflicts, and branch-protection blockers; fix in-scope actionable issues, rerun relevant validation, and push updates before final handoff.
 
 ## Completion Definition
 

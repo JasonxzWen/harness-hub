@@ -18,7 +18,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 | Feature, bug fix, refactor, product/spec change, or implementation request | `sdd-workflow` | Align need, source material, spec, acceptance, executable plan, cleanup, implementation, tests, and delivery before coding. |
 | Failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure report | `diagnosis-workflow` | Reproduce or bound the failure before choosing helper skills. |
 | Code, plan, release, UI, or security review | `review-workflow` | Findings first; do not implement fixes unless redirected. |
-| Validation closeout, cleanup, release notes, or handoff | `delivery-workflow` | Run accepted checks and report residual risk. |
+| Validation closeout, cleanup, release notes, handoff, or post-PR status triage | `delivery-workflow` | Run accepted checks, inspect PR mergeability/CI/conflicts after PR creation or update, resolve actionable blockers, and report residual risk. |
 | Harness Hub source, routing, capability metadata, npm lifecycle, or managed cleanup work | `hub-maintenance-workflow` | Use source records and CLI dry-runs instead of removed broad helper skills. |
 | Plan/design pressure testing before implementation | `grill-me` | Ask one hard question at a time and surface assumptions. |
 | Diagnose runtime bug, failing command, flaky behavior, or performance regression | `diagnose` | `diagnose` owns unknown runtime bugs and performance regressions; use `tdd-workflow` after the behavior is understood. |
@@ -27,6 +27,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 | Deep pre-PR or structured code review | `compound-code-review` | Use `security-review` only for focused security concerns. |
 | Final build, typecheck, lint, and tests before completion | `verification-loop` | Verification gate, not a diagnosis workflow. |
 | Security-sensitive code, auth, secrets, injection, unsafe IO, or payments | `security-review` | Focused checklist and threat review. |
+| Coding behavior baseline for implementation, review, or refactor work after an owner is selected | `karpathy-guidelines` | Helper guardrails for assumptions, simplicity, surgical diffs, and verifiable success; use owner workflows for lifecycle decisions. |
 | Current library/framework/API behavior | `documentation-lookup` | Use current primary docs before implementing. |
 | Claude API or Anthropic SDK implementation, tuning, debugging, or migration | `claude-api` | Provider-specific atom; verify current official docs before code changes and do not use for provider-neutral work. |
 | MCP server design, implementation, review, or evaluation | `mcp-builder` | Use for MCP tool/resource/prompt contracts and external-service server design; ordinary REST clients route elsewhere. |
@@ -54,10 +55,12 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Use `claude-api` only for Anthropic provider work; use `documentation-lookup` for general library/API facts and other providers.
 - Use `mcp-builder` for MCP servers; use `claude-api` for Anthropic API clients and `security-review` when secret/tool-execution risk is central.
 - Use `skill-creator` for standard skill content; `hub-maintenance-workflow` still owns source records, capability metadata, and Harness Hub lifecycle decisions.
+- Use `delivery-workflow` after a requested PR is created or updated to inspect remote PR state, mergeability, CI/check runs, conflicts, and branch-protection blockers; do not treat local validation alone as PR-ready evidence.
 - Use OpenSpec skills only when the user explicitly wants the formal OpenSpec lifecycle.
 - Native goal/story loops are handled by current Codex and Claude Code capabilities; Harness Hub no longer distributes Ralph PRD or loop skills.
 - Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
 - `sdd-workflow` is the default change lane and `tdd-workflow` is an embedded implementation discipline, not a competing owner.
+- Use `karpathy-guidelines` as an engineering behavior baseline under `sdd-workflow`, `tdd-workflow`, or `review-workflow`; use `coding-standards` for cross-project code quality conventions and `grill-me` when the user wants an interview-style pressure test.
 - Do not treat `effective-interact` as a default-considered skill for non-trivial sessions merely because a reply may be long; the trigger is a real communication, alignment, verification, approval, handoff, or continuation need.
 - Use `effective-interact` as the default reporting layer when the agent is about to pause on relatively complex information, especially for material repo or skill change reports that need preserved facts, evidence navigation, validation state, risks, or a continuation handoff.
 - `frontend-slides` remains the deck lane; `effective-interact` may summarize or hand off deck-related findings, but it should not become the slide-generation workflow.
@@ -74,8 +77,10 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere.
 - `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.
 - `verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis.
+- `delivery-workflow` loads for accepted closeout and post-PR status triage, including mergeability, CI/check-run, conflict, branch-protection, and environment cleanup checks; it does not merge or publish unless explicitly requested.
 - `feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions.
 - `coding-standards` loads for cross-project code quality conventions after an owner workflow has selected scope.
+- `karpathy-guidelines` loads after a workflow owner has selected implementation, review, or refactor scope and the agent needs behavior guardrails for assumptions, simplicity, surgical diffs, or verifiable success; it is not a top-level workflow, requirements workflow, TDD workflow, or review workflow.
 - `documentation-lookup` loads when current library, framework, SDK, API, CLI, or cloud-service documentation is needed.
 - `web-artifacts-builder` loads for complex standalone React/Tailwind/shadcn browser artifacts.
 - `frontend-slides` loads for HTML presentations, slide decks, talk or pitch slides, and PPT/PPTX-to-web conversion.
@@ -101,7 +106,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `openspec-apply-change` loads only for implementing or continuing an existing OpenSpec change.
 - `openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes.
 - `hub-maintenance-workflow` loads for maintaining this Harness Hub's source records, installed skill components, routing, npm package boundary, and candidate-source decisions.
-- `claude-api`, `mcp-builder`, `skill-creator`, `source-to-insight-blog`, `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, `slack-gif-creator`, and `clone-website` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
+- `karpathy-guidelines`, `claude-api`, `mcp-builder`, `skill-creator`, `source-to-insight-blog`, `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, `slack-gif-creator`, and `clone-website` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
 
 ## Subagents And Hooks
 

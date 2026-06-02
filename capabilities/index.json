@@ -23,6 +23,7 @@
         "feature-state-evidence-policy",
         "validation-priority-policy",
         "web-browser-acceptance-policy",
+        "pr-status-closeout-policy",
         "runtime-signal-capture",
         "evaluator-rubric",
         "quality-snapshot",
@@ -288,13 +289,14 @@
       "provides": [
         "delivery-owner-workflow",
         "validation-handoff-cleanup",
+        "post-pr-status-triage",
         "pr-closeout-handoff"
       ],
       "overlapsWith": [
         "skill:verification-loop",
         "skill:effective-interact"
       ],
-      "routing": "Use when accepted work needs validation closeout, cleanup, handoff, release notes, or local environment reset.",
+      "routing": "Use when accepted work needs validation closeout, PR status triage, cleanup, handoff, release notes, or local environment reset.",
       "detects": [
         {
           "path": "skills/delivery-workflow/SKILL.md"
@@ -304,7 +306,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Close accepted work and PR updates with validation, cleanup, residual-risk notes, and handoff."
+      "recommendation": "Close accepted work and PR updates with validation, PR mergeability and CI/check-run status, in-scope blocker fixes, cleanup, residual-risk notes, and handoff."
     },
     "skill:hub-maintenance-workflow": {
       "kind": "skill",
@@ -587,6 +589,36 @@
       ],
       "risk": "low",
       "recommendation": "General implementation quality."
+    },
+    "skill:karpathy-guidelines": {
+      "kind": "skill",
+      "path": "skills/karpathy-guidelines",
+      "version": "0.1.0",
+      "source": "multica-ai/andrej-karpathy-skills",
+      "provides": [
+        "coding-behavior-baseline",
+        "assumption-surfacing",
+        "surgical-change-discipline",
+        "verifiable-success-criteria"
+      ],
+      "overlapsWith": [
+        "skill:coding-standards",
+        "skill:sdd-workflow",
+        "skill:tdd-workflow",
+        "skill:review-workflow",
+        "skill:grill-me"
+      ],
+      "routing": "Use when a workflow-router-selected owner workflow needs a coding behavior baseline for writing, reviewing, or refactoring code; do not use as a top-level owner, requirements workflow, TDD workflow, or code review workflow.",
+      "detects": [
+        {
+          "path": "skills/karpathy-guidelines/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Use as a helper baseline for assumption surfacing, simple implementation, surgical diffs, and verification criteria inside the selected owner workflow."
     },
     "skill:tdd-workflow": {
       "kind": "skill",

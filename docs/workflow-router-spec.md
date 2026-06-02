@@ -32,6 +32,8 @@ Harness Hub MUST provide a personal workflow routing overlay where each non-triv
 | Delivery | `delivery-workflow` | The user asks for acceptance, handoff, cleanup, release notes, validation closeout, or environment reset. | Declare done without verification and residual-risk notes. |
 | Harness Hub maintenance | `hub-maintenance-workflow` | The user asks to maintain this hub, evaluate skill sources, adjust routing, or change install/update/remove policy. | Wholesale import another workflow or bypass lock-backed lifecycle rules. |
 
+Post-PR closeout belongs to delivery. The user asks for post-PR status, mergeability, CI/check-run triage, conflict resolution, or branch-protection blocker handling after accepted work has been pushed.
+
 ## Canonical Lifecycle
 
 Every non-trivial change request MUST follow this order unless the selected state is explicitly read-only, such as a pure question or review.
@@ -221,6 +223,15 @@ Workflow changes MUST include:
 - `scripts/validate-skills.ps1 -SkipExternal`,
 - `bun run validate` when TypeScript, tests, capabilities, or CLI behavior change,
 - disposable target smoke tests before install-surface changes.
+
+After a requested PR is created or updated, delivery MUST verify the remote PR state before declaring completion:
+
+- check mergeability or merge-state status after the pushed head settles;
+- inspect CI/check-run status and identify failing checks;
+- resolve in-scope conflicts, CI failures, or other actionable blockers;
+- rerun relevant validation and push updates when the fix changes files;
+- stop only for user decisions, credentials, permissions, reviewer action, protected-branch overrides, or external service recovery;
+- do not merge the PR unless the user explicitly requests that remote mutation.
 
 ### WR-13: Non-Goals
 

@@ -25,6 +25,8 @@ Do not start implementation until the harness is fully landed and the active tas
 - Use read-only parallel work only for research, review, log analysis, or validation.
 - Use P0/P1/P2 validation priorities for implementation tasks: P0 must pass before handoff, P1 is run or risk-assessed for affected boundaries, and P2 is hardening that may be deferred with a reason.
 - For Web user-visible changes, record and run agent-run browser acceptance against the local app before handoff, including URL, scenario, viewport, console or network findings, and screenshot or trace evidence when useful.
+- After creating or updating a PR, treat PR status as a delivery gate: check mergeability, CI/check-run status, conflicts, and branch-protection blockers before declaring done; resolve in-scope blockers, rerun validation, and push updates unless a user decision, credential, permission, reviewer action, protected-branch override, or external outage is required.
+- Do not merge a PR unless the user explicitly asks for that remote mutation.
 - Use verified checkpoint commits for completed atomic work units when the task permits commits. Do not commit failing, unrelated, or half-done work. Record each checkpoint commit hash, or the reason commits were skipped, in progress and handoff state.
 - Promote repeated review feedback into a harness rule, validation command, or documented follow-up instead of relying on memory.
 - After creating or updating a PR, record the PR URL or number, branch, base, commit, validation status, skipped checks, residual risk, and next action in progress and handoff state.
@@ -34,4 +36,4 @@ Do not start implementation until the harness is fully landed and the active tas
 
 ## Required Handoff
 
-Before ending a session, update `.harness-hub/state/session-handoff.md` with the current status, changed files, validation evidence, PR handoff details when relevant, blockers, and the next concrete action. Update `.harness-hub/state/decisions.md` when assumptions, acceptance criteria, allowed paths, validation, user-visible behavior, or risk changed.
+Before ending a session, update `.harness-hub/state/session-handoff.md` with the current status, changed files, validation evidence, PR status and PR handoff details when a PR was created or updated, blockers, and the next concrete action. Update `.harness-hub/state/decisions.md` when assumptions, acceptance criteria, allowed paths, validation, user-visible behavior, or risk changed.

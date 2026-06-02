@@ -1,6 +1,6 @@
 # Source Skill Inventory
 
-Date: 2026-05-28
+Date: 2026-06-01
 
 This inventory records the local refresh of Harness Hub's referenced source repositories after removing `affaan-m/everything-claude-code` from the atomic skill candidate pool. Existing local skill lineage is not rewritten here; this file is only the candidate-source inventory for future atom selection and routing placement.
 
@@ -32,8 +32,9 @@ Scan scope:
 | `Leonxlnx/taste-skill` | `taste-skill` | `3c7017d636c3a4aad378433ea6d0cfa6c921da4a` | 12 |
 | `hardikpandya/stop-slop` | `stop-slop` | `8da1f030185bdfe8471220585162991eaeb970e9` | 1 |
 | `JCodesMore/ai-website-cloner-template` | `ai-website-cloner-template` | `c9b4fea5b257370af339abedad727c8903490dac` | 1 |
+| `multica-ai/andrej-karpathy-skills` | `andrej-karpathy-skills` | `2c606141936f1eeef17fa3043a72095b4765b9c2` | 1 |
 
-Total non-ECC canonical/reference skill surfaces scanned: 153.
+Total non-ECC canonical/reference skill surfaces scanned: 154.
 
 ## Excluded Sources
 
@@ -80,9 +81,16 @@ License/source note: the upstream README states many examples are Apache 2.0, wh
 |---|---|---|
 | `JCodesMore/ai-website-cloner-template` | Installed as explicit-only `clone-website` plus lightweight `harness/website-cloner` scaffold | MIT and provides a strong browser-inspection, component-spec, and validation workflow for authorized site reconstruction. Skill Hub keeps the trigger narrow, excludes host-specific multi-platform metadata, and requires safety, replacement-content, browser evidence, and local validation gates. |
 
+## Karpathy Guidelines Import Decision
+
+| Source | Decision | Reason |
+|---|---|---|
+| `multica-ai/andrej-karpathy-skills` | Installed as `karpathy-guidelines` | The single upstream skill is small, platform-neutral in its body, and matches Harness Hub's engineering discipline: state assumptions, avoid speculative abstractions, keep diffs surgical, and define verifiable success criteria. The local integration narrows frontmatter routing so it acts as a helper baseline under owner workflows rather than a broad top-level lifecycle owner. Host packaging files such as `CLAUDE.md`, `.cursor/rules/`, and `.claude-plugin/` stay out of the distributed skill tree. License evidence comes from README and plugin metadata because no standalone `LICENSE` file was present in the checked snapshot. |
+
 ## Coverage Notes
 
-- After excluding ECC and adding `anthropics/skills`, `taste-skill`, `stop-slop`, and `ai-website-cloner-template`, the candidate pool has 153 scanned surfaces across workflow, SDD, review, debugging, frontend, website reconstruction, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, creative artifacts, and prose cleanup. Ralph remains source-recorded but is retired from installable distribution.
+- After excluding ECC and adding `anthropics/skills`, `taste-skill`, `stop-slop`, `ai-website-cloner-template`, and `andrej-karpathy-skills`, the candidate pool has 154 scanned surfaces across workflow, SDD, review, debugging, frontend, website reconstruction, engineering behavior baselines, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, creative artifacts, and prose cleanup. Ralph remains source-recorded but is retired from installable distribution.
 - The first Anthropic atom pass promoted seven installable skills or local rewrites into `capabilities/index.json`: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator`. The prose pass promoted `stop-slop`; the taste pass promoted `design-taste-frontend` and also changed `effective-interact` references and validator behavior.
+- The Karpathy pass promoted `karpathy-guidelines` as a helper baseline for coding behavior and intentionally avoided importing host-specific rule files or plugin metadata into `skills/`.
 - It does not need to become a general marketplace. Future source expansion should follow recurring personal project needs first.
 - The sustainable direction is to keep Harness Hub's local layer as personal orchestration, routing, lifecycle, provenance, dedupe, and validation; pull atomic skills from upstream only when license, source quality, trigger contract, and personal usefulness pass.

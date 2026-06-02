@@ -10,7 +10,7 @@ Use this taxonomy only to classify the request. Do not execute the work here.
 | sdd-change | asks to add, change, fix, refactor, implement, build, migrate, or alter behavior | `sdd-workflow` |
 | diagnosis | reports a failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure | `diagnosis-workflow` |
 | review | asks to review, audit, assess risk, check security, check UI/UX, or find missing tests without requesting fixes | `review-workflow` |
-| delivery | asks to finish, validate, clean up, hand off, produce release notes, reset local environment, or close accepted work | `delivery-workflow` |
+| delivery | asks to finish, validate, clean up, hand off, produce release notes, reset local environment, open or update a PR, check PR status/mergeability/CI, or close accepted work | `delivery-workflow` |
 | harness-hub-maintenance | asks to maintain Harness Hub, evaluate skill sources, change routing, update capabilities, or preserve install/update/remove lifecycle | `hub-maintenance-workflow` |
 
 ## Ambiguity Rules
