@@ -29,6 +29,7 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.scripts['validate:release']).toContain('bun run validate');
   expect(packageJson.scripts['validate:release']).toContain('bun run build');
   expect(packageJson.scripts['validate:release']).toContain('node bin/harness-hub.mjs --help');
+  expect(packageJson.scripts['validate:release']).toContain('node bin/harness-hub.mjs check . --json');
   expect(packageJson.scripts['validate:release'].match(/node bin\/harness-hub\.mjs --help/g)?.length).toBe(1);
   expect(packageJson.scripts['validate:release']).toContain('npm pack --dry-run');
   expect(packageJson.scripts.validate).toContain('bun run validate:artifact-policy');

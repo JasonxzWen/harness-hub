@@ -10,6 +10,7 @@ import {
   analyzeTarget,
   applyInstall,
   applyHarnessInit,
+  checkHarnessHub,
   getRemovePlan,
   getStatus,
   getUpdatePlan,
@@ -1195,6 +1196,7 @@ test('help lists the full public command surface', async () => {
   const result = await captureCli(['--help']);
 
   expect(result.code).toBe(0);
+  expect(result.stdout).toContain('harness-hub check');
   expect(result.stdout).toContain('harness-hub init-harness');
   expect(result.stdout).toContain('harness-hub insight-generate');
   expect(result.stdout).toContain('harness-hub insight-build');
@@ -1238,6 +1240,95 @@ test('update command supports dry-run json output', async () => {
 
   expect(result.code).toBe(0);
   expect(JSON.parse(result.stdout).updates).toEqual([]);
+});
+
+test('check reports cli package status and target status separately', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-current-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async (packageName, registryBaseUrl) => ({
+      ok: true,
+      latestVersion: '1.0.1',
+      registryUrl: `${registryBaseUrl}/${encodeURIComponent(packageName)}/latest`,
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.cli.state).toBe('update-available');
+  expect(result.cli.currentVersion).toBe('1.0.0');
+  expect(result.cli.latestVersion).toBe('1.0.1');
+  expect(result.cli.recommendedCommand).toContain('bun run build');
+  expect(result.target.state).toBe('current');
+  expect(result.target.current.length).toBeGreaterThan(0);
+  expect(result.target.updates).toEqual([]);
+});
+
+test('check reports target managed component updates without applying them', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-target-update-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+  makeLockComponentStale(targetDir, 'skill:grill-me');
+  const before = fs.readFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), 'utf8');
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.cli.state).toBe('current');
+  expect(result.target.state).toBe('update-available');
+  expect(result.target.updates.map((row) => row.id)).toContain('skill:grill-me');
+  expect(result.target.recommendedCommand).toContain('update');
+  expect(result.target.recommendedCommand).toContain('--dry-run');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), 'utf8')).toBe(before);
+});
+
+test('check is non-blocking when registry is unavailable and target is not managed', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-unavailable-'));
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => {
+      throw new Error('offline');
+    },
+  });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.cli.state).toBe('unavailable');
+  expect(result.cli.message).toContain('offline');
+  expect(result.target.state).toBe('not-managed');
+  expect(result.target.recommendedCommand).toContain('init-harness');
+});
+
+test('check command emits split json and exits zero', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({ version: '99.0.0' }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  })) as unknown as typeof fetch;
+  try {
+    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-cli-'));
+    const result = await captureCli(['check', targetDir, '--json']);
+    const report = JSON.parse(result.stdout);
+
+    expect(result.code).toBe(0);
+    expect(report.cli.latestVersion).toBe('99.0.0');
+    expect(report.cli.state).toBe('update-available');
+    expect(report.target.state).toBe('not-managed');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 async function captureCli(argv: string[]): Promise<{ code: number; stdout: string; stderr: string }> {

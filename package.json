@@ -1,6 +1,6 @@
 {
   "name": "@jasonwen/harness-hub",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Personal repo harness toolkit with lock-backed lifecycle commands.",
   "type": "module",
   "main": "dist/harnessHub.js",
@@ -54,7 +54,7 @@
     "validate:artifact-policy": "bun ./scripts/validate-artifact-policy.ts",
     "validate:skills": "node ./scripts/run-validate-skills.mjs -SkipExternal",
     "validate": "bun run typecheck && bun test ./tests && bun run validate:artifact-policy && bun run validate:skills",
-    "validate:release": "bun run validate && bun run build && node bin/harness-hub.mjs --help && npm pack --dry-run"
+    "validate:release": "bun run validate && bun run build && node bin/harness-hub.mjs --help && node bin/harness-hub.mjs check . --json && npm pack --dry-run"
   },
   "keywords": [
     "agent-harness",

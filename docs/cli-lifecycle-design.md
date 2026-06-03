@@ -4,6 +4,7 @@ The Harness Hub CLI manages a repo-local agent harness lifecycle in target repos
 
 ## Goals
 
+- Keep `check` read-only and non-blocking for startup version checks.
 - Keep `analyze` read-only.
 - Keep `install` limited to standard skill folders in `skills/<name>/`.
 - Keep full Codex dev harness bootstrap explicit through `init-harness`.
@@ -16,6 +17,7 @@ The Harness Hub CLI manages a repo-local agent harness lifecycle in target repos
 ## Commands
 
 ```powershell
+harness-hub check <target> --json
 harness-hub analyze <target> --json
 harness-hub analyze <target> --agent-readiness --harness --json
 harness-hub init-harness <target> --dry-run --json
@@ -35,6 +37,8 @@ harness-hub update <target> --dry-run --json
 harness-hub migrate-lock <target> --dry-run --json
 harness-hub remove <target> --dry-run --json
 ```
+
+`check` is the startup-friendly read-only command. It compares the current `@jasonwen/harness-hub` package version to npm registry latest in a `cli` report section and summarizes the target repository's `.harness-hub/lock.json` managed-component freshness in a separate `target` section. It does not install packages, apply `update`, rewrite locks, or fail startup because of update availability, missing locks, or registry unavailability.
 
 `--target standard` is the supported skill install target. `install` always selects the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json`. The implementation still stores the selected target in existing `agents` lock fields for schema continuity, but the value is the personal default distribution.
 
@@ -86,5 +90,6 @@ powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExtern
 bun run validate:artifact-policy
 bun run build
 node bin/harness-hub.mjs --help
+node bin/harness-hub.mjs check . --json
 npm pack --dry-run
 ```

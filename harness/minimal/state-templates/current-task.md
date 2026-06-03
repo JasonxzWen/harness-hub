@@ -80,7 +80,9 @@ State the concrete outcome for the active Codex goal.
 
 ## Standard startup path
 
-- Add the command or steps that prove the project can restart from a clean checkout.
+- Run `harness-hub check . --json` as a read-only Harness Hub startup check; if the command is unavailable, use `npx @jasonwen/harness-hub@latest check . --json`.
+- Treat `cli.update-available`, `target.update-available`, `target.not-managed`, and `cli.unavailable` as advisory unless this task explicitly includes updating Harness Hub.
+- Add the project command or steps that prove the project can restart from a clean checkout.
 
 ## Validation commands
 

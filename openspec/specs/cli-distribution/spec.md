@@ -19,11 +19,31 @@ The system SHALL document the stable lifecycle commands and their side effects.
 
 #### Scenario: Help lists lifecycle commands
 - **WHEN** the user runs `harness-hub --help`
-- **THEN** help output includes `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update --dry-run`, `update --yes`, `update --force --yes`, `update --component <id>`, `migrate-lock`, `remove`, `components`, and the `insight-*` commands
+- **THEN** help output includes `check`, `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update --dry-run`, `update --yes`, `update --force --yes`, `update --component <id>`, `migrate-lock`, `remove`, `components`, and the `insight-*` commands
 
 #### Scenario: Documentation distinguishes read-only and mutating commands
 - **WHEN** the user reads README command examples
-- **THEN** the docs identify `analyze`, `status`, `update --dry-run`, and `migrate-lock --dry-run` as read-only and `install`, `update --yes`, `update --force --yes`, `migrate-lock --yes`, and `remove` as mutating
+- **THEN** the docs identify `check`, `analyze`, `status`, `update --dry-run`, and `migrate-lock --dry-run` as read-only and `install`, `update --yes`, `update --force --yes`, `migrate-lock --yes`, and `remove` as mutating
+
+### Requirement: Startup version checks are read-only and non-blocking
+The system SHALL provide a startup-friendly check command that reports Harness Hub CLI package freshness and target repository managed-component freshness without applying updates.
+
+#### Scenario: Check reports CLI and target status separately
+- **WHEN** the user runs `harness-hub check <target> --json`
+- **THEN** the JSON report includes a `cli` section for the `@jasonwen/harness-hub` npm package version
+- **AND** the JSON report includes a `target` section for the target repository `.harness-hub/lock.json` managed-component state
+
+#### Scenario: Check uses npm registry as CLI authority
+- **WHEN** `harness-hub check <target> --json` can reach npm registry metadata
+- **THEN** the `cli` section compares the current package version to npm latest and reports `current` or `update-available`
+
+#### Scenario: Check does not mutate target files
+- **WHEN** target managed components are stale, modified, missing, or blocked
+- **THEN** `harness-hub check <target> --json` reports the state and recommended follow-up command without copying files, deleting files, rewriting `.harness-hub/lock.json`, or installing packages
+
+#### Scenario: Check remains non-blocking when unavailable
+- **WHEN** npm registry metadata is unavailable or the target repository has no Harness Hub lock
+- **THEN** `harness-hub check <target> --json` exits with code 0 and reports `unavailable` or `not-managed` in the relevant section
 
 ### Requirement: Release readiness validation
 The system SHALL provide a repeatable validation path before publishing a package.
