@@ -612,6 +612,60 @@ export interface HarnessHubStatus {
   rows: StatusRow[];
 }
 
+export type HarnessHubCheckState =
+  | 'current'
+  | 'update-available'
+  | 'not-managed'
+  | 'attention-required'
+  | 'unavailable';
+
+export interface HarnessHubCliCheck {
+  state: Exclude<HarnessHubCheckState, 'not-managed' | 'attention-required'>;
+  packageName: string;
+  currentVersion: string;
+  latestVersion: string | null;
+  installMethod: 'npm' | 'source' | 'unknown';
+  registryUrl: string;
+  checkedAt: string;
+  message: string;
+  recommendedCommand: string | null;
+  evidence: string[];
+}
+
+export interface HarnessHubTargetCheck {
+  state: HarnessHubCheckState;
+  targetDir: string;
+  lockPath: string | null;
+  current: StatusRow[];
+  updates: StatusRow[];
+  blockers: StatusRow[];
+  forceOverridable: StatusRow[];
+  modified: StatusRow[];
+  missing: StatusRow[];
+  skipped: StatusRow[];
+  unknown: StatusRow[];
+  recommendedCommand: string | null;
+  message: string;
+  evidence: string[];
+}
+
+export interface HarnessHubCheckResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  exitCode: 0;
+  hubVersion: string;
+  cli: HarnessHubCliCheck;
+  target: HarnessHubTargetCheck;
+  reason: string;
+}
+
+interface LatestPackageVersionResult {
+  ok: boolean;
+  latestVersion: string | null;
+  registryUrl: string;
+  reason: string;
+}
+
 interface CliOptions {
   command: string;
   targetDir: string | null;
@@ -652,6 +706,13 @@ interface UpdatePlanOptions extends StatusOptions {
 interface UpdateApplyOptions extends UpdatePlanOptions {
   dryRun?: boolean;
   yes?: boolean;
+}
+
+interface CheckOptions extends StatusOptions {
+  packageName?: string;
+  currentVersion?: string;
+  registryBaseUrl?: string;
+  latestVersionResolver?: (packageName: string, registryBaseUrl: string) => Promise<LatestPackageVersionResult>;
 }
 
 interface MigrateLockOptions extends StatusOptions {
@@ -2590,6 +2651,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Codex',
     'Initialization Gate',
     'harness-validate.mjs',
+    'harness-hub check',
     'current-task.md',
     'checkpoint commit',
     'quality snapshot',
@@ -2653,6 +2715,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Forbidden paths',
     'Acceptance criteria',
     'Standard startup path',
+    'harness-hub check',
     'Validation commands',
     'Validation tiers',
     'P0',
@@ -2672,6 +2735,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
   ]));
   checks.push(validateFileContains(targetDir, 'clean-state-checklist.md', [
     'Standard startup path',
+    'harness-hub check',
     'Runtime signals',
     'P0',
     'P1',
@@ -2693,6 +2757,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'P2',
     'agent-run browser',
     'Standard startup path',
+    'harness-hub check',
     'Runtime logs',
     'PR status',
     'mergeability',
@@ -4608,6 +4673,355 @@ export function getStatus(options: StatusOptions = {}): HarnessHubStatus {
   };
 }
 
+export async function checkHarnessHub(options: CheckOptions = {}): Promise<HarnessHubCheckResult> {
+  const generatedAt = new Date().toISOString();
+  const hubRoot = options.hubRoot || HUB_ROOT;
+  const index = options.index || readCapabilityIndex(hubRoot);
+  const packageJson = readHarnessHubPackageJson(hubRoot);
+  const packageName = options.packageName || packageJson.name || '@jasonwen/harness-hub';
+  const currentVersion = options.currentVersion || packageJson.version || '0.0.0';
+  const registryBaseUrl = options.registryBaseUrl || 'https://registry.npmjs.org';
+  const latestVersionResult = await resolveLatestPackageVersion(packageName, registryBaseUrl, options.latestVersionResolver);
+  const cli = buildCliCheck({
+    packageName,
+    currentVersion,
+    latestVersionResult,
+    hubRoot,
+    checkedAt: generatedAt,
+  });
+  const target = buildTargetCheck({
+    targetDir: options.targetDir || process.cwd(),
+    index,
+  });
+  const reason = [
+    `CLI ${cli.state}: ${cli.message}`,
+    `Target ${target.state}: ${target.message}`,
+  ].join(' ');
+
+  return {
+    schemaVersion: 1,
+    generatedAt,
+    exitCode: 0,
+    hubVersion: index.version,
+    cli,
+    target,
+    reason,
+  };
+}
+
+function readHarnessHubPackageJson(hubRoot: string): { name?: string; version?: string } {
+  const packagePath = path.join(hubRoot, 'package.json');
+  if (!fs.existsSync(packagePath)) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as { name?: unknown; version?: unknown };
+    return {
+      name: typeof parsed.name === 'string' ? parsed.name : undefined,
+      version: typeof parsed.version === 'string' ? parsed.version : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function resolveLatestPackageVersion(
+  packageName: string,
+  registryBaseUrl: string,
+  resolver: CheckOptions['latestVersionResolver'],
+): Promise<LatestPackageVersionResult> {
+  if (resolver) {
+    try {
+      return await resolver(packageName, registryBaseUrl);
+    } catch (error) {
+      return {
+        ok: false,
+        latestVersion: null,
+        registryUrl: npmLatestRegistryUrl(packageName, registryBaseUrl),
+        reason: `Registry check failed: ${errorMessage(error)}.`,
+      };
+    }
+  }
+
+  return fetchLatestPackageVersion(packageName, registryBaseUrl);
+}
+
+async function fetchLatestPackageVersion(packageName: string, registryBaseUrl: string): Promise<LatestPackageVersionResult> {
+  const registryUrl = npmLatestRegistryUrl(packageName, registryBaseUrl);
+  if (typeof fetch !== 'function') {
+    return {
+      ok: false,
+      latestVersion: null,
+      registryUrl,
+      reason: 'Global fetch is unavailable in this Node runtime.',
+    };
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(registryUrl, {
+      headers: { accept: 'application/json' },
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      return {
+        ok: false,
+        latestVersion: null,
+        registryUrl,
+        reason: `Registry returned HTTP ${response.status}.`,
+      };
+    }
+    const payload = await response.json() as { version?: unknown };
+    if (typeof payload.version !== 'string' || payload.version.trim().length === 0) {
+      return {
+        ok: false,
+        latestVersion: null,
+        registryUrl,
+        reason: 'Registry response did not include a package version.',
+      };
+    }
+    return {
+      ok: true,
+      latestVersion: payload.version,
+      registryUrl,
+      reason: 'Registry latest version resolved.',
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      latestVersion: null,
+      registryUrl,
+      reason: `Registry check failed: ${errorMessage(error)}.`,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function npmLatestRegistryUrl(packageName: string, registryBaseUrl: string): string {
+  const packagePath = encodeURIComponent(packageName).replace(/^%40/, '@');
+  return `${registryBaseUrl.replace(/\/+$/, '')}/${packagePath}/latest`;
+}
+
+function buildCliCheck({
+  packageName,
+  currentVersion,
+  latestVersionResult,
+  hubRoot,
+  checkedAt,
+}: {
+  packageName: string;
+  currentVersion: string;
+  latestVersionResult: LatestPackageVersionResult;
+  hubRoot: string;
+  checkedAt: string;
+}): HarnessHubCliCheck {
+  const installMethod = detectHarnessHubInstallMethod(hubRoot);
+  if (!latestVersionResult.ok || !latestVersionResult.latestVersion) {
+    return {
+      state: 'unavailable',
+      packageName,
+      currentVersion,
+      latestVersion: null,
+      installMethod,
+      registryUrl: latestVersionResult.registryUrl,
+      checkedAt,
+      message: latestVersionResult.reason,
+      recommendedCommand: null,
+      evidence: [latestVersionResult.registryUrl],
+    };
+  }
+
+  const latestVersion = latestVersionResult.latestVersion;
+  const updateAvailable = compareVersions(latestVersion, currentVersion) > 0;
+  return {
+    state: updateAvailable ? 'update-available' : 'current',
+    packageName,
+    currentVersion,
+    latestVersion,
+    installMethod,
+    registryUrl: latestVersionResult.registryUrl,
+    checkedAt,
+    message: updateAvailable
+      ? `${packageName} ${currentVersion} -> ${latestVersion} available.`
+      : `${packageName} ${currentVersion} is current against npm latest ${latestVersion}.`,
+    recommendedCommand: updateAvailable
+      ? recommendedCliUpdateCommand(packageName, latestVersion, installMethod)
+      : null,
+    evidence: [latestVersionResult.registryUrl],
+  };
+}
+
+function detectHarnessHubInstallMethod(hubRoot: string): HarnessHubCliCheck['installMethod'] {
+  const normalized = path.resolve(hubRoot).toLowerCase();
+  if (normalized.includes(`${path.sep}node_modules${path.sep}`.toLowerCase())) {
+    return 'npm';
+  }
+  if (fs.existsSync(path.join(hubRoot, '.git'))) {
+    return 'source';
+  }
+  return 'unknown';
+}
+
+function recommendedCliUpdateCommand(
+  packageName: string,
+  latestVersion: string,
+  installMethod: HarnessHubCliCheck['installMethod'],
+): string {
+  if (installMethod === 'source') {
+    return 'git pull && bun install && bun run build';
+  }
+  return `npm install -g ${packageName}@${latestVersion}`;
+}
+
+function buildTargetCheck({
+  targetDir,
+  index,
+}: {
+  targetDir: string;
+  index: CapabilityIndex;
+}): HarnessHubTargetCheck {
+  const resolvedTarget = path.resolve(targetDir);
+  const status = getStatus({ targetDir: resolvedTarget, index });
+  if (!status.lock) {
+    return {
+      state: 'not-managed',
+      targetDir: resolvedTarget,
+      lockPath: null,
+      current: [],
+      updates: [],
+      blockers: [],
+      forceOverridable: [],
+      modified: [],
+      missing: [],
+      skipped: [],
+      unknown: [],
+      recommendedCommand: `harness-hub init-harness "${resolvedTarget}" --dry-run --json`,
+      message: 'No Harness Hub lock found for this target.',
+      evidence: ['.harness-hub/lock.json'],
+    };
+  }
+
+  let updatePlan: UpdatePlan;
+  try {
+    updatePlan = getUpdatePlan({ targetDir: resolvedTarget, index });
+  } catch (error) {
+    return {
+      state: 'attention-required',
+      targetDir: resolvedTarget,
+      lockPath: status.lock.path,
+      current: status.current,
+      updates: status.updates,
+      blockers: [{
+        id: 'target',
+        version: status.lock.data.schemaVersion === 2 ? status.lock.data.hubVersion : status.lock.data.hubVersion,
+        latestVersion: null,
+        agent: 'standard',
+        dest: '.harness-hub/lock.json',
+        state: 'unknown-component',
+        evidence: ['.harness-hub/lock.json'],
+        reason: errorMessage(error),
+        exists: true,
+      }],
+      forceOverridable: [],
+      modified: status.modified,
+      missing: status.missing,
+      skipped: status.skipped,
+      unknown: status.unknown,
+      recommendedCommand: `harness-hub status "${resolvedTarget}" --json`,
+      message: `Target status requires attention: ${errorMessage(error)}.`,
+      evidence: [status.lock.path],
+    };
+  }
+
+  const hasDrift = status.modified.length > 0 || status.missing.length > 0 || status.unknown.length > 0;
+  const hasUpdateBlockers = updatePlan.blockers.length > 0;
+  const hasUpdates = updatePlan.updates.length > 0;
+  const state: HarnessHubTargetCheck['state'] = hasDrift || hasUpdateBlockers
+    ? 'attention-required'
+    : hasUpdates
+      ? 'update-available'
+      : 'current';
+  const message = targetCheckMessage({ state, status, updatePlan });
+
+  return {
+    state,
+    targetDir: resolvedTarget,
+    lockPath: status.lock.path,
+    current: status.current,
+    updates: updatePlan.updates,
+    blockers: updatePlan.blockers,
+    forceOverridable: updatePlan.forceOverridable,
+    modified: status.modified,
+    missing: status.missing,
+    skipped: status.skipped,
+    unknown: status.unknown,
+    recommendedCommand: targetRecommendedCommand(state, resolvedTarget),
+    message,
+    evidence: [status.lock.path],
+  };
+}
+
+function targetCheckMessage({
+  state,
+  status,
+  updatePlan,
+}: {
+  state: HarnessHubTargetCheck['state'];
+  status: HarnessHubStatus;
+  updatePlan: UpdatePlan;
+}): string {
+  if (state === 'attention-required') {
+    const drift = [
+      status.modified.length > 0 ? `${status.modified.length} modified` : '',
+      status.missing.length > 0 ? `${status.missing.length} missing` : '',
+      status.unknown.length > 0 ? `${status.unknown.length} unknown` : '',
+      updatePlan.blockers.length > 0 ? `${updatePlan.blockers.length} update blockers` : '',
+    ].filter(Boolean).join(', ');
+    return `Target managed components require attention: ${drift}.`;
+  }
+  if (state === 'update-available') {
+    return `${updatePlan.updates.length} target managed component updates available.`;
+  }
+  return `${status.current.length} target managed components are current.`;
+}
+
+function targetRecommendedCommand(state: HarnessHubTargetCheck['state'], targetDir: string): string | null {
+  if (state === 'update-available') {
+    return `harness-hub update "${targetDir}" --dry-run --json`;
+  }
+  if (state === 'attention-required') {
+    return `harness-hub status "${targetDir}" --json`;
+  }
+  return null;
+}
+
+function compareVersions(left: string, right: string): number {
+  const leftParts = parseVersionParts(left);
+  const rightParts = parseVersionParts(right);
+  const length = Math.max(leftParts.length, rightParts.length);
+  for (let index = 0; index < length; index += 1) {
+    const diff = (leftParts[index] || 0) - (rightParts[index] || 0);
+    if (diff !== 0) {
+      return diff;
+    }
+  }
+  return left.localeCompare(right);
+}
+
+function parseVersionParts(version: string): number[] {
+  return version
+    .split(/[.-]/)
+    .map((part) => Number.parseInt(part, 10))
+    .filter((part) => Number.isFinite(part));
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export function getRemovePlan(targetDirInput: string, options: { force?: boolean } = {}): RemoveResult {
   const targetDir = path.resolve(targetDirInput);
   const lock = readLock(targetDir);
@@ -5541,6 +5955,14 @@ async function runCliInner(argv: string[]): Promise<number> {
     return 0;
   }
 
+  if (options.command === 'check') {
+    const result = await checkHarnessHub({
+      targetDir: options.targetDir || undefined,
+    });
+    emitReport(renderLifecycleReport('Harness Hub Check Report', result, options), options);
+    return result.exitCode;
+  }
+
   if (options.command === 'analyze') {
     const analysis = analyzeTarget({
       targetDir: options.targetDir || undefined,
@@ -5698,7 +6120,7 @@ async function runCliInner(argv: string[]): Promise<number> {
 
 function renderLifecycleReport(
   title: string,
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | HarnessHubCheckResult | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
   options: CliOptions,
 ): string {
   if (options.json) {
@@ -5719,8 +6141,29 @@ function renderLifecycleReport(
 }
 
 function rowsForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | HarnessHubCheckResult | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): HtmlRow[] {
+  if ('cli' in data && 'target' in data) {
+    return [
+      {
+        id: data.cli.packageName,
+        state: data.cli.state,
+        dest: data.cli.message,
+        version: data.cli.currentVersion,
+        latestVersion: data.cli.latestVersion,
+      },
+      {
+        id: 'target',
+        state: data.target.state,
+        dest: data.target.message,
+        version: data.target.lockPath || '',
+        latestVersion: data.target.recommendedCommand,
+      },
+      ...data.target.updates.map((row) => ({ ...row, state: 'update-available' })),
+      ...data.target.blockers.map((row) => ({ ...row, state: row.state })),
+    ];
+  }
+
   if ('checks' in data && 'assessment' in data) {
     return [
       {
@@ -5964,8 +6407,12 @@ function rowsForLifecycleData(
 }
 
 function summaryForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | HarnessHubCheckResult | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
 ): string {
+  if ('cli' in data && 'target' in data) {
+    return data.reason;
+  }
+
   if ('checks' in data && 'assessment' in data) {
     const failed = data.checks.filter((check) => check.state === 'fail').length;
     return `${data.checks.length - failed} passed, ${failed} failed. Assessment ${data.assessment.overall}/100, bottleneck ${data.assessment.bottleneck}. Benchmark ${data.benchmark.score}/100. ${data.reason}`;
@@ -6093,6 +6540,7 @@ function printHelp() {
   console.log(`Harness Hub
 
 Usage:
+  harness-hub check [target] [--json|--html] [--output file]
   harness-hub analyze [target] [--target standard] [--agent-readiness] [--harness] [--json|--html] [--output file]
   harness-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
   harness-hub validate-harness [target] [--json|--html] [--output file]
@@ -6109,6 +6557,7 @@ Usage:
   harness-hub components
 
 Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
+Use check for read-only startup version checks: CLI package status and target managed-component status are reported separately.
 Install selects every standard skill component and overwrites same-name skill directories by default.
 Use init-harness for Codex-only dev bootstrap: standard skills plus root harness files.
 validate-harness includes minimal checks, five-subsystem assessment, and a structural benchmark.

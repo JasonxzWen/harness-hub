@@ -29,6 +29,7 @@ flowchart TD
 
 | Command | Mutates target? | Purpose |
 |---|---:|---|
+| `harness-hub check <target>` | No | Report CLI package freshness and target lock-managed component freshness separately without applying updates. |
 | `harness-hub analyze <target>` | No | Detect existing standard skills, missing capabilities, conflicts, and recommendations. |
 | `harness-hub analyze <target> --harness` | No | Detect repo harness gaps, existing root harness evidence, and initialization recommendations. |
 | `harness-hub init-harness <target> --dry-run` | No | Preview root harness initialization without writing files or lock state. |

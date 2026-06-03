@@ -112,6 +112,7 @@ Use `docs/skill-quality-guide.md` as the quality bar for authoring, importing, r
 
 Use these verbs for target-repo lifecycle work:
 
+- `harness-hub check <target> --json`
 - `harness-hub analyze <target> --json`
 - `harness-hub analyze <target> --agent-readiness --harness --json`
 - `harness-hub init-harness <target> --dry-run --json`
@@ -125,10 +126,12 @@ Use these verbs for target-repo lifecycle work:
 - `harness-hub remove <target> --dry-run --json`
 
 `install` remains the standard skill install command and must not create root harness files. `init-harness` owns root harness initialization and must stay dry-run/confirmation guarded.
+`check` is read-only startup guidance: it reports CLI and target managed-component freshness separately and must not auto-update either layer.
 
 Harness initialization is a hard gate for target repositories:
 - Use `init-harness`, not `install`, when root harness files are needed.
 - Do not start implementation in a target repo until `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, and `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}` exist.
+- Run `harness-hub check <target> --json` during startup and treat update availability, missing locks, and registry unavailability as non-blocking advisory output unless the task explicitly asks to update.
 - Fill `.harness-hub/state/current-task.md` with goal, non-goals, allowed paths, forbidden paths, acceptance criteria, validation commands, and checkpoint policy before coding.
 - Run `node scripts/harness-validate.mjs` or `harness-hub validate-harness <target> --json`; fix harness failures before product edits.
 - Record validation command status, passed/failed counts when available, evidence, and checkpoint commit state in progress and handoff state.

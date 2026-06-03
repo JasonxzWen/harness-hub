@@ -6,7 +6,7 @@
       "kind": "harness-template",
       "path": "harness/minimal",
       "dest": ".",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "source": "local",
       "provides": [
         "repo-harness-initialization",

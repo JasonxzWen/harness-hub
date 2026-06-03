@@ -75,6 +75,7 @@ bun run validate
 bun run bootstrap:codex-skills
 
 npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --harness --json
+npx @jasonwen/harness-hub check D:\path\to\target --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
@@ -93,6 +94,8 @@ npx @jasonwen/harness-hub insight-build . --json
 npx @jasonwen/harness-hub insight-validate . --json
 npx @jasonwen/harness-hub insight-publish . --dry-run --json
 ```
+
+`check` is a read-only startup check. It reports the released CLI package status from npm registry in `cli` and the target repository's lock-managed component status in `target`; update availability, registry failures, and missing locks are advisory and do not apply updates or block the agent startup path.
 
 ## What Is Included
 

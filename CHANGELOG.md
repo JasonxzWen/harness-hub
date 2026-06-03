@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.12 - 2026-06-03
+
+- Add read-only `harness-hub check <target> --json` startup checks with separate `cli` and `target` sections.
+- Report npm registry CLI freshness and target lock-managed component freshness without applying updates or blocking startup.
+- Add the check command to the minimal root harness standard startup path and bump `harness:minimal` to `0.5.2`.
+
 ## 0.1.11 - 2026-05-29
 
 - Keep Harness Hub minimal-only: document the single `init-harness --target standard` migration path, including npm and source-clone bootstrap instructions.

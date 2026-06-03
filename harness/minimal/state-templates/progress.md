@@ -35,7 +35,8 @@
 
 | Signal | Status | Evidence | Follow-up |
 | --- | --- | --- | --- |
-| Standard startup path | not run | No startup evidence recorded yet. | Fill current task first. |
+| Harness Hub startup check | not run | No `harness-hub check . --json` evidence recorded yet. | Fill current task first. |
+| Standard startup path | not run | No project startup evidence recorded yet. | Fill current task first. |
 
 ## Web browser acceptance
 
