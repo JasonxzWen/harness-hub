@@ -40,7 +40,7 @@ async function classify(prompt: string): Promise<RouteResult> {
 
 function runRoute(scriptPath: string, prompt: string): RouteResult {
   const output = execFileSync(process.execPath, [
-    scriptPath,
+    path.resolve(scriptPath),
     '--prompt',
     prompt,
     '--json',
@@ -51,6 +51,52 @@ function runRoute(scriptPath: string, prompt: string): RouteResult {
   return JSON.parse(output) as RouteResult;
 }
 
+function makeTempDir(prefix = 'harness-hub-workflow-check-') {
+  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+}
+
+function writeAlignedCurrentTask(targetDir: string) {
+  const taskPath = path.join(targetDir, '.harness-hub', 'state', 'current-task.md');
+  fs.mkdirSync(path.dirname(taskPath), { recursive: true });
+  fs.writeFileSync(taskPath, [
+    '# Current Task',
+    '',
+    '## Goal',
+    '',
+    'Implement settings validation.',
+    '',
+    '## Non-goals',
+    '',
+    '- Do not change unrelated settings.',
+    '',
+    '## Allowed paths',
+    '',
+    '- src/settings.ts',
+    '- tests/settings.test.ts',
+    '',
+    '## Forbidden paths',
+    '',
+    '- production secrets',
+    '',
+    '## Target spec',
+    '',
+    '- Invalid settings return actionable errors.',
+    '',
+    '## Acceptance criteria',
+    '',
+    '- Invalid settings fail validation.',
+    '- Valid settings pass validation.',
+    '',
+    '## Test matrix',
+    '',
+    '| Priority | Test type | Behavior or boundary | Command or method | Expected RED | Expected GREEN | Evidence |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+    '| P0 | Unit | settings validation | bun test ./tests/settings.test.ts | failing validation case | passing validation case | pending |',
+    '',
+  ].join('\n'));
+  return taskPath;
+}
+
 function runWorkflowCheck(scriptPath: string, args: string[]): {
   route: RouteResult;
   advisory: { ok: boolean; warnings: Array<{ id: string }>; mutates: boolean };
@@ -58,8 +104,8 @@ function runWorkflowCheck(scriptPath: string, args: string[]): {
   mutates: boolean;
   dispatchesSubagents: boolean;
 } {
-  const output = execFileSync(process.execPath, [scriptPath, ...args, '--json'], {
-    cwd: process.cwd(),
+  const output = execFileSync(process.execPath, [path.resolve(scriptPath), ...args, '--json'], {
+    cwd: makeTempDir(),
     encoding: 'utf8',
   });
   return JSON.parse(output) as {
@@ -102,6 +148,48 @@ test('workflow-router executable classifier matches routing fixture owners', asy
     expect(result.mutationAllowed).toBe(entry.mutationAllowed);
     expect(result.requiredGates).toEqual(entry.requiredGates);
   }
+});
+
+test('workflow-check CLI matches routing fixtures and stays side-effect free', () => {
+  const fixture = JSON.parse(fs.readFileSync('tests/fixtures/workflow-router-cases.json', 'utf8')) as {
+    cases: Array<{
+      prompt: string;
+      expectedState: string;
+      expectedOwner: string | null;
+      mutationAllowed: boolean;
+      requiredGates: string[];
+    }>;
+  };
+
+  for (const entry of fixture.cases) {
+    const result = runWorkflowCheck(workflowCheckScript, ['--prompt', entry.prompt]);
+
+    expect(result.route.state).toBe(entry.expectedState);
+    expect(result.route.owner).toBe(entry.expectedOwner);
+    expect(result.route.mutationAllowed).toBe(entry.mutationAllowed);
+    expect(result.route.requiredGates).toEqual(entry.requiredGates);
+    expect(result.mutates).toBe(false);
+    expect(result.dispatchesSubagents).toBe(false);
+    expect(result.advisory.mutates).toBe(false);
+  }
+});
+
+test('workflow check can hydrate advisory gates from an explicit current-task path', () => {
+  const targetDir = makeTempDir('harness-hub-workflow-current-task-');
+  const currentTaskPath = writeAlignedCurrentTask(targetDir);
+  const result = runWorkflowCheck(workflowCheckScript, [
+    '--prompt',
+    'Implement the accepted settings validation change with tests.',
+    '--phase',
+    'pre-implementation',
+    '--current-task',
+    currentTaskPath,
+  ]);
+
+  expect(result.route.state).toBe('sdd-change');
+  expect(result.advisory.ok).toBe(true);
+  expect(result.advisory.warnings).toEqual([]);
+  expect(result.mutates).toBe(false);
 });
 
 test('workflow-router executable classifier handles Chinese user intent', async () => {

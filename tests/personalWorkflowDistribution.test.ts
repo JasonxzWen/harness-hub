@@ -3,6 +3,7 @@ import { expect, test } from 'bun:test';
 
 const personalDistribution = fs.readFileSync('docs/personal-workflow-distribution.md', 'utf8');
 const readme = fs.readFileSync('README.md', 'utf8');
+const readmeZh = fs.readFileSync('README.zh-CN.md', 'utf8');
 const agents = fs.readFileSync('AGENTS.md', 'utf8');
 const skillQualityGuide = fs.readFileSync('docs/skill-quality-guide.md', 'utf8');
 const skillEvaluationPolicy = fs.readFileSync('docs/skill-evaluation-policy.md', 'utf8');
@@ -23,6 +24,24 @@ test('personal distribution contract is the project positioning source', () => {
   expect(readme).toContain('docs/personal-workflow-distribution.md');
   expect(agents).toContain('repo-local agent harnesses');
   expect(agents).toContain('keep their upstream style by default');
+});
+
+test('README localization stays complete but entry-focused', () => {
+  expect(readme).toContain('README.zh-CN.md');
+  expect(readmeZh).toContain('README.md');
+  expect(readme).toContain('## Visual Navigator');
+  expect(readmeZh).toContain('## 可视化导航');
+  expect(readme).toContain('## Choose A Path');
+  expect(readmeZh).toContain('## 选择入口');
+  expect(readmeZh).toContain('flowchart TD');
+  expect(readmeZh).toContain('npx @jasonwen/harness-hub init-harness');
+  expect(readmeZh).toContain('bun run validate');
+
+  expect(personalDistribution).toContain('Keep README localization entry-focused');
+  expect(personalDistribution).toContain('README files are human-facing entrypoints');
+  expect(personalDistribution).toContain('Agent-facing execution rules belong in `AGENTS.md`');
+  expect(personalDistribution).toContain('core commands, capability map, and default development workflow');
+  expect(personalDistribution).toContain('does not need to mirror every governance detail word for word');
 });
 
 test('imported skills are governed by routing overlay, not style rewrites', () => {

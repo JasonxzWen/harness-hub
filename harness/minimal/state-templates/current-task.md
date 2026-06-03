@@ -8,6 +8,33 @@ State the concrete outcome for the active Codex goal.
 
 - Add assumptions before implementation starts.
 
+## Requirement intake
+
+- Actor:
+- Outcome:
+- Pain or trigger:
+- Constraints:
+- Success target:
+
+## Discovery and brainstorming
+
+- Repo evidence inspected:
+- Existing behavior or source decisions:
+- Option A:
+- Option B:
+- Option C:
+- Recommended direction:
+- Rejected alternatives and why:
+
+## Target spec
+
+- User-visible behavior:
+- Boundaries:
+- Interfaces or data implications:
+- Compatibility constraints:
+- Failure behavior:
+- Rollout or rollback notes:
+
 ## Non-goals
 
 - List what this task must not change.
@@ -27,6 +54,29 @@ State the concrete outcome for the active Codex goal.
 ## Acceptance criteria
 
 - Add observable checks that prove the task is done.
+
+## Test matrix
+
+| Priority | Test type | Behavior or boundary | Command or method | Expected RED | Expected GREEN | Evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| P0 | Unit / integration / E2E / deterministic | Add the first public behavior to prove. | Add command. | Add failure expected before implementation. | Add pass condition. | Pending. |
+| P1 | Integration / cross-boundary | Add affected boundary confidence check. | Add command or risk assessment. | n/a | Add pass condition. | Pending. |
+| P2 | Hardening | Add broader regression, accessibility, performance, repeated run, or viewport check. | Add command or defer reason. | n/a | Add pass condition. | Pending. |
+
+## Open questions
+
+| Question | Why it matters | Recommended answer | Status |
+| --- | --- | --- | --- |
+| Add only blocking questions. | Explain behavior, safety, data, compatibility, cost, release, path, or acceptance impact. | Add recommendation. | open |
+
+## Alignment status
+
+- User-visible details aligned: no
+- Spec aligned: no
+- Acceptance criteria aligned: no
+- Test matrix aligned: no
+- Blocking open questions resolved: no
+- Implementation may start: no
 
 ## Standard startup path
 

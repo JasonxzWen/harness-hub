@@ -26,6 +26,7 @@ function parseArgs(argv) {
     hasValidation: false,
     materialChanges: false,
     willMutate: false,
+    currentTaskPath: null,
     json: false,
     help: false,
   };
@@ -59,6 +60,8 @@ function parseArgs(argv) {
       options.materialChanges = true;
     } else if (arg === '--will-mutate') {
       options.willMutate = true;
+    } else if (arg === '--current-task') {
+      options.currentTaskPath = readValue(argv, ++index, arg);
     } else if (arg === '--json') {
       options.json = true;
     } else if (arg === '--help' || arg === '-h') {
@@ -111,6 +114,7 @@ export function checkWorkflow(options) {
     hasValidation: Boolean(options.hasValidation),
     materialChanges: Boolean(options.materialChanges),
     willMutate: Boolean(options.willMutate),
+    currentTaskPath: options.currentTaskPath,
   });
   const ownerContract = checkOwnerContract({ state: route.state });
 
@@ -144,6 +148,7 @@ Flags mirror advisory-check.mjs:
   --has-validation
   --material-changes
   --will-mutate
+  --current-task <path>
 
 This command composes intent routing, advisory gates, and owner contract checks. It is side-effect free:
 it never edits files, dispatches subagents, calls remote services, or starts implementation.`);

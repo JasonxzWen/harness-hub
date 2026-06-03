@@ -35,6 +35,7 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.scripts.validate).toContain('bun run validate:skills');
   expect(packageJson.files).toEqual(artifactPolicy.npm.files);
   expect(packageJson.files).toContain('CHANGELOG.md');
+  expect(packageJson.files).toContain('README.zh-CN.md');
   expect(packageJson.files).toContain('config/');
   expect(packageJson.files).toContain('harness/');
   expect(packageJson.files).toContain('scripts/sync-codex-skills.mjs');

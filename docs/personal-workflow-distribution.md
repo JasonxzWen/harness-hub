@@ -37,6 +37,14 @@ The project must not introduce advanced, lite, domain, team, experimental, or la
    - Use OpenSpec only for larger behavior, CLI lifecycle, or routing changes that need durable acceptance criteria.
    - For ordinary curation, routing, or documentation changes, use a short plan, a small diff, and the nearest validation command.
 
+6. Keep README localization entry-focused.
+   - README files are human-facing entrypoints and should prefer visual navigation, quick paths, core commands, and links over agent checklists.
+   - Agent-facing execution rules belong in `AGENTS.md`, owner workflow skills, or focused docs such as `docs/development-workflow.md`.
+   - `README.md` and `README.zh-CN.md` must both expose the core commands, capability map, and default development workflow.
+   - The Simplified Chinese README should stay complete enough for fast onboarding, but it does not need to mirror every governance detail word for word.
+   - Prefer linking long-lived governance, source, and lifecycle details to `docs/` instead of duplicating them in both README files.
+   - When the English README changes core commands, the capability map, install/bootstrap paths, validation commands, or the default development workflow, update `README.zh-CN.md` in the same change.
+
 ## TODO
 
 1. Reframe docs around personal workflow distribution.

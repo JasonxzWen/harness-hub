@@ -69,15 +69,15 @@ test('Codex worktree setup command stays portable and documented', () => {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8')) as {
     scripts: Record<string, string>;
   };
-  const readme = fs.readFileSync('README.md', 'utf8');
+  const agents = fs.readFileSync('AGENTS.md', 'utf8');
   const lifecycleDesign = fs.readFileSync('docs/cli-lifecycle-design.md', 'utf8');
-  const selfBootstrapSection = readme.slice(readme.indexOf('## Codex Self-Bootstrap'), readme.indexOf('## Claude Plugin Publishing'));
+  const worktreeSetupSection = agents.slice(agents.indexOf('## Codex Worktree Setup'), agents.indexOf('## Third-Party Skill Evaluation'));
 
   expect(packageJson.scripts['codex:worktree-setup']).toBe('node ./scripts/sync-codex-skills.mjs');
-  expect(selfBootstrapSection).toContain('node scripts/sync-codex-skills.mjs');
-  expect(selfBootstrapSection).toContain('bun run codex:worktree-setup');
-  expect(selfBootstrapSection).toContain('Do not hard-code a machine path');
-  expect(selfBootstrapSection).not.toMatch(/[A-Za-z]:\\/);
+  expect(worktreeSetupSection).toContain('node scripts/sync-codex-skills.mjs');
+  expect(worktreeSetupSection).toContain('bun run codex:worktree-setup');
+  expect(worktreeSetupSection).toContain('Do not hard-code a machine path');
+  expect(worktreeSetupSection).not.toMatch(/[A-Za-z]:\\/);
   expect(lifecycleDesign).toContain('node scripts/sync-codex-skills.mjs');
   expect(lifecycleDesign).toContain('host-local absolute paths must stay out of the project design');
 });

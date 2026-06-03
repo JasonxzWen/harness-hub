@@ -4,7 +4,9 @@ Use this rubric after implementation and before acceptance.
 
 | Dimension | Question | Score 0-2 | Notes |
 | --- | --- | --- | --- |
+| Alignment | Were requirement intake, selected direction, target spec, open questions, and acceptance criteria recorded before implementation? |  |  |
 | Correctness | Does the implemented behavior match the active task and feature state? |  |  |
+| TDD discipline | Did the work follow the agreed P0/P1/P2 test matrix, with RED/GREEN evidence where practical? |  |  |
 | Verification | Were the required checks actually run with recorded evidence? |  |  |
 | Scope discipline | Did this session stay within the selected task and allowed paths? |  |  |
 | Runtime reliability | Can the standard startup path, health checks, or user flow run again? |  |  |

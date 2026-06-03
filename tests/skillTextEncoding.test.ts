@@ -8,6 +8,7 @@ const scannedRoots = [
   'docs',
   'tests',
   'README.md',
+  'README.zh-CN.md',
   'AGENTS.md',
   'capabilities/index.json',
 ];

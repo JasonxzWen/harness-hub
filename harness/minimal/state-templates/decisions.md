@@ -13,5 +13,7 @@
 - Date:
 - Decision:
 - Rationale:
+- Alternatives considered:
 - Status:
+- State-file impact:
 - Follow-up:

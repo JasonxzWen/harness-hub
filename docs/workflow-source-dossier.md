@@ -24,7 +24,7 @@ The workflow system must serve this order:
 | Source | Repo-local status | Primary value | Default decision |
 |---|---|---|---|
 | Matt Pocock skills | `grill-me`, `diagnose`, and `prototype` adapted; other skills rejected or explicit-only. | Narrow, memorable phase skills and feedback-loop framing. | Adapt selected phase patterns only. |
-| Superpowers | Referenced, not installed. | Broad disciplined workflow, brainstorming-style idea shaping, `using-superpowers`, subagent-driven development, worktree/finish discipline. | Reference for lifecycle and orchestration boundaries; do not install wholesale. |
+| Superpowers | Referenced, not installed. | Broad disciplined workflow, brainstorming-style idea shaping, `using-superpowers`, subagent-driven development, worktree/finish discipline. | Reference for lifecycle and orchestration boundaries; borrow lightweight brainstorming as an SDD phase action, but do not install wholesale. |
 | Everything Claude Code | Source checkout and compatibility docs retained; only selected helper skills remain active through `capabilities/index.json`. | Rules, agents, hooks, MCP patterns, verification, broad Claude Code conventions. | Reference surface plus bounded helpers; do not restore the broad local skill library. |
 | OpenSpec | Installed as formal lifecycle helpers. | Proposal/spec/task/archive artifacts and formal change tracking. | Use only when the user explicitly asks for OpenSpec or existing artifacts require it. |
 | Compound Engineering Plugin | `compound-code-review` adapted; rest explicit-only or reference. | Structured review, reviewer lenses, doc-review candidates, side-effect-heavy work loops. | Keep review lane; postpone broader workflows. |

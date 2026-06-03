@@ -9,20 +9,22 @@ import {
   planInstall,
 } from '../src/harnessHub';
 
-function route(scriptPath: string, prompt: string): { state: string; owner: string | null; mutates: boolean } {
+function route(scriptPath: string, prompt: string, cwd = process.cwd()): { state: string; owner: string | null; mutates: boolean } {
   const output = execFileSync(process.execPath, [scriptPath, '--prompt', prompt, '--json'], {
+    cwd,
     encoding: 'utf8',
   });
   return JSON.parse(output) as { state: string; owner: string | null; mutates: boolean };
 }
 
-function workflowCheck(scriptPath: string, prompt: string): {
+function workflowCheck(scriptPath: string, prompt: string, cwd = process.cwd()): {
   route: { state: string; owner: string | null; mutates: boolean };
   advisory: { ok: boolean; warnings: Array<{ id: string }> };
   mutates: boolean;
   dispatchesSubagents: boolean;
 } {
   const output = execFileSync(process.execPath, [scriptPath, '--prompt', prompt, '--json'], {
+    cwd,
     encoding: 'utf8',
   });
   return JSON.parse(output) as {
@@ -40,7 +42,8 @@ test('root host instructions activate the executable workflow router before owne
   expect(agents).toContain('node skills/workflow-router/scripts/workflow-check.mjs --prompt "<request>" --json');
   expect(agents).toContain('thin, executable `workflow-router`');
   expect(agents.indexOf('workflow-router')).toBeLessThan(agents.indexOf('sdd-workflow'));
-  expect(readme).toContain('workflow-router` with executable `workflow-check.mjs`');
+  expect(readme).toContain('Human-facing workflow detail lives in [Development Workflow](docs/development-workflow.md)');
+  expect(agents).toContain('workflow-check.mjs');
 });
 
 test('standard install exposes the router script for target-repo host activation', () => {
@@ -82,9 +85,13 @@ test('standard install exposes the router script for target-repo host activation
     expect(ownerBody).toContain('description: Load when workflow-router selects');
   }
 
-  const review = route(routerScript, 'Review these skill boundaries and do not change files yet.');
-  const change = route(routerScript, 'Implement the accepted settings validation change with tests.');
-  const preflight = workflowCheck(workflowCheckScript, 'Remove install profiles and make Harness Hub default to full install with overwrite smoke coverage.');
+  const review = route(routerScript, 'Review these skill boundaries and do not change files yet.', targetDir);
+  const change = route(routerScript, 'Implement the accepted settings validation change with tests.', targetDir);
+  const preflight = workflowCheck(
+    workflowCheckScript,
+    'Remove install profiles and make Harness Hub default to full install with overwrite smoke coverage.',
+    targetDir,
+  );
 
   expect(review).toMatchObject({ state: 'review', owner: 'review-workflow', mutates: false });
   expect(change).toMatchObject({ state: 'sdd-change', owner: 'sdd-workflow', mutates: false });

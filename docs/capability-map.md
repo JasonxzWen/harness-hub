@@ -9,6 +9,22 @@ Harness Hub exposes three surfaces:
 
 It also owns two explicit higher-level repo capabilities: Codex dev harness bootstrap through `init-harness`, and source-backed insight publishing through `insight-*`.
 
+For the default requirement-to-delivery lane, see [Development Workflow](development-workflow.md). It explains how `workflow-router`, `sdd-workflow`, lightweight brainstorming, `tdd-workflow`, validation helpers, `effective-interact`, and `.harness-hub/state/` fit together during normal feature, bug-fix, refactor, and product-change work.
+
+## Default Development Flow
+
+```mermaid
+flowchart TD
+  Need["Need / bug / refactor"] --> Route["workflow-router"]
+  Route --> SDD["sdd-workflow"]
+  SDD --> Brainstorm["Repo scan + lightweight brainstorming"]
+  Brainstorm --> State["current-task.md<br/>spec, tests, open questions"]
+  State --> TDD["tdd-workflow"]
+  TDD --> Verify["verification-loop<br/>P0/P1/P2"]
+  Verify --> Memory["progress.md + decisions.md"]
+  Memory --> Handoff["session-handoff.md<br/>effective-interact when useful"]
+```
+
 ## CLI Commands
 
 | Command | Mutates target? | Purpose |
@@ -62,6 +78,7 @@ This map separates current installable capabilities from source-backed atom cand
 Current strengths:
 
 - Workflow ownership is clear: `workflow-router` selects one owner, then owner workflows call atoms.
+- Normal change work now has an explicit development lane: requirement intake, repo/source inspection, lightweight brainstorming, spec and P0/P1/P2 test matrix, TDD execution, validation, and state-file handoff.
 - Repo harness ownership is explicit: root files are initialized only through `init-harness --target standard`, not through default skill installation.
 - Engineering lifecycle coverage is strong: SDD, TDD, Karpathy-style coding behavior guardrails, P0/P1/P2 validation priorities, Web browser acceptance, PR status closeout, diagnosis, review, verification, handoff, and Harness Hub maintenance are all installable.
 - Web/artifact coverage is strong after adding `theme-factory` and `design-taste-frontend`; production UI, frontend taste direction, standalone artifacts, slides, one-off browser checks, agent-run Web browser acceptance, and durable E2E have separate lanes. `effective-interact` also has a report-only aesthetic preflight derived from `taste-skill`.
@@ -71,6 +88,7 @@ Current strengths:
 Known gaps:
 
 - Native document/spreadsheet/PDF/PPT editing remains a distribution gap because Anthropic `docx`, `pdf`, `pptx`, and `xlsx` are source-available, not open source.
+- Standalone brainstorming remains intentionally uninstalled. It is currently an SDD phase action composed from repo inspection, direction comparison, `grill-me`, `prototype`, and `product-capability`; promote it only if repeated routing evidence proves a bounded helper gap.
 - External harness, team-architecture, and stocktake ideas still need careful extraction; accepted ideas must improve the minimal path instead of creating another install level. Website-cloner is intentionally explicit and high-risk because it touches external sites, browser evidence, and potential third-party brand assets.
 - Cloud/provider coverage is Vercel-heavy; AWS/GCP/Azure, data/ML operations, security operations, and enterprise SaaS integrations still need additional reviewed sources.
 - Brand workflow remains generic-only; Anthropic `brand-guidelines` was not imported because it is Anthropic-specific.
