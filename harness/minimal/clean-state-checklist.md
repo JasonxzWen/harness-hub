@@ -4,6 +4,8 @@ Use this checklist before handoff.
 
 - `git status --short` has been reviewed.
 - Standard startup path has been run or explicitly skipped with a reason.
+- Requirement intake, selected direction, rejected alternatives, target spec, open questions, and alignment status are recorded for change work.
+- The P0/P1/P2 test matrix in `.harness-hub/state/current-task.md` matches the validation commands and recorded results.
 - Changed files match the current task's allowed paths.
 - Forbidden paths were not modified.
 - Temporary logs or generated artifacts are in ignored locations.

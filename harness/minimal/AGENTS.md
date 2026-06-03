@@ -12,6 +12,7 @@ Do not start implementation until the harness is fully landed and the active tas
 - If any required file is missing, stop and run the approved harness init path before coding.
 - Run `node scripts/harness-validate.mjs`; fix harness failures before changing product files.
 - Fill `.harness-hub/state/current-task.md` with goal, assumptions, non-goals, allowed paths, forbidden paths, acceptance criteria, validation tiers, runtime signals, standard startup path, and checkpoint policy before editing.
+- For feature, bug-fix, refactor, or product/spec change work, fill requirement intake, discovery/brainstorming, target spec, P0/P1/P2 test matrix, open questions, and alignment status before editing.
 - Review recent progress, decisions, handoff, feature state, quality snapshot, branch/worktree, and `git status --short`.
 
 ## Operating Rules
@@ -24,6 +25,7 @@ Do not start implementation until the harness is fully landed and the active tas
 - Do not run parallel writes against the same file, module, or feature state.
 - Use read-only parallel work only for research, review, log analysis, or validation.
 - Use P0/P1/P2 validation priorities for implementation tasks: P0 must pass before handoff, P1 is run or risk-assessed for affected boundaries, and P2 is hardening that may be deferred with a reason.
+- Treat lightweight brainstorming as part of SDD: inspect repo evidence, compare 2-3 viable directions, recommend one, record rejected alternatives, and ask only blocking open questions before implementation.
 - For Web user-visible changes, record and run agent-run browser acceptance against the local app before handoff, including URL, scenario, viewport, console or network findings, and screenshot or trace evidence when useful.
 - After creating or updating a PR, treat PR status as a delivery gate: check mergeability, CI/check-run status, conflicts, and branch-protection blockers before declaring done; resolve in-scope blockers, rerun validation, and push updates unless a user decision, credential, permission, reviewer action, protected-branch override, or external outage is required.
 - Do not merge a PR unless the user explicitly asks for that remote mutation.

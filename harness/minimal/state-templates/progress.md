@@ -12,6 +12,17 @@
 
 - Nothing recorded yet.
 
+## Plan Checkpoints
+
+| Phase | Status | Evidence | Next |
+| --- | --- | --- | --- |
+| Requirement intake | pending | Fill `current-task.md`. | Inspect repo evidence. |
+| Discovery and brainstorming | pending | Record options and selected direction. | Align spec. |
+| Spec and acceptance | pending | Record target spec, acceptance, and open questions. | Align tests. |
+| Test matrix | pending | Record P0/P1/P2 tests or deterministic substitutes. | Start RED. |
+| Implementation | pending | Record completed slices and checkpoint state. | Run validation. |
+| Delivery | pending | Record validation, risk, PR status, and next action. | Update handoff. |
+
 ## Recent Validation
 
 ## Validation Records

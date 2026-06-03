@@ -16,6 +16,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 | Non-trivial request that needs intent recognition | `workflow-router` | Classify into exactly one state: question, SDD change, diagnosis, review, delivery, or Harness Hub maintenance. |
 | Read-only question, explanation, feasibility check, evidence lookup, or comparison | `answer-workflow` | Answer from evidence; do not mutate files. |
 | Feature, bug fix, refactor, product/spec change, or implementation request | `sdd-workflow` | Align need, source material, spec, acceptance, executable plan, cleanup, implementation, tests, and delivery before coding. |
+| Requirement intake, lightweight brainstorming, direction selection, or implementation planning inside change work | `sdd-workflow` | Treat brainstorming as a phase action, not a separate top-level owner; inspect repo evidence, compare 2-3 directions, and record the selected direction, rejected alternatives, tests, and open questions in harness state. |
 | Failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure report | `diagnosis-workflow` | Reproduce or bound the failure before choosing helper skills. |
 | Code, plan, release, UI, or security review | `review-workflow` | Findings first; do not implement fixes unless redirected. |
 | Validation closeout, cleanup, release notes, handoff, or post-PR status triage | `delivery-workflow` | Run accepted checks, inspect PR mergeability/CI/conflicts after PR creation or update, resolve actionable blockers, and report residual risk. |
@@ -60,6 +61,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Native goal/story loops are handled by current Codex and Claude Code capabilities; Harness Hub no longer distributes Ralph PRD or loop skills.
 - Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
 - `sdd-workflow` is the default change lane and `tdd-workflow` is an embedded implementation discipline, not a competing owner.
+- Lightweight brainstorming belongs inside `sdd-workflow`: use repo/source inspection, 2-3 direction comparison, `grill-me` for pressure questions, `prototype` for disposable proof, and `product-capability` for implementation constraints. Do not add or trigger a standalone brainstorming skill unless a future routing gap is explicitly accepted.
 - Use `karpathy-guidelines` as an engineering behavior baseline under `sdd-workflow`, `tdd-workflow`, or `review-workflow`; use `coding-standards` for cross-project code quality conventions and `grill-me` when the user wants an interview-style pressure test.
 - Do not treat `effective-interact` as a default-considered skill for non-trivial sessions merely because a reply may be long; the trigger is a real communication, alignment, verification, approval, handoff, or continuation need.
 - Use `effective-interact` as the default reporting layer when the agent is about to pause on relatively complex information, especially for material repo or skill change reports that need preserved facts, evidence navigation, validation state, risks, or a continuation handoff.
@@ -107,6 +109,15 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes.
 - `hub-maintenance-workflow` loads for maintaining this Harness Hub's source records, installed skill components, routing, npm package boundary, and candidate-source decisions.
 - `karpathy-guidelines`, `claude-api`, `mcp-builder`, `skill-creator`, `source-to-insight-blog`, `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, `slack-gif-creator`, and `clone-website` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
+
+## Skill Registration Path
+
+Use [Development Workflow](development-workflow.md) for the practical intake checklist before adding a skill. In short:
+
+- New workflow owners require a new top-level task state, router support, owner contract coverage, routing docs, capability metadata, and tests.
+- Helper atoms require a bounded trigger, clear side-effect boundary, overlap rules, capability metadata, and focused routing or contract coverage.
+- Explicit-only skills stay out of default activation unless the user names them or a selected owner reaches that niche use case.
+- Source-only ideas belong in `docs/source-projects.md` or `docs/workflow-source-dossier.md` until they fill a real bounded gap.
 
 ## Subagents And Hooks
 

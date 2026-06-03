@@ -4,6 +4,15 @@
 
 - No active Codex task is in progress.
 
+## Active Plan Snapshot
+
+- Requirement intake:
+- Selected direction:
+- Target spec:
+- P0/P1/P2 test matrix status:
+- Blocking open questions:
+- Alignment status:
+
 ## Changed Files
 
 - None.

@@ -3,7 +3,9 @@
 A Codex task is done only when the worktree proves it.
 
 - The goal and non-goals are stated in `.harness-hub/state/current-task.md`.
+- Requirement intake, selected direction, rejected alternatives, target spec, open questions, and alignment status are recorded for change work.
 - Acceptance criteria are satisfied by direct evidence.
+- The P0/P1/P2 test matrix was defined before implementation; P0 passed, P1 was run or risk-assessed, and P2 was run or explicitly deferred.
 - Changed files stay within allowed paths and avoid forbidden paths.
 - P0 validation has passed before handoff; P1 checks are run or risk-assessed; P2 hardening is run or explicitly deferred.
 - Static checks, runtime checks, and the relevant user-flow or end-to-end path have been run when relevant.

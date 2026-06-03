@@ -64,7 +64,7 @@ Every non-trivial change request MUST follow this order unless the selected stat
 `sdd-workflow` MUST gate implementation on the canonical lifecycle:
 
 1. user need alignment: outcome, actor, pain, surface, constraints, and non-goals;
-2. required material: repo-local references, existing source decisions, relevant code paths, and upstream repos/blogs that the repo has cited or that the change depends on;
+2. required material: repo-local references, existing source decisions, relevant code paths, upstream repos/blogs that the repo has cited or that the change depends on, and lightweight brainstorming over 2-3 evidence-backed directions;
 3. target spec: behavior, state transitions, interfaces, compatibility constraints, and non-goals;
 4. acceptance criteria: observable success, regression scope, and verification commands;
 5. executable plan: file targets, task order, cleanup list, test strategy, subagent policy, and rollback/cleanup notes;

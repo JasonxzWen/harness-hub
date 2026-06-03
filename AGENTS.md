@@ -77,6 +77,26 @@ Subagents are an optimization owned by the active workflow, not a default behavi
 
 Hooks should start as advisory or deterministic local checks only. Do not introduce blocking hooks, remote actions, credential changes, posting, pushing, publishing, or agent dispatch without explicit user approval and security review.
 
+## Agent Development Workflow
+
+README files are human-facing visual navigation. Keep agent execution rules here, in owner workflow skills, or in focused docs. Do not turn README into an agent checklist.
+
+For feature, bug-fix, refactor, product/spec change, or implementation work:
+
+1. Route first with `workflow-router`; use the selected owner and do not let helper skills compete for top-level ownership.
+2. Inspect repo docs, code paths, existing state, tests, source records, and relevant upstream references before proposing a direction.
+3. Treat lightweight brainstorming as part of SDD: compare 2-3 evidence-backed directions, recommend one, and record rejected alternatives.
+4. Write the active task contract before implementation when `.harness-hub/state/` exists:
+   - `current-task.md`: goal, assumptions, non-goals, allowed paths, forbidden paths, requirement intake, discovery/brainstorming, target spec, acceptance criteria, P0/P1/P2 test matrix, validation commands, open questions, alignment status, and checkpoint policy.
+   - `decisions.md`: accepted direction, rationale, alternatives, and decision-level changes.
+   - `progress.md`: current phase, completed work, validation records, runtime signals, blockers, PR status, and checkpoint commit state.
+   - `session-handoff.md`: restart status, changed files, validation evidence, residual risk, blockers, and next action.
+5. Ask only blocking open questions before implementation. A blocking question changes user-visible behavior, safety, data ownership, compatibility, cost, release or rollback behavior, external side effects, allowed paths, or acceptance criteria.
+6. Implement one public behavior at a time through `tdd-workflow`: RED, GREEN, REFACTOR. If direct tests are impractical, define the deterministic substitute before production edits.
+7. Verify with P0/P1/P2 validation: P0 must pass before handoff, P1 is run or risk-assessed, and P2 hardening is run or explicitly deferred.
+8. Use `effective-interact` for material plans, evidence maps, reviews, and handoffs only when structure lowers human reading cost.
+9. Before handoff, update progress, decisions when needed, session handoff, and validation evidence. Do not claim completion from intent or partial progress.
+
 ## Skill Quality Governance
 
 Use `docs/skill-quality-guide.md` as the quality bar for authoring, importing, reviewing, and maintaining skills.
@@ -115,6 +135,24 @@ Harness initialization is a hard gate for target repositories:
 - Use verified checkpoint commits for completed atomic units when the task permits commits; otherwise record the skip reason.
 
 Before release-oriented CLI changes, run `bun run validate`, `git diff --check`, and the relevant smoke flow.
+
+## Codex Worktree Setup
+
+For local Codex dogfooding, the generated `.codex/skills/` tree is host-local and ignored. Edit source skills under `skills/`, then regenerate wrappers.
+
+Use this portable worktree setup command from the worktree root:
+
+```powershell
+node scripts/sync-codex-skills.mjs
+```
+
+The equivalent package script is:
+
+```powershell
+bun run codex:worktree-setup
+```
+
+Do not hard-code a machine path in setup commands. The script derives the repository root from its own location so fresh worktrees can generate their ignored `.codex/skills/` copy without committing host-local files.
 
 ## Third-Party Skill Evaluation
 

@@ -23,6 +23,7 @@
     "AGENTS.md",
     "CHANGELOG.md",
     "README.md",
+    "README.zh-CN.md",
     "bin/",
     "capabilities/",
     "config/",

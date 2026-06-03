@@ -6,7 +6,11 @@ import { expect, test } from 'bun:test';
 
 const scriptPath = 'skills/workflow-router/scripts/advisory-check.mjs';
 
-function runAdvisory(args: string[], cwd = process.cwd()) {
+function makeTempDir(prefix = 'harness-hub-advisory-check-') {
+  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+}
+
+function runAdvisory(args: string[], cwd = makeTempDir()) {
   const result = spawnSync(process.execPath, [path.resolve(scriptPath), ...args, '--json'], {
     cwd,
     encoding: 'utf8',
@@ -14,6 +18,62 @@ function runAdvisory(args: string[], cwd = process.cwd()) {
 
   expect(result.status, result.stderr).toBe(0);
   return JSON.parse(result.stdout);
+}
+
+function writeCurrentTask(targetDir: string, body = completeCurrentTaskBody()) {
+  const taskPath = path.join(targetDir, '.harness-hub', 'state', 'current-task.md');
+  fs.mkdirSync(path.dirname(taskPath), { recursive: true });
+  fs.writeFileSync(taskPath, body);
+  return taskPath;
+}
+
+function completeCurrentTaskBody() {
+  return [
+    '# Current Task',
+    '',
+    '## Goal',
+    '',
+    'Add workflow contract tests.',
+    '',
+    '## Non-goals',
+    '',
+    '- Do not change remote systems.',
+    '',
+    '## Allowed paths',
+    '',
+    '- tests/workflowAdvisoryCheck.test.ts',
+    '- skills/workflow-router/scripts/advisory-check.mjs',
+    '',
+    '## Forbidden paths',
+    '',
+    '- production credentials',
+    '',
+    '## Target spec',
+    '',
+    '- advisory-check reads current task state when available.',
+    '- discovery remains side-effect free.',
+    '',
+    '## Acceptance criteria',
+    '',
+    '- Explicit current-task paths override cwd discovery.',
+    '- Cwd discovery does not recurse upward.',
+    '',
+    '## Test matrix',
+    '',
+    '| Priority | Test type | Behavior or boundary | Command or method | Expected RED | Expected GREEN | Evidence |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+    '| P0 | Unit | current-task discovery | bun test ./tests/workflowAdvisoryCheck.test.ts | missing gates | passed | pending |',
+    '',
+    '## Alignment status',
+    '',
+    '- User-visible details aligned: yes',
+    '- Spec aligned: yes',
+    '- Acceptance criteria aligned: yes',
+    '- Test matrix aligned: yes',
+    '- Blocking open questions resolved: yes',
+    '- Implementation may start: yes',
+    '',
+  ].join('\n');
 }
 
 test('advisory check warns before SDD implementation without aligned artifacts', () => {
@@ -153,7 +213,7 @@ test('advisory check warns on state and phase mismatches instead of returning a 
 });
 
 test('advisory check is side-effect free in disposable directories', () => {
-  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-advisory-check-'));
+  const targetDir = makeTempDir();
   const before = fs.readdirSync(targetDir);
 
   const result = runAdvisory([
@@ -168,4 +228,99 @@ test('advisory check is side-effect free in disposable directories', () => {
   expect(after).toEqual(before);
 
   fs.rmSync(targetDir, { recursive: true, force: true });
+});
+
+test('advisory check treats an explicit current-task path as highest priority', () => {
+  const cwd = makeTempDir('harness-hub-advisory-cwd-');
+  const explicitDir = makeTempDir('harness-hub-advisory-explicit-');
+  writeCurrentTask(cwd, [
+    '# Current Task',
+    '',
+    '## Goal',
+    '',
+    'Incomplete cwd task.',
+    '',
+  ].join('\n'));
+  const explicitTask = writeCurrentTask(explicitDir);
+
+  const result = runAdvisory([
+    '--state',
+    'sdd-change',
+    '--phase',
+    'pre-implementation',
+    '--current-task',
+    explicitTask,
+  ], cwd);
+
+  expect(result.ok).toBe(true);
+  expect(result.detection.currentTaskSource).toBe('explicit');
+  expect(result.detection.currentTaskPath).toBe(path.resolve(explicitTask));
+  expect(result.warnings).toEqual([]);
+});
+
+test('advisory check auto-discovers current-task from the current working directory only', () => {
+  const targetDir = makeTempDir('harness-hub-advisory-auto-');
+  const taskPath = writeCurrentTask(targetDir);
+
+  const result = runAdvisory([
+    '--state',
+    'sdd-change',
+    '--phase',
+    'pre-implementation',
+  ], targetDir);
+
+  expect(result.ok).toBe(true);
+  expect(result.detection.currentTaskSource).toBe('cwd');
+  expect(result.detection.currentTaskPath).toBe(path.resolve(taskPath));
+  expect(result.warnings).toEqual([]);
+});
+
+test('advisory check does not recurse upward when auto-discovering current-task', () => {
+  const parentDir = makeTempDir('harness-hub-advisory-parent-');
+  const childDir = path.join(parentDir, 'child');
+  fs.mkdirSync(childDir);
+  writeCurrentTask(parentDir);
+
+  const result = runAdvisory([
+    '--state',
+    'sdd-change',
+    '--phase',
+    'pre-implementation',
+  ], childDir);
+
+  expect(result.ok).toBe(false);
+  expect(result.detection.currentTaskSource).toBe('none');
+  expect(result.detection.currentTaskPath).toBeNull();
+  expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
+    'missing-scope',
+    'missing-spec',
+    'missing-acceptance',
+    'missing-plan',
+  ]);
+});
+
+test('advisory check does not treat an unfilled current-task template as aligned', () => {
+  const targetDir = makeTempDir('harness-hub-advisory-template-');
+  const templatePath = writeCurrentTask(
+    targetDir,
+    fs.readFileSync('harness/minimal/state-templates/current-task.md', 'utf8'),
+  );
+
+  const result = runAdvisory([
+    '--state',
+    'sdd-change',
+    '--phase',
+    'pre-implementation',
+    '--current-task',
+    templatePath,
+  ]);
+
+  expect(result.ok).toBe(false);
+  expect(result.detection.currentTaskSource).toBe('explicit');
+  expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
+    'missing-scope',
+    'missing-spec',
+    'missing-acceptance',
+    'missing-plan',
+  ]);
 });

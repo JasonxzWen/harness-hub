@@ -82,8 +82,9 @@ function installIntoTemp(prefix: string): string {
   return targetDir;
 }
 
-function runWorkflowCheck(scriptPath: string, prompt: string, extraArgs: string[] = []): WorkflowCheckResult {
+function runWorkflowCheck(scriptPath: string, prompt: string, extraArgs: string[] = [], cwd = process.cwd()): WorkflowCheckResult {
   const output = execFileSync(process.execPath, [scriptPath, '--prompt', prompt, ...extraArgs, '--json'], {
+    cwd,
     encoding: 'utf8',
   });
 
@@ -165,7 +166,7 @@ test('installed workflow router routes a user-perspective intent matrix without 
   ];
 
   for (const entry of cases) {
-    const result = runWorkflowCheck(workflowCheckScript, entry.prompt);
+    const result = runWorkflowCheck(workflowCheckScript, entry.prompt, [], targetDir);
 
     expect(result.route.state).toBe(entry.state);
     expect(result.route.owner).toBe(entry.owner);
@@ -220,7 +221,7 @@ test('installed workflow check has a passing gate path for every owner state', (
   ];
 
   for (const entry of cases) {
-    const result = runWorkflowCheck(workflowCheckScript, entry.prompt, entry.args);
+    const result = runWorkflowCheck(workflowCheckScript, entry.prompt, entry.args, targetDir);
 
     expect(result.route.state).toBe(entry.state);
     expect(result.route.owner).toBe(entry.owner);
