@@ -268,9 +268,63 @@
       "docsBoundary": "The user asks for explanation, lookup, feasibility, comparison, or evidence."
     },
     {
+      "id": "question-positive-real-chinese-summary-reflection",
+      "kind": "no-mutation",
+      "prompt": "\u603b\u7ed3\u6587\u672c\u5e76\u53cd\u601d\u662f\u5426\u9700\u8981\u636e\u6b64\u4f18\u5316\u672c\u9879\u76ee",
+      "expectedState": "question",
+      "expectedOwner": "answer-workflow",
+      "mutationAllowed": false,
+      "requiredGates": [
+        "gather-required-material",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks for explanation, lookup, feasibility, comparison, or evidence."
+    },
+    {
+      "id": "question-positive-real-chinese-bare-summary",
+      "kind": "no-mutation",
+      "prompt": "\u603b\u7ed3\u4e00\u4e0b\u8fd9\u6bb5\u6750\u6599\u5e76\u8bf4\u660e\u8981\u70b9",
+      "expectedState": "question",
+      "expectedOwner": "answer-workflow",
+      "mutationAllowed": false,
+      "requiredGates": [
+        "gather-required-material",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks for explanation, lookup, feasibility, comparison, or evidence."
+    },
+    {
       "id": "delivery-positive-real-chinese-closeout",
       "kind": "positive",
       "prompt": "\u6536\u5c3e\uff1a\u8fd0\u884c\u9a8c\u8bc1\u3001\u6e05\u7406\u4ea7\u7269\u5e76\u4ea4\u4ed8\u603b\u7ed3\u3002",
+      "expectedState": "delivery",
+      "expectedOwner": "delivery-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "clean-unneeded-files",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks for acceptance, handoff, cleanup, release notes, validation closeout, or environment reset."
+    },
+    {
+      "id": "delivery-positive-real-chinese-handoff-summary",
+      "kind": "positive",
+      "prompt": "\u4ea4\u4ed8\u603b\u7ed3\u4e00\u4e0b\u672c\u6b21\u6539\u52a8\u548c\u9a8c\u8bc1\u7ed3\u679c",
+      "expectedState": "delivery",
+      "expectedOwner": "delivery-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "clean-unneeded-files",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks for acceptance, handoff, cleanup, release notes, validation closeout, or environment reset."
+    },
+    {
+      "id": "delivery-positive-real-chinese-validation-summary",
+      "kind": "positive",
+      "prompt": "\u9a8c\u8bc1\u603b\u7ed3\u548c\u5269\u4f59\u98ce\u9669\u5e76\u4ea4\u4ed8\u62a5\u544a",
       "expectedState": "delivery",
       "expectedOwner": "delivery-workflow",
       "mutationAllowed": true,

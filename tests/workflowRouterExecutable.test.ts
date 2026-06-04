@@ -199,6 +199,10 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   const pureChineseMaintenance = await classify('\u7ee7\u7eed\u6536\u655b\u6280\u80fd\u8d28\u91cf\u548c\u89e6\u53d1\u8fb9\u754c\uff0c\u8865\u9f50\u53ef\u6267\u884c\u95e8\u7981\u3002');
   const pureChineseDelivery = await classify('\u6536\u5c3e\uff1a\u8fd0\u884c\u9a8c\u8bc1\u3001\u6e05\u7406\u4ea7\u7269\u5e76\u4ea4\u4ed8\u603b\u7ed3\u3002');
   const prCloseoutDelivery = await classify('\u63d0 PR \u540e\u68c0\u67e5\u5408\u5e76\u72b6\u6001\u548c CI \u72b6\u6001\uff0c\u6709\u51b2\u7a81\u5c31\u5904\u7406\u3002');
+  const summaryWithReflectionQuestion = await classify('\u603b\u7ed3\u6587\u672c\u5e76\u53cd\u601d\u662f\u5426\u9700\u8981\u636e\u6b64\u4f18\u5316\u672c\u9879\u76ee');
+  const bareSummaryQuestion = await classify('\u603b\u7ed3\u4e00\u4e0b\u8fd9\u6bb5\u6750\u6599');
+  const handoffSummaryDelivery = await classify('\u4ea4\u4ed8\u603b\u7ed3\u4e00\u4e0b\u672c\u6b21\u6539\u52a8');
+  const validationSummaryDelivery = await classify('\u9a8c\u8bc1\u603b\u7ed3\u548c\u5269\u4f59\u98ce\u9669');
 
   expect(review.state).toBe('review');
   expect(review.owner).toBe('review-workflow');
@@ -214,6 +218,14 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   expect(pureChineseDelivery.owner).toBe('delivery-workflow');
   expect(prCloseoutDelivery.state).toBe('delivery');
   expect(prCloseoutDelivery.owner).toBe('delivery-workflow');
+  expect(summaryWithReflectionQuestion.state).toBe('question');
+  expect(summaryWithReflectionQuestion.owner).toBe('answer-workflow');
+  expect(bareSummaryQuestion.state).toBe('question');
+  expect(bareSummaryQuestion.owner).toBe('answer-workflow');
+  expect(handoffSummaryDelivery.state).toBe('delivery');
+  expect(handoffSummaryDelivery.owner).toBe('delivery-workflow');
+  expect(validationSummaryDelivery.state).toBe('delivery');
+  expect(validationSummaryDelivery.owner).toBe('delivery-workflow');
 });
 
 test('workflow-router modules can be imported without CLI argv', () => {

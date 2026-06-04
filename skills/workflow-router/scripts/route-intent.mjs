@@ -150,6 +150,7 @@ const SIGNALS = Object.freeze({
     '\u8bc1\u636e',
     '\u8bf4\u660e',
     '\u56de\u7b54',
+    '\u603b\u7ed3',
   ],
   sddChange: [
     'add',
@@ -273,7 +274,6 @@ const SIGNALS = Object.freeze({
     '\u6e05\u7406',
     '\u4ea4\u4ed8',
     '\u53d1\u5e03\u8bf4\u660e',
-    '\u603b\u7ed3',
     '\u63d0pr',
     '\u63d0 pr',
     '\u521b\u5efapr',
