@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.13 - 2026-06-04
+
+- Add Codex worktree preflight checks so write tasks hard-fail when repo-local skill wrappers or harness state are missing, while read-only tasks receive a soft warning.
+- Add safe Codex worktree setup that syncs ignored `.codex/skills/` copies, fills missing `.harness-hub/state/` templates, preserves existing task state by default, and requires `--reset-state` or `--fresh` for intentional local state resets.
+- Document the Codex worktree startup gate and keep the local dogfooding scripts in the npm package manifest and artifact policy.
+
 ## 0.1.12 - 2026-06-03
 
 - Add read-only `harness-hub check <target> --json` startup checks with separate `cli` and `target` sections.
