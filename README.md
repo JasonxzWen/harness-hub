@@ -95,7 +95,7 @@ npx @jasonwen/harness-hub insight-validate . --json
 npx @jasonwen/harness-hub insight-publish . --dry-run --json
 ```
 
-`check` is a read-only startup check. It reports the released CLI package status from npm registry in `cli` and the target repository's lock-managed component status in `target`; update availability, registry failures, and missing locks are advisory and do not apply updates or block the agent startup path.
+`check` is a read-only startup check. It reports the released CLI package status from npm registry in `cli`, the target repository's lock-managed component status in `target`, and explicit CodeGraph/Headroom configuration advice in `externalTools`; update availability, registry failures, missing locks, and external tool suggestions are advisory and do not apply updates, install tools, or block the agent startup path.
 
 ## What Is Included
 
@@ -107,7 +107,8 @@ npx @jasonwen/harness-hub insight-publish . --dry-run --json
 | Communication and handoff | `effective-interact`, `handoff`, `doc-coauthoring`, `internal-comms`, `documentation-lookup`. |
 | Web and artifacts | `frontend-design`, `design-taste-frontend`, `webapp-testing`, `e2e-testing`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`. |
 | Platform extension | `claude-api`, `mcp-builder`, `skill-creator`, source records, capability metadata. |
-| Harness lifecycle | `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update`, `remove`. |
+| External tool advice | `check.externalTools` and `analyze --agent-readiness` signals for explicit CodeGraph and Headroom setup. |
+| Harness lifecycle | `check`, `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update`, `remove`. |
 
 ## Source Layout
 

@@ -38,7 +38,7 @@ harness-hub migrate-lock <target> --dry-run --json
 harness-hub remove <target> --dry-run --json
 ```
 
-`check` is the startup-friendly read-only command. It compares the current `@jasonwen/harness-hub` package version to npm registry latest in a `cli` report section and summarizes the target repository's `.harness-hub/lock.json` managed-component freshness in a separate `target` section. It does not install packages, apply `update`, rewrite locks, or fail startup because of update availability, missing locks, or registry unavailability.
+`check` is the startup-friendly read-only command. It compares the current `@jasonwen/harness-hub` package version to npm registry latest in a `cli` report section, summarizes the target repository's `.harness-hub/lock.json` managed-component freshness in a separate `target` section, and reports explicit CodeGraph/Headroom configuration advice in `externalTools`. It does not install packages, apply `update`, rewrite locks, initialize CodeGraph indexes, write Headroom config, or fail startup because of update availability, missing locks, registry unavailability, or external tool suggestions.
 
 `--target standard` is the supported skill install target. `install` always selects the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json`. The implementation still stores the selected target in existing `agents` lock fields for schema continuity, but the value is the personal default distribution.
 

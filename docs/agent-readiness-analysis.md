@@ -31,6 +31,7 @@ This option remains side-effect free: no `.harness-hub/` creation, no file write
 | `agent_routing` | Detect whether work is decomposed through skills, roles, OpenSpec changes, or routing docs. |
 | `automation_candidates` | Suggest reviewable routine candidates such as CI triage, code-review prep, docs freshness, or nightly validation. |
 | `learning_capture` | Suggest places to capture reviewable lessons, such as docs, skill gotchas, changelogs, retrospectives, or memory-note proposals. |
+| `external_tools` | Detect explicit target markers for advisory external tools such as CodeGraph indexes or Headroom project state. |
 
 The report should expose evidence and recommendations per category rather than a single readiness score. A score would hide uncertainty and imply precision the analyzer does not have.
 

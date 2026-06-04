@@ -75,6 +75,7 @@ bun run validate
 bun run bootstrap:codex-skills
 
 npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --harness --json
+npx @jasonwen/harness-hub check D:\path\to\target --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
@@ -94,6 +95,8 @@ npx @jasonwen/harness-hub insight-validate . --json
 npx @jasonwen/harness-hub insight-publish . --dry-run --json
 ```
 
+`check` 是只读启动检查。它在 `cli` 报告 npm 上的 CLI 包状态，在 `target` 报告目标仓库 lock 托管组件状态，并在 `externalTools` 给出 CodeGraph 和 Headroom 的显式配置/安装建议；这些建议不会安装工具、改写目标仓库或阻塞 agent 启动路径。
+
 ## 包含能力
 
 | 领域 | 包含内容 |
@@ -104,7 +107,8 @@ npx @jasonwen/harness-hub insight-publish . --dry-run --json
 | 沟通与交接 | `effective-interact`、`handoff`、`doc-coauthoring`、`internal-comms`、`documentation-lookup`。 |
 | Web 与 artifacts | `frontend-design`、`design-taste-frontend`、`webapp-testing`、`e2e-testing`、`web-artifacts-builder`、`frontend-slides`、`theme-factory`。 |
 | 平台扩展 | `claude-api`、`mcp-builder`、`skill-creator`、source records、capability metadata。 |
-| Harness lifecycle | `analyze`、`init-harness`、`validate-harness`、`install`、`status`、`update`、`remove`。 |
+| 外部工具建议 | `check.externalTools` 和 `analyze --agent-readiness` 会给出显式 CodeGraph 与 Headroom 配置建议。 |
+| Harness lifecycle | `check`、`analyze`、`init-harness`、`validate-harness`、`install`、`status`、`update`、`remove`。 |
 
 ## Source Layout
 

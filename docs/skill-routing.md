@@ -55,6 +55,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Use `source-to-insight-blog` when a source must become a public blog with source fidelity, media references, effective-interact summary, and project iteration review; use `answer-workflow` for ordinary summaries, `doc-coauthoring` for internal durable docs, and `frontend-design` for production site design.
 - Use `claude-api` only for Anthropic provider work; use `documentation-lookup` for general library/API facts and other providers.
 - Use `mcp-builder` for MCP servers; use `claude-api` for Anthropic API clients and `security-review` when secret/tool-execution risk is central.
+- Treat CodeGraph and Headroom as external tool configuration suggestions surfaced by `harness-hub check` and readiness analysis, not as skill owners or managed install components. Any MCP config, proxy, hook, provider routing, or memory setup remains explicit and reviewed.
 - Use `skill-creator` for standard skill content; `hub-maintenance-workflow` still owns source records, capability metadata, and Harness Hub lifecycle decisions.
 - Use `delivery-workflow` after a requested PR is created or updated to inspect remote PR state, mergeability, CI/check runs, conflicts, and branch-protection blockers; do not treat local validation alone as PR-ready evidence.
 - Use OpenSpec skills only when the user explicitly wants the formal OpenSpec lifecycle.
