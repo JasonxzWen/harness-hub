@@ -46,6 +46,26 @@ Keep every distributed skill in the standard layout under `skills/<skill-name>/S
 - If a capability cannot be used safely without rewriting away its core value, keep it as an evaluated source or explicit-only reference.
 - Keep repo harness templates under `harness/<template-name>/`; root harness files in target projects are installed only through explicit harness lifecycle commands, never through default skill installation.
 
+## Codex Worktree Startup Gate
+
+Before using repo-local skill activation or running `workflow-router` in a fresh Codex worktree, check whether `.codex/skills/` and `.harness-hub/state/` exist. Git worktree creation does not copy ignored generated directories.
+
+For write tasks, run the tracked read-only preflight first:
+
+```powershell
+bun run codex:worktree-check -- --write-task
+```
+
+If the preflight fails, run the portable local setup before continuing:
+
+```powershell
+bun run codex:worktree-setup
+```
+
+For purely read-only questions, `bun run codex:worktree-check` may warn and still exit zero; continue only while clearly stating that repo-local skills are not yet bootstrapped.
+
+This setup is local initialization only: it syncs `.codex/skills/`, creates missing `.harness-hub/state/` templates, preserves existing task state by default, and must not create a checkpoint commit. Use `bun run codex:worktree-setup -- --reset-state` only when intentionally starting over with clean local task state.
+
 ## Skill Routing
 
 Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest matching skill:
@@ -141,12 +161,14 @@ Before release-oriented CLI changes, run `bun run validate`, `git diff --check`,
 
 ## Codex Worktree Setup
 
-For local Codex dogfooding, the generated `.codex/skills/` tree is host-local and ignored. Edit source skills under `skills/`, then regenerate wrappers.
+For local Codex dogfooding, the generated `.codex/skills/` tree and `.harness-hub/state/` task memory are host-local and ignored. Edit source skills under `skills/`, then run worktree setup to regenerate wrappers and create any missing local harness state templates.
+
+At the start of a fresh Codex worktree, before relying on repo-local skill activation or workflow routing, run worktree setup if `.codex/skills/` or `.harness-hub/state/` is missing. Git worktree creation does not copy ignored generated directories.
 
 Use this portable worktree setup command from the worktree root:
 
 ```powershell
-node scripts/sync-codex-skills.mjs
+node scripts/setup-codex-worktree.mjs
 ```
 
 The equivalent package script is:
@@ -155,7 +177,7 @@ The equivalent package script is:
 bun run codex:worktree-setup
 ```
 
-Do not hard-code a machine path in setup commands. The script derives the repository root from its own location so fresh worktrees can generate their ignored `.codex/skills/` copy without committing host-local files.
+Do not hard-code a machine path in setup commands. The script derives the repository root from its own location so fresh worktrees can generate ignored `.codex/skills/` copies, create missing `.harness-hub/state/` templates, preserve existing task state on reruns, and skip checkpoint commits for setup-only work. Use `--reset-state` or `--fresh` only when intentionally discarding local task state.
 
 ## Third-Party Skill Evaluation
 

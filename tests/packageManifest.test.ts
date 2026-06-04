@@ -39,7 +39,9 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.files).toContain('README.zh-CN.md');
   expect(packageJson.files).toContain('config/');
   expect(packageJson.files).toContain('harness/');
+  expect(packageJson.files).toContain('scripts/check-codex-worktree.mjs');
   expect(packageJson.files).toContain('scripts/sync-codex-skills.mjs');
+  expect(packageJson.files).toContain('scripts/setup-codex-worktree.mjs');
   expect(packageJson.files).toContain('scripts/run-validate-skills.mjs');
   expect(packageJson.files).toContain('openspec/config.yaml');
   expect(packageJson.files).toContain('openspec/specs/');

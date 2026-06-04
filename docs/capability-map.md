@@ -137,6 +137,6 @@ Known redundancies:
 - `agents`: currently `["standard"]` for lock compatibility with older schema field names;
 - `risk`: lifecycle risk for install/update/remove decisions.
 
-Do not add host-specific install directories to the capability graph. Packaging for a host belongs in that host's manifest layer, such as `.claude-plugin/`. Local Codex dogfooding uses `scripts/sync-codex-skills.mjs` to generate ignored `.codex/skills/` copies from the standard source tree; `.codex/` stays local and is not installable capability metadata. Subagents and hooks are workflow-owned optimizations: subagents need independent scopes, and hooks stay advisory until reviewed and approved.
+Do not add host-specific install directories to the capability graph. Packaging for a host belongs in that host's manifest layer, such as `.claude-plugin/`. Local Codex dogfooding uses `scripts/check-codex-worktree.mjs` as a read-only preflight and `scripts/setup-codex-worktree.mjs` to generate ignored `.codex/skills/` copies from the standard source tree plus missing `.harness-hub/state/` templates; `.codex/` and `.harness-hub/state/` stay local and are not installable capability metadata. Subagents and hooks are workflow-owned optimizations: subagents need independent scopes, and hooks stay advisory until reviewed and approved.
 
 Harness components currently live under `harness/minimal/`, but they are not part of default standard skill install. They are copied only by explicit harness lifecycle commands and must stay free of host-local runner metadata.
