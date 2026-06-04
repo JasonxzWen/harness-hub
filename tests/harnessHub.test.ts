@@ -565,6 +565,17 @@ test('readiness analysis detects well-instrumented repo evidence', async () => {
     .map((item) => item.value)).toContain('CHANGELOG.md');
 });
 
+test('readiness analysis surfaces external tool target markers', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-readiness-external-tools-'));
+  fs.mkdirSync(path.join(targetDir, '.codegraph'));
+
+  const result = analyzeTarget({ targetDir, agents: ['standard'], agentReadiness: true });
+  const finding = result.agentReadiness?.findings.find((entry) => entry.category === 'external_tools');
+
+  expect(finding?.state).toBe('detected');
+  expect(finding?.evidence.map((item) => item.value)).toContain('.codegraph');
+});
+
 test('readiness analysis reports duplicated always-loaded context risk', async () => {
   const targetDir = path.join(AGENT_READINESS_FIXTURES, 'overloaded-context');
   const result = await captureCli(['analyze', targetDir, '--agent-readiness', '--json']);
@@ -1267,6 +1278,69 @@ test('check reports cli package status and target status separately', async () =
   expect(result.target.updates).toEqual([]);
 });
 
+test('check reports external tool installation suggestions without side effects', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-external-tools-'));
+  const before = snapshotDirectory(targetDir);
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    pathEnv: '',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  const codegraph = result.externalTools.find((tool) => tool.id === 'codegraph');
+  const headroom = result.externalTools.find((tool) => tool.id === 'headroom');
+
+  expect(result.exitCode).toBe(0);
+  expect(result.reason).toContain('External tools');
+  expect(codegraph?.state).toBe('recommended');
+  expect(codegraph?.recommendedCommands).toContain('npm install -g @colbymchenry/codegraph');
+  expect(headroom?.state).toBe('recommended');
+  expect(headroom?.recommendedCommands).toContain('pipx install --python python3.13 "headroom-ai[all]"');
+  expect(snapshotDirectory(targetDir)).toEqual(before);
+});
+
+test('check detects explicit external tool host and target configuration evidence', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-external-config-'));
+  const binDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-fake-bin-'));
+  fs.mkdirSync(path.join(targetDir, '.codegraph'));
+  writeFakePathCommand(binDir, 'codegraph');
+  writeFakePathCommand(binDir, 'headroom');
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    pathEnv: binDir,
+    env: {
+      PATH: binDir,
+      HEADROOM_BASE_URL: 'http://127.0.0.1:8787',
+    },
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  const codegraph = result.externalTools.find((tool) => tool.id === 'codegraph');
+  const headroom = result.externalTools.find((tool) => tool.id === 'headroom');
+
+  expect(codegraph?.state).toBe('configured');
+  expect(codegraph?.installed).toBe(true);
+  expect(codegraph?.targetInitialized).toBe(true);
+  expect(codegraph?.evidence).toContain('.codegraph');
+  expect(headroom?.state).toBe('configured');
+  expect(headroom?.installed).toBe(true);
+  expect(headroom?.evidence).toContain('env:HEADROOM_BASE_URL');
+});
+
 test('check reports target managed component updates without applying them', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-target-update-'));
   applyInstall(planInstall({ targetDir, agents: ['standard'] }));
@@ -1326,6 +1400,7 @@ test('check command emits split json and exits zero', async () => {
     expect(report.cli.latestVersion).toBe('99.0.0');
     expect(report.cli.state).toBe('update-available');
     expect(report.target.state).toBe('not-managed');
+    expect(report.externalTools.map((tool: { id: string }) => tool.id)).toEqual(['codegraph', 'headroom']);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -1355,6 +1430,14 @@ async function captureCli(argv: string[]): Promise<{ code: number; stdout: strin
 
 function normalizeGeneratedAt<T extends { generatedAt?: string }>(value: T): T {
   return { ...value, generatedAt: '<timestamp>' };
+}
+
+function writeFakePathCommand(binDir: string, name: string): void {
+  fs.mkdirSync(binDir, { recursive: true });
+  const shellPath = path.join(binDir, name);
+  fs.writeFileSync(shellPath, '#!/bin/sh\nexit 0\n');
+  fs.chmodSync(shellPath, 0o755);
+  fs.writeFileSync(path.join(binDir, `${name}.CMD`), '@echo off\r\nexit /b 0\r\n');
 }
 
 function snapshotDirectory(root: string): string[] {

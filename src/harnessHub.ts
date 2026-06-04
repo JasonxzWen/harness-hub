@@ -18,6 +18,7 @@ export const AGENT_READINESS_CATEGORIES = [
   'agent_routing',
   'automation_candidates',
   'learning_capture',
+  'external_tools',
 ] as const;
 
 export type AgentReadinessCategory = typeof AGENT_READINESS_CATEGORIES[number];
@@ -649,6 +650,24 @@ export interface HarnessHubTargetCheck {
   evidence: string[];
 }
 
+export type ExternalToolSuggestionState = 'configured' | 'installed' | 'recommended';
+export type ExternalToolSuggestionId = 'codegraph' | 'headroom';
+
+export interface ExternalToolSuggestion {
+  id: ExternalToolSuggestionId;
+  name: string;
+  source: string;
+  state: ExternalToolSuggestionState;
+  installed: boolean;
+  configured: boolean;
+  targetInitialized: boolean | null;
+  risk: LifecycleRisk;
+  message: string;
+  recommendation: string;
+  recommendedCommands: string[];
+  evidence: string[];
+}
+
 export interface HarnessHubCheckResult {
   schemaVersion: 1;
   generatedAt: string;
@@ -656,6 +675,7 @@ export interface HarnessHubCheckResult {
   hubVersion: string;
   cli: HarnessHubCliCheck;
   target: HarnessHubTargetCheck;
+  externalTools: ExternalToolSuggestion[];
   reason: string;
 }
 
@@ -712,6 +732,9 @@ interface CheckOptions extends StatusOptions {
   packageName?: string;
   currentVersion?: string;
   registryBaseUrl?: string;
+  pathEnv?: string;
+  platform?: NodeJS.Platform;
+  env?: Record<string, string | undefined>;
   latestVersionResolver?: (packageName: string, registryBaseUrl: string) => Promise<LatestPackageVersionResult>;
 }
 
@@ -1087,6 +1110,7 @@ export function analyzeAgentReadiness(targetDirInput: string): AgentReadinessRep
     buildRoutingFinding(routingEvidence),
     ...buildAutomationCandidateFindings(targetDir, verificationEvidence, outcomeEvidence),
     buildLearningCaptureFinding(learningEvidence),
+    buildExternalToolsFinding(targetDir),
   ].sort(sortReadinessFindings);
 
   return {
@@ -1317,6 +1341,50 @@ function buildLearningCaptureFinding(evidence: AgentReadinessEvidence[]): AgentR
     recommendation: 'Capture lessons as docs, changelog entries, skill gotchas, or memory-note proposals after review.',
     evidence,
   });
+}
+
+function buildExternalToolsFinding(targetDir: string): AgentReadinessFinding {
+  const evidence = detectExternalToolTargetEvidence(targetDir);
+  if (evidence.length === 0) {
+    return makeReadinessFinding({
+      id: 'external_tools.no_external_tool_markers',
+      category: 'external_tools',
+      state: 'not-detected',
+      severity: 'info',
+      reason: 'No CodeGraph index or Headroom project marker was detected.',
+      recommendation: 'Use harness-hub check for host install/config advice; consider CodeGraph for structural code intelligence and Headroom for explicit context-compression/proxy workflows.',
+      evidence,
+    });
+  }
+
+  return makeReadinessFinding({
+    id: 'external_tools.external_tool_markers',
+    category: 'external_tools',
+    state: 'detected',
+    severity: 'info',
+    reason: 'External tool project markers were detected.',
+    recommendation: 'Keep external tools explicit and review their generated config before relying on them in default agent workflows.',
+    evidence,
+  });
+}
+
+function detectExternalToolTargetEvidence(targetDir: string): AgentReadinessEvidence[] {
+  const evidence: AgentReadinessEvidence[] = [];
+  if (safeRelativePathExists(targetDir, '.codegraph')) {
+    evidence.push({
+      kind: 'path',
+      value: '.codegraph',
+      detail: 'CodeGraph project index marker',
+    });
+  }
+  if (safeRelativePathExists(targetDir, '.headroom')) {
+    evidence.push({
+      kind: 'path',
+      value: '.headroom',
+      detail: 'Headroom project-local state marker',
+    });
+  }
+  return evidence;
 }
 
 function detectContextSurfaceEvidence(targetDir: string): AgentReadinessEvidence[] {
@@ -4693,9 +4761,16 @@ export async function checkHarnessHub(options: CheckOptions = {}): Promise<Harne
     targetDir: options.targetDir || process.cwd(),
     index,
   });
+  const externalTools = buildExternalToolSuggestions({
+    targetDir: target.targetDir,
+    pathEnv: options.pathEnv,
+    platform: options.platform,
+    env: options.env,
+  });
   const reason = [
     `CLI ${cli.state}: ${cli.message}`,
     `Target ${target.state}: ${target.message}`,
+    `External tools: ${externalToolSummary(externalTools)}`,
   ].join(' ');
 
   return {
@@ -4705,6 +4780,7 @@ export async function checkHarnessHub(options: CheckOptions = {}): Promise<Harne
     hubVersion: index.version,
     cli,
     target,
+    externalTools,
     reason,
   };
 }
@@ -4996,6 +5072,175 @@ function targetRecommendedCommand(state: HarnessHubTargetCheck['state'], targetD
     return `harness-hub status "${targetDir}" --json`;
   }
   return null;
+}
+
+function buildExternalToolSuggestions({
+  targetDir,
+  pathEnv,
+  platform,
+  env,
+}: {
+  targetDir: string;
+  pathEnv?: string;
+  platform?: NodeJS.Platform;
+  env?: Record<string, string | undefined>;
+}): ExternalToolSuggestion[] {
+  const resolvedTarget = path.resolve(targetDir);
+  const environment = env || process.env;
+  const effectivePath = pathEnv ?? readPathEnv(environment);
+  const effectivePlatform = platform || process.platform;
+  return [
+    buildCodeGraphSuggestion(resolvedTarget, effectivePath, effectivePlatform),
+    buildHeadroomSuggestion(resolvedTarget, effectivePath, effectivePlatform, environment),
+  ];
+}
+
+function buildCodeGraphSuggestion(
+  targetDir: string,
+  pathEnv: string,
+  platform: NodeJS.Platform,
+): ExternalToolSuggestion {
+  const installed = commandExistsOnPath('codegraph', pathEnv, platform);
+  const targetInitialized = safeRelativePathExists(targetDir, '.codegraph');
+  const evidence = [
+    installed ? 'PATH:codegraph' : 'PATH:codegraph missing',
+    targetInitialized ? '.codegraph' : '.codegraph missing',
+  ];
+  const recommendedCommands = installed
+    ? [
+      'codegraph install --print-config codex',
+      'codegraph init -i',
+    ]
+    : [
+      'npm install -g @colbymchenry/codegraph',
+      'codegraph install --print-config codex',
+      'codegraph init -i',
+    ];
+  const state: ExternalToolSuggestionState = installed && targetInitialized
+    ? 'configured'
+    : installed
+      ? 'installed'
+      : 'recommended';
+  const message = installed && targetInitialized
+    ? 'CodeGraph CLI is on PATH and this target has a .codegraph index marker.'
+    : installed
+      ? 'CodeGraph CLI is on PATH; initialize this target before expecting CodeGraph MCP context.'
+      : 'CodeGraph CLI is not on PATH; install it before wiring MCP config or initializing target indexes.';
+
+  return {
+    id: 'codegraph',
+    name: 'CodeGraph',
+    source: 'colbymchenry/codegraph',
+    state,
+    installed,
+    configured: installed && targetInitialized,
+    targetInitialized,
+    risk: 'medium',
+    message,
+    recommendation: 'Use CodeGraph as an explicit local MCP/code-indexing layer for structural code questions; keep global agent config changes manual or reviewed.',
+    recommendedCommands,
+    evidence,
+  };
+}
+
+function buildHeadroomSuggestion(
+  targetDir: string,
+  pathEnv: string,
+  platform: NodeJS.Platform,
+  env: Record<string, string | undefined>,
+): ExternalToolSuggestion {
+  const installed = commandExistsOnPath('headroom', pathEnv, platform);
+  const envEvidence = [
+    'HEADROOM_BASE_URL',
+    'HEADROOM_PORT',
+    'HEADROOM_WORKSPACE_DIR',
+    'HEADROOM_CONFIG_DIR',
+  ].filter((key) => Boolean(env[key]));
+  const projectMarker = safeRelativePathExists(targetDir, '.headroom');
+  const configured = installed && (envEvidence.length > 0 || projectMarker);
+  const evidence = [
+    installed ? 'PATH:headroom' : 'PATH:headroom missing',
+    ...envEvidence.map((key) => `env:${key}`),
+    projectMarker ? '.headroom' : '.headroom missing',
+  ];
+  const recommendedCommands = installed
+    ? [
+      'headroom init -g codex',
+      'headroom proxy --port 8787',
+    ]
+    : [
+      'pipx install --python python3.13 "headroom-ai[all]"',
+      'headroom init -g codex',
+      'headroom proxy --port 8787',
+    ];
+  const state: ExternalToolSuggestionState = configured
+    ? 'configured'
+    : installed
+      ? 'installed'
+      : 'recommended';
+  const message = configured
+    ? 'Headroom CLI/config evidence is present; keep proxy and hook usage explicit.'
+    : installed
+      ? 'Headroom CLI is on PATH; configure it only when a target workflow needs context compression, proxying, or shared memory.'
+      : 'Headroom CLI is not on PATH; install it only for explicit context-compression, proxy, or cross-agent memory workflows.';
+
+  return {
+    id: 'headroom',
+    name: 'Headroom',
+    source: 'chopratejas/headroom',
+    state,
+    installed,
+    configured,
+    targetInitialized: projectMarker,
+    risk: 'high',
+    message,
+    recommendation: 'Use Headroom as an explicit opt-in runtime layer; review proxy, hook, provider-routing, telemetry, and memory behavior before enabling it.',
+    recommendedCommands,
+    evidence,
+  };
+}
+
+function externalToolSummary(tools: ExternalToolSuggestion[]): string {
+  const configured = tools.filter((tool) => tool.state === 'configured').length;
+  const installed = tools.filter((tool) => tool.state === 'installed').length;
+  const recommended = tools.filter((tool) => tool.state === 'recommended').length;
+  return `${configured} configured, ${installed} installed, ${recommended} recommended.`;
+}
+
+function readPathEnv(env: Record<string, string | undefined>): string {
+  return env.PATH || env.Path || env.path || '';
+}
+
+function commandExistsOnPath(command: string, pathEnv: string, platform: NodeJS.Platform): boolean {
+  if (!pathEnv.trim()) {
+    return false;
+  }
+
+  const pathEntries = pathEnv.split(path.delimiter).filter((entry) => entry.trim().length > 0);
+  const extensions = platform === 'win32'
+    ? (process.env.PATHEXT || '.COM;.EXE;.BAT;.CMD')
+      .split(';')
+      .filter((extension) => extension.trim().length > 0)
+    : [''];
+  const commandHasExtension = path.extname(command).length > 0;
+
+  for (const entry of pathEntries) {
+    const directory = entry.replace(/^"|"$/g, '');
+    const candidates = commandHasExtension
+      ? [path.join(directory, command)]
+      : extensions.map((extension) => path.join(directory, `${command}${extension}`));
+    for (const candidate of candidates) {
+      try {
+        if (fs.statSync(candidate).isFile()) {
+          return true;
+        }
+      } catch {
+        // Continue scanning PATH.
+      }
+    }
+  }
+
+  return false;
 }
 
 function compareVersions(left: string, right: string): number {
@@ -6159,6 +6404,13 @@ function rowsForLifecycleData(
         version: data.target.lockPath || '',
         latestVersion: data.target.recommendedCommand,
       },
+      ...data.externalTools.map((tool) => ({
+        id: `external:${tool.id}`,
+        state: tool.state,
+        dest: tool.message,
+        version: tool.installed ? 'installed' : 'not-installed',
+        latestVersion: tool.recommendedCommands.join(' | '),
+      })),
       ...data.target.updates.map((row) => ({ ...row, state: 'update-available' })),
       ...data.target.blockers.map((row) => ({ ...row, state: row.state })),
     ];
