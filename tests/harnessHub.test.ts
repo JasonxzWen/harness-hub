@@ -21,6 +21,7 @@ import {
   readLock,
   removeManaged,
   runCli,
+  selfCheckHarnessHub,
   type HarnessHubLock,
   updateManaged,
   validateHarness,
@@ -1401,6 +1402,101 @@ test('check command emits split json and exits zero', async () => {
     expect(report.cli.state).toBe('update-available');
     expect(report.target.state).toBe('not-managed');
     expect(report.externalTools.map((tool: { id: string }) => tool.id)).toEqual(['codegraph', 'headroom']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('self-check treats the Harness Hub source checkout as advisory when no target harness lock exists', async () => {
+  const result = await selfCheckHarnessHub({
+    targetDir: process.cwd(),
+    currentVersion: '1.0.0',
+    pathEnv: '',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.harnessValidation.state).toBe('skipped');
+  expect(result.harnessValidation.attempted).toBe(false);
+  expect(result.hardFailures).toEqual([]);
+  expect(result.advisories.map((finding) => finding.id)).toContain('harness-validation.skipped');
+});
+
+test('self-check skips strict harness validation for uninitialized targets by default without writing files', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({ version: '1.0.0' }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  })) as unknown as typeof fetch;
+  try {
+    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-self-check-uninitialized-'));
+    const before = snapshotDirectory(targetDir);
+    const result = await captureCli(['self-check', targetDir, '--json']);
+    const report = JSON.parse(result.stdout);
+
+    expect(result.code).toBe(0);
+    expect(report.exitCode).toBe(0);
+    expect(report.check.target.state).toBe('not-managed');
+    expect(report.harnessValidation.state).toBe('skipped');
+    expect(report.harnessValidation.validation).toBeNull();
+    expect(report.hardFailures).toEqual([]);
+    expect(report.advisories.map((finding: { id: string }) => finding.id)).toEqual(expect.arrayContaining([
+      'target.not-managed',
+      'harness-validation.skipped',
+    ]));
+    expect(snapshotDirectory(targetDir)).toEqual(before);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('self-check runs harness validation automatically for initialized harness targets', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({ version: '1.0.0' }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  })) as unknown as typeof fetch;
+  try {
+    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-self-check-initialized-'));
+    applyHarnessInit(planHarnessInit({ targetDir }));
+    const result = await captureCli(['self-check', targetDir, '--json']);
+    const report = JSON.parse(result.stdout);
+
+    expect(result.code).toBe(0);
+    expect(report.exitCode).toBe(0);
+    expect(report.check.target.state).toBe('current');
+    expect(report.harnessValidation.state).toBe('pass');
+    expect(report.harnessValidation.attempted).toBe(true);
+    expect(report.harnessValidation.initialized).toBe(true);
+    expect(report.harnessValidation.validation.exitCode).toBe(0);
+    expect(report.hardFailures).toEqual([]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('self-check returns a hard failure when strict harness validation is requested for an uninitialized target', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({ version: '1.0.0' }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  })) as unknown as typeof fetch;
+  try {
+    const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-self-check-strict-'));
+    const result = await captureCli(['self-check', targetDir, '--validate-harness', '--json']);
+    const report = JSON.parse(result.stdout);
+
+    expect(result.code).toBe(1);
+    expect(report.exitCode).toBe(1);
+    expect(report.harnessValidation.state).toBe('fail');
+    expect(report.harnessValidation.strict).toBe(true);
+    expect(report.harnessValidation.validation.exitCode).toBe(3);
+    expect(report.hardFailures.map((finding: { id: string }) => finding.id)).toContain('harness-validation.failed');
   } finally {
     globalThis.fetch = originalFetch;
   }

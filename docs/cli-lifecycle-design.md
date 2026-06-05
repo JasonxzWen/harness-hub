@@ -18,6 +18,8 @@ The Harness Hub CLI manages a repo-local agent harness lifecycle in target repos
 
 ```powershell
 harness-hub check <target> --json
+harness-hub self-check <target> --json
+harness-hub self-check <target> --validate-harness --json
 harness-hub analyze <target> --json
 harness-hub analyze <target> --agent-readiness --harness --json
 harness-hub init-harness <target> --dry-run --json
@@ -39,6 +41,8 @@ harness-hub remove <target> --dry-run --json
 ```
 
 `check` is the startup-friendly read-only command. It compares the current `@jasonwen/harness-hub` package version to npm registry latest in a `cli` report section, summarizes the target repository's `.harness-hub/lock.json` managed-component freshness in a separate `target` section, and reports explicit CodeGraph/Headroom configuration advice in `externalTools`. It does not install packages, apply `update`, rewrite locks, initialize CodeGraph indexes, write Headroom config, or fail startup because of update availability, missing locks, registry unavailability, or external tool suggestions.
+
+`self-check` is the routine read-only aggregate for local or scheduled status checks. It wraps `check`, splits hard failures from advisory items, and conditionally includes `validate-harness`: initialized targets with an installed `harness:minimal` lock record are validated by default, while source checkouts or uninitialized targets skip strict harness validation unless `--validate-harness` is passed. A local runner can schedule `harness-hub self-check <target> --json` at 21:30 daily, but the CLI must not create schedules, webhooks, commits, pushes, tool installs, or target setup as part of self-check.
 
 `--target standard` is the supported skill install target. `install` always selects the complete standard skill set: every `kind: "skill"` component in `capabilities/index.json`. The implementation still stores the selected target in existing `agents` lock fields for schema continuity, but the value is the personal default distribution.
 
