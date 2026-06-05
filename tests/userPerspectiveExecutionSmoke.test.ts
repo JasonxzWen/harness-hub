@@ -15,10 +15,13 @@ type WorkflowCheckResult = {
     owner: string | null;
     mutationAllowed: boolean;
     mutates: boolean;
+    expectedOutputMode: string | null;
   };
   advisory: {
     ok: boolean;
     mutates: boolean;
+    expectedOutputMode?: string | null;
+    htmlRequired?: boolean;
     warnings: Array<{ id: string }>;
   };
   ownerContract: {
@@ -27,6 +30,17 @@ type WorkflowCheckResult = {
   };
   mutates: boolean;
   dispatchesSubagents: boolean;
+};
+
+type ExpectedOutputMode = 'plain-brief' | 'structured-markdown' | 'visual-markdown' | 'html-artifact' | null;
+
+type WorkflowSmokeCase = {
+  prompt: string;
+  state: string;
+  owner: string | null;
+  expectedOutputMode?: ExpectedOutputMode;
+  warnings?: string[];
+  args?: string[];
 };
 
 type RoutingCase = {
@@ -120,7 +134,7 @@ function tryRunActivationCases(scriptPath: string, casesFile: string): Activatio
 test('installed workflow router routes a user-perspective intent matrix without mutation or subagent dispatch', () => {
   const targetDir = installIntoTemp('harness-hub-user-workflow-smoke-');
   const workflowCheckScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'workflow-check.mjs');
-  const cases = [
+  const cases: WorkflowSmokeCase[] = [
     {
       prompt: 'Where does install overwrite behavior come from? Explain the evidence first; do not change files.',
       state: 'question',
@@ -131,6 +145,7 @@ test('installed workflow router routes a user-perspective intent matrix without 
       prompt: 'Continue converging Harness Hub skill quality and trigger boundaries; add executable smoke coverage.',
       state: 'harness-hub-maintenance',
       owner: 'hub-maintenance-workflow',
+      expectedOutputMode: 'html-artifact',
       warnings: ['missing-scope', 'missing-spec', 'missing-acceptance', 'missing-plan'],
     },
     {
@@ -170,18 +185,21 @@ test('installed workflow router routes a user-perspective intent matrix without 
 
     expect(result.route.state).toBe(entry.state);
     expect(result.route.owner).toBe(entry.owner);
+    if (entry.expectedOutputMode !== undefined) {
+      expect(result.route.expectedOutputMode).toBe(entry.expectedOutputMode);
+    }
     expect(result.route.mutates).toBe(false);
     expect(result.mutates).toBe(false);
     expect(result.advisory.mutates).toBe(false);
     expect(result.dispatchesSubagents).toBe(false);
-    expect(result.advisory.warnings.map((warning) => warning.id)).toEqual(entry.warnings);
+    expect(result.advisory.warnings.map((warning) => warning.id)).toEqual(entry.warnings ?? []);
   }
 });
 
 test('installed workflow check has a passing gate path for every owner state', () => {
   const targetDir = installIntoTemp('harness-hub-owner-pass-smoke-');
   const workflowCheckScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'workflow-check.mjs');
-  const cases = [
+  const cases: WorkflowSmokeCase[] = [
     {
       prompt: 'Where does install overwrite behavior come from? Explain the evidence first; do not change files.',
       state: 'question',
@@ -210,21 +228,25 @@ test('installed workflow check has a passing gate path for every owner state', (
       prompt: 'Continue converging Harness Hub skill quality and trigger boundaries; add executable smoke coverage.',
       state: 'harness-hub-maintenance',
       owner: 'hub-maintenance-workflow',
+      expectedOutputMode: 'html-artifact',
       args: ['--has-scope', '--has-spec', '--has-acceptance', '--has-plan'],
     },
     {
       prompt: 'Finish the accepted work: run validation, clean artifacts, and write the handoff.',
       state: 'delivery',
       owner: 'delivery-workflow',
-      args: ['--has-validation', '--has-handoff', '--material-changes'],
+      args: ['--has-validation', '--has-html-handoff', '--material-changes'],
     },
   ];
 
   for (const entry of cases) {
-    const result = runWorkflowCheck(workflowCheckScript, entry.prompt, entry.args, targetDir);
+    const result = runWorkflowCheck(workflowCheckScript, entry.prompt, entry.args ?? [], targetDir);
 
     expect(result.route.state).toBe(entry.state);
     expect(result.route.owner).toBe(entry.owner);
+    if (entry.expectedOutputMode !== undefined) {
+      expect(result.route.expectedOutputMode).toBe(entry.expectedOutputMode);
+    }
     expect(result.advisory.ok).toBe(true);
     expect(result.advisory.warnings).toEqual([]);
     expect(result.ownerContract.ok).toBe(true);
@@ -259,6 +281,22 @@ test('installed skill metadata selects high-overlap helper skills from user prom
   expect(pauseReportSmoke.selectedSkill).toBe('effective-interact');
   expect(pauseReportSmoke.mutates).toBe(false);
   expect(pauseReportSmoke.dispatchesSubagents).toBe(false);
+
+  const chineseHtmlReportSmoke = runActivationCheck(
+    activationCheckScript,
+    '请生成 HTML 汇报：这次改动涉及多个 skill、路由边界、验证结果和风险。',
+  );
+  expect(chineseHtmlReportSmoke.selectedSkill).toBe('effective-interact');
+  expect(chineseHtmlReportSmoke.mutates).toBe(false);
+  expect(chineseHtmlReportSmoke.dispatchesSubagents).toBe(false);
+
+  const visualLanguageReportSmoke = runActivationCheck(
+    activationCheckScript,
+    '这次汇报请先用可视化语言组织内容，减少人机交互时间开销和信息损失，不要只是把 Markdown 包成 HTML。',
+  );
+  expect(visualLanguageReportSmoke.selectedSkill).toBe('effective-interact');
+  expect(visualLanguageReportSmoke.mutates).toBe(false);
+  expect(visualLanguageReportSmoke.dispatchesSubagents).toBe(false);
 
   const ownerPromptSmoke = runActivationCheck(
     activationCheckScript,

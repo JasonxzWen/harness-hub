@@ -186,6 +186,22 @@
       "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
+      "id": "effective-interact-positive-real-chinese-html-report",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "请生成 HTML 汇报：这次改动涉及多个 skill、路由边界、验证结果和风险。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-chinese-visual-language-report",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "这次汇报请先用可视化语言组织内容，减少人机交互时间开销和信息损失，不要只是把 Markdown 包成 HTML。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
       "id": "effective-interact-positive-completed-conclusion",
       "skill": "effective-interact",
       "kind": "positive",

@@ -122,7 +122,7 @@
     "skill:workflow-router": {
       "kind": "skill",
       "path": "skills/workflow-router",
-      "version": "0.12.0",
+      "version": "0.12.2",
       "source": "local",
       "provides": [
         "workflow-intent-routing",
@@ -137,6 +137,9 @@
         "owner-helper-activation-separation",
         "helper-side-effect-contract",
         "explicit-read-only-mutation-guard",
+        "expected-output-mode-routing",
+        "html-handoff-advisory-gate",
+        "visual-language-report-activation",
         "owner-workflow-structure-contract",
         "executable-owner-contract-smoke"
       ],
@@ -443,7 +446,7 @@
     "skill:effective-interact": {
       "kind": "skill",
       "path": "skills/effective-interact",
-      "version": "0.2.1",
+      "version": "0.2.3",
       "source": "local",
       "provides": [
         "complex-communication-briefs",
@@ -456,6 +459,8 @@
         "self-contained-html-interaction-artifacts",
         "interactive-work-artifacts",
         "html-change-artifacts",
+        "material-change-html-handoffs",
+        "visual-language-first-handoffs",
         "html-aesthetic-preflight-validation",
         "visual-code-evidence-artifacts",
         "generated-interaction-artifacts",
@@ -472,7 +477,7 @@
         "skill:frontend-slides",
         "skill:frontend-design"
       ],
-      "routing": "Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text/Markdown/visual Markdown/HTML by decision cost; do not load merely because answer is long; skip trivial chat/bundled apps.",
+      "routing": "Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; organize from visual language first, then choose plain text/Markdown/visual Markdown/HTML by decision cost, defaulting material repo/skill changes to HTML handoff; do not load merely because answer is long; skip trivial chat/bundled apps.",
       "detects": [
         {
           "path": "skills/effective-interact/SKILL.md"
@@ -485,7 +490,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Structure Chinese-first complex pause reports when material alignment, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, evidence, risks, validation, or continuation notes need first-principles organization; escalate to self-contained HTML only when it lowers decision cost."
+      "recommendation": "Structure Chinese-first complex pause reports when material alignment, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, evidence, risks, validation, or continuation notes need first-principles organization; start from useful visual language, avoid Markdown-in-HTML, and default material repo/skill change handoffs to validated self-contained HTML unless explicitly waived."
     },
     "skill:handoff": {
       "kind": "skill",

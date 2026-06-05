@@ -67,7 +67,8 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Lightweight brainstorming belongs inside `sdd-workflow`: use repo/source inspection, 2-3 direction comparison, `grill-me` for pressure questions, `prototype` for disposable proof, and `product-capability` for implementation constraints. Do not add or trigger a standalone brainstorming skill unless a future routing gap is explicitly accepted.
 - Use `karpathy-guidelines` as an engineering behavior baseline under `sdd-workflow`, `tdd-workflow`, or `review-workflow`; use `coding-standards` for cross-project code quality conventions and `grill-me` when the user wants an interview-style pressure test.
 - Do not treat `effective-interact` as a default-considered skill for non-trivial sessions merely because a reply may be long; the trigger is a real communication, alignment, verification, approval, handoff, or continuation need.
-- Use `effective-interact` as the default reporting layer when the agent is about to pause on relatively complex information, especially for material repo or skill change reports that need preserved facts, evidence navigation, validation state, risks, or a continuation handoff.
+- Use `effective-interact` as the default reporting layer when the agent is about to pause on relatively complex information. For material repo or skill behavior changes, default to a validated HTML handoff unless the user explicitly waives HTML or the work is tiny and has no durable evidence trail.
+- When `effective-interact` loads, organize the report from visual language first: choose matrices, timelines, maps, flows, evidence layouts, or source-linked tours that reduce interaction time and information loss before deciding the output mode. Avoid both decorative visuals and Markdown-in-HTML handoffs.
 - `frontend-slides` remains the deck lane; `effective-interact` may summarize or hand off deck-related findings, but it should not become the slide-generation workflow.
 
 ## Boundary Sentences
@@ -78,6 +79,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `tdd-workflow` loads for production features, confirmed bug fixes, and refactors with tests; unknown root-cause diagnosis and throwaway exploration route elsewhere.
 - `frontend-design` loads for production-grade visual UI creation, not routine reports or debugging.
 - `effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere.
+- Material repo/skill behavior changes default to a validated HTML handoff unless explicitly waived or tiny with no durable evidence trail.
 - `handoff` loads for restart notes or compact agent/session handoff documents; visual HTML reports and context-limit advice route elsewhere.
 - `compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere.
 - `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.

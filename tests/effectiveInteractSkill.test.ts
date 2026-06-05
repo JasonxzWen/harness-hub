@@ -52,7 +52,7 @@ test('effective-interact documents positive and negative trigger examples', () =
   expect(skill).toContain('200 Chinese characters');
   expect(skill).toContain('changed skill/repo behavior');
   expect(skill).toContain('choose before you implement');
-  expect(skill).toContain('plain-text handoff');
+  expect(skill).toContain('HTML handoff');
   expect(skill).toContain('OpenSpec apply');
   expect(skill).toContain('implementation plan with milestones');
   expect(skill).toContain('validation gates');
@@ -79,6 +79,9 @@ test('effective-interact treats complex communication as the core job', () => {
   expect(skill).toContain('Do not load merely because the answer may exceed roughly 200 Chinese characters');
   expect(skill).toContain('200 Chinese characters and 3 or more independent points are auxiliary signals');
   expect(skill).toContain('communication-worthiness check');
+  expect(skill).toContain('visual-language check');
+  expect(skill).toContain('think in visual language first');
+  expect(skill).toContain('interaction time and information loss');
   expect(skill).toContain('Reader need');
   expect(skill).toContain('Decision frame');
   expect(skill).toContain('plain-brief');
@@ -86,6 +89,7 @@ test('effective-interact treats complex communication as the core job', () => {
   expect(skill).toContain('visual-markdown');
   expect(skill).toContain('html-artifact');
   expect(skill).toContain('HTML is an escalation path, not the default goal');
+  expect(skill).toContain('material repo or skill behavior changes are the default HTML handoff exception');
 });
 
 test('effective-interact can shape communication before, during, or after implementation', () => {
@@ -109,6 +113,7 @@ test('effective-interact defines communication and output-mode gates', () => {
   expect(skill).toContain('primary trigger is the user decision need');
   expect(skill).toContain('Use the lightest mode that lowers decision cost');
   expect(skill).toContain('material repo/skill implementation');
+  expect(skill).toContain('When repo or skill behavior materially changes, create a validated `html-artifact` handoff by default');
   expect(skill).toContain('2 or more comparable options');
   expect(skill).toContain('flow, state, timeline, map, call path, or architecture');
   expect(skill).toContain('user must choose, tune, sort, filter, copy, export, or inspect');
@@ -116,10 +121,15 @@ test('effective-interact defines communication and output-mode gates', () => {
   expect(skill).toContain('plain text would hide the main point');
   expect(skill).toContain('If no strong signal and no handoff obligation is present, answer in chat or Markdown');
   expect(patterns).toContain('Default Session Routing');
+  expect(patterns).toContain('Visual Language First');
+  expect(patterns).toContain('HTML handoff is a visual communication artifact, not Markdown wrapped in a browser');
+  expect(patterns).toContain('reduce interaction time and information loss');
+  expect(patterns).toContain('Do not draft a linear handoff first');
   expect(patterns).toContain('Output Mode Gate');
   expect(patterns).toContain('Material repo or skill behavior changed');
   expect(patterns).toContain('Strong signal');
   expect(patterns).toContain('Plain text or Markdown default');
+  expect(patterns).toContain('default to a validated `implementation-handoff` or `conclusion-dashboard` HTML artifact');
   expect(patterns).toContain('Length is never sufficient by itself');
   expect(skill).toContain('never because the topic is important');
 });
@@ -130,13 +140,17 @@ test('effective-interact defines hard output-mode escalation criteria', () => {
   expect(skill).toContain('## Mode Selection Hard Rules');
   expect(skill).toContain('Do not load for a long but routine answer');
   expect(skill).toContain('Use `html-artifact` only when a hard HTML condition is true');
+  expect(skill).toContain('material repo/skill behavior changed and handoff evidence matters');
   expect(skill).toContain('more than 5 source anchors');
   expect(skill).toContain('user must filter, sort, compare, copy, or export');
   expect(skill).toContain('architecture, dependency, milestone, module, repo, or skill structure');
   expect(skill).toContain('visual style, component variant, design-system, illustration, prototype, or multi-option approval needs a browsable gallery');
   expect(skill).toContain('status/incident/editor surface needs drilldown or visible export');
-  expect(skill).toContain('HTML escalation is forbidden when one compact Markdown table, one Mermaid diagram, or one short file list is enough');
+  expect(skill).toContain('HTML handoff must be visualized');
+  expect(skill).toContain('Avoid Markdown-in-HTML handoffs and decorative visuals');
+  expect(skill).toContain('HTML escalation is forbidden when one compact Markdown table, one Mermaid diagram, or one short file list is enough, except for material repo/skill handoffs');
   expect(patterns).toContain('Hard HTML conditions');
+  expect(patterns).toContain('Material repo or skill behavior changed and the final handoff needs changed areas');
   expect(patterns).toContain('Use the lower mode when in doubt');
 });
 
@@ -330,7 +344,7 @@ test('effective-interact codifies output-mode escalation without stealing adjace
   expect(routingDocs).toContain('option comparison');
   expect(routingDocs).toContain('lightweight export editor');
   expect(routingDocs).toContain('default reporting layer when the agent is about to pause on relatively complex information');
-  expect(routingDocs).toContain('material repo or skill change reports');
+  expect(routingDocs).toContain('material repo or skill behavior changes, default to a validated HTML handoff');
   expect(routingDocs).toContain('frontend-slides` remains the deck lane');
 });
 

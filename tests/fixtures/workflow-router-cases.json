@@ -44,6 +44,19 @@
       "docsBoundary": "The user asks for explanation, lookup, feasibility, comparison, or evidence."
     },
     {
+      "id": "question-positive-effective-interact-explanation",
+      "kind": "no-mutation",
+      "prompt": "What is effective-interact, and when should it load?",
+      "expectedState": "question",
+      "expectedOwner": "answer-workflow",
+      "mutationAllowed": false,
+      "requiredGates": [
+        "gather-required-material",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks for explanation, lookup, feasibility, comparison, or evidence."
+    },
+    {
       "id": "diagnosis-positive-failing-command",
       "kind": "positive",
       "prompt": "The workflow-router contract test fails after a docs change; reproduce the failure, identify the cause, fix it, and add coverage.",
@@ -105,6 +118,63 @@
       "id": "hub-maintenance-positive-source-dossier",
       "kind": "positive",
       "prompt": "Maintain Harness Hub by evaluating referenced upstream skill repos, updating routing docs, and preserving npm update/remove behavior.",
+      "expectedState": "harness-hub-maintenance",
+      "expectedOwner": "hub-maintenance-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "align-user-need",
+        "gather-required-material",
+        "write-spec-and-acceptance",
+        "write-executable-plan-and-align",
+        "clean-unneeded-files",
+        "implement",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks to maintain this hub, evaluate skill sources, adjust routing, or change install/update/remove policy."
+    },
+    {
+      "id": "hub-maintenance-explicit-owner-html-handoff-repair",
+      "kind": "positive",
+      "prompt": "继续走 hub-maintenance-workflow 修：恢复重大 repo/skill 变更默认 HTML handoff，并补中文 HTML 汇报触发。",
+      "expectedState": "harness-hub-maintenance",
+      "expectedOwner": "hub-maintenance-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "align-user-need",
+        "gather-required-material",
+        "write-spec-and-acceptance",
+        "write-executable-plan-and-align",
+        "clean-unneeded-files",
+        "implement",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "Explicit owner references to hub-maintenance-workflow should not be stolen by generic repair wording."
+    },
+    {
+      "id": "hub-maintenance-effective-interact-visual-language",
+      "kind": "positive",
+      "prompt": "继续修 effective-interact：HTML 汇报核心是先用可视化语言组织内容，减少交互时间开销和信息损失。",
+      "expectedState": "harness-hub-maintenance",
+      "expectedOwner": "hub-maintenance-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "align-user-need",
+        "gather-required-material",
+        "write-spec-and-acceptance",
+        "write-executable-plan-and-align",
+        "clean-unneeded-files",
+        "implement",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "The user asks to maintain this hub, evaluate skill sources, adjust routing, or change install/update/remove policy."
+    },
+    {
+      "id": "hub-maintenance-effective-interact-english-fix",
+      "kind": "positive",
+      "prompt": "fix effective-interact: HTML reports should organize content with visual language first",
       "expectedState": "harness-hub-maintenance",
       "expectedOwner": "hub-maintenance-workflow",
       "mutationAllowed": true,

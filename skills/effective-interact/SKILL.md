@@ -5,51 +5,53 @@ description: Load when agent pauses to report relatively complex information nee
 
 # Effective Interact
 
-Help complex communication: understand, compare, decide, continue. HTML is an escalation path, not the default goal.
+Help complex communication: understand, compare, decide, continue. When loaded, think in visual language first: map/table/timeline/flow/evidence shapes reduce interaction time and information loss. HTML is an escalation path, not the default goal; material repo or skill behavior changes are the default HTML handoff exception.
 
 ## Default Load And Communication Gate
 
-Default: load this skill whenever the agent is about to pause and report relatively complex information if structure lowers cost. It does not have to wait for an owner workflow to select it. It does not replace the owner workflow or decide substantive scope. Do not load merely because the answer may exceed roughly 200 Chinese characters. 200 Chinese characters and 3 or more independent points are auxiliary signals. The primary trigger is the user decision need: understand, compare, choose, verify, approve, continue, or take over. Loading runs a communication-worthiness check.
+Default: load this skill whenever the agent is about to pause and report relatively complex information if structure lowers cost; it does not have to wait for an owner workflow to select it, and does not replace the owner workflow or decide substantive scope. Do not load merely because the answer may exceed roughly 200 Chinese characters; 200 Chinese characters and 3 or more independent points are auxiliary signals. The primary trigger is the user decision need; run communication-worthiness check plus visual-language check.
 
-Use the skill only when linear reply raises decision cost:
+Use only when linear reply raises decision cost:
 
-- the agent is stopping to report material repo/skill implementation, review, migration, OpenSpec, research, or validation facts that need evidence, risks, and next actions.
+- material repo/skill implementation, review, migration, OpenSpec, research, or validation facts need evidence, risks, next actions.
 - 2 or more comparable options, findings, files, statuses, or scenarios have tradeoffs.
 - flow, state, timeline, map, call path, or architecture needs spatial structure.
 - user must choose, tune, sort, filter, copy, export, or inspect source anchors, code, diff, citations, evidence, or validation.
-- visual structure lowers cost: multi-option approval, visual style boards, plans, PR writeups, code tours, design-system references, component variants, incidents, milestones, module/dependency maps, structure trees, or triage/flag/prompt editors.
+- visual structure lowers cost: multi-option approval, visual style boards, plans, PR writeups, code tours, component variants, incidents, milestones, module maps, structure trees, or triage/prompt editors.
 - long task state, checkpoints, data, or important tool-result summaries must stay stable for later status, handoff, or HTML reporting.
 - plain text would hide the main point while a decision or continuation need remains.
 
-If no strong signal and no handoff obligation is present, answer in chat or Markdown. Length is never sufficient by itself; long but routine answers, translations, simple explanations, ordinary summaries, and one-command status stay outside this skill.
+If no strong signal and no handoff obligation is present, answer in chat or Markdown. Length is never sufficient by itself; long routine answers, translations, simple explanations, summaries, and one-command status stay outside this skill.
 
-Use this skill before, during, or after implementation for planning options, PR writeups, status or incident dashboards, prompt/config tuners, material-change reports, and final handoffs. It is for interaction points, not only final handoffs. The user does not need to say "HTML".
+Use this skill before, during, or after implementation for planning options, PR writeups, status or incident dashboards, prompt/config tuners, material-change reports, and final handoffs; it is for interaction points, not only final handoffs. The user does not need to say "HTML". When repo or skill behavior materially changes, create a validated `html-artifact` handoff by default unless waived or tiny.
 
 ## Output Mode Ladder
 
 Use the lightest mode that lowers decision cost:
 
-1. `plain-brief`: chat text for one decision, Top 3 support points, and next action.
-2. `structured-markdown`: headings, bullets, compact tables, and labels.
-3. `visual-markdown`: Mermaid, tables, command blocks, file anchors, or decision matrices in chat.
-4. `html-artifact`: one static HTML file when browser navigation, visualization, filtering, copy/export, or local interaction lowers decision cost.
+1. `plain-brief`: chat for one decision, Top 3 support, and next action.
+2. `structured-markdown`: headings, bullets, compact tables, labels.
+3. `visual-markdown`: Mermaid, tables, commands, file anchors, or decision matrices.
+4. `html-artifact`: one static HTML file for browser navigation, visualization, filtering, copy/export, or local interaction.
+
+Visual thinking happens before mode selection: do not draft a linear answer first and later ask whether to visualize it.
 
 HTML when browser navigation, visualization, or local interaction lowers decision cost; never because the topic is important, long, or validator-backed.
 
 ## Mode Selection Hard Rules
 
-Do not load for a long but routine answer. If loaded, use the lower mode when in doubt.
+Do not load for a long but routine answer.
 
 - Use `plain-brief` for one conclusion, Top 3 support, and one next action.
 - Use `structured-markdown` for grouped evidence, risks, status, options, or compact tables.
 - Use `visual-markdown` when one Mermaid diagram, decision matrix, command block, or short source-anchor list is enough.
-- Use `html-artifact` only when a hard HTML condition is true: more than 5 source anchors; user must filter, sort, compare, copy, or export; side-by-side options exceed a compact table; architecture, dependency, milestone, module, repo, or skill structure is too wide for one Mermaid diagram; visual style, component variant, design-system, illustration, prototype, or multi-option approval needs a browsable gallery; or a status/incident/editor surface needs drilldown or visible export.
+- Use `html-artifact` only when a hard HTML condition is true: material repo/skill behavior changed and handoff evidence matters; more than 5 source anchors; user must filter, sort, compare, copy, or export; architecture, dependency, milestone, module, repo, or skill structure is too wide for one Mermaid diagram; visual style, component variant, design-system, illustration, prototype, or multi-option approval needs a browsable gallery; or status/incident/editor surface needs drilldown or visible export.
 
-HTML escalation is forbidden when one compact Markdown table, one Mermaid diagram, or one short file list is enough.
+HTML escalation is forbidden when one compact Markdown table, one Mermaid diagram, or one short file list is enough, except for material repo/skill handoffs where the workflow/advisory layer expects `html-artifact`.
 
 ## Trigger Examples
 
-Use for: 复杂状态汇报; long-task fact ledger; changed skill/repo behavior needing a plain-text handoff, file evidence, tests, risks, and validation gates; "Show the options so I can choose before you implement"; implementation plan with milestones; OpenSpec apply; PR review/PR writeup; HTML architecture walkthrough; side-by-side option gallery; design-system reference; component variant matrix; incident timeline; temporary triage, feature-flag, or prompt editor that exports Markdown, JSON, or diff.
+Use for: 复杂状态汇报; long-task fact ledger; changed skill/repo behavior with HTML handoff, evidence, tests, risks, and validation gates; "Show the options so I can choose before you implement"; implementation plan with milestones; OpenSpec apply; PR review; HTML architecture walkthrough; side-by-side option gallery; design-system reference; component variant matrix; incident timeline; temporary triage, feature-flag, or prompt editor that exports Markdown, JSON, or diff.
 
 Do not use this skill for:
 
@@ -60,21 +62,23 @@ Do not use this skill for:
 
 ## First-Principles Communication Contract
 
-Before choosing output shape, identify Reader need, Decision frame, first principles, and Evidence boundary. Rebuild from goal, audience, constraints, facts, inferences, assumptions, tradeoffs, and next action; important claims trace to source, command, file, or assumption.
+Before choosing output shape, identify Reader need, Decision frame, first principles, and Evidence boundary. Rebuild from goal, audience, constraints, facts, inferences, assumptions, tradeoffs, and next action; trace claims to source.
 
-All modes start with BLUF and the smallest structure that preserves reasoning. SCQA/PREP may shape reasoning, but the first visible sentence answers directly.
+All modes start with BLUF; SCQA/PREP may shape reasoning, but the first visible sentence answers directly.
 
 ## Output Contract
 
-Start with the direct answer, not background. Keep support to Top 3 mutually distinct points. Mark important claims as 事实 / 推断 / 假设 when uncertainty matters. Explain tradeoffs, recommendation, rejected path, and a CTA or next action when approval, review, unblock, choice, or continuation is needed. Treat validator warnings as advisory: fix only when it lowers decision cost.
+Start with the direct answer. Keep Top 3 distinct support. Mark important claims as 事实 / 推断 / 假设. Explain tradeoffs, recommendation, rejected path, and CTA/next action. Treat validator warnings as advisory.
 
-Handoff obligation exists only when changed behavior, multiple surfaces, validation evidence, remaining risk, or reviewer/user continuation matters. Tiny local work with one obvious command result stays brief.
+Handoff obligation exists only when changed behavior, multiple surfaces, validation evidence, risk, or continuation matters. Tiny local work stays brief.
 
 ## HTML Artifact Contract
 
 Use only for `html-artifact` mode. Write one static UTF-8 Chinese `.html`, defaulting to `skills/effective-interact/artifacts/`; inlineable HTML/CSS and vanilla JS only; no build step.
 
-For code evidence, include source file link, line number, smallest useful snippet, highlighted lines, and `diff` only when before/after matters. Use Mermaid for sequence, architecture, call-path, routing, or data flow only when faster than text; it must render to SVG before handoff.
+HTML handoff must be visualized: include a useful table, map, timeline, flow, evidence layout, code tour, or comparison surface. Avoid Markdown-in-HTML handoffs and decorative visuals.
+
+For code evidence, include source file link, line number, smallest useful snippet, highlighted lines, and `diff` only when before/after matters. Use Mermaid when faster than text; it must render to SVG before handoff.
 
 Editors: no network/repo writes, credentials, or hidden persistence; always include Markdown, JSON, diff, or prompt export.
 
@@ -82,7 +86,7 @@ Use grouped navigation with a return-to-overview path. 流程、路由、调用�
 
 ## Long Task Fact Ledger
 
-For long work where state may drift, keep optional JSONL at `skills/effective-interact/artifacts/session-ledgers/<task-slug>.jsonl`. Record checkpoints, data/status, tool-result summaries, decisions, assumptions, verification, blockers, and next actions for claims, evidence, timelines, status, handoff, or HTML artifacts. Never record secrets, credentials, raw large logs, copyrighted text, hidden persistence, or artifact writes. See `references/session-ledger-schema.json`.
+For long work where state may drift, keep optional JSONL at `skills/effective-interact/artifacts/session-ledgers/<task-slug>.jsonl`. Record checkpoints, data/status, tool-result summaries, decisions, assumptions, verification, blockers, and next actions. Never record secrets or raw large logs.
 
 ## Generator First Workflow
 
@@ -93,12 +97,12 @@ For `html-artifact` mode:
 3. Run `scripts/validate-interaction.mjs <outputPath> --json --require-browser`; failed/degraded Mermaid is blocking.
 4. Hand off the artifact link, verification, and any kept advisory warning.
 
-Hand-write HTML only when the generator cannot express the needed local editor or visualization.
+Hand-write HTML only when the generator cannot express the needed editor or visualization.
 
 ## Failure Lessons
 
 - 必须使用 UTF-8 中文输入和输出；连续问号乱码通常来自 shell/codepage.
-- Mermaid、浏览器、validator 诊断必须脱敏：本地绝对路径、`file:///`、token、原始 HTML/script 都不能进入产物.
+- Mermaid/browser/validator 诊断要脱敏：本地绝对路径、`file:///`、token、原始 HTML/script 不进产物.
 
 ## Verification
 

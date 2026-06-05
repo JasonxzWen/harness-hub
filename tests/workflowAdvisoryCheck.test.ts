@@ -162,13 +162,32 @@ test('advisory check warns when material delivery lacks an effective-interact ha
   ]);
 
   expect(result.ok).toBe(false);
+  expect(result.expectedOutputMode).toBe('html-artifact');
+  expect(result.htmlRequired).toBe(true);
   expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
     'missing-validation',
-    'missing-effective-interact-handoff',
+    'missing-effective-interact-html-handoff',
   ]);
 });
 
-test('advisory check passes delivery when validation and handoff are present', () => {
+test('advisory check passes delivery when validation and HTML handoff are present', () => {
+  const result = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--material-changes',
+    '--has-validation',
+    '--has-html-handoff',
+  ]);
+
+  expect(result.ok).toBe(true);
+  expect(result.expectedOutputMode).toBe('html-artifact');
+  expect(result.htmlRequired).toBe(true);
+  expect(result.warnings).toEqual([]);
+});
+
+test('advisory check can explicitly require html-artifact output mode', () => {
   const result = runAdvisory([
     '--state',
     'delivery',
@@ -177,10 +196,16 @@ test('advisory check passes delivery when validation and handoff are present', (
     '--material-changes',
     '--has-validation',
     '--has-handoff',
+    '--expected-output-mode',
+    'html-artifact',
   ]);
 
-  expect(result.ok).toBe(true);
-  expect(result.warnings).toEqual([]);
+  expect(result.ok).toBe(false);
+  expect(result.expectedOutputMode).toBe('html-artifact');
+  expect(result.htmlRequired).toBe(true);
+  expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
+    'missing-effective-interact-html-handoff',
+  ]);
 });
 
 test('advisory check warns on state and phase mismatches instead of returning a false green', () => {
