@@ -18,6 +18,8 @@ It will:
 
 The workflow uses npm trusted publishing, so it should not need an `NPM_TOKEN` secret once npm is configured for this package.
 
+For pull request-level release decisions, use [Release Policy](release-policy.md). Every PR must classify release impact, but PR creation must not publish npm `latest`.
+
 ## Artifact Policy
 
 Git tracking, Git ignore rules, and npm package contents are coordinated through `config/artifact-policy.json`.
