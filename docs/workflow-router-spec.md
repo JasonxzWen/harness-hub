@@ -58,6 +58,7 @@ Every non-trivial change request MUST follow this order unless the selected stat
 - The router MUST expose the selected state, reason, and next gate to the active workflow owner.
 - The router MUST NOT implement, test, review, or deliver work itself.
 - Explicit owner references MUST NOT override contradictory no-mutation, Harness Hub maintenance, or mixed review-and-implementation signals.
+- Explicit owner references to hub-maintenance-workflow should not be stolen by generic repair wording.
 
 ### WR-2: SDD-First Change Flow
 

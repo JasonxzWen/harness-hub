@@ -22,6 +22,7 @@ type RouteResult = {
   nextGate: string;
   allowedHelperSkills: string[];
   effectiveInteract: 'required' | 'default-consider' | 'not-needed';
+  expectedOutputMode: 'plain-brief' | 'structured-markdown' | 'visual-markdown' | 'html-artifact' | null;
   mutates: boolean;
   clarification?: string;
 };
@@ -99,7 +100,13 @@ function writeAlignedCurrentTask(targetDir: string) {
 
 function runWorkflowCheck(scriptPath: string, args: string[]): {
   route: RouteResult;
-  advisory: { ok: boolean; warnings: Array<{ id: string }>; mutates: boolean };
+  advisory: {
+    ok: boolean;
+    warnings: Array<{ id: string }>;
+    mutates: boolean;
+    expectedOutputMode: 'plain-brief' | 'structured-markdown' | 'visual-markdown' | 'html-artifact' | null;
+    htmlRequired: boolean;
+  };
   ownerContract: { ok: boolean; warnings: Array<{ id: string; owner?: string }> };
   mutates: boolean;
   dispatchesSubagents: boolean;
@@ -110,7 +117,13 @@ function runWorkflowCheck(scriptPath: string, args: string[]): {
   });
   return JSON.parse(output) as {
     route: RouteResult;
-    advisory: { ok: boolean; warnings: Array<{ id: string }>; mutates: boolean };
+    advisory: {
+      ok: boolean;
+      warnings: Array<{ id: string }>;
+      mutates: boolean;
+      expectedOutputMode: 'plain-brief' | 'structured-markdown' | 'visual-markdown' | 'html-artifact' | null;
+      htmlRequired: boolean;
+    };
     ownerContract: { ok: boolean; warnings: Array<{ id: string; owner?: string }> };
     mutates: boolean;
     dispatchesSubagents: boolean;
@@ -147,6 +160,7 @@ test('workflow-router executable classifier matches routing fixture owners', asy
     expect(result.owner).toBe(entry.expectedOwner);
     expect(result.mutationAllowed).toBe(entry.mutationAllowed);
     expect(result.requiredGates).toEqual(entry.requiredGates);
+    expect(Object.prototype.hasOwnProperty.call(result, 'expectedOutputMode')).toBe(true);
   }
 });
 
@@ -168,6 +182,7 @@ test('workflow-check CLI matches routing fixtures and stays side-effect free', (
     expect(result.route.owner).toBe(entry.expectedOwner);
     expect(result.route.mutationAllowed).toBe(entry.mutationAllowed);
     expect(result.route.requiredGates).toEqual(entry.requiredGates);
+    expect(Object.prototype.hasOwnProperty.call(result.route, 'expectedOutputMode')).toBe(true);
     expect(result.mutates).toBe(false);
     expect(result.dispatchesSubagents).toBe(false);
     expect(result.advisory.mutates).toBe(false);
@@ -212,8 +227,10 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   expect(change.requiredGates).toContain('write-spec-and-acceptance');
   expect(maintenance.state).toBe('harness-hub-maintenance');
   expect(maintenance.owner).toBe('hub-maintenance-workflow');
+  expect(maintenance.expectedOutputMode).toBe('html-artifact');
   expect(pureChineseMaintenance.state).toBe('harness-hub-maintenance');
   expect(pureChineseMaintenance.owner).toBe('hub-maintenance-workflow');
+  expect(pureChineseMaintenance.expectedOutputMode).toBe('html-artifact');
   expect(pureChineseDelivery.state).toBe('delivery');
   expect(pureChineseDelivery.owner).toBe('delivery-workflow');
   expect(prCloseoutDelivery.state).toBe('delivery');
@@ -317,7 +334,24 @@ test('workflow check routes explicit Harness Hub repair discovered during review
 
   expect(result.route.state).toBe('harness-hub-maintenance');
   expect(result.route.owner).toBe('hub-maintenance-workflow');
+  expect(result.route.expectedOutputMode).toBe('html-artifact');
   expect(result.route.mutationAllowed).toBe(true);
+  expect(result.mutates).toBe(false);
+  expect(result.dispatchesSubagents).toBe(false);
+});
+
+test('workflow check preserves explicit hub-maintenance workflow despite repair wording', () => {
+  const result = runWorkflowCheck(workflowCheckScript, [
+    '--prompt',
+    '继续走 hub-maintenance-workflow 修：恢复重大 repo/skill 变更默认 HTML handoff，并补中文 HTML 汇报触发。',
+    '--phase',
+    'pre-implementation',
+  ]);
+
+  expect(result.route.state).toBe('harness-hub-maintenance');
+  expect(result.route.owner).toBe('hub-maintenance-workflow');
+  expect(result.route.expectedOutputMode).toBe('html-artifact');
+  expect(result.advisory.expectedOutputMode).toBe('html-artifact');
   expect(result.mutates).toBe(false);
   expect(result.dispatchesSubagents).toBe(false);
 });
@@ -397,6 +431,33 @@ test('workflow check warns when an explicit phase does not match the selected ow
   expect(result.dispatchesSubagents).toBe(false);
 });
 
+test('workflow check warns when material delivery lacks required HTML handoff', () => {
+  const missing = runWorkflowCheck(workflowCheckScript, [
+    '--prompt',
+    'Finish the accepted work: run validation and produce the handoff.',
+    '--phase',
+    'pre-delivery',
+    '--material-changes',
+    '--has-validation',
+  ]);
+  const present = runWorkflowCheck(workflowCheckScript, [
+    '--prompt',
+    'Finish the accepted work: run validation and produce the handoff.',
+    '--phase',
+    'pre-delivery',
+    '--material-changes',
+    '--has-validation',
+    '--has-html-handoff',
+  ]);
+
+  expect(missing.advisory.expectedOutputMode).toBe('html-artifact');
+  expect(missing.advisory.warnings.map((warning) => warning.id)).toEqual([
+    'missing-effective-interact-html-handoff',
+  ]);
+  expect(present.advisory.ok).toBe(true);
+  expect(present.advisory.warnings).toEqual([]);
+});
+
 test('workflow check only warns on read-only owners when mutation is explicitly planned', () => {
   const readOnly = runWorkflowCheck(workflowCheckScript, [
     '--prompt',
@@ -465,7 +526,7 @@ test('installed workflow check warns when the selected owner skill is missing', 
 test('workflow-router executable classifier is tracked as an installable capability', () => {
   const component = readCapabilityIndex().components['skill:workflow-router'];
 
-  expect(component.version).toBe('0.12.0');
+  expect(component.version).toBe('0.12.2');
   expect(component.provides).toContain('executable-intent-classifier');
   expect(component.provides).toContain('workflow-gate-preflight');
   expect(component.provides).toContain('executable-skill-activation-smoke');
@@ -475,6 +536,9 @@ test('workflow-router executable classifier is tracked as an installable capabil
   expect(component.provides).toContain('owner-helper-activation-separation');
   expect(component.provides).toContain('helper-side-effect-contract');
   expect(component.provides).toContain('explicit-read-only-mutation-guard');
+  expect(component.provides).toContain('expected-output-mode-routing');
+  expect(component.provides).toContain('html-handoff-advisory-gate');
+  expect(component.provides).toContain('visual-language-report-activation');
   expect(component.provides).toContain('owner-workflow-structure-contract');
   expect(component.provides).toContain('executable-owner-contract-smoke');
   expect(component.detects.map((entry) => entry.path)).toContain(routeScript);

@@ -20,6 +20,13 @@ const VALID_PHASES = new Set([
   'pre-delivery',
 ]);
 
+const VALID_OUTPUT_MODES = new Set([
+  'plain-brief',
+  'structured-markdown',
+  'visual-markdown',
+  'html-artifact',
+]);
+
 function parseArgs(argv) {
   const options = {
     state: 'none',
@@ -32,8 +39,10 @@ function parseArgs(argv) {
     hasEvidence: false,
     hasReproduction: false,
     hasValidation: false,
+    hasHtmlHandoff: false,
     materialChanges: false,
     willMutate: false,
+    expectedOutputMode: null,
     currentTaskPath: null,
     json: false,
   };
@@ -60,10 +69,15 @@ function parseArgs(argv) {
       options.hasReproduction = true;
     } else if (arg === '--has-validation') {
       options.hasValidation = true;
+    } else if (arg === '--has-html-handoff') {
+      options.hasHtmlHandoff = true;
+      options.hasHandoff = true;
     } else if (arg === '--material-changes') {
       options.materialChanges = true;
     } else if (arg === '--will-mutate') {
       options.willMutate = true;
+    } else if (arg === '--expected-output-mode') {
+      options.expectedOutputMode = readValue(argv, ++index, arg);
     } else if (arg === '--current-task') {
       options.currentTaskPath = readValue(argv, ++index, arg);
     } else if (arg === '--json') {
@@ -81,6 +95,9 @@ function parseArgs(argv) {
   if (!VALID_PHASES.has(options.phase)) {
     throw new Error(`Unsupported phase '${options.phase}'`);
   }
+  if (options.expectedOutputMode && !VALID_OUTPUT_MODES.has(options.expectedOutputMode)) {
+    throw new Error(`Unsupported expected output mode '${options.expectedOutputMode}'`);
+  }
 
   return options;
 }
@@ -96,6 +113,8 @@ function readValue(argv, index, flag) {
 export function evaluateAdvisory(options) {
   const warnings = [];
   const { hydratedOptions, detection } = hydrateFromCurrentTask(options);
+  const expectedOutputMode = inferExpectedOutputMode(hydratedOptions);
+  const htmlRequired = expectedOutputMode === 'html-artifact';
 
   if (hydratedOptions.state === 'delivery' && hydratedOptions.phase !== 'pre-delivery') {
     warnings.push({
@@ -167,7 +186,12 @@ export function evaluateAdvisory(options) {
     });
   }
 
-  if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges && !hydratedOptions.hasHandoff) {
+  if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges && htmlRequired && !hydratedOptions.hasHtmlHandoff) {
+    warnings.push({
+      id: 'missing-effective-interact-html-handoff',
+      message: 'Material work with expected html-artifact output should produce a validated effective-interact HTML handoff unless explicitly waived.',
+    });
+  } else if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges && !hydratedOptions.hasHandoff) {
     warnings.push({
       id: 'missing-effective-interact-handoff',
       message: 'Material work should produce an effective-interact handoff unless explicitly waived.',
@@ -180,9 +204,24 @@ export function evaluateAdvisory(options) {
     mutates: false,
     state: hydratedOptions.state,
     phase: hydratedOptions.phase,
+    expectedOutputMode,
+    htmlRequired,
     detection,
     warnings,
   };
+}
+
+function inferExpectedOutputMode(options) {
+  if (options.expectedOutputMode) {
+    return options.expectedOutputMode;
+  }
+  if (
+    options.materialChanges
+    && ['delivery', 'harness-hub-maintenance', 'sdd-change'].includes(options.state)
+  ) {
+    return 'html-artifact';
+  }
+  return null;
 }
 
 function hydrateFromCurrentTask(options) {
@@ -205,6 +244,8 @@ function hydrateFromCurrentTask(options) {
       hasSpec: Boolean(options.hasSpec || inferred.hasSpec),
       hasAcceptance: Boolean(options.hasAcceptance || inferred.hasAcceptance),
       hasPlan: Boolean(options.hasPlan || inferred.hasPlan),
+      hasHtmlHandoff: Boolean(options.hasHtmlHandoff),
+      hasHandoff: Boolean(options.hasHandoff || options.hasHtmlHandoff),
     },
     detection,
   };
@@ -352,8 +393,10 @@ Flags:
   --has-evidence
   --has-reproduction
   --has-validation
+  --has-html-handoff
   --material-changes
   --will-mutate
+  --expected-output-mode <mode>
   --current-task <path>
 
 When --current-task is provided, that file is inspected first. Without it, the command only checks
