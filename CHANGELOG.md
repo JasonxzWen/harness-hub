@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a PR release-impact policy, pull request template, and regression coverage so release decisions are explicit without publishing npm `latest` from PRs.
+
 ## 0.1.13 - 2026-06-04
 
 - Add Codex worktree preflight checks so write tasks hard-fail when repo-local skill wrappers or harness state are missing, while read-only tasks receive a soft warning.

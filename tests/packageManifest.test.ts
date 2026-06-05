@@ -89,10 +89,44 @@ test('npm publish workflow uses trusted publishing and release tag checks', () =
   const workflow = fs.readFileSync('.github/workflows/publish-npm.yml', 'utf8');
 
   expect(workflow).toContain('release:');
+  expect(workflow).not.toContain('pull_request:');
   expect(workflow).toContain('id-token: write');
   expect(workflow).toContain('actions/setup-node@v6');
   expect(workflow).toContain('node-version: "24"');
   expect(workflow).toContain('bun run validate:release');
   expect(workflow).toContain('npm publish --access public');
   expect(workflow).toContain('Release tag ${GITHUB_REF_NAME} does not match package version ${EXPECTED_TAG}.');
+});
+
+test('release policy and PR template require release decisions without PR-time publishing', () => {
+  const artifactPolicy = JSON.parse(fs.readFileSync('config/artifact-policy.json', 'utf8')) as {
+    npm: { files: string[]; forbidden: string[] };
+  };
+  const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8')) as {
+    files: string[];
+  };
+  const npmPublishingDoc = fs.readFileSync('docs/npm-publishing.md', 'utf8');
+  const releasePolicy = fs.readFileSync('docs/release-policy.md', 'utf8');
+  const prTemplate = fs.readFileSync('.github/PULL_REQUEST_TEMPLATE.md', 'utf8');
+  const categories = ['none', 'patch', 'minor', 'major', 'prerelease'];
+
+  expect(npmPublishingDoc).toContain('[Release Policy](release-policy.md)');
+  expect(npmPublishingDoc).toContain('PR creation must not publish npm `latest`');
+  expect(packageJson.files).toContain('docs/');
+  expect(packageJson.files).not.toContain('.github/');
+  expect(artifactPolicy.npm.files).toContain('docs/');
+  expect(artifactPolicy.npm.forbidden).toContain('.github/');
+
+  expect(releasePolicy).toContain('A pull request does not automatically publish a formal npm `latest` release.');
+  expect(releasePolicy).toContain('Formal npm publishing remains controlled by a maintainer-created GitHub Release.');
+  expect(releasePolicy).toContain('Do not publish a prerelease from automation unless the maintainer explicitly requested that remote mutation.');
+  expect(releasePolicy).toContain('Add a lightweight PR-body check only if authors repeatedly omit the release-impact section.');
+  for (const category of categories) {
+    expect(releasePolicy).toContain(`\`${category}\``);
+    expect(prTemplate).toContain(`\`${category}\``);
+  }
+
+  expect(prTemplate).toContain('Select exactly one category and explain the choice.');
+  expect(prTemplate).toContain('This PR does not publish npm `latest`.');
+  expect(prTemplate).toContain('No PR-time publish, tag, merge, or credential mutation is introduced.');
 });
