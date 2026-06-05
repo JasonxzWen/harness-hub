@@ -27,6 +27,7 @@ const optionalDemoSkills = [
   'coding-standards',
   'karpathy-guidelines',
   'documentation-lookup',
+  'package-release-sniffer',
   'design-taste-frontend',
   'clone-website',
   'web-artifacts-builder',

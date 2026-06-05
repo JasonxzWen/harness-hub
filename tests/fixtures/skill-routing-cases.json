@@ -418,6 +418,14 @@
       "docsBoundary": "`documentation-lookup` loads when current library, framework, SDK, API, CLI, or cloud-service documentation is needed."
     },
     {
+      "id": "package-release-sniffer-positive-new-ai-package",
+      "skill": "package-release-sniffer",
+      "kind": "positive",
+      "prompt": "Sniff newly published npm and PyPI AI agent packages from primary registry and release feeds for today's developer-tool monitoring.",
+      "expectedSkill": "package-release-sniffer",
+      "docsBoundary": "`package-release-sniffer` loads for newly published package or model-package release discovery across primary package registries and release feeds; it does not build registry clients, scheduled monitors, or implementation code."
+    },
+    {
       "id": "web-artifacts-builder-positive-standalone-react",
       "skill": "web-artifacts-builder",
       "kind": "positive",
@@ -704,6 +712,14 @@
       "prompt": "Where does this repository define routing behavior? Answer from local files only.",
       "expectedSkill": null,
       "docsBoundary": "`documentation-lookup` loads when current library, framework, SDK, API, CLI, or cloud-service documentation is needed."
+    },
+    {
+      "id": "package-release-sniffer-forbidden-known-package-docs",
+      "skill": "package-release-sniffer",
+      "kind": "forbidden-load",
+      "prompt": "Read the current official LangChain package docs for its streaming API and answer how to use it.",
+      "expectedSkill": "documentation-lookup",
+      "docsBoundary": "`package-release-sniffer` loads for newly published package or model-package release discovery across primary package registries and release feeds; it does not build registry clients, scheduled monitors, or implementation code."
     },
     {
       "id": "web-artifacts-builder-forbidden-production-ui",
