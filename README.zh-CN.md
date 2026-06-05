@@ -37,6 +37,7 @@ flowchart TD
 | 让另一个仓库适合 Codex 驱动开发 | `init-harness --target standard` | 标准 skills、根级 harness 文件、本地 state 模板、验证脚本、lock ownership。 |
 | 只安装 skills，不写根级 harness 文件 | `install --target standard` | 完整标准 skill 树，写到 `skills/<name>/`。 |
 | 写文件前先检查目标仓库 | `analyze --agent-readiness --harness --json` | 只读 readiness、harness 缺口和建议。 |
+| 执行例行状态自检 | `self-check --json` | 只读聚合状态、自检 advisory/failure 分流和条件化 harness 验证。 |
 | 验证已初始化的仓库 | `validate-harness --json` | 必需文件、state、QA 边界、trigger hygiene 和结构评分。 |
 | 维护 Harness Hub 自身 | `workflow-router` 再进入 `hub-maintenance-workflow` | source records、routing、capability metadata、docs、templates、lifecycle safety。 |
 | 创建公开 source-backed insight post | `insight-*` 命令 | source ledger、Effective Interact adaptation、Pages 输出和发布预检。 |
@@ -76,6 +77,7 @@ bun run bootstrap:codex-skills
 
 npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --harness --json
 npx @jasonwen/harness-hub check D:\path\to\target --json
+npx @jasonwen/harness-hub self-check D:\path\to\target --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
@@ -97,6 +99,14 @@ npx @jasonwen/harness-hub insight-publish . --dry-run --json
 
 `check` 是只读启动检查。它在 `cli` 报告 npm 上的 CLI 包状态，在 `target` 报告目标仓库 lock 托管组件状态，并在 `externalTools` 给出 CodeGraph 和 Headroom 的显式配置/安装建议；这些建议不会安装工具、改写目标仓库或阻塞 agent 启动路径。
 
+`self-check` 是例行健康自检聚合命令。它包装 `check`，把硬失败和 advisory 分开，并且只有在目标已有 `harness:minimal` 安装 lock 记录时默认运行严格 `validate-harness`；如果要强制验证未初始化目标，需要显式加 `--validate-harness`。本地每天 21:30 的 runner 可以调用：
+
+```powershell
+npx @jasonwen/harness-hub self-check D:\path\to\target --json
+```
+
+Harness Hub 不会为这条命令创建定时任务、webhook、commit、push、工具安装或目标 setup。
+
 ## 包含能力
 
 | 领域 | 包含内容 |
@@ -108,7 +118,7 @@ npx @jasonwen/harness-hub insight-publish . --dry-run --json
 | Web 与 artifacts | `frontend-design`、`design-taste-frontend`、`webapp-testing`、`e2e-testing`、`web-artifacts-builder`、`frontend-slides`、`theme-factory`。 |
 | 平台扩展 | `claude-api`、`mcp-builder`、`skill-creator`、source records、capability metadata。 |
 | 外部工具建议 | `check.externalTools` 和 `analyze --agent-readiness` 会给出显式 CodeGraph 与 Headroom 配置建议。 |
-| Harness lifecycle | `check`、`analyze`、`init-harness`、`validate-harness`、`install`、`status`、`update`、`remove`。 |
+| Harness lifecycle | `check`、`self-check`、`analyze`、`init-harness`、`validate-harness`、`install`、`status`、`update`、`remove`。 |
 
 ## Source Layout
 

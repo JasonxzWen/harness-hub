@@ -679,6 +679,40 @@ export interface HarnessHubCheckResult {
   reason: string;
 }
 
+export type SelfCheckState = 'pass' | 'warn' | 'fail' | 'skipped';
+
+export interface SelfCheckFinding {
+  id: string;
+  severity: 'advisory' | 'failure';
+  message: string;
+  evidence: string[];
+  recommendedCommand: string | null;
+}
+
+export interface SelfCheckHarnessValidation {
+  state: SelfCheckState;
+  strict: boolean;
+  attempted: boolean;
+  initialized: boolean;
+  exitCode: number | null;
+  validation: HarnessValidationResult | null;
+  reason: string;
+  evidence: string[];
+}
+
+export interface HarnessHubSelfCheckResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  exitCode: 0 | 1;
+  hubVersion: string;
+  targetDir: string;
+  check: HarnessHubCheckResult;
+  harnessValidation: SelfCheckHarnessValidation;
+  hardFailures: SelfCheckFinding[];
+  advisories: SelfCheckFinding[];
+  reason: string;
+}
+
 interface LatestPackageVersionResult {
   ok: boolean;
   latestVersion: string | null;
@@ -703,6 +737,7 @@ interface CliOptions {
   input: string | null;
   slug: string | null;
   allowDirty: boolean;
+  validateHarness: boolean;
 }
 
 interface PlanInstallOptions {
@@ -736,6 +771,10 @@ interface CheckOptions extends StatusOptions {
   platform?: NodeJS.Platform;
   env?: Record<string, string | undefined>;
   latestVersionResolver?: (packageName: string, registryBaseUrl: string) => Promise<LatestPackageVersionResult>;
+}
+
+interface SelfCheckOptions extends CheckOptions {
+  validateHarness?: boolean;
 }
 
 interface MigrateLockOptions extends StatusOptions {
@@ -4785,6 +4824,171 @@ export async function checkHarnessHub(options: CheckOptions = {}): Promise<Harne
   };
 }
 
+export async function selfCheckHarnessHub(options: SelfCheckOptions = {}): Promise<HarnessHubSelfCheckResult> {
+  const targetDir = path.resolve(options.targetDir || process.cwd());
+  const check = await checkHarnessHub({
+    ...options,
+    targetDir,
+  });
+  const initialized = isMinimalHarnessInitialized(targetDir);
+  const strict = options.validateHarness === true;
+  const harnessValidation = strict || initialized
+    ? runSelfCheckHarnessValidation(targetDir, { strict, initialized })
+    : skipSelfCheckHarnessValidation(targetDir);
+  const hardFailures = buildSelfCheckHardFailures(check, harnessValidation);
+  const advisories = buildSelfCheckAdvisories(check, harnessValidation);
+  const exitCode: HarnessHubSelfCheckResult['exitCode'] = hardFailures.length > 0 ? 1 : 0;
+  const reason = [
+    hardFailures.length > 0
+      ? `${hardFailures.length} hard self-check failure${hardFailures.length === 1 ? '' : 's'}.`
+      : 'No hard self-check failures.',
+    advisories.length > 0
+      ? `${advisories.length} advisory item${advisories.length === 1 ? '' : 's'}.`
+      : 'No advisory items.',
+    `Harness validation ${harnessValidation.state}: ${harnessValidation.reason}`,
+  ].join(' ');
+
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    exitCode,
+    hubVersion: check.hubVersion,
+    targetDir,
+    check,
+    harnessValidation,
+    hardFailures,
+    advisories,
+    reason,
+  };
+}
+
+function isMinimalHarnessInitialized(targetDir: string): boolean {
+  const lock = readLock(targetDir);
+  if (!lock) {
+    return false;
+  }
+  return lock.data.components.some((component) => (
+    component.id === HARNESS_COMPONENT_ID
+    && component.status === 'installed'
+  ));
+}
+
+function runSelfCheckHarnessValidation(
+  targetDir: string,
+  options: { strict: boolean; initialized: boolean },
+): SelfCheckHarnessValidation {
+  const validation = validateHarness(targetDir);
+  return {
+    state: validation.exitCode === 0 ? 'pass' : 'fail',
+    strict: options.strict,
+    attempted: true,
+    initialized: options.initialized,
+    exitCode: validation.exitCode,
+    validation,
+    reason: validation.reason,
+    evidence: validation.exitCode === 0
+      ? ['validate-harness passed']
+      : validation.checks
+        .filter((check) => check.state === 'fail')
+        .slice(0, 8)
+        .map((check) => `${check.path}: ${check.reason}`),
+  };
+}
+
+function skipSelfCheckHarnessValidation(targetDir: string): SelfCheckHarnessValidation {
+  return {
+    state: 'skipped',
+    strict: false,
+    attempted: false,
+    initialized: false,
+    exitCode: null,
+    validation: null,
+    reason: 'Target is not initialized with harness:minimal; strict harness validation is skipped by default.',
+    evidence: [
+      path.join(targetDir, '.harness-hub', 'lock.json'),
+      HARNESS_COMPONENT_ID,
+    ],
+  };
+}
+
+function buildSelfCheckHardFailures(
+  check: HarnessHubCheckResult,
+  harnessValidation: SelfCheckHarnessValidation,
+): SelfCheckFinding[] {
+  const failures: SelfCheckFinding[] = [];
+  if (check.target.state === 'attention-required') {
+    failures.push({
+      id: 'target.attention-required',
+      severity: 'failure',
+      message: check.target.message,
+      evidence: [
+        ...check.target.modified.map((row) => `modified:${row.id}`),
+        ...check.target.missing.map((row) => `missing:${row.id}`),
+        ...check.target.unknown.map((row) => `unknown:${row.id}`),
+        ...check.target.blockers.map((row) => `blocker:${row.id}`),
+      ],
+      recommendedCommand: check.target.recommendedCommand,
+    });
+  }
+  if (harnessValidation.state === 'fail') {
+    failures.push({
+      id: 'harness-validation.failed',
+      severity: 'failure',
+      message: harnessValidation.reason,
+      evidence: harnessValidation.evidence,
+      recommendedCommand: `harness-hub validate-harness "${check.target.targetDir}" --json`,
+    });
+  }
+  return failures;
+}
+
+function buildSelfCheckAdvisories(
+  check: HarnessHubCheckResult,
+  harnessValidation: SelfCheckHarnessValidation,
+): SelfCheckFinding[] {
+  const advisories: SelfCheckFinding[] = [];
+  if (check.cli.state !== 'current') {
+    advisories.push({
+      id: `cli.${check.cli.state}`,
+      severity: 'advisory',
+      message: check.cli.message,
+      evidence: check.cli.evidence,
+      recommendedCommand: check.cli.recommendedCommand,
+    });
+  }
+  if (check.target.state === 'not-managed' || check.target.state === 'update-available') {
+    advisories.push({
+      id: `target.${check.target.state}`,
+      severity: 'advisory',
+      message: check.target.message,
+      evidence: check.target.evidence,
+      recommendedCommand: check.target.recommendedCommand,
+    });
+  }
+  for (const tool of check.externalTools) {
+    if (tool.state === 'configured') {
+      continue;
+    }
+    advisories.push({
+      id: `external-tool.${tool.id}.${tool.state}`,
+      severity: 'advisory',
+      message: tool.message,
+      evidence: tool.evidence,
+      recommendedCommand: tool.recommendedCommands[0] || null,
+    });
+  }
+  if (harnessValidation.state === 'skipped') {
+    advisories.push({
+      id: 'harness-validation.skipped',
+      severity: 'advisory',
+      message: harnessValidation.reason,
+      evidence: harnessValidation.evidence,
+      recommendedCommand: `harness-hub self-check "${check.target.targetDir}" --validate-harness --json`,
+    });
+  }
+  return advisories;
+}
+
 function readHarnessHubPackageJson(hubRoot: string): { name?: string; version?: string } {
   const packagePath = path.join(hubRoot, 'package.json');
   if (!fs.existsSync(packagePath)) {
@@ -6105,6 +6309,7 @@ function parseArgs(argv: string[]): CliOptions {
     input: null,
     slug: null,
     allowDirty: false,
+    validateHarness: false,
   };
   const positional: string[] = [];
 
@@ -6138,6 +6343,8 @@ function parseArgs(argv: string[]): CliOptions {
       options.slug = readOptionValue(argv, ++index, arg);
     } else if (arg === '--allow-dirty') {
       options.allowDirty = true;
+    } else if (arg === '--validate-harness') {
+      options.validateHarness = true;
     } else if (arg.startsWith('-')) {
       throw new CliError(`Unsupported option '${arg}'`, 2);
     } else {
@@ -6192,6 +6399,9 @@ async function runCliInner(argv: string[]): Promise<number> {
   if (options.harness && options.command !== 'analyze') {
     throw new CliError(`Unsupported option '--harness' for command '${options.command}'`, 2);
   }
+  if (options.validateHarness && options.command !== 'self-check') {
+    throw new CliError(`Unsupported option '--validate-harness' for command '${options.command}'`, 2);
+  }
 
   if (options.command === 'components') {
     for (const component of listComponents()) {
@@ -6205,6 +6415,15 @@ async function runCliInner(argv: string[]): Promise<number> {
       targetDir: options.targetDir || undefined,
     });
     emitReport(renderLifecycleReport('Harness Hub Check Report', result, options), options);
+    return result.exitCode;
+  }
+
+  if (options.command === 'self-check') {
+    const result = await selfCheckHarnessHub({
+      targetDir: options.targetDir || undefined,
+      validateHarness: options.validateHarness,
+    });
+    emitReport(renderLifecycleReport('Harness Hub Self-Check Report', result, options), options);
     return result.exitCode;
   }
 
@@ -6363,9 +6582,30 @@ async function runCliInner(argv: string[]): Promise<number> {
   throw new CliError(`Unknown command '${options.command}'`, 2);
 }
 
+type LifecycleReportData =
+  | AnalysisResult
+  | InstallPlan
+  | InstallResult
+  | DevBootstrapPlan
+  | DevBootstrapResult
+  | HarnessInitPlan
+  | HarnessInitResult
+  | HarnessValidationResult
+  | InsightPostResult
+  | InsightBuildResult
+  | InsightValidationResult
+  | InsightPreflightResult
+  | HarnessHubStatus
+  | HarnessHubCheckResult
+  | HarnessHubSelfCheckResult
+  | RemoveResult
+  | UpdatePlan
+  | UpdateResult
+  | LockMigrationResult;
+
 function renderLifecycleReport(
   title: string,
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | HarnessHubCheckResult | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: LifecycleReportData,
   options: CliOptions,
 ): string {
   if (options.json) {
@@ -6386,8 +6626,54 @@ function renderLifecycleReport(
 }
 
 function rowsForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | HarnessHubCheckResult | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: LifecycleReportData,
 ): HtmlRow[] {
+  if ('check' in data && 'harnessValidation' in data) {
+    return [
+      {
+        id: 'self-check',
+        state: data.exitCode === 0 ? 'pass' : 'fail',
+        dest: data.reason,
+        version: data.generatedAt,
+      },
+      {
+        id: 'cli',
+        state: data.check.cli.state,
+        dest: data.check.cli.message,
+        version: data.check.cli.currentVersion,
+        latestVersion: data.check.cli.latestVersion,
+      },
+      {
+        id: 'target',
+        state: data.check.target.state,
+        dest: data.check.target.message,
+        version: data.check.target.lockPath || '',
+        latestVersion: data.check.target.recommendedCommand,
+      },
+      {
+        id: 'harness-validation',
+        state: data.harnessValidation.state,
+        dest: data.harnessValidation.reason,
+        version: data.harnessValidation.strict ? 'strict' : 'conditional',
+        latestVersion: data.harnessValidation.exitCode === null ? 'not-run' : String(data.harnessValidation.exitCode),
+      },
+      ...data.hardFailures.map((finding) => ({
+        id: finding.id,
+        state: finding.severity,
+        dest: finding.message,
+        version: finding.evidence.join(', '),
+        latestVersion: finding.recommendedCommand,
+      })),
+      ...data.advisories.map((finding) => ({
+        id: finding.id,
+        state: finding.severity,
+        dest: finding.message,
+        version: finding.evidence.join(', '),
+        latestVersion: finding.recommendedCommand,
+      })),
+    ];
+  }
+
   if ('cli' in data && 'target' in data) {
     return [
       {
@@ -6659,8 +6945,12 @@ function rowsForLifecycleData(
 }
 
 function summaryForLifecycleData(
-  data: AnalysisResult | InstallPlan | InstallResult | DevBootstrapPlan | DevBootstrapResult | HarnessInitPlan | HarnessInitResult | HarnessValidationResult | InsightPostResult | InsightBuildResult | InsightValidationResult | InsightPreflightResult | HarnessHubStatus | HarnessHubCheckResult | RemoveResult | UpdatePlan | UpdateResult | LockMigrationResult,
+  data: LifecycleReportData,
 ): string {
+  if ('check' in data && 'harnessValidation' in data) {
+    return data.reason;
+  }
+
   if ('cli' in data && 'target' in data) {
     return data.reason;
   }
@@ -6793,6 +7083,7 @@ function printHelp() {
 
 Usage:
   harness-hub check [target] [--json|--html] [--output file]
+  harness-hub self-check [target] [--validate-harness] [--json|--html] [--output file]
   harness-hub analyze [target] [--target standard] [--agent-readiness] [--harness] [--json|--html] [--output file]
   harness-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
   harness-hub validate-harness [target] [--json|--html] [--output file]
@@ -6810,6 +7101,7 @@ Usage:
 
 Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
 Use check for read-only startup version checks: CLI package status and target managed-component status are reported separately.
+Use self-check for read-only aggregate status checks; strict harness validation runs only for initialized harness targets unless --validate-harness is provided.
 Install selects every standard skill component and overwrites same-name skill directories by default.
 Use init-harness for Codex-only dev bootstrap: standard skills plus root harness files.
 validate-harness includes minimal checks, five-subsystem assessment, and a structural benchmark.

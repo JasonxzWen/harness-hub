@@ -4,7 +4,7 @@ Harness Hub exposes three surfaces:
 
 - a personal distributed skill set under `skills/`;
 - one supported target bootstrap harness under `harness/minimal/`;
-- a lifecycle CLI that can analyze, initialize, validate, install, update, status-check, and remove managed target-repo assets.
+- a lifecycle CLI that can analyze, initialize, validate, self-check, install, update, status-check, and remove managed target-repo assets.
 
 
 It also owns two explicit higher-level repo capabilities: Codex dev harness bootstrap through `init-harness`, and source-backed insight publishing through `insight-*`.
@@ -30,6 +30,7 @@ flowchart TD
 | Command | Mutates target? | Purpose |
 |---|---:|---|
 | `harness-hub check <target>` | No | Report CLI package freshness, target lock-managed component freshness, and explicit CodeGraph/Headroom configuration advice without applying updates or installing tools. |
+| `harness-hub self-check <target>` | No | Aggregate read-only health status, split hard failures from advisory items, and run strict harness validation only for initialized harness targets unless explicitly requested. |
 | `harness-hub analyze <target>` | No | Detect existing standard skills, missing capabilities, conflicts, and recommendations. |
 | `harness-hub analyze <target> --harness` | No | Detect repo harness gaps, existing root harness evidence, and initialization recommendations. |
 | `harness-hub init-harness <target> --dry-run` | No | Preview root harness initialization without writing files or lock state. |
