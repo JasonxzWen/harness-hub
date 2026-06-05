@@ -716,6 +716,35 @@
       "risk": "low",
       "recommendation": "Library, framework, SDK, API, CLI, or cloud-service docs."
     },
+    "skill:package-release-sniffer": {
+      "kind": "skill",
+      "path": "skills/package-release-sniffer",
+      "version": "0.1.0",
+      "source": "local-original",
+      "provides": [
+        "package-release-discovery",
+        "registry-primary-source-triage",
+        "ai-developer-tool-release-sniffing",
+        "package-release-output-shape"
+      ],
+      "overlapsWith": [
+        "skill:documentation-lookup",
+        "skill:source-to-insight-blog",
+        "skill:answer-workflow",
+        "skill:tdd-workflow"
+      ],
+      "routing": "Load when tracking newly published package or model-package releases across package registries and release feeds for AI or developer-tool monitoring; use documentation-lookup for docs on a chosen package and implementation workflows for building registry clients.",
+      "detects": [
+        {
+          "path": "skills/package-release-sniffer/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Add source-first package release sniffing for AI and developer-tool monitoring without installing registry clients, hooks, credentials, or scheduled monitors."
+    },
     "skill:agent-introspection-debugging": {
       "kind": "skill",
       "path": "skills/agent-introspection-debugging",
