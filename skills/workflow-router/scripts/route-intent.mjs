@@ -143,6 +143,7 @@ const SIGNALS = Object.freeze({
     'can it',
     'can this',
     'compare',
+    'describe',
     'explain',
     'look up',
     'what is',
@@ -153,7 +154,10 @@ const SIGNALS = Object.freeze({
     '\u80fd\u5426',
     '\u53ef\u4ee5\u5417',
     '\u5bf9\u6bd4',
+    '\u63cf\u8ff0',
     '\u89e3\u91ca',
+    '\u4ecb\u7ecd',
+    '\u68b3\u7406',
     '\u67e5\u4e00\u4e0b',
     '\u8bc1\u636e',
     '\u8bf4\u660e',
@@ -509,6 +513,22 @@ export function classifyIntent(prompt) {
   const hubActionSignal = includesAny(text, SIGNALS.hubMaintenanceAction);
   const hubChangeTargetSignal = includesAny(text, SIGNALS.hubMaintenanceChangeTarget);
   const explicitOwner = hasExplicitOwner(text);
+  const broadRepoExplainerSignal = (
+    includesAny(text, [
+      'describe this repo',
+      'describe this repository',
+      'describe the repo',
+      'describe the repository',
+      'codebase overview',
+      'repo capability map',
+      'repository capability map',
+    ]) || (
+      includesAny(text, ['describe', '\u63cf\u8ff0', '\u8bf4\u660e', '\u89e3\u91ca', '\u4ecb\u7ecd', '\u68b3\u7406'])
+      && includesAny(text, ['repo', 'repository', 'codebase', '\u672c\u4ed3\u5e93', '\u8fd9\u4e2a\u4ed3\u5e93', '\u4ed3\u5e93', '\u4ee3\u7801\u5e93'])
+      && includesAny(text, ['capability', 'capabilities', 'structure', 'function', 'functions', 'implementation', 'architecture', '\u80fd\u529b', '\u7ed3\u6784', '\u529f\u80fd', '\u5b9e\u73b0', '\u67b6\u6784'])
+      && includesAny(text, ['structure', 'implementation', '\u7ed3\u6784', '\u5b9e\u73b0'])
+    )
+  );
 
   if (includesAny(text, SIGNALS.vagueNext) && !changeSignal && !explicitOwner) {
     return makeResult('clarify', 'medium', 'The request references prior work but does not say whether to review, plan, or implement.', {
@@ -518,6 +538,13 @@ export function classifyIntent(prompt) {
 
   if (noMutation && (reviewSignal || questionSignal)) {
     return makeResult(reviewSignal ? 'review' : 'question', 'high', 'The user requested evidence or review and explicitly blocked mutation.');
+  }
+
+  if (broadRepoExplainerSignal) {
+    return makeResult('question', 'high', 'The user asked for a broad read-only repository explainer where a navigable visual report lowers interpretation cost.', {
+      effectiveInteract: 'required',
+      expectedOutputMode: 'html-artifact',
+    });
   }
 
   if (hubSignal && hubActionSignal) {
