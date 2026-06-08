@@ -88,6 +88,29 @@ type ActivationCasesResult = {
   }>;
 };
 
+type ModeStructureCasesResult = {
+  schemaVersion: 1;
+  ok: boolean;
+  mutates: boolean;
+  dispatchesSubagents: boolean;
+  summary: {
+    caseCount: number;
+    passedCount: number;
+    failedCount: number;
+    warnedCount: number;
+  };
+  cases: Array<{
+    id: string;
+    mode: string;
+    shouldWarn: boolean;
+    warned: boolean;
+    detectedStructures: string[];
+    warnings: string[];
+    missingStructures: string[];
+    passed: boolean;
+  }>;
+};
+
 function installIntoTemp(prefix: string): string {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 
@@ -129,6 +152,14 @@ function tryRunActivationCases(scriptPath: string, casesFile: string): Activatio
 
     return JSON.parse(output) as ActivationCasesResult;
   }
+}
+
+function runModeStructureCases(scriptPath: string, casesFile: string): ModeStructureCasesResult {
+  const output = execFileSync(process.execPath, [scriptPath, '--cases-file', casesFile, '--json'], {
+    encoding: 'utf8',
+  });
+
+  return JSON.parse(output) as ModeStructureCasesResult;
 }
 
 test('installed workflow router routes a user-perspective intent matrix without mutation or subagent dispatch', () => {
@@ -298,6 +329,14 @@ test('installed skill metadata selects high-overlap helper skills from user prom
   expect(visualLanguageReportSmoke.mutates).toBe(false);
   expect(visualLanguageReportSmoke.dispatchesSubagents).toBe(false);
 
+  const repoCapabilityMapSmoke = runActivationCheck(
+    activationCheckScript,
+    '描述本仓库的能力、结构、功能、实现',
+  );
+  expect(repoCapabilityMapSmoke.selectedSkill).toBe('effective-interact');
+  expect(repoCapabilityMapSmoke.mutates).toBe(false);
+  expect(repoCapabilityMapSmoke.dispatchesSubagents).toBe(false);
+
   const ownerPromptSmoke = runActivationCheck(
     activationCheckScript,
     'Where does this repository reference Matt Pocock skills, and what behavior do those references currently drive?',
@@ -364,4 +403,30 @@ test('installed skill activation check fails when helper boundary prompts are mi
   expect(result.summary.failedCount).toBe(0);
   expect(result.summary.boundaryUncoveredSkillCount).toBeGreaterThan(0);
   expect(result.boundaryUncoveredSkills).toContain('documentation-lookup');
+});
+
+test('installed effective-interact mode structure checker enforces non-html output shapes', () => {
+  const targetDir = installIntoTemp('harness-hub-effective-interact-mode-shape-');
+  const scriptPath = path.join(targetDir, 'skills', 'effective-interact', 'scripts', 'check-mode-structure.mjs');
+  const casesFile = path.join(targetDir, 'skills', 'effective-interact', 'assets', 'fixtures', 'mode-structure-cases.json');
+  const fixture = JSON.parse(fs.readFileSync(path.resolve('skills/effective-interact/assets/fixtures/mode-structure-cases.json'), 'utf8')) as {
+    cases: Array<{ id: string }>;
+  };
+
+  expect(fs.existsSync(scriptPath)).toBe(true);
+  expect(fs.existsSync(casesFile)).toBe(true);
+
+  const result = runModeStructureCases(scriptPath, casesFile);
+
+  expect(result.schemaVersion).toBe(1);
+  expect(result.ok).toBe(true);
+  expect(result.mutates).toBe(false);
+  expect(result.dispatchesSubagents).toBe(false);
+  expect(result.summary.caseCount).toBe(fixture.cases.length);
+  expect(result.summary.passedCount).toBe(fixture.cases.length);
+  expect(result.summary.failedCount).toBe(0);
+  expect(result.summary.warnedCount).toBeGreaterThan(0);
+  expect(result.cases.some((entry) => entry.id === 'structured-markdown-linear-paragraphs' && entry.warned)).toBe(true);
+  expect(result.cases.some((entry) => entry.id === 'visual-markdown-mermaid' && !entry.warned && entry.detectedStructures.includes('mermaid'))).toBe(true);
+  expect(result.cases.every((entry) => entry.passed)).toBe(true);
 });

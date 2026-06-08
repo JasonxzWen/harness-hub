@@ -2,7 +2,12 @@
 
 ## Unreleased
 
+## 0.1.14 - 2026-06-08
+
 - Add a PR release-impact policy, pull request template, and regression coverage so release decisions are explicit without publishing npm `latest` from PRs.
+- Route wide repo or skill capability/structure/function/implementation explainers through `effective-interact` as read-only HTML-first communication artifacts instead of ordinary prose or change requests.
+- Add visual-structure advisory validation for Effective Interact HTML artifacts and non-HTML mode structure checks so loaded skill outputs do not collapse into linear prose.
+- Bump shipped managed component versions for `skill:workflow-router` and `skill:effective-interact` so managed installs can detect the updated behavior.
 
 ## 0.1.13 - 2026-06-04
 
