@@ -38,6 +38,7 @@ flowchart TD
 | Install skills without root harness files | `install --target standard` | Full standard skill tree under `skills/<name>/`, no root file changes. |
 | Check a target repo before writing files | `analyze --agent-readiness --harness --json` | Read-only readiness, harness gaps, and recommendations. |
 | Run a routine status self-check | `self-check --json` | Read-only aggregate status, advisory/failure split, and conditional harness validation. |
+| Make installed skills visible to local Codex | `activate-codex --yes` | Sync project-local `skills/<name>` into `.codex/skills` without global installation. |
 | Validate a bootstrapped repo | `validate-harness --json` | Required files, state, QA boundaries, trigger hygiene, and structural scores. |
 | Maintain this hub | `workflow-router` then `hub-maintenance-workflow` | Source records, routing, capability metadata, docs, templates, and lifecycle safety. |
 | Create a public source-backed insight post | `insight-*` commands | Source ledger, Effective Interact adaptation, Pages output, and publish preflight. |
@@ -78,6 +79,8 @@ bun run bootstrap:codex-skills
 npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --harness --json
 npx @jasonwen/harness-hub check D:\path\to\target --json
 npx @jasonwen/harness-hub self-check D:\path\to\target --json
+npx @jasonwen/harness-hub activate-codex D:\path\to\target --dry-run --json
+npx @jasonwen/harness-hub activate-codex D:\path\to\target --yes
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
@@ -97,7 +100,9 @@ npx @jasonwen/harness-hub insight-validate . --json
 npx @jasonwen/harness-hub insight-publish . --dry-run --json
 ```
 
-`check` is a read-only startup check. It reports the released CLI package status from npm registry in `cli`, the target repository's lock-managed component status in `target`, and explicit CodeGraph/Headroom configuration advice in `externalTools`; update availability, registry failures, missing locks, and external tool suggestions are advisory and do not apply updates, install tools, or block the agent startup path.
+`check` is a read-only startup check. It reports the released CLI package status from npm registry in `cli`, the target repository's lock-managed component status in `target`, and explicit CodeGraph/Headroom configuration advice in `externalTools`; update availability, registry failures, missing locks, missing project-local Codex activation, and external tool suggestions are advisory and do not apply updates, install tools, or block the agent startup path.
+
+`activate-codex` is an explicit local activation step for Codex projects. It copies the already installed `skills/<name>` tree into `.codex/skills/<name>` so Codex can index the skill metadata, including helper triggers such as `package-release-sniffer`. It writes only the target repository's local `.codex/skills` cache, uses a Harness Hub marker to avoid overwriting unmarked local Codex skills, and does not write global skill directories or `.harness-hub/lock.json`.
 
 `self-check` is the routine health-check aggregate. It wraps `check`, classifies hard failures separately from advisory items, and runs strict `validate-harness` only when the target has an installed `harness:minimal` lock record unless `--validate-harness` is explicitly provided. A local daily 21:30 runner can call:
 

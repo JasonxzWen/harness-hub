@@ -7,6 +7,7 @@ import { expect, test } from 'bun:test';
 
 import {
   AGENT_READINESS_CATEGORIES,
+  activateCodex,
   analyzeTarget,
   applyInstall,
   applyHarnessInit,
@@ -96,6 +97,33 @@ test('installs skills, writes lock, and reports current status', () => {
   expect(status.missing.length).toBe(0);
   expect(status.updates.length).toBe(0);
   expect(status.current.length).toBeGreaterThan(0);
+});
+
+test('activate-codex syncs installed skills into project-local Codex cache', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-codex-activate-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+
+  const result = activateCodex({ targetDir });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.synced.length).toBeGreaterThan(0);
+  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'workflow-router', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'package-release-sniffer', 'SKILL.md'))).toBe(true);
+  expect(fs.readFileSync(path.join(targetDir, '.codex', 'skills', 'workflow-router', '.harness-hub-managed'), 'utf8')).toContain('activate-codex');
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(true);
+});
+
+test('activate-codex blocks unmarked existing Codex skill directories', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-codex-activate-block-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+  fs.mkdirSync(path.join(targetDir, '.codex', 'skills', 'workflow-router'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.codex', 'skills', 'workflow-router', 'SKILL.md'), '# local override\n');
+
+  const result = activateCodex({ targetDir });
+
+  expect(result.exitCode).toBe(1);
+  expect(result.blockers.map((item) => item.skillName)).toContain('workflow-router');
+  expect(fs.readFileSync(path.join(targetDir, '.codex', 'skills', 'workflow-router', 'SKILL.md'), 'utf8')).toBe('# local override\n');
 });
 
 test('confirmed install overwrites same-name skill directories by default', () => {
@@ -1212,11 +1240,29 @@ test('help lists the full public command surface', async () => {
   expect(result.code).toBe(0);
   expect(result.stdout).toContain('harness-hub check');
   expect(result.stdout).toContain('harness-hub init-harness');
+  expect(result.stdout).toContain('harness-hub activate-codex');
   expect(result.stdout).toContain('harness-hub insight-generate');
   expect(result.stdout).toContain('harness-hub insight-build');
   expect(result.stdout).toContain('harness-hub insight-validate');
   expect(result.stdout).toContain('harness-hub insight-publish');
   expect(result.stdout).toContain('harness-hub migrate-lock');
+});
+
+test('activate-codex CLI requires confirmation and supports json output', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-codex-activate-cli-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+
+  const blocked = await captureCli(['activate-codex', targetDir]);
+  const dryRun = await captureCli(['activate-codex', targetDir, '--dry-run', '--json']);
+  const confirmed = await captureCli(['activate-codex', targetDir, '--yes', '--json']);
+
+  expect(blocked.code).toBe(2);
+  expect(blocked.stderr).toContain('--yes');
+  expect(dryRun.code).toBe(0);
+  expect(JSON.parse(dryRun.stdout).dryRun).toBe(true);
+  expect(confirmed.code).toBe(0);
+  expect(JSON.parse(confirmed.stdout).synced.length).toBeGreaterThan(0);
+  expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'package-release-sniffer', 'SKILL.md'))).toBe(true);
 });
 
 test('status supports json, html stdout, and explicit output', async () => {
@@ -1279,6 +1325,39 @@ test('check reports cli package status and target status separately', async () =
   expect(result.target.state).toBe('current');
   expect(result.target.current.length).toBeGreaterThan(0);
   expect(result.target.updates).toEqual([]);
+});
+
+test('check recommends project-local Codex activation when installed skills are not visible to Codex', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-codex-activation-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+
+  const beforeActivation = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+  activateCodex({ targetDir });
+  const afterActivation = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(beforeActivation.target.state).toBe('current');
+  expect(beforeActivation.target.recommendedCommand).toContain('activate-codex');
+  expect(beforeActivation.target.message).toContain('Codex skill activation is missing');
+  expect(afterActivation.target.state).toBe('current');
+  expect(afterActivation.target.recommendedCommand).toBe(null);
 });
 
 test('check reports external tool installation suggestions without side effects', async () => {

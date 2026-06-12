@@ -38,6 +38,7 @@ flowchart TD
 | 只安装 skills，不写根级 harness 文件 | `install --target standard` | 完整标准 skill 树，写到 `skills/<name>/`。 |
 | 写文件前先检查目标仓库 | `analyze --agent-readiness --harness --json` | 只读 readiness、harness 缺口和建议。 |
 | 执行例行状态自检 | `self-check --json` | 只读聚合状态、自检 advisory/failure 分流和条件化 harness 验证。 |
+| 让已安装 skills 被本地 Codex 看见 | `activate-codex --yes` | 把项目内 `skills/<name>` 同步到 `.codex/skills`，不做全局安装。 |
 | 验证已初始化的仓库 | `validate-harness --json` | 必需文件、state、QA 边界、trigger hygiene 和结构评分。 |
 | 维护 Harness Hub 自身 | `workflow-router` 再进入 `hub-maintenance-workflow` | source records、routing、capability metadata、docs、templates、lifecycle safety。 |
 | 创建公开 source-backed insight post | `insight-*` 命令 | source ledger、Effective Interact adaptation、Pages 输出和发布预检。 |
@@ -78,6 +79,8 @@ bun run bootstrap:codex-skills
 npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --harness --json
 npx @jasonwen/harness-hub check D:\path\to\target --json
 npx @jasonwen/harness-hub self-check D:\path\to\target --json
+npx @jasonwen/harness-hub activate-codex D:\path\to\target --dry-run --json
+npx @jasonwen/harness-hub activate-codex D:\path\to\target --yes
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
@@ -97,7 +100,9 @@ npx @jasonwen/harness-hub insight-validate . --json
 npx @jasonwen/harness-hub insight-publish . --dry-run --json
 ```
 
-`check` 是只读启动检查。它在 `cli` 报告 npm 上的 CLI 包状态，在 `target` 报告目标仓库 lock 托管组件状态，并在 `externalTools` 给出 CodeGraph 和 Headroom 的显式配置/安装建议；这些建议不会安装工具、改写目标仓库或阻塞 agent 启动路径。
+`check` 是只读启动检查。它在 `cli` 报告 npm 上的 CLI 包状态，在 `target` 报告目标仓库 lock 托管组件状态，并在 `externalTools` 给出 CodeGraph 和 Headroom 的显式配置/安装建议；更新可用、registry 失败、缺少 lock、缺少项目本地 Codex 激活、外部工具建议都只是 advisory，不会安装工具、改写目标仓库或阻塞 agent 启动路径。
+
+`activate-codex` 是显式的 Codex 项目本地激活步骤。它把已经安装在目标仓库里的 `skills/<name>` 复制到 `.codex/skills/<name>`，让 Codex 能索引 skill metadata，包括 `package-release-sniffer` 这类 helper 触发。它只写目标仓库本地 `.codex/skills` 缓存，用 Harness Hub marker 避免覆盖未标记的本地 Codex skill，不写全局 skill 目录，也不写 `.harness-hub/lock.json`。
 
 `self-check` 是例行健康自检聚合命令。它包装 `check`，把硬失败和 advisory 分开，并且只有在目标已有 `harness:minimal` 安装 lock 记录时默认运行严格 `validate-harness`；如果要强制验证未初始化目标，需要显式加 `--validate-harness`。本地每天 21:30 的 runner 可以调用：
 
