@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { expect, test } from 'bun:test';
 
@@ -11,10 +11,63 @@ const skillDir = 'skills/effective-interact';
 const createInteractionScript = `${skillDir}/scripts/create-interaction.mjs`;
 const validateInteractionScript = `${skillDir}/scripts/validate-interaction.mjs`;
 const checkModeStructureScript = `${skillDir}/scripts/check-mode-structure.mjs`;
+const serveArtifactScript = `${skillDir}/scripts/serve-artifact.mjs`;
+
+type SpawnedProcess = ReturnType<typeof spawn>;
 
 function frontmatterValue(name: string): string {
   const match = skill.match(new RegExp(`^${name}:\\s*(.+)$`, 'm'));
   return match?.[1] || '';
+}
+
+function waitForServerPayload(child: SpawnedProcess): Promise<{ ok: true; file: string; url: string; pid: number | null }> {
+  return new Promise((resolve, reject) => {
+    let stdout = '';
+    let stderr = '';
+    const timeout = setTimeout(() => {
+      reject(new Error(`Timed out waiting for server payload. stdout=${stdout} stderr=${stderr}`));
+    }, 5000);
+
+    const finish = (payload: { ok: true; file: string; url: string; pid: number | null }) => {
+      clearTimeout(timeout);
+      resolve(payload);
+    };
+
+    child.stdout?.on('data', (chunk) => {
+      stdout += String(chunk);
+      try {
+        const payload = JSON.parse(stdout);
+        finish(payload);
+      } catch {
+        // Pretty JSON can arrive in chunks; keep buffering until it parses.
+      }
+    });
+    child.stderr?.on('data', (chunk) => {
+      stderr += String(chunk);
+    });
+    child.once('error', (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+    child.once('exit', (code) => {
+      if (code !== null && code !== 0 && !stdout.trim()) {
+        clearTimeout(timeout);
+        reject(new Error(`Server exited before payload. code=${code} stderr=${stderr}`));
+      }
+    });
+  });
+}
+
+async function stopServer(child: SpawnedProcess): Promise<void> {
+  if (child.exitCode !== null) return;
+  await new Promise<void>((resolve) => {
+    child.once('exit', () => resolve());
+    child.kill('SIGTERM');
+    setTimeout(() => {
+      if (child.exitCode === null) child.kill('SIGKILL');
+      resolve();
+    }, 1000).unref();
+  });
 }
 
 test('effective-interact has a low-noise complex communication trigger description', () => {
@@ -667,6 +720,183 @@ test('effective-interact generator defaults to ignored skill-local outputs', () 
   expect(normalizedOutput).toContain('skills/effective-interact/artifacts/default-output-smoke.html');
   expect(fs.existsSync(payload.outputPath)).toBe(true);
   fs.rmSync(payload.outputPath, { force: true });
+});
+
+test('effective-interact generator emits structured handoff durability metadata', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-handoff-meta-'));
+  const inputPath = path.join(tmpDir, 'handoff.json');
+  fs.writeFileSync(inputPath, JSON.stringify({
+    title: 'Handoff durability fixture',
+    summary: 'Status: regenerated reports carry durable source metadata.',
+    status: 'complete',
+    template: 'implementation-handoff',
+    handoff: {
+      sourcePath: 'skills/effective-interact/assets/fixtures/handoff.json',
+      regenerationCommand: 'node skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/handoff.json --slug handoff --json',
+    },
+    sections: [
+      {
+        type: 'data-table',
+        title: 'Durability contract',
+        group: 'verification',
+        status: 'ready',
+        columns: ['Field', 'Purpose'],
+        rows: [
+          ['sourcePath', 'Tracked durable input'],
+          ['regenerationCommand', 'Exact rebuild command'],
+        ],
+      },
+    ],
+  }), 'utf8');
+
+  const result = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    inputPath,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'handoff-meta',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  const html = fs.readFileSync(JSON.parse(result.stdout).outputPath, 'utf8');
+
+  expect(html).toContain('data-handoff-source-path="skills/effective-interact/assets/fixtures/handoff.json"');
+  expect(html).toContain('data-handoff-regeneration-command="node skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/handoff.json --slug handoff --json"');
+  expect(html).toContain('name="handoff-source-path"');
+  expect(html).toContain('name="handoff-regeneration-command"');
+  expect(html).not.toMatch(/[A-Za-z]:[\\/]/);
+  expect(html).not.toContain('file:///');
+});
+
+test('effective-interact schema documents structured handoff durability metadata', () => {
+  const schema = JSON.parse(fs.readFileSync(`${skillDir}/references/interaction-input-schema.json`, 'utf8'));
+
+  expect(schema.properties.handoff.type).toBe('object');
+  expect(schema.properties.handoff.additionalProperties).toBe(false);
+  expect(schema.properties.handoff.properties.sourcePath.type).toBe('string');
+  expect(schema.properties.handoff.properties.regenerationCommand.type).toBe('string');
+});
+
+test('effective-interact generator rejects unsafe handoff durability metadata', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-unsafe-handoff-'));
+  const inputPath = path.join(tmpDir, 'unsafe.json');
+  fs.writeFileSync(inputPath, JSON.stringify({
+    title: 'Unsafe handoff fixture',
+    summary: 'Status: unsafe handoff metadata is rejected.',
+    status: 'complete',
+    template: 'implementation-handoff',
+    handoff: {
+      sourcePath: 'skills/effective-interact/assets/fixtures/..',
+      regenerationCommand: 'node skills/effective-interact/scripts/create-interaction.mjs --input C:/Users/Admin/private.json --slug unsafe --json',
+    },
+    sections: [
+      {
+        type: 'summary-cards',
+        title: 'Boundary',
+        cards: [{ label: 'Expected', value: 'Reject host-local and parent paths' }],
+      },
+    ],
+  }), 'utf8');
+
+  const result = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    inputPath,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'unsafe',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain('handoff.sourcePath must be a repo-relative path');
+  expect(result.stderr).toContain('handoff.regenerationCommand must not contain host-local absolute paths');
+});
+
+test('effective-interact validator warns when HTML handoffs lack durability metadata', async () => {
+  const validateModule = await import(pathToFileURL(path.resolve(validateInteractionScript)).href);
+  const base = `<!doctype html>
+<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered" data-template="implementation-handoff">
+<head><meta charset="utf-8"><title>Durability fixture</title><style>@media (prefers-reduced-motion: reduce) { * { transition: none; } }</style></head>
+<body>
+  <main>
+    <header class="report-hero" data-report-intent data-primary-question="Can this be reopened?" data-time-budget="30s" data-artifact-kind="handoff">
+      <h1>Durability fixture</h1>
+      <p class="hero-summary-text">Status: report can be reopened later.</p>
+    </header>
+    <nav data-report-nav><div class="report-nav-group"><a data-nav-link href="#summary">Summary</a></div></nav>
+    <section id="summary" data-section-type="summary-cards" data-section-group="summary" data-render-state="ready"><h2>Summary</h2><article><strong>Ready</strong></article></section>
+  </main>
+</body>
+</html>`;
+
+  const missing = validateModule.validateStatic(base);
+  expect(missing.ok).toBe(true);
+  expect(missing.warnings).toEqual(expect.arrayContaining([
+    expect.stringContaining('advisory: handoff durability'),
+  ]));
+
+  const withMetadata = base.replace(
+    '<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered" data-template="implementation-handoff">',
+    '<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered" data-template="implementation-handoff" data-handoff-source-path="skills/effective-interact/assets/fixtures/handoff.json" data-handoff-regeneration-command="node skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/handoff.json --slug handoff --json">',
+  );
+  const present = validateModule.validateStatic(withMetadata);
+  expect(present.warnings.join('\n')).not.toContain('handoff durability');
+});
+
+test('effective-interact serve-artifact exposes only the selected artifact over localhost', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-serve-'));
+  const artifactPath = path.join(tmpDir, 'report.html');
+  const secretPath = path.join(tmpDir, 'secret.html');
+  fs.writeFileSync(artifactPath, '<!doctype html><html><body>artifact only</body></html>', 'utf8');
+  fs.writeFileSync(secretPath, '<!doctype html><html><body>secret</body></html>', 'utf8');
+
+  const child = spawn(process.execPath, [
+    serveArtifactScript,
+    artifactPath,
+    '--host',
+    '127.0.0.1',
+    '--port',
+    '0',
+    '--json',
+  ], { stdio: ['ignore', 'pipe', 'pipe'] });
+
+  try {
+    const payload = await waitForServerPayload(child);
+    const artifactResponse = await fetch(payload.url);
+    const rootResponse = await fetch(new URL('/', payload.url));
+    const blockedSibling = await fetch(new URL('/secret.html', payload.url));
+    const blockedMethod = await fetch(payload.url, { method: 'POST' });
+
+    expect(payload.ok).toBe(true);
+    expect(payload.file).toBe(path.resolve(artifactPath));
+    expect(artifactResponse.status).toBe(200);
+    expect(await artifactResponse.text()).toContain('artifact only');
+    expect(rootResponse.status).toBe(200);
+    expect(await rootResponse.text()).toContain('artifact only');
+    expect(blockedSibling.status).toBe(404);
+    expect(blockedMethod.status).toBe(405);
+  } finally {
+    await stopServer(child);
+  }
+});
+
+test('effective-interact serve-artifact fails clearly when the artifact is missing', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-serve-missing-'));
+  const missingPath = path.join(tmpDir, 'missing.html');
+  const result = spawnSync(process.execPath, [
+    serveArtifactScript,
+    missingPath,
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain('Artifact file not found:');
+  expect(result.stderr).toContain('Regenerate it before serving.');
 });
 
 test('effective-interact option-gallery fixture renders a compare-first report', () => {

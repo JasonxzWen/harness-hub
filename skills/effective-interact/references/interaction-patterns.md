@@ -207,6 +207,25 @@ Add richer sections only when they shorten the explanation:
 
 Supported section types: `summary-cards`, `data-table`, `markdown`, `mermaid`, `code`, `diff`, `timeline`, `evidence`, `decision-matrix`, `actions`, `tabs`, `filterable-cards`, and `chart`. Optional section fields `group`, `priority`, `summary`, `status`, `richId`, and `trustLevel` drive grouped navigation, runtime state, and sanitization. Optional root fields `intent`, `claims`, `evidence`, `verification`, and `nextActions` are rendered only when useful or non-empty.
 
+### Handoff Durability
+
+Generated HTML under `skills/effective-interact/artifacts/` is a disposable inspection output. It can disappear when a fresh Codex worktree is created, ignored files are cleaned, or local state is reset. For any report the user is expected to reopen later, keep the JSON input in a durable source location such as `skills/effective-interact/assets/fixtures/` when the content is safe to track, or another approved tracked path owned by the task. If the content is private or unsuitable for tracking, record the regeneration command in `.harness-hub/state/session-handoff.md` and the final response.
+
+Before final handoff:
+
+- Check that the generated HTML still exists at the path you plan to share.
+- Regenerate from the durable JSON source if the file is missing.
+- Include the regeneration command beside the artifact path when continuity matters.
+- Do not cite an ignored HTML file as the only durable deliverable.
+
+For Codex in-app browser review, prefer a localhost URL over a raw `file://` path. Use:
+
+```powershell
+node skills/effective-interact/scripts/serve-artifact.mjs skills/effective-interact/artifacts/report.html --host 127.0.0.1 --port 4173 --json
+```
+
+The helper serves only the selected artifact, not the whole workspace. Open or hand off the returned `http://127.0.0.1:<port>/...` URL after validating the artifact with `validate-interaction.mjs --require-browser`.
+
 ## Long Task Session Ledger
 
 Use a local fact ledger when complex communication depends on state that could drift during a long task. The ledger is not required for short replies, one-command status, or routine explanations. It is useful when a later status update, handoff, or HTML artifact will need stable facts instead of reconstructed memory.

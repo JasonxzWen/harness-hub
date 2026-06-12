@@ -5,7 +5,7 @@ description: Load when agent pauses to report relatively complex information nee
 
 # Effective Interact
 
-Help complex communication: understand, compare, decide, continue. When loaded, think in visual language first: map/table/timeline/flow/evidence shapes reduce interaction time and information loss. HTML is an escalation path, not the default goal; material repo or skill behavior changes are the default HTML handoff exception.
+When loaded, think in visual language first: map/table/timeline/flow/evidence shapes reduce interaction time and information loss. HTML is an escalation path, not the default goal; material repo or skill behavior changes are the default HTML handoff exception.
 
 ## Default Load And Communication Gate
 
@@ -18,7 +18,7 @@ Use only when linear reply raises decision cost:
 - flow, state, timeline, map, call path, or architecture needs spatial structure.
 - repo/module/skill explainers need capability, structure, implementation/source map.
 - user must choose, tune, sort, filter, copy, export, or inspect source anchors, code, diff, citations, evidence, or validation.
-- visual structure lowers cost: approvals, visual style boards, plans, PR writeups, variants, incidents, milestones, module maps, structure trees, or triage/prompt editors.
+- visual structure lowers cost: approvals, style boards, PR writeups, incidents, milestones, module maps, structure trees, or triage/prompt editors.
 - long task state, checkpoints, data, or tool-result summaries must stay stable for later status or handoff.
 - plain text would hide the main point while a decision or continuation need remains.
 
@@ -35,7 +35,7 @@ Use the lightest mode that lowers decision cost:
 3. `visual-markdown`: Mermaid, tables, commands, file anchors, or decision matrices.
 4. `html-artifact`: one static HTML file for browser navigation, visualization, filtering, copy/export, or local interaction.
 
-Visual thinking happens before mode selection: do not draft a linear answer first.
+Visual thinking happens before mode selection.
 Unless you intentionally choose `plain-brief`, include at least one visible visual structure in the final output.
 
 HTML when browser navigation, visualization, or local interaction lowers decision cost; never because the topic is important, long, or validator-backed.
@@ -80,9 +80,9 @@ Handoff obligation exists only when changed behavior, evidence, risk, or continu
 
 Use only for `html-artifact` mode. Write one static UTF-8 Chinese `.html`, defaulting to `skills/effective-interact/artifacts/`; inlineable HTML/CSS and vanilla JS only; no build step.
 
-HTML handoff must be visualized: include a table, map, timeline, flow, evidence layout, or comparison surface. Avoid Markdown-in-HTML handoffs and decorative visuals.
+HTML handoff must be visualized with a table, map, timeline, flow, evidence layout, or comparison surface. Avoid Markdown-in-HTML handoffs and decorative visuals.
 
-For code evidence, include source file link, line number, snippet, and `diff` when before/after matters. Mermaid must render to SVG before handoff.
+For code evidence, include source file link, line number, smallest useful snippet, and `diff` when before/after matters. Mermaid must render to SVG before handoff.
 
 Editors: no network/repo writes, credentials, or hidden persistence; include Markdown, JSON, diff, or prompt export.
 
@@ -90,7 +90,7 @@ Use grouped navigation with a return-to-overview path. 流程、路由、调用�
 
 ## Long Task Fact Ledger
 
-For long work where state may drift, keep JSONL at `skills/effective-interact/artifacts/session-ledgers/<task-slug>.jsonl`. Record checkpoints, data/status, tool-result summaries, decisions, assumptions, verification, blockers, and next actions. Never record secrets or raw large logs.
+For long drifting work, keep JSONL at `skills/effective-interact/artifacts/session-ledgers/<task-slug>.jsonl`; record tool-result summaries, verification, blockers, and next actions. Never record secrets or raw large logs.
 
 ## Generator First Workflow
 
@@ -98,8 +98,10 @@ For `html-artifact` mode:
 
 1. Write UTF-8 JSON for `references/interaction-input-schema.json`.
 2. Run `scripts/create-interaction.mjs --input <input.json> --slug <name> --json`; omit `--out-dir` so HTML lands in ignored skill-local artifacts. If overriding, choose only a gitignored directory.
-3. Run `scripts/validate-interaction.mjs <outputPath> --json --require-browser`; failed/degraded Mermaid is blocking.
-4. Hand off the artifact link, validation, and kept advisory warnings. Hand-write HTML only when the generator cannot express the needed visualization.
+3. Check `outputPath` exists before browser handoff; regenerate if missing.
+4. Run `scripts/validate-interaction.mjs <outputPath> --json --require-browser`; failed/degraded Mermaid is blocking.
+5. Prefer `scripts/serve-artifact.mjs <outputPath> --host 127.0.0.1 --port <port> --json`; hand off localhost URL, source/regeneration command, validation, and warnings.
+6. Hand-write HTML only when the generator cannot express the visualization.
 
 ## Failure Lessons
 
@@ -108,4 +110,4 @@ For `html-artifact` mode:
 
 ## Verification
 
-Before HTML handoff, run `scripts/validate-interaction.mjs`; report degradation. Read `references/interaction-patterns.md`, `references/html-effectiveness-patterns.md`, `references/html-aesthetic-preflight.md`, `references/session-ledger-schema.json`, and `evals/routing-cases.json` before changing trigger or HTML rules.
+Before HTML handoff, run `scripts/validate-interaction.mjs`; report degradation. Read `references/interaction-patterns.md`, `references/html-effectiveness-patterns.md`, `references/html-aesthetic-preflight.md`, ledger schema, and eval cases before changing trigger/HTML rules.

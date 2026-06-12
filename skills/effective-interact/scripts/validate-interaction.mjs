@@ -274,6 +274,27 @@ function attrValue(tag, name) {
   return match ? match[1] : "";
 }
 
+function metaContent(documentMarkup, name) {
+  const pattern = new RegExp(`<meta\\b(?=[^>]*name="${name}")[^>]*>`, "i");
+  const tag = String(documentMarkup || "").match(pattern)?.[0] || "";
+  return attrValue(tag, "content");
+}
+
+function collectHandoffDurabilityWarnings(documentMarkup) {
+  const htmlTag = String(documentMarkup || "").match(/<html\b[^>]*>/i)?.[0] || "";
+  const hero = String(documentMarkup || "").match(/<header\b(?=[^>]*report-hero)[\s\S]*?<\/header>/i)?.[0] || "";
+  const template = attrValue(htmlTag, "data-template");
+  const artifactKind = attrValue(hero, "data-artifact-kind") || attrValue(String(documentMarkup || ""), "data-artifact-kind");
+  const durableKinds = new Set(["handoff", "review", "status", "research", "decision", "explainer"]);
+  const durableTemplates = new Set(["implementation-handoff", "conclusion-dashboard", "review-findings", "research-explainer", "decision-matrix", "implementation-plan"]);
+  const shouldHaveDurability = durableKinds.has(artifactKind) || durableTemplates.has(template);
+  const sourcePath = attrValue(htmlTag, "data-handoff-source-path") || metaContent(documentMarkup, "handoff-source-path");
+  const regenerationCommand = attrValue(htmlTag, "data-handoff-regeneration-command") || metaContent(documentMarkup, "handoff-regeneration-command");
+
+  if (!shouldHaveDurability || (sourcePath && regenerationCommand)) return [];
+  return ["advisory: handoff durability: add data-handoff-source-path and data-handoff-regeneration-command so ignored HTML artifacts can be regenerated"];
+}
+
 function normalizeFragmentId(value) {
   return String(value || "")
     .replace(/^#/, "")
@@ -388,6 +409,7 @@ function validateStatic(html) {
   warnings.push(...collectRichContentOpportunityWarnings(documentMarkup));
   warnings.push(...collectRichRenderWarnings(html, mode));
   warnings.push(...collectAestheticPreflightWarnings(html, documentMarkup));
+  warnings.push(...collectHandoffDurabilityWarnings(documentMarkup));
 
   add(checks, "report-root", html.includes("data-html-work-report"), "missing data-html-work-report root", issues);
   add(checks, "render-mode", ["runtime-cdn", "pre-rendered", "fallback-only"].includes(mode), `unexpected render mode: ${mode}`, issues);
