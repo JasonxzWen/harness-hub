@@ -750,6 +750,36 @@
       "risk": "low",
       "recommendation": "Add source-first package release sniffing for AI and developer-tool monitoring without installing registry clients, hooks, credentials, or scheduled monitors."
     },
+    "skill:harness-quality-check": {
+      "kind": "skill",
+      "path": "skills/harness-quality-check",
+      "version": "0.1.0",
+      "source": "local-original",
+      "provides": [
+        "harness-quality-audit",
+        "target-readiness-quality-report",
+        "advisory-html-quality-findings",
+        "existing-check-composition"
+      ],
+      "overlapsWith": [
+        "skill:effective-interact",
+        "skill:verification-loop",
+        "skill:coding-standards",
+        "skill:skill-creator",
+        "skill:hub-maintenance-workflow"
+      ],
+      "routing": "Load when explicitly asked to audit Harness Hub or target repo harness quality/readiness and produce advisory HTML findings; use verification-loop for final gates, coding-standards for code quality conventions, skill-creator for skill authoring, and hub-maintenance-workflow for actual source changes.",
+      "detects": [
+        {
+          "path": "skills/harness-quality-check/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "low",
+      "recommendation": "Compose existing Harness Hub self-check, readiness, harness validation, and skill-quality evidence into local advisory HTML reports without remote writes, schedules, hooks, or enforcement changes."
+    },
     "skill:agent-introspection-debugging": {
       "kind": "skill",
       "path": "skills/agent-introspection-debugging",

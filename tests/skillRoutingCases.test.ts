@@ -28,6 +28,7 @@ const optionalDemoSkills = [
   'karpathy-guidelines',
   'documentation-lookup',
   'package-release-sniffer',
+  'harness-quality-check',
   'design-taste-frontend',
   'clone-website',
   'web-artifacts-builder',

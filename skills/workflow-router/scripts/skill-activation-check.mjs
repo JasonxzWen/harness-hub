@@ -145,12 +145,14 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     includesAny(text, [
       'before completion',
       'before declaring',
+      'artifact validation',
       'branch is ready',
       'build, typecheck',
       'final build',
       'final validation',
       'lint',
       'open the pr',
+      'smoke checks',
       'tests, validation',
       'typecheck',
       'validation commands',
@@ -496,6 +498,30 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'cross-project code quality',
     'layering conventions',
   ]);
+  const harnessQualityCheckSignal = (
+    includesAny(text, [
+      'harness quality audit',
+      'harness quality check',
+      'harness-quality-check',
+      'harness readiness audit',
+      'quality readiness check',
+      'quality/readiness check',
+      'target repo harness quality',
+    ]) || (
+      includesAny(text, ['harness hub', 'harness-hub', 'hub checkout', 'target repo', 'target repository'])
+      && includesAny(text, [
+        'advisory',
+        'agent readiness',
+        'audit',
+        'quality',
+        'readiness',
+        'self-check',
+        'skill-quality',
+        'validate-harness',
+      ])
+      && includesAny(text, ['findings', 'html', 'report'])
+    )
+  ) && !finalGateSignal && !codingStandardsSignal && !skillCreatorSignal;
   const karpathyGuidelinesSignal = includesAny(text, [
     'avoid overcomplication',
     'coding behavior baseline',
@@ -529,6 +555,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'refactor',
     'with tests',
   ]) || matchesAny(text, [/\bimplement(?:ed|ing)?\b/]);
+
+  if (harnessQualityCheckSignal && canLoad(metadata, 'harness-quality-check', ['harness quality', 'advisory HTML'])) {
+    return 'harness-quality-check';
+  }
 
   if (effectiveInteractSignal && canLoad(metadata, 'effective-interact', ['complex communication', 'handoff'])) {
     return 'effective-interact';
