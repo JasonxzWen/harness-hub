@@ -66,6 +66,14 @@ For purely read-only questions, `bun run codex:worktree-check` may warn and stil
 
 This setup is local initialization only: it syncs `.codex/skills/`, creates missing `.harness-hub/state/` templates, preserves existing task state by default, and must not create a checkpoint commit. Use `bun run codex:worktree-setup -- --reset-state` only when intentionally starting over with clean local task state.
 
+To avoid repeating this manual setup in this clone, install the advisory local Git hook once:
+
+```powershell
+bun run codex:worktree-hook:install
+```
+
+The hook uses Git's `post-checkout` hook, which also runs after `git worktree add` unless `--no-checkout` is used. It calls the same setup script, exits zero on setup failure, and does not perform remote writes.
+
 ## Skill Routing
 
 Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest matching skill:
@@ -178,6 +186,14 @@ bun run codex:worktree-setup
 ```
 
 Do not hard-code a machine path in setup commands. The script derives the repository root from its own location so fresh worktrees can generate ignored `.codex/skills/` copies, create missing `.harness-hub/state/` templates, preserve existing task state on reruns, and skip checkpoint commits for setup-only work. Use `--reset-state` or `--fresh` only when intentionally discarding local task state.
+
+For repeated local Codex worktree creation, run this once per clone:
+
+```powershell
+bun run codex:worktree-hook:install
+```
+
+This installs a managed advisory `post-checkout` hook in the Git hooks path. The hook runs `node scripts/setup-codex-worktree.mjs` for new worktree checkouts, preserves existing task state, and leaves `bun run codex:worktree-setup` as the deterministic fallback.
 
 ## Third-Party Skill Evaluation
 
