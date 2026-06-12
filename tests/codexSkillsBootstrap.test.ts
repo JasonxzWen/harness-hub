@@ -6,7 +6,9 @@ import path from 'node:path';
 
 const syncScript = path.resolve('scripts/sync-codex-skills.mjs');
 const checkScript = path.resolve('scripts/check-codex-worktree.mjs');
+const installHookScript = path.resolve('scripts/install-codex-worktree-hook.mjs');
 const setupScript = path.resolve('scripts/setup-codex-worktree.mjs');
+const bootstrapScripts = ['setup-codex-worktree.mjs', 'sync-codex-skills.mjs'];
 
 function makeTempRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-codex-bootstrap-'));
@@ -24,6 +26,24 @@ function writeStateTemplates(root: string): void {
   for (const name of ['current-task.md', 'decisions.md', 'progress.md', 'session-handoff.md']) {
     fs.writeFileSync(path.join(templateDir, name), `# ${name}\n\nclean template\n`);
   }
+}
+
+function writeBootstrapScripts(root: string): void {
+  const scriptsDir = path.join(root, 'scripts');
+  fs.mkdirSync(scriptsDir, { recursive: true });
+  for (const name of bootstrapScripts) {
+    fs.copyFileSync(path.resolve('scripts', name), path.join(scriptsDir, name));
+  }
+}
+
+function initGitRepo(root: string): void {
+  spawnSync('git', ['init'], { cwd: root, encoding: 'utf8' });
+  spawnSync('git', ['config', 'user.email', 'codex@example.com'], { cwd: root, encoding: 'utf8' });
+  spawnSync('git', ['config', 'user.name', 'Codex'], { cwd: root, encoding: 'utf8' });
+}
+
+function resolveGitPath(root: string, gitPath: string): string {
+  return path.isAbsolute(gitPath) ? gitPath : path.resolve(root, gitPath);
 }
 
 test('Codex bootstrap sync mirrors standard skills and preserves local artifacts', () => {
@@ -124,9 +144,7 @@ test('Codex worktree setup syncs skills and preserves existing harness state wit
   writeSkill(root, 'alpha');
   writeStateTemplates(root);
   fs.writeFileSync(path.join(root, '.gitignore'), '.codex/\n.harness-hub/state/\n');
-  spawnSync('git', ['init'], { cwd: root, encoding: 'utf8' });
-  spawnSync('git', ['config', 'user.email', 'codex@example.com'], { cwd: root, encoding: 'utf8' });
-  spawnSync('git', ['config', 'user.name', 'Codex'], { cwd: root, encoding: 'utf8' });
+  initGitRepo(root);
   spawnSync('git', ['add', '.gitignore'], { cwd: root, encoding: 'utf8' });
   spawnSync('git', ['commit', '-m', 'baseline'], { cwd: root, encoding: 'utf8' });
   const commitsBefore = spawnSync('git', ['rev-list', '--count', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim();
@@ -172,8 +190,54 @@ test('Codex worktree setup reset-state explicitly restores clean harness state',
   expect(fs.existsSync(path.join(stateDir, 'old-task.md'))).toBe(false);
 });
 
+test('Codex worktree hook installer refuses unmanaged post-checkout hooks', () => {
+  const root = makeTempRoot();
+  initGitRepo(root);
+  const hookPathOutput = spawnSync('git', ['rev-parse', '--git-path', 'hooks/post-checkout'], {
+    cwd: root,
+    encoding: 'utf8',
+  }).stdout.trim();
+  const hookPath = resolveGitPath(root, hookPathOutput);
+  fs.mkdirSync(path.dirname(hookPath), { recursive: true });
+  fs.writeFileSync(hookPath, '#!/bin/sh\nexit 0\n');
+
+  const result = spawnSync('node', [installHookScript, '--root', root], { encoding: 'utf8' });
+
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain('Refusing to overwrite existing post-checkout hook');
+});
+
+test('Codex worktree hook bootstraps new git worktrees', () => {
+  const root = makeTempRoot();
+  const linkedParent = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-codex-linked-parent-'));
+  const linkedRoot = path.join(linkedParent, 'linked');
+  writeSkill(root, 'alpha');
+  writeStateTemplates(root);
+  writeBootstrapScripts(root);
+  fs.writeFileSync(path.join(root, '.gitignore'), '.codex/\n.harness-hub/state/\n');
+  initGitRepo(root);
+  spawnSync('git', ['add', '.'], { cwd: root, encoding: 'utf8' });
+  spawnSync('git', ['commit', '-m', 'baseline'], { cwd: root, encoding: 'utf8' });
+
+  const install = spawnSync('node', [installHookScript, '--root', root], { encoding: 'utf8' });
+  const addWorktree = spawnSync('git', ['worktree', 'add', '-b', 'hook-test', linkedRoot], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+
+  expect(install.status).toBe(0);
+  expect(install.stdout).toContain('Installed Codex worktree bootstrap hook');
+  expect(addWorktree.status).toBe(0);
+  expect(fs.existsSync(path.join(linkedRoot, '.codex', 'skills', 'alpha', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(linkedRoot, '.harness-hub', 'state', 'current-task.md'))).toBe(true);
+  expect(fs.existsSync(path.join(linkedRoot, '.harness-hub', 'state', 'decisions.md'))).toBe(true);
+  expect(fs.existsSync(path.join(linkedRoot, '.harness-hub', 'state', 'progress.md'))).toBe(true);
+  expect(fs.existsSync(path.join(linkedRoot, '.harness-hub', 'state', 'session-handoff.md'))).toBe(true);
+});
+
 test('Codex worktree setup command stays portable and documented', () => {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8')) as {
+    files: string[];
     scripts: Record<string, string>;
   };
   const agents = fs.readFileSync('AGENTS.md', 'utf8');
@@ -185,12 +249,15 @@ test('Codex worktree setup command stays portable and documented', () => {
 
   expect(packageJson.scripts['codex:worktree-setup']).toBe('node ./scripts/setup-codex-worktree.mjs');
   expect(packageJson.scripts['codex:worktree-check']).toBe('node ./scripts/check-codex-worktree.mjs');
+  expect(packageJson.scripts['codex:worktree-hook:install']).toBe('node ./scripts/install-codex-worktree-hook.mjs');
+  expect(packageJson.files).toContain('scripts/install-codex-worktree-hook.mjs');
   expect(startupGateIndex).toBeGreaterThan(-1);
   expect(startupGateIndex).toBeLessThan(skillRoutingIndex);
   expect(agents.slice(startupGateIndex, skillRoutingIndex)).toContain('Before using repo-local skill activation or running `workflow-router`');
   expect(agents.slice(startupGateIndex, skillRoutingIndex)).toContain('bun run codex:worktree-check -- --write-task');
   expect(agents.slice(startupGateIndex, skillRoutingIndex)).toContain('For purely read-only questions');
   expect(agents.slice(startupGateIndex, skillRoutingIndex)).toContain('bun run codex:worktree-setup');
+  expect(agents.slice(startupGateIndex, skillRoutingIndex)).toContain('bun run codex:worktree-hook:install');
   expect(agents.slice(startupGateIndex, skillRoutingIndex)).toContain('must not create a checkpoint commit');
   expect(agents.slice(startupGateIndex, skillRoutingIndex)).toContain('preserves existing task state by default');
   expect(worktreeSetupSection).toContain('node scripts/setup-codex-worktree.mjs');
@@ -200,10 +267,15 @@ test('Codex worktree setup command stays portable and documented', () => {
   expect(worktreeSetupSection).toContain('create missing `.harness-hub/state/` templates');
   expect(worktreeSetupSection).toContain('preserve existing task state on reruns');
   expect(worktreeSetupSection).toContain('skip checkpoint commits for setup-only work');
+  expect(worktreeSetupSection).toContain('bun run codex:worktree-hook:install');
+  expect(worktreeSetupSection).toContain('post-checkout');
   expect(worktreeSetupSection).toContain('`--reset-state` or `--fresh`');
   expect(worktreeSetupSection).toContain('Do not hard-code a machine path');
   expect(worktreeSetupSection).not.toMatch(/[A-Za-z]:\\/);
   expect(lifecycleDesign).toContain('node scripts/setup-codex-worktree.mjs');
+  expect(lifecycleDesign).toContain('scripts/install-codex-worktree-hook.mjs');
+  expect(lifecycleDesign).toContain('bun run codex:worktree-hook:install');
+  expect(lifecycleDesign).toContain('post-checkout');
   expect(lifecycleDesign).toContain('node scripts/check-codex-worktree.mjs --write-task');
   expect(lifecycleDesign).toContain('bun run codex:worktree-check -- --write-task');
   expect(lifecycleDesign).toContain('Read-only tasks may use `bun run codex:worktree-check` as a soft warning');
@@ -213,6 +285,7 @@ test('Codex worktree setup command stays portable and documented', () => {
   expect(lifecycleDesign).toContain('does not create a checkpoint commit for setup-only work');
   expect(lifecycleDesign).toContain('Host-local absolute paths must stay out of the project design');
   expect(capabilityMap).toContain('scripts/check-codex-worktree.mjs');
+  expect(capabilityMap).toContain('scripts/install-codex-worktree-hook.mjs');
   expect(capabilityMap).toContain('scripts/setup-codex-worktree.mjs');
   expect(capabilityMap).toContain('`.codex/` and `.harness-hub/state/` stay local');
 });
