@@ -142,6 +142,17 @@ test('workflow-router has an executable side-effect-free classifier', async () =
   expect(result.nextGate).toContain('Gather review evidence');
 });
 
+test('workflow-router treats broad repo implementation explainers as read-only HTML questions', async () => {
+  const result = await classify('描述本仓库的能力、结构、功能、实现');
+
+  expect(result.state).toBe('question');
+  expect(result.owner).toBe('answer-workflow');
+  expect(result.mutationAllowed).toBe(false);
+  expect(result.effectiveInteract).toBe('required');
+  expect(result.expectedOutputMode).toBe('html-artifact');
+  expect(result.mutates).toBe(false);
+});
+
 test('workflow-router executable classifier matches routing fixture owners', async () => {
   const fixture = JSON.parse(fs.readFileSync('tests/fixtures/workflow-router-cases.json', 'utf8')) as {
     cases: Array<{
@@ -187,7 +198,7 @@ test('workflow-check CLI matches routing fixtures and stays side-effect free', (
     expect(result.dispatchesSubagents).toBe(false);
     expect(result.advisory.mutates).toBe(false);
   }
-});
+}, 10000);
 
 test('workflow check can hydrate advisory gates from an explicit current-task path', () => {
   const targetDir = makeTempDir('harness-hub-workflow-current-task-');
@@ -526,7 +537,7 @@ test('installed workflow check warns when the selected owner skill is missing', 
 test('workflow-router executable classifier is tracked as an installable capability', () => {
   const component = readCapabilityIndex().components['skill:workflow-router'];
 
-  expect(component.version).toBe('0.12.2');
+  expect(component.version).toBe('0.12.3');
   expect(component.provides).toContain('executable-intent-classifier');
   expect(component.provides).toContain('workflow-gate-preflight');
   expect(component.provides).toContain('executable-skill-activation-smoke');

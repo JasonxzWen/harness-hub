@@ -186,6 +186,14 @@
       "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
+      "id": "effective-interact-positive-repo-capability-map",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "描述本仓库的能力、结构、功能、实现",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; broad repo capability/structure/function/implementation maps are HTML candidates when navigation or source evidence lowers interpretation cost; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
       "id": "effective-interact-positive-real-chinese-html-report",
       "skill": "effective-interact",
       "kind": "positive",

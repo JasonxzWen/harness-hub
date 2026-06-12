@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { expect, test } from 'bun:test';
 
@@ -10,10 +10,64 @@ const skill = fs.readFileSync(skillPath, 'utf8');
 const skillDir = 'skills/effective-interact';
 const createInteractionScript = `${skillDir}/scripts/create-interaction.mjs`;
 const validateInteractionScript = `${skillDir}/scripts/validate-interaction.mjs`;
+const checkModeStructureScript = `${skillDir}/scripts/check-mode-structure.mjs`;
+const serveArtifactScript = `${skillDir}/scripts/serve-artifact.mjs`;
+
+type SpawnedProcess = ReturnType<typeof spawn>;
 
 function frontmatterValue(name: string): string {
   const match = skill.match(new RegExp(`^${name}:\\s*(.+)$`, 'm'));
   return match?.[1] || '';
+}
+
+function waitForServerPayload(child: SpawnedProcess): Promise<{ ok: true; file: string; url: string; pid: number | null }> {
+  return new Promise((resolve, reject) => {
+    let stdout = '';
+    let stderr = '';
+    const timeout = setTimeout(() => {
+      reject(new Error(`Timed out waiting for server payload. stdout=${stdout} stderr=${stderr}`));
+    }, 5000);
+
+    const finish = (payload: { ok: true; file: string; url: string; pid: number | null }) => {
+      clearTimeout(timeout);
+      resolve(payload);
+    };
+
+    child.stdout?.on('data', (chunk) => {
+      stdout += String(chunk);
+      try {
+        const payload = JSON.parse(stdout);
+        finish(payload);
+      } catch {
+        // Pretty JSON can arrive in chunks; keep buffering until it parses.
+      }
+    });
+    child.stderr?.on('data', (chunk) => {
+      stderr += String(chunk);
+    });
+    child.once('error', (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+    child.once('exit', (code) => {
+      if (code !== null && code !== 0 && !stdout.trim()) {
+        clearTimeout(timeout);
+        reject(new Error(`Server exited before payload. code=${code} stderr=${stderr}`));
+      }
+    });
+  });
+}
+
+async function stopServer(child: SpawnedProcess): Promise<void> {
+  if (child.exitCode !== null) return;
+  await new Promise<void>((resolve) => {
+    child.once('exit', () => resolve());
+    child.kill('SIGTERM');
+    setTimeout(() => {
+      if (child.exitCode === null) child.kill('SIGKILL');
+      resolve();
+    }, 1000).unref();
+  });
 }
 
 test('effective-interact has a low-noise complex communication trigger description', () => {
@@ -88,6 +142,7 @@ test('effective-interact treats complex communication as the core job', () => {
   expect(skill).toContain('structured-markdown');
   expect(skill).toContain('visual-markdown');
   expect(skill).toContain('html-artifact');
+  expect(skill).toContain('Unless you intentionally choose `plain-brief`, include at least one visible visual structure');
   expect(skill).toContain('HTML is an escalation path, not the default goal');
   expect(skill).toContain('material repo or skill behavior changes are the default HTML handoff exception');
 });
@@ -113,6 +168,7 @@ test('effective-interact defines communication and output-mode gates', () => {
   expect(skill).toContain('primary trigger is the user decision need');
   expect(skill).toContain('Use the lightest mode that lowers decision cost');
   expect(skill).toContain('material repo/skill implementation');
+  expect(skill).toContain('repo/module/skill explainers need capability');
   expect(skill).toContain('When repo or skill behavior materially changes, create a validated `html-artifact` handoff by default');
   expect(skill).toContain('2 or more comparable options');
   expect(skill).toContain('flow, state, timeline, map, call path, or architecture');
@@ -131,6 +187,7 @@ test('effective-interact defines communication and output-mode gates', () => {
   expect(patterns).toContain('Plain text or Markdown default');
   expect(patterns).toContain('default to a validated `implementation-handoff` or `conclusion-dashboard` HTML artifact');
   expect(patterns).toContain('Length is never sufficient by itself');
+  expect(patterns).toContain('non-`plain-brief` outputs should not collapse back into linear prose');
   expect(skill).toContain('never because the topic is important');
 });
 
@@ -140,10 +197,11 @@ test('effective-interact defines hard output-mode escalation criteria', () => {
   expect(skill).toContain('## Mode Selection Hard Rules');
   expect(skill).toContain('Do not load for a long but routine answer');
   expect(skill).toContain('Use `html-artifact` only when a hard HTML condition is true');
+  expect(skill).toContain('Any mode other than `plain-brief` must show at least one visible visual structure before handoff');
   expect(skill).toContain('material repo/skill behavior changed and handoff evidence matters');
   expect(skill).toContain('more than 5 source anchors');
   expect(skill).toContain('user must filter, sort, compare, copy, or export');
-  expect(skill).toContain('architecture, dependency, milestone, module, repo, or skill structure');
+  expect(skill).toContain('repo capability/function/implementation map');
   expect(skill).toContain('visual style, component variant, design-system, illustration, prototype, or multi-option approval needs a browsable gallery');
   expect(skill).toContain('status/incident/editor surface needs drilldown or visible export');
   expect(skill).toContain('HTML handoff must be visualized');
@@ -207,6 +265,7 @@ test('effective-interact ships skill-local routing evals for trigger and HTML ti
   expect(ids.has('positive-visual-style-approval-html')).toBe(true);
   expect(ids.has('positive-milestone-dependency-html')).toBe(true);
   expect(ids.has('positive-module-dependency-html')).toBe(true);
+  expect(ids.has('positive-repo-capability-implementation-map-html')).toBe(true);
   expect(ids.has('positive-skill-structure-tree-html')).toBe(true);
   expect(ids.has('positive-code-approach-comparison-html')).toBe(true);
   expect(ids.has('positive-implementation-plan-html')).toBe(true);
@@ -333,6 +392,7 @@ test('effective-interact codifies output-mode escalation without stealing adjace
   expect(patterns).toContain('implementation-plan');
   expect(patterns).toContain('review-findings');
   expect(patterns).toContain('module-map');
+  expect(patterns).toContain('repo-capability-map');
   expect(patterns).toContain('flow-drilldown');
   expect(patterns).toContain('pr-writeup');
   expect(patterns).toContain('explorable-explainer');
@@ -345,6 +405,7 @@ test('effective-interact codifies output-mode escalation without stealing adjace
   expect(routingDocs).toContain('lightweight export editor');
   expect(routingDocs).toContain('default reporting layer when the agent is about to pause on relatively complex information');
   expect(routingDocs).toContain('material repo or skill behavior changes, default to a validated HTML handoff');
+  expect(routingDocs).toContain('any output other than `plain-brief` should expose at least one visible visual structure');
   expect(routingDocs).toContain('frontend-slides` remains the deck lane');
 });
 
@@ -361,6 +422,7 @@ test('effective-interact keeps detailed patterns in references', () => {
   expect(patterns).toContain('docs/harness-vocabulary.md');
   expect(patterns).toContain('local-original');
   expect(patterns).toContain('Do not build credential or token tools');
+  expect(patterns).toContain('visual-structure gate for HTML reports that still read like linear prose');
   expect(patterns).not.toContain('Current Limits To Correct');
   expect(patterns).not.toContain('Source Inspiration');
   expect(patterns).not.toContain('previous versions failed');
@@ -561,6 +623,7 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
   const expectedFiles = [
     createInteractionScript,
     validateInteractionScript,
+    checkModeStructureScript,
     `${skillDir}/references/interaction-input-schema.json`,
     `${skillDir}/references/html-effectiveness-patterns.md`,
     `${skillDir}/references/html-aesthetic-preflight.md`,
@@ -573,6 +636,7 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
     `${skillDir}/assets/fixtures/option-gallery-report.json`,
     `${skillDir}/assets/fixtures/disposable-export-editor-report.json`,
     `${skillDir}/assets/fixtures/communication-mode-cases.json`,
+    `${skillDir}/assets/fixtures/mode-structure-cases.json`,
     `${skillDir}/assets/fixtures/skill-structure-map-report.json`,
     `${skillDir}/assets/fixtures/html-effectiveness-pattern-library-report.json`,
     `${skillDir}/assets/fixtures/harness-vocabulary-explainer-report.json`,
@@ -656,6 +720,183 @@ test('effective-interact generator defaults to ignored skill-local outputs', () 
   expect(normalizedOutput).toContain('skills/effective-interact/artifacts/default-output-smoke.html');
   expect(fs.existsSync(payload.outputPath)).toBe(true);
   fs.rmSync(payload.outputPath, { force: true });
+});
+
+test('effective-interact generator emits structured handoff durability metadata', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-handoff-meta-'));
+  const inputPath = path.join(tmpDir, 'handoff.json');
+  fs.writeFileSync(inputPath, JSON.stringify({
+    title: 'Handoff durability fixture',
+    summary: 'Status: regenerated reports carry durable source metadata.',
+    status: 'complete',
+    template: 'implementation-handoff',
+    handoff: {
+      sourcePath: 'skills/effective-interact/assets/fixtures/handoff.json',
+      regenerationCommand: 'node skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/handoff.json --slug handoff --json',
+    },
+    sections: [
+      {
+        type: 'data-table',
+        title: 'Durability contract',
+        group: 'verification',
+        status: 'ready',
+        columns: ['Field', 'Purpose'],
+        rows: [
+          ['sourcePath', 'Tracked durable input'],
+          ['regenerationCommand', 'Exact rebuild command'],
+        ],
+      },
+    ],
+  }), 'utf8');
+
+  const result = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    inputPath,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'handoff-meta',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  const html = fs.readFileSync(JSON.parse(result.stdout).outputPath, 'utf8');
+
+  expect(html).toContain('data-handoff-source-path="skills/effective-interact/assets/fixtures/handoff.json"');
+  expect(html).toContain('data-handoff-regeneration-command="node skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/handoff.json --slug handoff --json"');
+  expect(html).toContain('name="handoff-source-path"');
+  expect(html).toContain('name="handoff-regeneration-command"');
+  expect(html).not.toMatch(/[A-Za-z]:[\\/]/);
+  expect(html).not.toContain('file:///');
+});
+
+test('effective-interact schema documents structured handoff durability metadata', () => {
+  const schema = JSON.parse(fs.readFileSync(`${skillDir}/references/interaction-input-schema.json`, 'utf8'));
+
+  expect(schema.properties.handoff.type).toBe('object');
+  expect(schema.properties.handoff.additionalProperties).toBe(false);
+  expect(schema.properties.handoff.properties.sourcePath.type).toBe('string');
+  expect(schema.properties.handoff.properties.regenerationCommand.type).toBe('string');
+});
+
+test('effective-interact generator rejects unsafe handoff durability metadata', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-unsafe-handoff-'));
+  const inputPath = path.join(tmpDir, 'unsafe.json');
+  fs.writeFileSync(inputPath, JSON.stringify({
+    title: 'Unsafe handoff fixture',
+    summary: 'Status: unsafe handoff metadata is rejected.',
+    status: 'complete',
+    template: 'implementation-handoff',
+    handoff: {
+      sourcePath: 'skills/effective-interact/assets/fixtures/..',
+      regenerationCommand: 'node skills/effective-interact/scripts/create-interaction.mjs --input C:/Users/Admin/private.json --slug unsafe --json',
+    },
+    sections: [
+      {
+        type: 'summary-cards',
+        title: 'Boundary',
+        cards: [{ label: 'Expected', value: 'Reject host-local and parent paths' }],
+      },
+    ],
+  }), 'utf8');
+
+  const result = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    inputPath,
+    '--out-dir',
+    tmpDir,
+    '--slug',
+    'unsafe',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain('handoff.sourcePath must be a repo-relative path');
+  expect(result.stderr).toContain('handoff.regenerationCommand must not contain host-local absolute paths');
+});
+
+test('effective-interact validator warns when HTML handoffs lack durability metadata', async () => {
+  const validateModule = await import(pathToFileURL(path.resolve(validateInteractionScript)).href);
+  const base = `<!doctype html>
+<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered" data-template="implementation-handoff">
+<head><meta charset="utf-8"><title>Durability fixture</title><style>@media (prefers-reduced-motion: reduce) { * { transition: none; } }</style></head>
+<body>
+  <main>
+    <header class="report-hero" data-report-intent data-primary-question="Can this be reopened?" data-time-budget="30s" data-artifact-kind="handoff">
+      <h1>Durability fixture</h1>
+      <p class="hero-summary-text">Status: report can be reopened later.</p>
+    </header>
+    <nav data-report-nav><div class="report-nav-group"><a data-nav-link href="#summary">Summary</a></div></nav>
+    <section id="summary" data-section-type="summary-cards" data-section-group="summary" data-render-state="ready"><h2>Summary</h2><article><strong>Ready</strong></article></section>
+  </main>
+</body>
+</html>`;
+
+  const missing = validateModule.validateStatic(base);
+  expect(missing.ok).toBe(true);
+  expect(missing.warnings).toEqual(expect.arrayContaining([
+    expect.stringContaining('advisory: handoff durability'),
+  ]));
+
+  const withMetadata = base.replace(
+    '<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered" data-template="implementation-handoff">',
+    '<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered" data-template="implementation-handoff" data-handoff-source-path="skills/effective-interact/assets/fixtures/handoff.json" data-handoff-regeneration-command="node skills/effective-interact/scripts/create-interaction.mjs --input skills/effective-interact/assets/fixtures/handoff.json --slug handoff --json">',
+  );
+  const present = validateModule.validateStatic(withMetadata);
+  expect(present.warnings.join('\n')).not.toContain('handoff durability');
+});
+
+test('effective-interact serve-artifact exposes only the selected artifact over localhost', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-serve-'));
+  const artifactPath = path.join(tmpDir, 'report.html');
+  const secretPath = path.join(tmpDir, 'secret.html');
+  fs.writeFileSync(artifactPath, '<!doctype html><html><body>artifact only</body></html>', 'utf8');
+  fs.writeFileSync(secretPath, '<!doctype html><html><body>secret</body></html>', 'utf8');
+
+  const child = spawn(process.execPath, [
+    serveArtifactScript,
+    artifactPath,
+    '--host',
+    '127.0.0.1',
+    '--port',
+    '0',
+    '--json',
+  ], { stdio: ['ignore', 'pipe', 'pipe'] });
+
+  try {
+    const payload = await waitForServerPayload(child);
+    const artifactResponse = await fetch(payload.url);
+    const rootResponse = await fetch(new URL('/', payload.url));
+    const blockedSibling = await fetch(new URL('/secret.html', payload.url));
+    const blockedMethod = await fetch(payload.url, { method: 'POST' });
+
+    expect(payload.ok).toBe(true);
+    expect(payload.file).toBe(path.resolve(artifactPath));
+    expect(artifactResponse.status).toBe(200);
+    expect(await artifactResponse.text()).toContain('artifact only');
+    expect(rootResponse.status).toBe(200);
+    expect(await rootResponse.text()).toContain('artifact only');
+    expect(blockedSibling.status).toBe(404);
+    expect(blockedMethod.status).toBe(405);
+  } finally {
+    await stopServer(child);
+  }
+});
+
+test('effective-interact serve-artifact fails clearly when the artifact is missing', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-serve-missing-'));
+  const missingPath = path.join(tmpDir, 'missing.html');
+  const result = spawnSync(process.execPath, [
+    serveArtifactScript,
+    missingPath,
+    '--json',
+  ], { encoding: 'utf8' });
+
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain('Artifact file not found:');
+  expect(result.stderr).toContain('Regenerate it before serving.');
 });
 
 test('effective-interact option-gallery fixture renders a compare-first report', () => {
@@ -1254,6 +1495,55 @@ test('effective-interact validator warns on weak decision brief structure', asyn
   ]));
 });
 
+test('effective-interact validator warns when a report stays linear without visible structure', async () => {
+  const validateModule = await import(pathToFileURL(path.resolve(validateInteractionScript)).href);
+  const html = `<!doctype html>
+<html lang="zh-CN" data-html-work-report data-render-mode="pre-rendered">
+<head><meta charset="utf-8"><title>Linear report fixture</title><style>@media (prefers-reduced-motion: reduce) { * { transition: none; } }</style></head>
+<body>
+  <main>
+    <header class="report-hero" data-report-intent data-primary-question="Is this still linear?" data-time-budget="30s"><h1>Linear report fixture</h1><p><strong>Conclusion exists.</strong></p></header>
+    <nav data-report-nav><div class="report-nav-group"><a data-nav-link href="#summary">Summary</a></div></nav>
+    <section id="summary" data-section-type="summary" data-section-group="summary" data-render-state="ready">
+      <h2>Summary</h2>
+      <p>This report only uses prose paragraphs to describe the update, the evidence, the tradeoff, and the next step without any visible structure that helps the reader compare or scan.</p>
+      <p>The effective-interact skill loaded, but the artifact still behaves like a linear memo.</p>
+    </section>
+  </main>
+</body>
+</html>`;
+
+  const result = validateModule.validateStatic(html);
+
+  expect(result.ok).toBe(true);
+  expect(result.checks).toContain('visual-structure-gate-scan');
+  expect(result.warnings).toEqual(expect.arrayContaining([
+    expect.stringContaining('advisory: visual structure gate'),
+  ]));
+});
+
+test('effective-interact mode structure checker enforces non-html shape expectations', async () => {
+  const modeStructureModule = await import(pathToFileURL(path.resolve(checkModeStructureScript)).href);
+  const fixture = JSON.parse(fs.readFileSync(`${skillDir}/assets/fixtures/mode-structure-cases.json`, 'utf8')) as {
+    cases: Array<{
+      id: string;
+      mode: 'plain-brief' | 'structured-markdown' | 'visual-markdown';
+      content: string;
+      shouldWarn: boolean;
+      expectedStructures: string[];
+    }>;
+  };
+
+  for (const entry of fixture.cases) {
+    const result = modeStructureModule.checkModeStructure({ mode: entry.mode, content: entry.content });
+    expect(result.ok).toBe(true);
+    expect(result.warnings.length > 0).toBe(entry.shouldWarn);
+    for (const expectedStructure of entry.expectedStructures) {
+      expect(result.detectedStructures).toContain(expectedStructure);
+    }
+  }
+});
+
 test('effective-interact validator warns when rich rendering opportunities stay as prose', async () => {
   const validateModule = await import(pathToFileURL(path.resolve(validateInteractionScript)).href);
   const html = `<!doctype html>
@@ -1278,10 +1568,11 @@ test('effective-interact validator warns when rich rendering opportunities stay 
   const result = validateModule.validateStatic(html);
 
   expect(result.ok).toBe(true);
+  expect(result.checks).toContain('visual-structure-gate-scan');
   expect(result.checks).toContain('rich-content-opportunity-scan');
   expect(result.warnings).toEqual(expect.arrayContaining([
-    expect.stringContaining('advisory: rich content opportunity: consider Mermaid'),
     expect.stringContaining('advisory: rich content opportunity: consider code or diff'),
+    expect.stringContaining('advisory: rich content opportunity: consider Mermaid'),
   ]));
 });
 
@@ -1305,6 +1596,9 @@ test('effective-interact validator accepts structured flow sections without forc
   const result = validateModule.validateStatic(html);
 
   expect(result.ok).toBe(true);
+  expect(result.warnings).not.toEqual(expect.arrayContaining([
+    expect.stringContaining('advisory: visual structure gate'),
+  ]));
   expect(result.warnings).not.toEqual(expect.arrayContaining([
     expect.stringContaining('advisory: rich content opportunity: consider Mermaid'),
   ]));
