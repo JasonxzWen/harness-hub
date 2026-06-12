@@ -31,6 +31,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 | Coding behavior baseline for implementation, review, or refactor work after an owner is selected | `karpathy-guidelines` | Helper guardrails for assumptions, simplicity, surgical diffs, and verifiable success; use owner workflows for lifecycle decisions. |
 | Current library/framework/API behavior | `documentation-lookup` | Use current primary docs before implementing. |
 | Newly published package or model-package releases | `package-release-sniffer` | Use for AI/developer-tool package release discovery from primary registry and release sources; use `documentation-lookup` for docs on a chosen package and implementation workflows for building monitors or clients. |
+| Advisory Harness Hub or target repo quality/readiness audit with HTML output | `harness-quality-check` | Compose existing self-check, readiness, harness validation, and skill-quality evidence into an advisory HTML report; use `verification-loop` for final gates and `hub-maintenance-workflow` for actual source changes. |
 | Claude API or Anthropic SDK implementation, tuning, debugging, or migration | `claude-api` | Provider-specific atom; verify current official docs before code changes and do not use for provider-neutral work. |
 | MCP server design, implementation, review, or evaluation | `mcp-builder` | Use for MCP tool/resource/prompt contracts and external-service server design; ordinary REST clients route elsewhere. |
 | Creating, adapting, or evaluating standard skills | `skill-creator` | Use under `hub-maintenance-workflow` or `sdd-workflow` after the owner is selected. |
@@ -56,6 +57,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Use `source-to-insight-blog` when a source must become a public blog with source fidelity, media references, effective-interact summary, and project iteration review; use `answer-workflow` for ordinary summaries, `doc-coauthoring` for internal durable docs, and `frontend-design` for production site design.
 - Use `claude-api` only for Anthropic provider work; use `documentation-lookup` for general library/API facts and other providers.
 - Use `package-release-sniffer` for newly published package or model-package discovery across registries and release feeds; use `documentation-lookup` for current docs on a known package, `source-to-insight-blog` for public article production, and implementation workflows for registry clients, scrapers, monitors, or scheduled jobs.
+- Use `harness-quality-check` for explicit Harness Hub or target-repo harness quality/readiness audits that should produce advisory HTML findings. Use `verification-loop` for final implementation gates, `coding-standards` for ordinary code quality conventions, `skill-creator` for creating or changing skills, `hub-maintenance-workflow` for actual Harness Hub source/capability changes, and direct lifecycle commands when the user only asks to run one command.
 - Use `mcp-builder` for MCP servers; use `claude-api` for Anthropic API clients and `security-review` when secret/tool-execution risk is central.
 - Treat CodeGraph and Headroom as external tool configuration suggestions surfaced by `harness-hub check` and readiness analysis, not as skill owners or managed install components. Any MCP config, proxy, hook, provider routing, or memory setup remains explicit and reviewed.
 - Use `skill-creator` for standard skill content; `hub-maintenance-workflow` still owns source records, capability metadata, and Harness Hub lifecycle decisions.
@@ -92,6 +94,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `karpathy-guidelines` loads after a workflow owner has selected implementation, review, or refactor scope and the agent needs behavior guardrails for assumptions, simplicity, surgical diffs, or verifiable success; it is not a top-level workflow, requirements workflow, TDD workflow, or review workflow.
 - `documentation-lookup` loads when current library, framework, SDK, API, CLI, or cloud-service documentation is needed.
 - `package-release-sniffer` loads for newly published package or model-package release discovery across primary package registries and release feeds; it does not build registry clients, scheduled monitors, or implementation code.
+- `harness-quality-check` loads for explicit Harness Hub or target repo harness quality/readiness audits with advisory HTML output; it does not perform final implementation validation, ordinary code review, skill authoring, source changes, schedules, hooks, remote writes, or blocking enforcement.
 - `web-artifacts-builder` loads for complex standalone React/Tailwind/shadcn browser artifacts.
 - `frontend-slides` loads for HTML presentations, slide decks, talk or pitch slides, and PPT/PPTX-to-web conversion.
 - `frontend-patterns` loads for React or Next.js frontend logic, state, forms, routing, accessibility, or responsive behavior.
@@ -116,7 +119,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `openspec-apply-change` loads only for implementing or continuing an existing OpenSpec change.
 - `openspec-archive-change` loads only for finalizing and archiving completed OpenSpec changes.
 - `hub-maintenance-workflow` loads for maintaining this Harness Hub's source records, installed skill components, routing, npm package boundary, and candidate-source decisions.
-- `karpathy-guidelines`, `package-release-sniffer`, `claude-api`, `mcp-builder`, `skill-creator`, `source-to-insight-blog`, `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, `slack-gif-creator`, and `clone-website` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
+- `karpathy-guidelines`, `package-release-sniffer`, `harness-quality-check`, `claude-api`, `mcp-builder`, `skill-creator`, `source-to-insight-blog`, `doc-coauthoring`, `internal-comms`, `stop-slop`, `design-taste-frontend`, `theme-factory`, `slack-gif-creator`, and `clone-website` load as helper atoms under the selected owner workflow, not as top-level workflow owners.
 
 ## Skill Registration Path
 

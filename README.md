@@ -118,7 +118,7 @@ Harness Hub does not create the schedule, webhook, commit, push, tool install, o
 | Web and artifacts | `frontend-design`, `design-taste-frontend`, `webapp-testing`, `e2e-testing`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`. |
 | Platform extension | `claude-api`, `mcp-builder`, `skill-creator`, source records, capability metadata. |
 | External tool advice | `check.externalTools` and `analyze --agent-readiness` signals for explicit CodeGraph and Headroom setup. |
-| Harness lifecycle | `check`, `self-check`, `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update`, `remove`. |
+| Harness lifecycle | `check`, `self-check`, `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update`, `remove`, `harness-quality-check`. |
 
 ## Source Layout
 
