@@ -458,6 +458,14 @@
       "docsBoundary": "`package-release-sniffer` loads for newly published package or model-package release discovery across primary package registries and release feeds; it does not build registry clients, scheduled monitors, or implementation code."
     },
     {
+      "id": "harness-quality-check-positive-html-audit",
+      "skill": "harness-quality-check",
+      "kind": "positive",
+      "prompt": "Run a Harness Hub quality/readiness check for both this Hub checkout and a target repo, then write an advisory HTML report from self-check, agent readiness, validate-harness, and skill-quality evidence.",
+      "expectedSkill": "harness-quality-check",
+      "docsBoundary": "`harness-quality-check` loads for explicit Harness Hub or target repo harness quality/readiness audits with advisory HTML output; it does not perform final implementation validation, ordinary code review, skill authoring, source changes, schedules, hooks, remote writes, or blocking enforcement."
+    },
+    {
       "id": "web-artifacts-builder-positive-standalone-react",
       "skill": "web-artifacts-builder",
       "kind": "positive",
@@ -752,6 +760,22 @@
       "prompt": "Read the current official LangChain package docs for its streaming API and answer how to use it.",
       "expectedSkill": "documentation-lookup",
       "docsBoundary": "`package-release-sniffer` loads for newly published package or model-package release discovery across primary package registries and release feeds; it does not build registry clients, scheduled monitors, or implementation code."
+    },
+    {
+      "id": "harness-quality-check-negative-code-quality",
+      "skill": "harness-quality-check",
+      "kind": "negative",
+      "prompt": "Review this module against our cross-project code quality conventions after the owner workflow has selected scope.",
+      "expectedSkill": "coding-standards",
+      "docsBoundary": "`harness-quality-check` loads for explicit Harness Hub or target repo harness quality/readiness audits with advisory HTML output; it does not perform final implementation validation, ordinary code review, skill authoring, source changes, schedules, hooks, remote writes, or blocking enforcement."
+    },
+    {
+      "id": "harness-quality-check-forbidden-final-validation",
+      "skill": "harness-quality-check",
+      "kind": "forbidden-load",
+      "prompt": "Before declaring this task done, run the final build, typecheck, lint, tests, smoke checks, and artifact validation.",
+      "expectedSkill": "verification-loop",
+      "docsBoundary": "`harness-quality-check` loads for explicit Harness Hub or target repo harness quality/readiness audits with advisory HTML output; it does not perform final implementation validation, ordinary code review, skill authoring, source changes, schedules, hooks, remote writes, or blocking enforcement."
     },
     {
       "id": "web-artifacts-builder-forbidden-production-ui",
