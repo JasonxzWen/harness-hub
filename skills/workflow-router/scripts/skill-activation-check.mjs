@@ -303,15 +303,49 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     includesAny(text, [
       'new package',
       'new packages',
+      'new release',
+      'new version',
       'newly published',
       'package release',
       'package releases',
       'published package',
       'registry feed',
+      'release feed',
       'release feeds',
+      'release sniff',
+      'release sniffing',
+      'version sniff',
+      'version sniffing',
+      '\u7248\u672c\u55c5\u63a2',
+      '\u53d1\u5e03\u55c5\u63a2',
+      '\u65b0\u5305',
+      '\u65b0\u7248\u672c',
+      '\u5305\u53d1\u5e03',
+      '\u7248\u672c\u53d1\u5e03',
+      '\u65b0\u53d1\u5e03',
+      '\u521a\u53d1\u5e03',
     ]) || (
-      includesAny(text, ['npm', 'pypi', 'registry', 'registries'])
-      && includesAny(text, ['ai', 'developer-tool', 'package', 'packages', 'release', 'sniff'])
+      includesAny(text, ['npm', 'pypi', 'registry', 'registries', 'package', 'packages', '\u5305', '\u6a21\u578b\u5305'])
+      && includesAny(text, [
+        'ai',
+        'developer-tool',
+        'latest version',
+        'new release',
+        'new version',
+        'package',
+        'packages',
+        'published',
+        'release',
+        'sniff',
+        '\u55c5\u63a2',
+        '\u6700\u65b0\u7248\u672c',
+        '\u65b0\u7248\u672c',
+        '\u53d1\u5e03',
+        '\u66f4\u65b0',
+      ])
+    ) || (
+      includesAny(text, ['sniff', '\u55c5\u63a2'])
+      && includesAny(text, ['release', 'version', 'package', 'registry', 'npm', 'pypi', '\u7248\u672c', '\u53d1\u5e03', '\u5305'])
     )
   ) && !documentationLookupSignal;
   const webArtifactsSignal = includesAny(text, [

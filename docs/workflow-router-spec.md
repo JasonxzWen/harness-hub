@@ -121,6 +121,7 @@ Examples:
 - `sdd-workflow` may use `product-capability`, `tdd-workflow`, `e2e-testing`, and `verification-loop`.
 - `diagnosis-workflow` may use `diagnose`, `agent-introspection-debugging`, and `webapp-testing`.
 - `review-workflow` may use `compound-code-review`, `security-review`, and `web-design-guidelines`.
+- Package release discovery is read-only evidence gathering; `package-release-sniffer` remains a helper under the selected owner.
 - `hub-maintenance-workflow` may use source records, routing docs, capability metadata, lifecycle CLI dry-runs, and targeted repo/source inspection.
 
 Native goal/story loops are outside Harness Hub's distributed skill set. They MUST NOT bypass SDD alignment or start autonomous repeated execution without user approval.

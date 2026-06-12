@@ -450,6 +450,14 @@
       "docsBoundary": "`package-release-sniffer` loads for newly published package or model-package release discovery across primary package registries and release feeds; it does not build registry clients, scheduled monitors, or implementation code."
     },
     {
+      "id": "package-release-sniffer-positive-chinese-version-sniff",
+      "skill": "package-release-sniffer",
+      "kind": "positive",
+      "prompt": "版本嗅探：找出今天 npm 和 PyPI 新发布的 AI agent 包，并记录版本号和发布时间。",
+      "expectedSkill": "package-release-sniffer",
+      "docsBoundary": "`package-release-sniffer` loads for newly published package or model-package release discovery across primary package registries and release feeds; it does not build registry clients, scheduled monitors, or implementation code."
+    },
+    {
       "id": "harness-quality-check-positive-html-audit",
       "skill": "harness-quality-check",
       "kind": "positive",

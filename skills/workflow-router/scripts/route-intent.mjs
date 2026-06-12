@@ -20,7 +20,7 @@ const STATE_CONFIG = Object.freeze({
     mutationAllowed: false,
     requiredGates: ['gather-required-material', 'deliver-report'],
     nextGate: 'Gather required material and answer from evidence.',
-    helpers: ['documentation-lookup'],
+    helpers: ['documentation-lookup', 'package-release-sniffer'],
     effectiveInteract: 'default-consider',
     expectedOutputMode: null,
   },
@@ -448,6 +448,54 @@ function includesAny(text, values) {
   return values.some((value) => matchesSignal(text, value.toLowerCase()));
 }
 
+function hasPackageReleaseDiscoverySignal(text) {
+  return (
+    includesAny(text, [
+      'new package',
+      'new packages',
+      'new version',
+      'newly published',
+      'package release',
+      'package releases',
+      'published package',
+      'registry feed',
+      'release feed',
+      'release feeds',
+      'release sniff',
+      'release sniffing',
+      'version sniff',
+      'version sniffing',
+      '\u7248\u672c\u55c5\u63a2',
+      '\u53d1\u5e03\u55c5\u63a2',
+      '\u65b0\u5305',
+      '\u65b0\u7248\u672c',
+      '\u5305\u53d1\u5e03',
+      '\u7248\u672c\u53d1\u5e03',
+      '\u65b0\u53d1\u5e03',
+      '\u521a\u53d1\u5e03',
+    ]) || (
+      includesAny(text, ['npm', 'pypi', 'registry', 'registries', 'package', 'packages', '\u5305', '\u6a21\u578b\u5305'])
+      && includesAny(text, [
+        'latest version',
+        'new release',
+        'new version',
+        'published',
+        'release',
+        'releases',
+        'sniff',
+        '\u55c5\u63a2',
+        '\u6700\u65b0\u7248\u672c',
+        '\u65b0\u7248\u672c',
+        '\u53d1\u5e03',
+        '\u66f4\u65b0',
+      ])
+    ) || (
+      includesAny(text, ['sniff', '\u55c5\u63a2'])
+      && includesAny(text, ['release', 'version', 'package', 'registry', 'npm', 'pypi', '\u7248\u672c', '\u53d1\u5e03', '\u5305'])
+    )
+  );
+}
+
 function matchesSignal(text, value) {
   if (/^[a-z0-9'/-]+(?:\s+[a-z0-9'/-]+)*$/.test(value)) {
     const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
@@ -512,6 +560,7 @@ export function classifyIntent(prompt) {
   const hubSignal = includesAny(text, SIGNALS.hubMaintenance);
   const hubActionSignal = includesAny(text, SIGNALS.hubMaintenanceAction);
   const hubChangeTargetSignal = includesAny(text, SIGNALS.hubMaintenanceChangeTarget);
+  const packageReleaseDiscoverySignal = hasPackageReleaseDiscoverySignal(text);
   const explicitOwner = hasExplicitOwner(text);
   const broadRepoExplainerSignal = (
     includesAny(text, [
@@ -538,6 +587,10 @@ export function classifyIntent(prompt) {
 
   if (noMutation && (reviewSignal || questionSignal)) {
     return makeResult(reviewSignal ? 'review' : 'question', 'high', 'The user requested evidence or review and explicitly blocked mutation.');
+  }
+
+  if (packageReleaseDiscoverySignal && !changeSignal && !reviewSignal && !diagnosisSignal) {
+    return makeResult('question', 'high', 'The request is read-only package or model-package release discovery.');
   }
 
   if (broadRepoExplainerSignal) {

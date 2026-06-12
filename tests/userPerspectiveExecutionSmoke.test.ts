@@ -329,6 +329,14 @@ test('installed skill metadata selects high-overlap helper skills from user prom
   expect(visualLanguageReportSmoke.mutates).toBe(false);
   expect(visualLanguageReportSmoke.dispatchesSubagents).toBe(false);
 
+  const versionSniffSmoke = runActivationCheck(
+    activationCheckScript,
+    '版本嗅探：找出今天 npm 和 PyPI 新发布的 AI agent 包。',
+  );
+  expect(versionSniffSmoke.selectedSkill).toBe('package-release-sniffer');
+  expect(versionSniffSmoke.mutates).toBe(false);
+  expect(versionSniffSmoke.dispatchesSubagents).toBe(false);
+
   const repoCapabilityMapSmoke = runActivationCheck(
     activationCheckScript,
     '描述本仓库的能力、结构、功能、实现',
