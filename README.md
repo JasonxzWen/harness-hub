@@ -8,6 +8,22 @@ Imported skills can keep their upstream style; Harness Hub mainly owns routing, 
 
 Agent execution rules live in [AGENTS.md](AGENTS.md). Human-facing workflow detail lives in [Development Workflow](docs/development-workflow.md).
 
+## First-Use Summary
+
+Harness Hub does three bounded jobs:
+
+- `check` and `analyze` inspect a target repo and stay read-only.
+- `init-harness` creates the minimal root harness only when you explicitly approve it.
+- `install` installs the standard skill set only; it does not create root harness files.
+
+For a new target repo, start with a dry run:
+
+```powershell
+npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
+```
+
+Move to `--yes` only after reviewing the planned files. Harness Hub does not create schedules, webhooks, commits, pushes, global skill installs, or remote service changes unless a command explicitly says so.
+
 ## Visual Navigator
 
 ```mermaid

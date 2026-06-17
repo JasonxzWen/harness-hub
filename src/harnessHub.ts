@@ -4403,7 +4403,7 @@ function renderInsightsIndexHtml(posts: InsightBuildResult['posts']): string {
 function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
   const latest = posts[0];
   const latestHtml = latest
-    ? `<p>Latest: <a href="insights/${escapeAttr(latest.href)}">${escapeHtml(latest.title)}</a></p>`
+    ? `<p><a href="insights/${escapeAttr(latest.href)}">${escapeHtml(latest.title)}</a></p>`
     : '<p>No insight posts yet.</p>';
   return `<!doctype html>
 <html lang="zh-CN">
@@ -4412,16 +4412,200 @@ function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Harness Hub</title>
   <style>
-    body { margin: 0; font-family: system-ui, sans-serif; color: #172033; background: #ffffff; }
-    main { max-width: 760px; margin: 0 auto; padding: 40px 20px; }
-    a { color: #155eef; font-weight: 700; }
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #5b6472;
+      --line: #d7dce5;
+      --soft: #f6f8fb;
+      --accent: #155eef;
+      --accent-strong: #0f3fa8;
+      --warn-bg: #fff7e8;
+      --warn-line: #f1cf92;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 20px 56px;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin-bottom: 12px;
+      font-size: 4.2rem;
+      line-height: 0.96;
+      letter-spacing: 0;
+    }
+    h2 {
+      margin-bottom: 14px;
+      font-size: 1.35rem;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+    h3 {
+      margin-bottom: 8px;
+      font-size: 1rem;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+    a { color: var(--accent); font-weight: 700; text-decoration-thickness: 0.08em; text-underline-offset: 0.2em; }
+    code {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.12rem 0.32rem;
+      background: var(--soft);
+      font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+      font-size: 0.92em;
+    }
+    pre {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #0f172a;
+      color: #f8fafc;
+      line-height: 1.45;
+    }
+    pre code {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+    }
+    .eyebrow {
+      margin-bottom: 16px;
+      color: var(--accent-strong);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    .lead {
+      max-width: 760px;
+      margin-bottom: 24px;
+      color: var(--muted);
+      font-size: 1.12rem;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 40px;
+      padding: 0;
+      list-style: none;
+    }
+    .actions a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--ink);
+      background: #ffffff;
+      text-decoration: none;
+    }
+    .actions a.primary {
+      border-color: var(--accent);
+      color: #ffffff;
+      background: var(--accent);
+    }
+    .section {
+      border-top: 1px solid var(--line);
+      padding: 28px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #ffffff;
+    }
+    .panel p,
+    .note,
+    .latest p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+    .steps {
+      margin: 0 0 18px;
+      padding-left: 1.35rem;
+    }
+    .steps li + li { margin-top: 8px; }
+    .note {
+      border: 1px solid var(--warn-line);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--warn-bg);
+    }
+    .latest {
+      border-top: 1px solid var(--line);
+      padding-top: 24px;
+    }
+    @media (max-width: 720px) {
+      main { padding-top: 32px; }
+      h1 { font-size: 2.6rem; }
+      .grid { grid-template-columns: 1fr; }
+      .actions a { width: 100%; justify-content: center; }
+    }
   </style>
 </head>
 <body>
   <main>
+    <p class="eyebrow">Repo-local agent harness toolkit</p>
     <h1>Harness Hub</h1>
-    <p><a href="insights/">Insights</a></p>
-    ${latestHtml}
+    <p class="lead">让 agent 在不同仓库里使用同一套可重复、可验证、可交接的工作方式。它负责技能安装、minimal harness 初始化、验证和托管文件生命周期安全。</p>
+
+    <ul class="actions" aria-label="Primary links">
+      <li><a class="primary" href="https://github.com/JasonxzWen/harness-hub/blob/main/README.zh-CN.md">阅读中文 README</a></li>
+      <li><a href="https://github.com/JasonxzWen/harness-hub/blob/main/README.md">English README</a></li>
+      <li><a href="insights/">Insights</a></li>
+    </ul>
+
+    <section class="section" aria-labelledby="first-use">
+      <h2 id="first-use">首次理解</h2>
+      <div class="grid">
+        <article class="panel">
+          <h3>先看状态</h3>
+          <p><code>check</code> 和 <code>analyze</code> 是只读入口，用来判断目标仓库是否已经准备好。</p>
+        </article>
+        <article class="panel">
+          <h3>再初始化 harness</h3>
+          <p><code>init-harness</code> 只在你明确确认后创建 minimal 根级 harness 文件。</p>
+        </article>
+        <article class="panel">
+          <h3>只装技能时分开做</h3>
+          <p><code>install</code> 只安装标准 skill set，不创建根级 harness 文件。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="safe-start">
+      <h2 id="safe-start">安全起步</h2>
+      <ol class="steps">
+        <li>在目标仓库外先运行 dry-run，检查计划写入的文件。</li>
+        <li>确认目标仓库的现有规则、锁文件和本地 state 不会被误覆盖。</li>
+        <li>只有看懂计划后再把命令切换到 <code>--yes</code>。</li>
+      </ol>
+      <pre><code>npx @jasonwen/harness-hub init-harness D:\\path\\to\\target --target standard --dry-run --json</code></pre>
+      <p class="note">Harness Hub 不会自动创建定时任务、webhook、commit、push、全局 skill 安装或远程服务改动，除非某条命令明确声明这类副作用。</p>
+    </section>
+
+    <section class="latest" aria-labelledby="latest">
+      <h2 id="latest">最新内容</h2>
+      ${latestHtml}
+    </section>
   </main>
 </body>
 </html>

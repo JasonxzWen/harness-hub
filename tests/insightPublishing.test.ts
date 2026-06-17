@@ -167,9 +167,15 @@ test('insight site build writes public index files and validation keeps local ar
   const validation = validateInsightSite({ repoRoot });
 
   expect(build.exitCode).toBe(0);
-  expect(fs.existsSync(path.join(repoRoot, 'site', 'index.html'))).toBe(true);
+  const homePath = path.join(repoRoot, 'site', 'index.html');
+  expect(fs.existsSync(homePath)).toBe(true);
   expect(fs.existsSync(path.join(repoRoot, 'site', 'insights', 'index.html'))).toBe(true);
   expect(fs.existsSync(path.join(repoRoot, 'site', 'insights', 'index.json'))).toBe(true);
+  const homeHtml = fs.readFileSync(homePath, 'utf8');
+  expect(homeHtml).toContain('首次理解');
+  expect(homeHtml).toContain('安全起步');
+  expect(homeHtml).toContain('init-harness');
+  expect(homeHtml).toContain('github.com/JasonxzWen/harness-hub/blob/main/README.zh-CN.md');
   expect(validation.exitCode).toBe(0);
   expect(validation.checks.every((check) => check.state === 'pass')).toBe(true);
   expect(snapshotPaths(path.join(repoRoot, 'site')).some((entry) => entry.includes('.harness-hub/reports'))).toBe(false);
