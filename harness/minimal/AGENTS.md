@@ -24,6 +24,7 @@ Do not start implementation until the harness is fully landed and the active tas
 - Use a separate git worktree or branch for each write task.
 - Start from `.harness-hub/state/current-task.md` before changing files.
 - Respect the task's allowed paths and forbidden paths.
+- Treat Harness Hub source-repo packaging as non-target material: do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`, `README*`, source `AGENTS.md`, or this repo's source tree into target projects. Use the managed outputs from `harness-hub init-harness`, `install`, and `activate-codex` instead.
 - Do not run parallel writes against the same file, module, or feature state.
 - Use read-only parallel work only for research, review, log analysis, or validation.
 - Use P0/P1/P2 validation priorities for implementation tasks: P0 must pass before handoff, P1 is run or risk-assessed for affected boundaries, and P2 is hardening that may be deferred with a reason.

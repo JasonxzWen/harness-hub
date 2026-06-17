@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { expect, test } from 'bun:test';
 
 const personalDistribution = fs.readFileSync('docs/personal-workflow-distribution.md', 'utf8');
+const bootstrapTarget = fs.readFileSync('BOOTSTRAP-TARGET.md', 'utf8');
 const readme = fs.readFileSync('README.md', 'utf8');
 const readmeZh = fs.readFileSync('README.zh-CN.md', 'utf8');
 const agents = fs.readFileSync('AGENTS.md', 'utf8');
@@ -24,6 +25,10 @@ test('personal distribution contract is the project positioning source', () => {
   expect(readme).toContain('docs/personal-workflow-distribution.md');
   expect(agents).toContain('repo-local agent harnesses');
   expect(agents).toContain('keep their upstream style by default');
+  expect(agents).toContain('receives only this Harness Hub repository link');
+  expect(agents).toContain('must follow [BOOTSTRAP-TARGET.md](BOOTSTRAP-TARGET.md)');
+  expect(agents).toContain('treat the link as documentation and CLI source, not as a template to copy');
+  expect(agents).toContain('report a bootstrap blocker instead of improvising a manual copy');
 });
 
 test('README localization stays complete but entry-focused', () => {
@@ -32,6 +37,18 @@ test('README localization stays complete but entry-focused', () => {
   expect(readme).toContain('## Visual Navigator');
   expect(readmeZh).toContain('## 可视化导航');
   expect(readme).toContain('## Choose A Path');
+  expect(readme).toContain('### Link-only agent bootstrap');
+  expect(readme).toContain('[Bootstrap A Target Repository](BOOTSTRAP-TARGET.md)');
+  expect(readme).toContain('If you are an agent working in another repo and received only this Harness Hub repository link');
+  expect(readme).toContain('do not copy this checkout into the target');
+  expect(readme).toContain('npx @jasonwen/harness-hub@latest init-harness');
+  expect(readme).toContain('If neither the npm CLI nor the source CLI can run, report a bootstrap blocker');
+  expect(readmeZh).toContain('### Link-only agent bootstrap');
+  expect(readmeZh).toContain('[Bootstrap A Target Repository](BOOTSTRAP-TARGET.md)');
+  expect(readme).toContain('This is the Harness Hub source checkout layout, not the target initialization output.');
+  expect(readme).toContain('Target initialization never copies `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`');
+  expect(readmeZh).toContain('不是 target 初始化输出');
+  expect(readmeZh).toContain('`.claude-plugin/`、root `openspec/`、`docs/`、`config/`、`package.json`');
   expect(readmeZh).toContain('## 选择入口');
   expect(readmeZh).toContain('flowchart TD');
   expect(readmeZh).toContain('npx @jasonwen/harness-hub init-harness');
@@ -42,6 +59,18 @@ test('README localization stays complete but entry-focused', () => {
   expect(personalDistribution).toContain('Agent-facing execution rules belong in `AGENTS.md`');
   expect(personalDistribution).toContain('core commands, capability map, and default development workflow');
   expect(personalDistribution).toContain('does not need to mirror every governance detail word for word');
+});
+
+test('bootstrap target guide gives link-only agents a copy-safe contract', () => {
+  expect(bootstrapTarget).toContain('Treat this repository as documentation and a CLI source, not as a template.');
+  expect(bootstrapTarget).toContain('npx @jasonwen/harness-hub@latest init-harness');
+  expect(bootstrapTarget).toContain('clone Harness Hub outside the target worktree');
+  expect(bootstrapTarget).toContain('Do not copy these Harness Hub source-repo paths into the target repository');
+  expect(bootstrapTarget).toContain('.claude-plugin/');
+  expect(bootstrapTarget).toContain('openspec/');
+  expect(bootstrapTarget).toContain("this repository's root `AGENTS.md`");
+  expect(bootstrapTarget).toContain('Stop and report a bootstrap blocker instead of manually copying folders');
+  expect(bootstrapTarget).toContain('forbidden source-repo paths are absent from the target root');
 });
 
 test('imported skills are governed by routing overlay, not style rewrites', () => {

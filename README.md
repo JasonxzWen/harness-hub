@@ -59,6 +59,32 @@ If the target already has root harness files, inspect first:
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
 ```
 
+### Link-only agent bootstrap
+
+If you are an agent working in another repo and received only this Harness Hub repository link, do not copy this checkout into the target. Treat the link as documentation and CLI source.
+
+Use [Bootstrap A Target Repository](BOOTSTRAP-TARGET.md) as the copy-safe contract for this path.
+
+Use the published CLI first:
+
+```powershell
+npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --dry-run --json
+npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --yes
+```
+
+If you must run from source, clone this repo outside the target worktree and use it only as a runner:
+
+```powershell
+git clone https://github.com/JasonxzWen/harness-hub.git
+cd harness-hub
+bun install
+bun run build
+node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --dry-run --json
+node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --yes
+```
+
+Never copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `capabilities/`, `harness/`, `package.json`, README files, source files, tests, or other Harness Hub source-repo material into the target. If neither the npm CLI nor the source CLI can run, report a bootstrap blocker instead of manually copying folders.
+
 From source:
 
 ```powershell
@@ -126,6 +152,8 @@ Harness Hub does not create the schedule, webhook, commit, push, tool install, o
 | Harness lifecycle | `check`, `self-check`, `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update`, `remove`, `harness-quality-check`. |
 
 ## Source Layout
+
+This is the Harness Hub source checkout layout, not the target initialization output. Target initialization never copies `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`, this repo's README files, or this repo's source tree into the target root; it writes only lock-managed `skills/<name>/` entries plus the explicit minimal harness files.
 
 ```text
 skills/
