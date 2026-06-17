@@ -8,6 +8,22 @@ Imported skills 可以保留上游风格；Harness Hub 主要负责路由、sour
 
 agent 执行规则放在 [AGENTS.md](AGENTS.md)。面向人的开发流程说明放在 [Development Workflow](docs/development-workflow.md)。
 
+## 首次理解
+
+Harness Hub 只做三类有边界的事：
+
+- `check` 和 `analyze` 只读检查目标仓库。
+- `init-harness` 只在你显式确认后创建 minimal 根级 harness。
+- `install` 只安装标准 skill set，不创建根级 harness 文件。
+
+第一次处理目标仓库时，先 dry-run：
+
+```powershell
+npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
+```
+
+看懂计划文件后再加 `--yes`。Harness Hub 不会替你创建定时任务、webhook、commit、push、全局 skill 安装或远程服务改动，除非某条命令明确声明这类副作用。
+
 ## 可视化导航
 
 ```mermaid
