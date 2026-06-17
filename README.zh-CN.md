@@ -75,6 +75,32 @@ npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
 ```
 
+### Link-only agent bootstrap
+
+如果你是在另一个仓库工作的 agent，只拿到了这个 Harness Hub 仓库链接，不要把这个 checkout 复制到目标仓库。把这个链接当作文档和 CLI 来源。
+
+这条路径使用 [Bootstrap A Target Repository](BOOTSTRAP-TARGET.md) 作为 copy-safe contract。
+
+优先使用已发布 CLI：
+
+```powershell
+npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --dry-run --json
+npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --yes
+```
+
+如果必须从源码运行，把本仓 clone 到目标 worktree 外部，只把它当 CLI runner：
+
+```powershell
+git clone https://github.com/JasonxzWen/harness-hub.git
+cd harness-hub
+bun install
+bun run build
+node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --dry-run --json
+node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --yes
+```
+
+不要把 `.claude-plugin/`、root `openspec/`、`docs/`、`config/`、`capabilities/`、`harness/`、`package.json`、README 文件、源码、测试或其他 Harness Hub 源仓库材料复制到目标仓库。如果 npm CLI 和源码 CLI 都无法运行，报告 bootstrap blocker，不要手动复制目录。
+
 从源码运行：
 
 ```powershell
@@ -142,6 +168,8 @@ Harness Hub 不会为这条命令创建定时任务、webhook、commit、push、
 | Harness lifecycle | `check`、`self-check`、`analyze`、`init-harness`、`validate-harness`、`install`、`status`、`update`、`remove`。 |
 
 ## Source Layout
+
+这是 Harness Hub 源码仓库布局，不是 target 初始化输出。Target 初始化不会把 `.claude-plugin/`、root `openspec/`、`docs/`、`config/`、`package.json`、本仓库 README 或本仓库源码树复制到目标根目录；它只写 lock-managed `skills/<name>/` 条目和显式 minimal harness 文件。
 
 ```text
 skills/

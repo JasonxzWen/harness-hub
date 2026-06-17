@@ -23,6 +23,23 @@ const REQUIRED_WORKFLOW_COMPONENTS = [
   'skill:verification-loop',
 ];
 
+const FORBIDDEN_STANDARD_INSTALL_ROOT_ARTIFACTS = [
+  '.claude-plugin',
+  'openspec',
+  'README.md',
+  'README.zh-CN.md',
+  'BOOTSTRAP-TARGET.md',
+  'CHANGELOG.md',
+  'package.json',
+  'docs',
+  'config',
+  'capabilities',
+  'harness',
+  'src',
+  'tests',
+  'site',
+] as const;
+
 test('capability index keeps harness metadata outside the standard install surface', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
     defaults?: unknown;
@@ -71,6 +88,10 @@ test('default standard install writes lock-backed status for the full skill set'
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'decisions.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, 'progress.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, 'session-handoff.md'))).toBe(false);
+  for (const relativePath of FORBIDDEN_STANDARD_INSTALL_ROOT_ARTIFACTS) {
+    expect(fs.existsSync(path.join(targetDir, relativePath))).toBe(false);
+  }
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'openspec-explore', 'SKILL.md'))).toBe(true);
 
   const status = getStatus({ targetDir, index: readCapabilityIndex() });
   expect(status.current.length).toBe(plan.items.length);

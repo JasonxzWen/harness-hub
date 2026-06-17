@@ -156,6 +156,8 @@ Use these verbs for target-repo lifecycle work:
 `install` remains the standard skill install command and must not create root harness files. `init-harness` owns root harness initialization and must stay dry-run/confirmation guarded.
 `check` is read-only startup guidance: it reports CLI and target managed-component freshness separately and must not auto-update either layer.
 
+When another repository's agent receives only this Harness Hub repository link, it must follow [BOOTSTRAP-TARGET.md](BOOTSTRAP-TARGET.md): treat the link as documentation and CLI source, not as a template to copy. Use `npx @jasonwen/harness-hub@latest init-harness <target> --target standard --dry-run --json` followed by `--yes`, or clone this repo outside the target only to run `node bin/harness-hub.mjs init-harness <target> --target standard ...`. Do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `capabilities/`, `harness/`, `package.json`, README files, source files, tests, or other Harness Hub source-repo material into the target. If neither npm nor the source CLI can run, report a bootstrap blocker instead of improvising a manual copy.
+
 Harness initialization is a hard gate for target repositories:
 - Use `init-harness`, not `install`, when root harness files are needed.
 - Do not start implementation in a target repo until `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, and `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}` exist.

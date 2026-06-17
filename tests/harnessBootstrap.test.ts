@@ -29,6 +29,23 @@ const REQUIRED_HARNESS_FILES = [
   'scripts/harness-validate.mjs',
 ] as const;
 
+const FORBIDDEN_TARGET_ROOT_ARTIFACTS = [
+  '.claude-plugin',
+  'openspec',
+  'README.md',
+  'README.zh-CN.md',
+  'BOOTSTRAP-TARGET.md',
+  'CHANGELOG.md',
+  'package.json',
+  'docs',
+  'config',
+  'capabilities',
+  'harness',
+  'src',
+  'tests',
+  'site',
+] as const;
+
 test('dev bootstrap dry run plans skills plus Codex harness without writing files', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-plan-'));
 
@@ -40,8 +57,12 @@ test('dev bootstrap dry run plans skills plus Codex harness without writing file
   expect(plan.harnessFiles.every((file) => file.exists === false)).toBe(true);
   expect(plan.blockers).toEqual([]);
   expect(cli.code).toBe(0);
-  expect(JSON.parse(cli.stdout).harnessFiles.map((file: { relativePath: string }) => file.relativePath).sort())
-    .toEqual([...REQUIRED_HARNESS_FILES].sort());
+  const dryRun = JSON.parse(cli.stdout);
+  const plannedHarnessFiles = dryRun.harnessFiles.map((file: { relativePath: string }) => file.relativePath);
+  expect(plannedHarnessFiles.sort()).toEqual([...REQUIRED_HARNESS_FILES].sort());
+  for (const relativePath of FORBIDDEN_TARGET_ROOT_ARTIFACTS) {
+    expect(plannedHarnessFiles).not.toContain(relativePath);
+  }
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
@@ -57,7 +78,10 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
     expect(fs.existsSync(path.join(targetDir, relativePath))).toBe(true);
   }
   expect(fs.existsSync(path.join(targetDir, 'CLAUDE.md'))).toBe(false);
+  expectForbiddenTargetRootArtifactsAbsent(targetDir);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'openspec-explore', 'SKILL.md'))).toBe(true);
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Codex');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', '.gitignore'), 'utf8')).toContain('state/');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', '.gitignore'), 'utf8')).toContain('reports/');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Allowed paths');
@@ -417,6 +441,12 @@ test('harness validation audits broad or missing skill triggers', () => {
     && check.reason.includes('broad activation')
   ))).toBe(true);
 });
+
+function expectForbiddenTargetRootArtifactsAbsent(targetDir: string): void {
+  for (const relativePath of FORBIDDEN_TARGET_ROOT_ARTIFACTS) {
+    expect(fs.existsSync(path.join(targetDir, relativePath))).toBe(false);
+  }
+}
 
 async function captureCli(argv: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
   const stdout: string[] = [];

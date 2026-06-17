@@ -21,6 +21,7 @@
   },
   "files": [
     "AGENTS.md",
+    "BOOTSTRAP-TARGET.md",
     "CHANGELOG.md",
     "README.md",
     "README.zh-CN.md",
