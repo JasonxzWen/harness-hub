@@ -39,10 +39,10 @@ jobs:
         run: bun run build
 
       - name: Build insight site indexes
-        run: node bin/harness-hub.mjs insight-build . --json
+        run: node bin/harness-hub.mjs insight build . --json
 
       - name: Validate insight site
-        run: node bin/harness-hub.mjs insight-validate . --json
+        run: node bin/harness-hub.mjs insight validate . --json
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

@@ -1,13 +1,14 @@
 # Capability Map
 
-Harness Hub exposes three surfaces:
+Harness Hub exposes four product surfaces:
 
 - a personal distributed skill set under `skills/`;
 - one supported target bootstrap harness under `harness/minimal/`;
-- a lifecycle CLI that can analyze, initialize, validate, self-check, install, update, status-check, and remove managed target-repo assets.
+- a lifecycle CLI that can analyze, initialize, validate, self-check, install, update, status-check, and remove managed target-repo assets;
+- a first-class source-backed insight publishing domain under `harness-hub insight <action>`.
 
 
-It also owns two explicit higher-level repo capabilities: Codex dev harness bootstrap through `init-harness`, and source-backed insight publishing through `insight-*`.
+It also owns two explicit higher-level repo capabilities: Codex dev harness bootstrap through `init-harness`, and source-backed insight publishing through `harness-hub insight`.
 
 For the default requirement-to-delivery lane, see [Development Workflow](development-workflow.md). It explains how `workflow-router`, `sdd-workflow`, lightweight brainstorming, `tdd-workflow`, validation helpers, `effective-interact`, and `.harness-hub/state/` fit together during normal feature, bug-fix, refactor, and product-change work.
 
@@ -43,10 +44,10 @@ flowchart TD
 | `harness-hub init-harness <target> --target standard --dry-run` | No | Preview standard skill installation plus Codex-only root harness files. |
 | `harness-hub init-harness <target> --target standard --yes` | Yes | Install standard skills, write managed root harness files, and validate the harness. |
 | `harness-hub validate-harness <target> --json` | No | Check required harness files, Codex-only boundary, current-state file sizes, QA boundaries, agent architecture boundaries, skill trigger hygiene, five-subsystem assessment, project verification detection, and structural benchmark results. |
-| `harness-hub insight-generate <target> --input file --json` | Yes | Validate a structured source record, write post metadata, adapt through `effective-interact`, and generate public post HTML. |
-| `harness-hub insight-build <target> --json` | Yes | Build `site/index.html`, `site/insights/index.html`, and `site/insights/index.json` from post metadata. |
-| `harness-hub insight-validate <target> --json` | No | Validate UTF-8, source attribution, fact/inference separation, links, excerpt size, indexes, and public artifact boundaries. |
-| `harness-hub insight-publish <target> --dry-run --json` | No | Run Pages publish preflight for workflow, Pages output, source metadata, branch, and worktree state. |
+| `harness-hub insight generate <target> --input file --json` | Yes | Validate a structured source record, write post metadata, adapt through `effective-interact`, and generate public post HTML. |
+| `harness-hub insight build <target> --json` | Yes | Build `site/index.html`, `site/insights/index.html`, and `site/insights/index.json` from post metadata. |
+| `harness-hub insight validate <target> --json` | No | Validate UTF-8, source attribution, fact/inference separation, links, excerpt size, indexes, and public artifact boundaries. |
+| `harness-hub insight publish <target> --dry-run --json` | No | Run Pages publish preflight for workflow, Pages output, source metadata, branch, and worktree state. |
 | `harness-hub status <target>` | No | Compare lock records with current files and hub versions. |
 | `harness-hub update <target> --dry-run` | No | Plan updates for managed skills. |
 | `harness-hub update <target> --yes` | Yes | Update managed, unmodified files. |
@@ -59,7 +60,7 @@ Harness Hub has one personal skill install set and one harness level: `minimal`.
 
 Harness components use explicit lifecycle commands. `install` never writes root harness files or worktree-local state. `init-harness --target standard --yes` is the one-step migration path: it installs the full standard skill and routing surface, writes stable files such as `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, and `scripts/harness-validate.mjs`, writes ignored worktree-local progress, decision, current-task, and handoff state under `.harness-hub/state/`, validates the harness, and records confirmed writes as harness components in the same lock. It does not copy Harness Hub source-repo packaging or maintenance artifacts such as `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`, README files, or this repo's source tree into target roots. `activate-codex --yes` is a separate host-local activation cache sync from `skills/` to `.codex/skills/`; it is not global installation and is not a managed capability target. Local state files and Codex activation cache files are not treated as content-drift blockers. The minimal harness now records PR closeout policy so PR creation or update is followed by mergeability, CI/check-run, conflict, and branch-protection status before final delivery.
 
-Insight publishing is intentionally outside the managed install set. Its public source lives under Git-only `site/`; ignored local artifacts such as `.harness-hub/reports/` and `skills/effective-interact/artifacts/` are not valid Pages sources.
+Insight publishing is a first-class product domain, but it is intentionally outside the target managed install set. Its public source lives under Git-only `site/`; ignored local artifacts such as `.harness-hub/reports/` and `skills/effective-interact/artifacts/` are not valid Pages sources.
 
 ## Atomic Capability Candidate Map
 

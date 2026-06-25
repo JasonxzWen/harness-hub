@@ -240,7 +240,7 @@ test('insight CLI accepts UTF-8 BOM JSON input', async () => {
   const inputPath = path.join(repoRoot, 'input.json');
   fs.writeFileSync(inputPath, `\uFEFF${JSON.stringify(sampleInsightInput(), null, 2)}`, 'utf8');
 
-  const generated = await captureCli(['insight-generate', repoRoot, '--input', inputPath, '--json']);
+  const generated = await captureCli(['insight', 'generate', repoRoot, '--input', inputPath, '--json']);
 
   expect(generated.code).toBe(0);
   expect(JSON.parse(generated.stdout).slug).toBe('2026-05-28-codex-self-improving-loop-and-harness-hub');
@@ -272,15 +272,15 @@ test('insight CLI supports generate, build, validate, and publish dry-run json o
   const inputPath = path.join(repoRoot, 'input.json');
   fs.writeFileSync(inputPath, JSON.stringify(sampleInsightInput(), null, 2), 'utf8');
 
-  const generated = await captureCli(['insight-generate', repoRoot, '--input', inputPath, '--json']);
-  const built = await captureCli(['insight-build', repoRoot, '--json']);
-  const validated = await captureCli(['insight-validate', repoRoot, '--json']);
+  const generated = await captureCli(['insight', 'generate', repoRoot, '--input', inputPath, '--json']);
+  const built = await captureCli(['insight', 'build', repoRoot, '--json']);
+  const validated = await captureCli(['insight', 'validate', repoRoot, '--json']);
   execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoRoot });
   execFileSync('git', ['config', 'user.name', 'Test User'], { cwd: repoRoot });
   execFileSync('git', ['add', '.'], { cwd: repoRoot });
   execFileSync('git', ['commit', '-m', 'site'], { cwd: repoRoot, stdio: 'ignore' });
-  const preflight = await captureCli(['insight-publish', repoRoot, '--dry-run', '--allow-dirty', '--json']);
+  const preflight = await captureCli(['insight', 'publish', repoRoot, '--dry-run', '--allow-dirty', '--json']);
 
   expect(generated.code).toBe(0);
   expect(JSON.parse(generated.stdout).slug).toBe('2026-05-28-codex-self-improving-loop-and-harness-hub');
@@ -288,6 +288,22 @@ test('insight CLI supports generate, build, validate, and publish dry-run json o
   expect(validated.code).toBe(0);
   expect(preflight.code).toBe(0);
   expect(JSON.parse(preflight.stdout).mode).toBe('dry-run');
+});
+
+test('old flat insight CLI commands are not supported', async () => {
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-insight-old-cli-'));
+  const inputPath = path.join(repoRoot, 'input.json');
+  fs.writeFileSync(inputPath, JSON.stringify(sampleInsightInput(), null, 2), 'utf8');
+
+  const generated = await captureCli(['insight-generate', repoRoot, '--input', inputPath, '--json']);
+  const built = await captureCli(['insight-build', repoRoot, '--json']);
+  const validated = await captureCli(['insight-validate', repoRoot, '--json']);
+  const published = await captureCli(['insight-publish', repoRoot, '--dry-run', '--json']);
+
+  for (const result of [generated, built, validated, published]) {
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain('Unknown command');
+  }
 });
 
 function snapshotPaths(root: string): string[] {
