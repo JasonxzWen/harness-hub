@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-06-25
+
+- Add the standard `insight` skill for private repository interaction audits across Codex and Claude Code traces.
+- Add `insight` collection and report scripts with evidence classes, repo affinity, confidence scoring, task clusters, parsed tool-branch review, JSONL tail sampling, and ignored local Markdown reports.
+- Register `insight` in the standard capability and routing surfaces with regression coverage for evidence weighting, Chinese JSONL excerpts, successful handoff handling, and parsed tool-call review.
+
 ## 0.1.14 - 2026-06-08
 
 - Add a PR release-impact policy, pull request template, and regression coverage so release decisions are explicit without publishing npm `latest` from PRs.

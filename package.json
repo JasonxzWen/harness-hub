@@ -1,6 +1,6 @@
 {
   "name": "@jasonwen/harness-hub",
-  "version": "0.1.14",
+  "version": "0.2.0",
   "description": "Personal repo harness toolkit with lock-backed lifecycle commands.",
   "type": "module",
   "main": "dist/harnessHub.js",
