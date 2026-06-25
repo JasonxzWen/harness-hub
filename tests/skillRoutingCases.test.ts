@@ -43,6 +43,7 @@ const optionalDemoSkills = [
   'mcp-builder',
   'skill-creator',
   'source-to-insight-blog',
+  'insight',
   'doc-coauthoring',
   'internal-comms',
   'stop-slop',

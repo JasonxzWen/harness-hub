@@ -1236,6 +1236,43 @@
       "risk": "medium",
       "recommendation": "Use as a bounded source-to-public-blog workflow that preserves source evidence, media references, and iteration decisions while forcing reader-first article flow; do not turn effective-interact reports, source ledgers, or copyrighted source text into the main post."
     },
+    "skill:insight": {
+      "kind": "skill",
+      "path": "skills/insight",
+      "version": "0.1.0",
+      "source": "local-original",
+      "provides": [
+        "repository-interaction-insight-audits",
+        "codex-claude-code-trace-review",
+        "local-agent-event-ledgers",
+        "private-insight-reports",
+        "tool-call-decision-audits"
+      ],
+      "overlapsWith": [
+        "skill:source-to-insight-blog",
+        "skill:agent-introspection-debugging",
+        "skill:effective-interact",
+        "skill:answer-workflow",
+        "skill:harness-quality-check"
+      ],
+      "routing": "Load when the user asks for a private repository interaction insight audit, Codex or Claude Code trace review, agent task profile, tool-call decision audit, or collaboration bottleneck analysis; use source-to-insight-blog for public external-source posts and agent-introspection-debugging for single-run failures.",
+      "detects": [
+        {
+          "path": "skills/insight/SKILL.md"
+        },
+        {
+          "path": "skills/insight/scripts/collect-insight-events.mjs"
+        },
+        {
+          "path": "skills/insight/scripts/build-insight-report.mjs"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "medium",
+      "recommendation": "Audit recent project-related Codex and Claude Code collaboration traces into ignored private reports with confirmed/candidate evidence separation, sharp bottleneck analysis, and no default project, memory, schedule, remote, or tracked-doc mutation."
+    },
     "skill:doc-coauthoring": {
       "kind": "skill",
       "path": "skills/doc-coauthoring",
