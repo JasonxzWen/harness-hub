@@ -10,11 +10,12 @@ agent 执行规则放在 [AGENTS.md](AGENTS.md)。面向人的开发流程说明
 
 ## 首次理解
 
-Harness Hub 只做三类有边界的事：
+Harness Hub 只做四类有边界的事：
 
 - `check` 和 `analyze` 只读检查目标仓库。
 - `init-harness` 只在你显式确认后创建 minimal 根级 harness。
 - `install` 只安装标准 skill set，不创建根级 harness 文件。
+- `insight` 创建、构建、验证并预检 source-backed insight posts。
 
 第一次处理目标仓库时，先 dry-run：
 
@@ -43,7 +44,7 @@ flowchart TD
   Work --> W1["workflow-router -> sdd-workflow -> tdd-workflow"]
   Validate --> V1["validate-harness / bun run validate"]
   Maintain --> M1["hub-maintenance-workflow"]
-  Insight --> P1["insight-generate -> insight-build -> insight-validate"]
+  Insight --> P1["insight generate -> insight build -> insight validate"]
 ```
 
 ## 选择入口
@@ -57,7 +58,7 @@ flowchart TD
 | 让已安装 skills 被本地 Codex 看见 | `activate-codex --yes` | 把项目内 `skills/<name>` 同步到 `.codex/skills`，不做全局安装。 |
 | 验证已初始化的仓库 | `validate-harness --json` | 必需文件、state、QA 边界、trigger hygiene 和结构评分。 |
 | 维护 Harness Hub 自身 | `workflow-router` 再进入 `hub-maintenance-workflow` | source records、routing、capability metadata、docs、templates、lifecycle safety。 |
-| 创建公开 source-backed insight post | `insight-*` 命令 | source ledger、Effective Interact adaptation、Pages 输出和发布预检。 |
+| 创建公开 source-backed insight post | `insight generate` | source ledger、Effective Interact adaptation、Pages 输出和发布预检。 |
 
 Harness Hub 只有一个标准 skill install set 和一个 `minimal` harness 路径。没有 named skill install variants、harness pack levels 或 bundle selectors。确认执行 `install` 会覆盖同名 skill 目录；如果目标仓库可能已有本地 skills，先用 `--dry-run` 检查。
 
@@ -136,10 +137,10 @@ npx @jasonwen/harness-hub remove D:\path\to\target --dry-run --json
 Insight publishing：
 
 ```powershell
-npx @jasonwen/harness-hub insight-generate . --input input.json --json
-npx @jasonwen/harness-hub insight-build . --json
-npx @jasonwen/harness-hub insight-validate . --json
-npx @jasonwen/harness-hub insight-publish . --dry-run --json
+npx @jasonwen/harness-hub insight generate . --input input.json --json
+npx @jasonwen/harness-hub insight build . --json
+npx @jasonwen/harness-hub insight validate . --json
+npx @jasonwen/harness-hub insight publish . --dry-run --json
 ```
 
 `check` 是只读启动检查。它在 `cli` 报告 npm 上的 CLI 包状态，在 `target` 报告目标仓库 lock 托管组件状态，并在 `externalTools` 给出 CodeGraph 和 Headroom 的显式配置/安装建议；更新可用、registry 失败、缺少 lock、缺少项目本地 Codex 激活、外部工具建议都只是 advisory，不会安装工具、改写目标仓库或阻塞 agent 启动路径。

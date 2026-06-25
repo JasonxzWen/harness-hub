@@ -751,8 +751,11 @@ interface LatestPackageVersionResult {
   reason: string;
 }
 
+type InsightCliAction = 'generate' | 'build' | 'validate' | 'publish';
+
 interface CliOptions {
   command: string;
+  insightAction: InsightCliAction | null;
   targetDir: string | null;
   agents: AgentName[];
   dryRun: boolean;
@@ -3288,7 +3291,7 @@ export function validateInsightSite(options: { repoRoot?: string } = {}): Insigh
       path: relativePath,
       reason: fs.existsSync(filePath)
         ? 'Public site index file exists.'
-        : 'Public site index file is missing; run insight-build first.',
+        : 'Public site index file is missing; run harness-hub insight build first.',
     });
   }
 
@@ -3376,7 +3379,7 @@ export function publishInsightPreflight(
       path: relativePath,
       reason: fs.existsSync(filePath)
         ? 'GitHub Pages output file exists.'
-        : 'GitHub Pages output file is missing; run insight-build first.',
+        : 'GitHub Pages output file is missing; run harness-hub insight build first.',
     });
   }
 
@@ -6708,6 +6711,7 @@ function escapeAttr(value: unknown): string {
 function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
     command: argv[0] || 'help',
+    insightAction: null,
     targetDir: null,
     agents: [],
     dryRun: false,
@@ -6726,8 +6730,18 @@ function parseArgs(argv: string[]): CliOptions {
     validateHarness: false,
   };
   const positional: string[] = [];
+  let firstOptionIndex = 1;
 
-  for (let index = 1; index < argv.length; index += 1) {
+  if (options.command === 'insight') {
+    const action = argv[1];
+    if (!action || action.startsWith('-')) {
+      throw new CliError('Use "harness-hub insight <generate|build|validate|publish>".', 2);
+    }
+    options.insightAction = parseInsightAction(action);
+    firstOptionIndex = 2;
+  }
+
+  for (let index = firstOptionIndex; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--agent' || arg === '--target' || arg === '-a') {
       options.agents.push(parseAgentName(readOptionValue(argv, ++index, arg)));
@@ -6783,6 +6797,13 @@ function parseAgentName(value: string): AgentName {
     return value;
   }
   throw new Error(`Unsupported agent '${value}'. Available: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}`);
+}
+
+function parseInsightAction(value: string): InsightCliAction {
+  if (value === 'generate' || value === 'build' || value === 'validate' || value === 'publish') {
+    return value;
+  }
+  throw new CliError(`Unknown insight action '${value}'. Available: generate, build, validate, publish`, 2);
 }
 
 export async function runCli(argv: string[]): Promise<number> {
@@ -6895,43 +6916,45 @@ async function runCliInner(argv: string[]): Promise<number> {
     return result.exitCode;
   }
 
-  if (options.command === 'insight-generate') {
-    if (!options.input) {
-      throw new CliError("Use --input <file> with insight-generate.", 2);
+  if (options.command === 'insight') {
+    if (options.insightAction === 'generate') {
+      if (!options.input) {
+        throw new CliError('Use --input <file> with "harness-hub insight generate".', 2);
+      }
+      const inputPath = path.resolve(options.input);
+      const input = readJsonFile<InsightPostInput>(inputPath);
+      const result = createInsightPost(input, {
+        repoRoot: options.targetDir || undefined,
+        slug: options.slug || undefined,
+      });
+      emitReport(renderLifecycleReport('Harness Hub Insight Generation Report', result, options), options);
+      return result.validation.exitCode;
     }
-    const inputPath = path.resolve(options.input);
-    const input = readJsonFile<InsightPostInput>(inputPath);
-    const result = createInsightPost(input, {
-      repoRoot: options.targetDir || undefined,
-      slug: options.slug || undefined,
-    });
-    emitReport(renderLifecycleReport('Harness Hub Insight Generation Report', result, options), options);
-    return result.validation.exitCode;
-  }
 
-  if (options.command === 'insight-build') {
-    const result = buildInsightSite({ repoRoot: options.targetDir || undefined });
-    emitReport(renderLifecycleReport('Harness Hub Insight Build Report', result, options), options);
-    return result.exitCode;
-  }
-
-  if (options.command === 'insight-validate') {
-    const result = validateInsightSite({ repoRoot: options.targetDir || undefined });
-    emitReport(renderLifecycleReport('Harness Hub Insight Validation Report', result, options), options);
-    return result.exitCode;
-  }
-
-  if (options.command === 'insight-publish') {
-    if (!options.dryRun) {
-      throw new CliError('Use --dry-run for local insight publish preflight. GitHub Actions performs the actual Pages deploy.', 2);
+    if (options.insightAction === 'build') {
+      const result = buildInsightSite({ repoRoot: options.targetDir || undefined });
+      emitReport(renderLifecycleReport('Harness Hub Insight Build Report', result, options), options);
+      return result.exitCode;
     }
-    const result = publishInsightPreflight({
-      repoRoot: options.targetDir || undefined,
-      dryRun: true,
-      allowDirty: options.allowDirty,
-    });
-    emitReport(renderLifecycleReport('Harness Hub Insight Publish Preflight Report', result, options), options);
-    return result.exitCode;
+
+    if (options.insightAction === 'validate') {
+      const result = validateInsightSite({ repoRoot: options.targetDir || undefined });
+      emitReport(renderLifecycleReport('Harness Hub Insight Validation Report', result, options), options);
+      return result.exitCode;
+    }
+
+    if (options.insightAction === 'publish') {
+      if (!options.dryRun) {
+        throw new CliError('Use --dry-run for local insight publish preflight. GitHub Actions performs the actual Pages deploy.', 2);
+      }
+      const result = publishInsightPreflight({
+        repoRoot: options.targetDir || undefined,
+        dryRun: true,
+        allowDirty: options.allowDirty,
+      });
+      emitReport(renderLifecycleReport('Harness Hub Insight Publish Preflight Report', result, options), options);
+      return result.exitCode;
+    }
   }
 
   if (options.command === 'init' || options.command === 'install') {
@@ -7543,10 +7566,10 @@ Usage:
   harness-hub activate-codex [target] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
-  harness-hub insight-generate [target] --input file [--slug slug] [--json|--html] [--output file]
-  harness-hub insight-build [target] [--json|--html] [--output file]
-  harness-hub insight-validate [target] [--json|--html] [--output file]
-  harness-hub insight-publish [target] --dry-run [--allow-dirty] [--json|--html] [--output file]
+  harness-hub insight generate [target] --input file [--slug slug] [--json|--html] [--output file]
+  harness-hub insight build [target] [--json|--html] [--output file]
+  harness-hub insight validate [target] [--json|--html] [--output file]
+  harness-hub insight publish [target] --dry-run [--allow-dirty] [--json|--html] [--output file]
   harness-hub status [target] [--json|--html] [--output file]
   harness-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
   harness-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
@@ -7560,6 +7583,6 @@ Install selects every standard skill component and overwrites same-name skill di
 Use init-harness for Codex-only dev bootstrap: standard skills plus root harness files.
 Use activate-codex to sync installed project-local skills into ignored .codex/skills without global installation.
 validate-harness includes minimal checks, five-subsystem assessment, and a structural benchmark.
-Use insight-* for structured source-to-blog generation and GitHub Pages preflight.
+Use insight for structured source-to-blog generation and GitHub Pages preflight.
 `);
 }

@@ -1,6 +1,6 @@
 # Insight Publishing
 
-Insight publishing is the second explicit Harness Hub capability beside dev harness bootstrap. It turns user-provided source material, such as blogs, X/Twitter posts, interviews, or release notes, into a source-backed project insight post and a small GitHub Pages site.
+Insight publishing is a first-class Harness Hub product domain beside the repo harness lifecycle. It turns user-provided source material, such as blogs, X/Twitter posts, interviews, or release notes, into a source-backed project insight post and a small GitHub Pages site.
 
 ## Source Of Truth
 
@@ -30,13 +30,13 @@ The slug is `<date>-<title-slug>` unless `--slug` is supplied. The slug is URL-s
 ## Commands
 
 ```powershell
-harness-hub insight-generate . --input input.json --json
-harness-hub insight-build . --json
-harness-hub insight-validate . --json
-harness-hub insight-publish . --dry-run --json
+harness-hub insight generate . --input input.json --json
+harness-hub insight build . --json
+harness-hub insight validate . --json
+harness-hub insight publish . --dry-run --json
 ```
 
-`insight-generate` validates the structured input before writing public files. `insight-build` writes the root and insight indexes under `site/`. `insight-validate` checks the generated site and post metadata. `insight-publish --dry-run` verifies workflow presence, Pages output, source metadata, links, branch state, and worktree cleanliness.
+`insight generate` validates the structured input before writing public files. `insight build` writes the root and insight indexes under `site/`. `insight validate` checks the generated site and post metadata. `insight publish --dry-run` verifies workflow presence, Pages output, source metadata, links, branch state, and worktree cleanliness.
 
 ## Validation Rules
 

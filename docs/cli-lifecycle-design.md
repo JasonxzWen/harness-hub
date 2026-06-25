@@ -9,7 +9,7 @@ The Harness Hub CLI manages a repo-local agent harness lifecycle in target repos
 - Keep `install` limited to standard skill folders in `skills/<name>/`.
 - Keep full Codex dev harness bootstrap explicit through `init-harness`.
 - Validate root harness files through side-effect-free `validate-harness`.
-- Keep source-backed insight publishing explicit through `insight-*`.
+- Keep source-backed insight publishing explicit through `harness-hub insight <action>`.
 - Track managed files with `.harness-hub/lock.json`.
 - Remove and update only lock-recorded files.
 - Keep host-specific packaging outside the lifecycle CLI.
@@ -32,10 +32,10 @@ harness-hub install <target> --target standard --yes
 harness-hub init-harness <target> --target standard --dry-run
 harness-hub init-harness <target> --target standard --yes
 harness-hub validate-harness <target> --json
-harness-hub insight-generate <target> --input input.json --json
-harness-hub insight-build <target> --json
-harness-hub insight-validate <target> --json
-harness-hub insight-publish <target> --dry-run --json
+harness-hub insight generate <target> --input input.json --json
+harness-hub insight build <target> --json
+harness-hub insight validate <target> --json
+harness-hub insight publish <target> --dry-run --json
 harness-hub status <target> --json
 harness-hub update <target> --dry-run --json
 harness-hub migrate-lock <target> --dry-run --json
