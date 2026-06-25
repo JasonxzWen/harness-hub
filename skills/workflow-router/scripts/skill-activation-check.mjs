@@ -481,6 +481,31 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'effective-interact summary',
     'repo should change',
   ]);
+  const insightSignal = (
+    includesAny(text, [
+      'agent task profile',
+      'collaboration bottleneck',
+      'cross-session codex',
+      'cross-session claude code',
+      'human-agent collaboration',
+      'interaction insight audit',
+      'project interaction audit',
+      'repository interaction audit',
+      'tool-call decision audit',
+      'work trace review',
+    ]) || matchesAny(text, [
+      /\bhuman-agent\b.*\b(?:audit|bottleneck|collaboration|interaction|trace)\b/,
+      /\b(?:codex|claude code)\b.*\b(?:session|trace|work history)\b.*\b(?:audit|review|profile)\b/,
+      /\b(?:agent|tool-call)\b.*\b(?:decision|trace)\b.*\b(?:audit|review)\b/,
+      /(?:\u4eba\u673a\u4ea4\u4e92|\u4eba\u673a\u534f\u4f5c).*(?:\u590d\u76d8|\u5ba1\u8ba1|\u5361\u70b9|\u753b\u50cf)/,
+      /(?:\u4f1a\u8bdd\u8bb0\u5f55|\u5de5\u4f5c\u8bb0\u5f55).*(?:codex|claude code).*(?:\u68b3\u7406|\u590d\u76d8|\u5ba1\u8ba1)/,
+    ])
+  ) && !sourceToInsightBlogSignal && !includesAny(text, [
+    'external article',
+    'public blog',
+    'source-backed blog',
+    'source-backed insight blog',
+  ]);
   const docCoauthoringSignal = includesAny(text, [
     'collaboratively draft',
     'decision record',
@@ -612,6 +637,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
 
   if (hubMaintenanceSignal) {
     return null;
+  }
+
+  if (insightSignal && canLoad(metadata, 'insight', ['interaction insight audit', 'claude code'])) {
+    return 'insight';
   }
 
   if (agentSignal && canLoad(metadata, 'agent-introspection-debugging', ['agent run', 'harness/tool'])) {
