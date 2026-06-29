@@ -18,6 +18,20 @@ const requiredFiles = [
   '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
   '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
   '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
+  '.harness-hub/context/AGENTS.md',
+  '.harness-hub/context/README.md',
+  '.harness-hub/context/llm-wiki-schema.md',
+  '.harness-hub/context/wiki/index.md',
+  '.harness-hub/context/wiki/sources/README.md',
+  '.harness-hub/context/wiki/concepts/README.md',
+  '.harness-hub/context/wiki/topics/README.md',
+  '.harness-hub/context/wiki/people/README.md',
+  '.harness-hub/context/wiki/contradictions.md',
+  '.harness-hub/context/wiki/update-log.md',
+  '.harness-hub/context/wiki/templates/wiki-page.md',
+  '.harness-hub/context/wiki/.obsidian/app.json',
+  '.harness-hub/context/wiki/.obsidian/core-plugins.json',
+  '.harness-hub/context/wiki/.obsidian/graph.json',
   'clean-state-checklist.md',
   'definition-of-done.md',
   'evaluator-rubric.md',
@@ -37,8 +51,14 @@ const sizeLimits = {
   '.harness-hub/state/capability-events.jsonl': 64 * 1024,
 };
 const requiredMarkers = {
-  'AGENTS.md': ['Codex', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run'],
+  'AGENTS.md': ['Codex', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'LLM Wiki', '.harness-hub/context/wiki', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run'],
   '.harness-hub/.gitignore': ['state/', 'reports/'],
+  '.harness-hub/context/AGENTS.md': ['LLM Wiki', 'Raw sources', 'No Redundant Facts', 'human confirmation', 'Contradiction Register'],
+  '.harness-hub/context/README.md': ['Agent Context Pack', 'Raw sources', 'Wiki pages', 'Obsidian', 'Update Flow'],
+  '.harness-hub/context/llm-wiki-schema.md': ['LLM Wiki Schema', 'Raw sources', 'Wiki', 'Stable Knowledge Boundary', 'Update Protocol', 'Contradictions'],
+  '.harness-hub/context/wiki/index.md': ['LLM Wiki Index', 'Raw sources', 'Stable Knowledge Map'],
+  '.harness-hub/context/wiki/contradictions.md': ['Contradiction Register', 'Resolution status', 'Next action'],
+  '.harness-hub/context/wiki/update-log.md': ['Update Log', 'Human confirmation', 'Sources consulted'],
   '.harness-hub/loop/policies/interrupt-policy.md': ['Interrupt Policy', 'standalone', 'composable', 'loop-participant', 'Continue By Default', 'Interrupt', 'Audit Requirement'],
   '.harness-hub/loop/policies/action-audit-schema.md': ['Runtime Ledgers', 'loop-runs.jsonl', 'interrupt-decisions.jsonl', 'capability-events.jsonl', 'continue|interrupt'],
   '.harness-hub/state/decisions.md': ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'],
@@ -186,6 +206,9 @@ if (fs.existsSync(featureStatePath)) {
     if (!isRecord(featureState) || !isRecord(featureState.loop_control_policy)) {
       missing.push('loop_control_policy object');
     }
+    if (!isRecord(featureState) || !isRecord(featureState.context_engineering_policy)) {
+      missing.push('context_engineering_policy object');
+    }
     if (!isRecord(featureState) || !isRecord(featureState.parallel_write_policy)) {
       missing.push('parallel_write_policy object');
     }
@@ -226,6 +249,11 @@ for (const evalCase of [
   if (issues.length > 0) {
     failures.push(`${evalCase.file}: interrupt policy eval issues ${issues.slice(0, 6).join('; ')}${issues.length > 6 ? `; +${issues.length - 6} more` : ''}`);
   }
+}
+
+const obsidianIssues = validateObsidianPortableProfile();
+if (obsidianIssues.length > 0) {
+  failures.push(`.harness-hub/context/wiki/.obsidian: ${obsidianIssues.join('; ')}`);
 }
 
 if (failures.length > 0) {
@@ -301,6 +329,35 @@ function validateInterruptEvalFile(relativePath, expectedDecision) {
       issues.push(`${prefix}: missing requiredEvidence`);
     }
   });
+  return issues;
+}
+
+function validateObsidianPortableProfile() {
+  const profileDir = '.harness-hub/context/wiki/.obsidian';
+  const files = [
+    `${profileDir}/app.json`,
+    `${profileDir}/core-plugins.json`,
+    `${profileDir}/graph.json`,
+  ];
+  const issues = [];
+  for (const file of files) {
+    const filePath = path.join(root, file);
+    if (!fs.existsSync(filePath)) {
+      issues.push(`${file}: missing`);
+      continue;
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    } catch {
+      issues.push(`${file}: invalid JSON`);
+      continue;
+    }
+    const jsonText = JSON.stringify(parsed);
+    if (/[A-Za-z]:\\\\|[A-Za-z]:\/|"\/Users\/|"\/home\/|sync|community-plugins|workspace/i.test(jsonText)) {
+      issues.push(`${file}: contains non-portable local state marker`);
+    }
+  }
   return issues;
 }
 

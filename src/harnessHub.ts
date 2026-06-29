@@ -480,6 +480,7 @@ export interface HarnessValidationCheck {
     | 'required-content'
     | 'structured-content'
     | 'loop-policy'
+    | 'context-wiki'
     | 'qa-boundary'
     | 'agent-architecture'
     | 'trigger-hygiene';
@@ -971,6 +972,16 @@ const HARNESS_STATE_FILES = Object.freeze([
   '.harness-hub/state/capability-events.jsonl',
 ]);
 const HARNESS_STATE_FILE_SET = new Set<string>(HARNESS_STATE_FILES);
+const HARNESS_CONTEXT_WIKI_PRESERVED_FILES = new Set([
+  '.harness-hub/context/wiki/index.md',
+  '.harness-hub/context/wiki/sources/README.md',
+  '.harness-hub/context/wiki/concepts/README.md',
+  '.harness-hub/context/wiki/topics/README.md',
+  '.harness-hub/context/wiki/people/README.md',
+  '.harness-hub/context/wiki/contradictions.md',
+  '.harness-hub/context/wiki/update-log.md',
+  '.harness-hub/context/wiki/templates/wiki-page.md',
+]);
 const LEGACY_HARNESS_STATE_MIGRATIONS = Object.freeze({
   'tasks/current-task.md': '.harness-hub/state/current-task.md',
   'decisions.md': '.harness-hub/state/decisions.md',
@@ -992,6 +1003,20 @@ const HARNESS_TEMPLATE_DESTINATIONS = Object.freeze({
   'loop-templates/evals/interrupt-policy/good-cases.jsonl': '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
   'loop-templates/evals/interrupt-policy/bad-cases.jsonl': '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
   'loop-templates/evals/interrupt-policy/regression-cases.jsonl': '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
+  'context-templates/AGENTS.md': '.harness-hub/context/AGENTS.md',
+  'context-templates/README.md': '.harness-hub/context/README.md',
+  'context-templates/llm-wiki-schema.md': '.harness-hub/context/llm-wiki-schema.md',
+  'context-templates/wiki/index.md': '.harness-hub/context/wiki/index.md',
+  'context-templates/wiki/sources/README.md': '.harness-hub/context/wiki/sources/README.md',
+  'context-templates/wiki/concepts/README.md': '.harness-hub/context/wiki/concepts/README.md',
+  'context-templates/wiki/topics/README.md': '.harness-hub/context/wiki/topics/README.md',
+  'context-templates/wiki/people/README.md': '.harness-hub/context/wiki/people/README.md',
+  'context-templates/wiki/contradictions.md': '.harness-hub/context/wiki/contradictions.md',
+  'context-templates/wiki/update-log.md': '.harness-hub/context/wiki/update-log.md',
+  'context-templates/wiki/templates/wiki-page.md': '.harness-hub/context/wiki/templates/wiki-page.md',
+  'context-templates/wiki/.obsidian/app.json': '.harness-hub/context/wiki/.obsidian/app.json',
+  'context-templates/wiki/.obsidian/core-plugins.json': '.harness-hub/context/wiki/.obsidian/core-plugins.json',
+  'context-templates/wiki/.obsidian/graph.json': '.harness-hub/context/wiki/.obsidian/graph.json',
 } satisfies Record<string, string>);
 const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   'AGENTS.md': 32 * 1024,
@@ -1969,7 +1994,10 @@ function digestManagedFile(targetDir: string, relativePath: string): ManagedFile
 }
 
 function harnessFileRole(relativePath: string): ManagedFileRole | undefined {
-  return HARNESS_STATE_FILE_SET.has(normalizePortablePath(relativePath)) ? 'local-state' : undefined;
+  const normalized = normalizePortablePath(relativePath);
+  return HARNESS_STATE_FILE_SET.has(normalized) || HARNESS_CONTEXT_WIKI_PRESERVED_FILES.has(normalized)
+    ? 'local-state'
+    : undefined;
 }
 
 function isHarnessStateFileRecord(file: ManagedFileRecord): boolean {
@@ -2507,6 +2535,12 @@ function assessHarness(targetDir: string): HarnessAssessment {
   const interruptGoodCases = text('.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl');
   const interruptBadCases = text('.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl');
   const interruptRegressionCases = text('.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl');
+  const contextAgents = text('.harness-hub/context/AGENTS.md');
+  const contextReadme = text('.harness-hub/context/README.md');
+  const contextSchema = text('.harness-hub/context/llm-wiki-schema.md');
+  const wikiIndex = text('.harness-hub/context/wiki/index.md');
+  const wikiContradictions = text('.harness-hub/context/wiki/contradictions.md');
+  const wikiUpdateLog = text('.harness-hub/context/wiki/update-log.md');
   const validationScript = text('scripts/harness-validate.mjs') || text('init.sh');
   const definitionOfDone = text('definition-of-done.md');
   const cleanState = text('clean-state-checklist.md');
@@ -2523,6 +2557,8 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/decisions.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md', 'quality-document.md', 'evaluator-rubric.md'], 'State artifacts are routed from instructions'),
       assessmentTextCheck(agents + currentTask, ['P0/P1/P2', 'agent-run browser', 'Web browser acceptance'], 'Validation priority and browser acceptance rules are discoverable'),
       assessmentTextCheck(agents + currentTask + definitionOfDone, ['PR status', 'mergeability', 'CI/check-run'], 'PR closeout gate is documented'),
+      assessmentFileCheck(files, ['.harness-hub/context/AGENTS.md', '.harness-hub/context/llm-wiki-schema.md'], 'LLM Wiki agent context rules exist'),
+      assessmentTextCheck(agents + contextAgents + contextSchema, ['LLM Wiki', 'Raw sources', 'No Redundant Facts', 'human confirmation'], 'Context engineering write boundary is documented'),
     ],
     state: [
       assessmentFileCheck(files, ['feature_list.json', 'feature-list.json'], 'Feature tracker exists'),
@@ -2534,6 +2570,8 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(handoff, ['Current Status', 'Changed Files', 'Validation Evidence', 'Validation Records', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Review Feedback To Rules', 'Blockers', 'Next Action'], 'Handoff captures status, files, evidence, blockers, and next action'),
       assessmentFileCheck(files, ['.harness-hub/state/loop-runs.jsonl', '.harness-hub/state/interrupt-decisions.jsonl', '.harness-hub/state/capability-events.jsonl'], 'Loop runtime ledgers exist as target-local state'),
       assessmentTextCheck(actionAuditSchema, ['interrupt-decisions.jsonl', 'capability-events.jsonl', 'loop-runs.jsonl', 'continue|interrupt'], 'Loop audit ledger schema is documented'),
+      assessmentFileCheck(files, ['.harness-hub/context/wiki/index.md', '.harness-hub/context/wiki/update-log.md', '.harness-hub/context/wiki/contradictions.md'], 'LLM Wiki persisted pages exist'),
+      assessmentTextCheck(wikiIndex + wikiUpdateLog + wikiContradictions, ['LLM Wiki Index', 'Update Log', 'Contradiction Register', 'Human confirmation'], 'LLM Wiki index, log, and contradiction records are initialized'),
       assessmentFileCheck(files, ['quality-document.md'], 'Quality snapshot exists'),
       assessmentTextCheck(qualityDocument, ['Quality Snapshot', 'Product Areas', 'P0/P1/P2 validation status', 'Browser acceptance status', 'Architecture Layers', 'Change History'], 'Quality snapshot captures areas, browser acceptance, layers, and history'),
     ],
@@ -2562,6 +2600,7 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(progress + decisions + handoff, ['Current Status', 'Current State', 'Next Action', 'Recommended Next Step', 'Active Decisions', 'Runtime Signals'], 'Session restart markers exist'),
       assessmentFileCheck(files, ['.harness-hub/loop/policies/interrupt-policy.md', '.harness-hub/loop/policies/action-audit-schema.md'], 'Loop control-plane policies exist'),
       assessmentTextCheck(agents + featureList + interruptPolicy, ['Loop Control Plane', 'Interrupt Policy', 'standalone', 'composable', 'loop-participant'], 'Loop control-plane boundary is documented'),
+      assessmentTextCheck(contextReadme + contextSchema + contextAgents, ['Update Flow', 'Update Protocol', 'Stable Knowledge Boundary', 'Contradictions'], 'LLM Wiki update and contradiction lifecycle is documented'),
       assessmentFileCheck(files, ['clean-state-checklist.md', 'definition-of-done.md', 'quality-document.md', 'evaluator-rubric.md'], 'Clean state, quality, review, and done guidance exists'),
       assessmentTextCheck(agents + currentTask, ['Update `.harness-hub/state/progress.md`', 'Update `.harness-hub/state/decisions.md`', 'Update `.harness-hub/state/session-handoff.md`', 'handoff'], 'End-of-session update routine is explicit'),
     ],
@@ -2689,6 +2728,20 @@ function loadHarnessAssessmentFiles(targetDir: string): Map<string, string> {
     '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
     '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
     '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
+    '.harness-hub/context/AGENTS.md',
+    '.harness-hub/context/README.md',
+    '.harness-hub/context/llm-wiki-schema.md',
+    '.harness-hub/context/wiki/index.md',
+    '.harness-hub/context/wiki/sources/README.md',
+    '.harness-hub/context/wiki/concepts/README.md',
+    '.harness-hub/context/wiki/topics/README.md',
+    '.harness-hub/context/wiki/people/README.md',
+    '.harness-hub/context/wiki/contradictions.md',
+    '.harness-hub/context/wiki/update-log.md',
+    '.harness-hub/context/wiki/templates/wiki-page.md',
+    '.harness-hub/context/wiki/.obsidian/app.json',
+    '.harness-hub/context/wiki/.obsidian/core-plugins.json',
+    '.harness-hub/context/wiki/.obsidian/graph.json',
     'clean-state-checklist.md',
     'definition-of-done.md',
     'evaluator-rubric.md',
@@ -2730,8 +2783,9 @@ function assessmentFeatureListCheck(text: string, message: string): HarnessAsses
       && isRecord(parsed.web_acceptance_policy)
       && isRecord(parsed.pr_closeout_policy)
       && isRecord(parsed.loop_control_policy)
+      && isRecord(parsed.context_engineering_policy)
       && isRecord(parsed.parallel_write_policy);
-    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'loop_control_policy object', 'parallel_write_policy object']);
+    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'loop_control_policy object', 'context_engineering_policy object', 'parallel_write_policy object']);
   } catch {
     return assessmentCheck(false, message, ['valid JSON']);
   }
@@ -2942,6 +2996,8 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Interrupt Policy',
     'harness-validate.mjs',
     'harness-hub check',
+    'LLM Wiki',
+    '.harness-hub/context/wiki',
     'current-task.md',
     'checkpoint commit',
     'quality snapshot',
@@ -2955,6 +3011,44 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'CI/check-run',
   ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/.gitignore', ['state/', 'reports/']));
+  checks.push(validateFileContainsWithCode(targetDir, '.harness-hub/context/AGENTS.md', [
+    'LLM Wiki',
+    'Raw sources',
+    'No Redundant Facts',
+    'human confirmation',
+    'Contradiction Register',
+  ], 'context-wiki', 'LLM Wiki agent rules are present.', 'Missing LLM Wiki agent rule markers'));
+  checks.push(validateFileContainsWithCode(targetDir, '.harness-hub/context/README.md', [
+    'Agent Context Pack',
+    'Raw sources',
+    'Wiki pages',
+    'Obsidian',
+    'Update Flow',
+  ], 'context-wiki', 'LLM Wiki context pack README is present.', 'Missing LLM Wiki README markers'));
+  checks.push(validateFileContainsWithCode(targetDir, '.harness-hub/context/llm-wiki-schema.md', [
+    'LLM Wiki Schema',
+    'Raw sources',
+    'Wiki',
+    'Stable Knowledge Boundary',
+    'Update Protocol',
+    'Contradictions',
+  ], 'context-wiki', 'LLM Wiki schema is present.', 'Missing LLM Wiki schema markers'));
+  checks.push(validateFileContainsWithCode(targetDir, '.harness-hub/context/wiki/index.md', [
+    'LLM Wiki Index',
+    'Raw sources',
+    'Stable Knowledge Map',
+  ], 'context-wiki', 'LLM Wiki index is present.', 'Missing LLM Wiki index markers'));
+  checks.push(validateFileContainsWithCode(targetDir, '.harness-hub/context/wiki/contradictions.md', [
+    'Contradiction Register',
+    'Resolution status',
+    'Next action',
+  ], 'context-wiki', 'LLM Wiki contradiction register is present.', 'Missing contradiction register markers'));
+  checks.push(validateFileContainsWithCode(targetDir, '.harness-hub/context/wiki/update-log.md', [
+    'Update Log',
+    'Human confirmation',
+    'Sources consulted',
+  ], 'context-wiki', 'LLM Wiki update log is present.', 'Missing update log markers'));
+  checks.push(validateObsidianPortableProfile(targetDir));
   checks.push(validateFileContains(targetDir, '.harness-hub/loop/policies/interrupt-policy.md', [
     'Interrupt Policy',
     'standalone',
@@ -3135,6 +3229,43 @@ function validateJsonlFile(
       ? 'JSONL file is parseable.'
       : `JSONL file has invalid JSON on ${invalid.join(', ')}.`,
     evidence: invalid.length === 0 ? [`${lines.length} records`] : invalid,
+  };
+}
+
+function validateObsidianPortableProfile(targetDir: string): HarnessValidationCheck {
+  const profileDir = '.harness-hub/context/wiki/.obsidian';
+  const files = [
+    `${profileDir}/app.json`,
+    `${profileDir}/core-plugins.json`,
+    `${profileDir}/graph.json`,
+  ];
+  const issues: string[] = [];
+  for (const relativePath of files) {
+    const filePath = path.join(targetDir, relativePath);
+    if (!fs.existsSync(filePath)) {
+      issues.push(`${relativePath}: missing`);
+      continue;
+    }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    } catch {
+      issues.push(`${relativePath}: invalid JSON`);
+      continue;
+    }
+    const jsonText = JSON.stringify(parsed);
+    if (/[A-Za-z]:\\\\|[A-Za-z]:\/|"\/Users\/|"\/home\/|sync|community-plugins|workspace/i.test(jsonText)) {
+      issues.push(`${relativePath}: contains non-portable local state marker`);
+    }
+  }
+  return {
+    code: 'context-wiki',
+    state: issues.length === 0 ? 'pass' : 'fail',
+    path: profileDir,
+    reason: issues.length === 0
+      ? 'Obsidian portable profile JSON is present and does not contain local-state markers.'
+      : `Obsidian portable profile has issues: ${issues.join('; ')}.`,
+    evidence: files,
   };
 }
 
@@ -3625,7 +3756,7 @@ function parseSkillDescription(content: string): string | null {
 function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   const relativePath = 'feature_list.json';
   const filePath = path.join(targetDir, relativePath);
-  const evidence = ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'loop_control_policy object', 'parallel_write_policy object'];
+  const evidence = ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'loop_control_policy object', 'context_engineering_policy object', 'parallel_write_policy object'];
   if (!fs.existsSync(filePath)) {
     return {
       code: 'structured-content',
@@ -3667,6 +3798,9 @@ function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   }
   if (!isRecord(data) || !isRecord(data.loop_control_policy)) {
     missing.push('loop_control_policy object');
+  }
+  if (!isRecord(data) || !isRecord(data.context_engineering_policy)) {
+    missing.push('context_engineering_policy object');
   }
   if (!isRecord(data) || !isRecord(data.parallel_write_policy)) {
     missing.push('parallel_write_policy object');

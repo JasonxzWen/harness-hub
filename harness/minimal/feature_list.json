@@ -110,6 +110,38 @@
       ".harness-hub/state/capability-events.jsonl"
     ]
   },
+  "context_engineering_policy": {
+    "knowledge_layer": "LLM Wiki keeps stable project knowledge in Markdown without duplicating raw sources or agent-native memory.",
+    "managed_schema": [
+      ".harness-hub/context/AGENTS.md",
+      ".harness-hub/context/README.md",
+      ".harness-hub/context/llm-wiki-schema.md"
+    ],
+    "wiki_root": ".harness-hub/context/wiki",
+    "obsidian_profile": ".harness-hub/context/wiki/.obsidian",
+    "write_policy": "Initialize incrementally; require human confirmation before knowledge writes; preserve wiki content file-by-file during standard updates.",
+    "stable_content": [
+      "design principles",
+      "product expectations",
+      "architecture intent",
+      "iteration rules",
+      "durable decisions",
+      "good and bad cases",
+      "contradictions"
+    ],
+    "excluded_content": [
+      "current task progress",
+      "rapidly changing implementation details",
+      "raw source copies",
+      "native agent memory",
+      "credentials or private local state"
+    ],
+    "validation": [
+      "context schema markers",
+      "wiki index/update-log/contradiction files",
+      "portable Obsidian JSON profile"
+    ]
+  },
   "worktree_policy": {
     "write_task_isolation": "Use one git worktree or branch per write task.",
     "code_organization": "Keep source code organized by project architecture, not by agent task folders."

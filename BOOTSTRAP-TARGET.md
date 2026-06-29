@@ -52,7 +52,7 @@ Do not copy these Harness Hub source-repo paths into the target repository:
 - `CHANGELOG.md`
 - this repository's root `AGENTS.md`
 
-The target should receive only lock-managed `skills/<name>/` entries, standard target harness root files, `.harness-hub/lock.json`, and ignored local state under `.harness-hub/state/`.
+The target should receive only lock-managed `skills/<name>/` entries, standard target harness root files, `.harness-hub/lock.json`, ignored local state under `.harness-hub/state/`, Loop policy/eval assets under `.harness-hub/loop/`, and the LLM Wiki context pack under `.harness-hub/context/`.
 
 ## Stop Conditions
 
@@ -65,4 +65,4 @@ Stop and report a bootstrap blocker instead of manually copying folders when:
 
 ## Handoff Evidence
 
-Report the commands run, exit codes, validation status, and whether forbidden source-repo paths are absent from the target root.
+Report the commands run, exit codes, validation status, whether forbidden source-repo paths are absent from the target root, and whether `.harness-hub/context/wiki/index.md` exists.

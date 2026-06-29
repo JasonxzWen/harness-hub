@@ -6,7 +6,7 @@ This repository is the Harness Hub source: a personal workflow distribution and 
 
 Harness Hub has one supported user-facing target experience: `standard`. It is the complete personal migration path: root harness files plus the full standard skills, routing owner workflows, source records, and validation tooling needed for another project agent to become productive after receiving this repository URL or npm package.
 
-`harness:minimal` and `harness/minimal/` are internal component/template identifiers for the root harness files installed by `init-harness --target standard`. They are not a second user-facing target, optional pack, reduced tier, or alternate install mode.
+`harness:minimal` and `harness/minimal/` are internal component/template identifiers for the root harness files installed by `init-harness --target standard`. They are not a second user-facing target, optional pack, reduced tier, or alternate install mode. The LLM Wiki context pack is part of this same `standard` target path, not a separate context bundle.
 
 The project must not introduce advanced, lite, domain, team, experimental, or language-specific harness levels. When ECC, `revfactory/harness`, or another upstream source reveals a useful pattern, extract only the parts with clear ROI and fold them back into the same `standard` path. If a pattern is not ready for the standard path, keep it as source evidence or a note; do not create a second install surface.
 
@@ -26,6 +26,7 @@ The project must not introduce advanced, lite, domain, team, experimental, or la
    - Keep the complete standard install as the default unless a recurring project-specific need proves bundles are worth the extra maintenance.
    - Keep root harness files behind explicit `init-harness`; do not hide them inside default skill installation.
    - Treat `init-harness --target standard --yes` as the one-step migration path: it installs the full skill/routing surface and writes the standard root harness contract.
+   - Include prompt, context, harness, Loop, and validation assets in that one standard migration path.
    - Do not add install levels, pack selectors, named variants, or a second user-facing target path. The only supported target experience is `standard`; `harness:minimal` stays an internal template ID.
    - Keep install, update, status, and remove lock-backed so target projects can be cleaned up safely.
    - Do not add public-marketplace polish, extra release ceremony, or host-specific wrappers unless they solve an active personal workflow problem.

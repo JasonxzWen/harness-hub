@@ -13,6 +13,7 @@ test('README exposes human-facing visual navigation', () => {
   expect(readme).toContain('```mermaid');
   expect(readme).toContain('Agent execution rules live in [AGENTS.md](AGENTS.md)');
   expect(readme).toContain('harness-hub init-harness --target standard');
+  expect(readme).toContain('.harness-hub/context/wiki');
   expect(readme).toContain('docs/development-workflow.md');
 });
 
@@ -166,4 +167,22 @@ test('standard harness state templates expose the full SDD and TDD memory contra
   expect(files.currentTask).toContain('P2');
   expect(files.progress).toContain('| Command | Status | Exit code | Passed | Failed | Evidence | Commit |');
   expect(files.handoff).toContain('| Command | Status | Exit code | Passed | Failed | Evidence | Commit |');
+});
+
+test('standard harness initializes durable LLM wiki context pack', () => {
+  const agents = read('harness/minimal/AGENTS.md');
+  const contextAgents = read('harness/minimal/context-templates/AGENTS.md');
+  const schema = read('harness/minimal/context-templates/llm-wiki-schema.md');
+  const index = read('harness/minimal/context-templates/wiki/index.md');
+  const updateLog = read('harness/minimal/context-templates/wiki/update-log.md');
+
+  expect(agents).toContain('LLM Wiki');
+  expect(agents).toContain('.harness-hub/context/wiki');
+  expect(contextAgents).toContain('No Redundant Facts');
+  expect(contextAgents).toContain('human confirmation');
+  expect(schema).toContain('Stable Knowledge Boundary');
+  expect(schema).toContain('Update Protocol');
+  expect(schema).toContain('Contradictions');
+  expect(index).toContain('LLM Wiki Index');
+  expect(updateLog).toContain('Human confirmation');
 });

@@ -6,7 +6,7 @@
       "kind": "harness-template",
       "path": "harness/minimal",
       "dest": ".",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "source": "local",
       "provides": [
         "repo-harness-initialization",
@@ -30,6 +30,13 @@
         "interrupt-policy-evals",
         "loop-runtime-ledgers",
         "capability-invocation-boundary",
+        "llm-wiki-context-pack",
+        "agent-context-schema",
+        "stable-knowledge-layer",
+        "context-update-log",
+        "contradiction-register",
+        "obsidian-portable-profile",
+        "context-pack-validation",
         "evaluator-rubric",
         "quality-snapshot",
         "pr-handoff-policy"
@@ -87,6 +94,33 @@
           "path": ".harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl"
         },
         {
+          "path": ".harness-hub/context/AGENTS.md"
+        },
+        {
+          "path": ".harness-hub/context/README.md"
+        },
+        {
+          "path": ".harness-hub/context/llm-wiki-schema.md"
+        },
+        {
+          "path": ".harness-hub/context/wiki/index.md"
+        },
+        {
+          "path": ".harness-hub/context/wiki/contradictions.md"
+        },
+        {
+          "path": ".harness-hub/context/wiki/update-log.md"
+        },
+        {
+          "path": ".harness-hub/context/wiki/.obsidian/app.json"
+        },
+        {
+          "path": ".harness-hub/context/wiki/.obsidian/core-plugins.json"
+        },
+        {
+          "path": ".harness-hub/context/wiki/.obsidian/graph.json"
+        },
+        {
           "path": "clean-state-checklist.md"
         },
         {
@@ -106,7 +140,7 @@
         "standard"
       ],
       "risk": "medium",
-      "recommendation": "Initialize the standard target harness with stable tracked rules, ignored worktree-local task state, loop control-plane policy/evals, validation, and managed ownership only through an explicit bootstrap command."
+      "recommendation": "Initialize the standard target harness with stable tracked rules, ignored worktree-local task state, loop control-plane policy/evals, LLM Wiki context pack, validation, and managed ownership only through an explicit bootstrap command."
     },
     "harness:website-cloner": {
       "kind": "harness-template",
