@@ -52,7 +52,7 @@ Do not copy these Harness Hub source-repo paths into the target repository:
 - `CHANGELOG.md`
 - this repository's root `AGENTS.md`
 
-The target should receive only lock-managed `skills/<name>/` entries, minimal harness root files, `.harness-hub/lock.json`, and ignored local state under `.harness-hub/state/`.
+The target should receive only lock-managed `skills/<name>/` entries, standard target harness root files, `.harness-hub/lock.json`, and ignored local state under `.harness-hub/state/`.
 
 ## Stop Conditions
 

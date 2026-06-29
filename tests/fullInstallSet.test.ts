@@ -59,13 +59,23 @@ test('default install set does not write root harness files', () => {
 test('docs describe the single full install set', () => {
   const readme = fs.readFileSync('README.md', 'utf8');
   const capabilityMap = fs.readFileSync('docs/capability-map.md', 'utf8');
+  const standardBoundary = fs.readFileSync('docs/standard-target-boundary.md', 'utf8');
 
   expect(readme).toContain('There are no named skill install variants');
+  expect(readme).toContain('one user-facing target path: `standard`');
   expect(readme).toContain('overwrites an existing same-name skill directory');
   expect(readme).toContain('Skill and harness component metadata');
   expect(capabilityMap).toContain('one personal skill install set');
+  expect(capabilityMap).toContain('one user-facing target path: `standard`');
+  expect(capabilityMap).toContain('`harness:minimal` and `harness/minimal/` are internal component/template identifiers');
   expect(capabilityMap).toContain('No named skill variants');
   expect(capabilityMap).toContain('`install` never writes root harness files');
+  expect(capabilityMap).toContain('harness-hub loop evaluate');
+  expect(capabilityMap).toContain('harness-hub loop schedule');
+  expect(capabilityMap).toContain('docs/standard-target-boundary.md');
+  expect(standardBoundary).toContain('one user-facing target path: `standard`');
+  expect(standardBoundary).toContain('No pack promotion checklist');
+  expect(fs.existsSync('docs/harness-packs.md')).toBe(false);
 });
 
 test('current lifecycle specs and smokes do not use named install variants', () => {

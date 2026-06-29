@@ -479,6 +479,7 @@ export interface HarnessValidationCheck {
     | 'file-size'
     | 'required-content'
     | 'structured-content'
+    | 'loop-policy'
     | 'qa-boundary'
     | 'agent-architecture'
     | 'trigger-hygiene';
@@ -752,10 +753,67 @@ interface LatestPackageVersionResult {
 }
 
 type SourcePostCliAction = 'generate' | 'build' | 'validate' | 'publish';
+type LoopCliAction = 'evaluate' | 'schedule';
+export type LoopDecision = 'continue' | 'interrupt';
+export type LoopDecisionConfidence = 'high' | 'medium';
+
+export interface LoopActionIntent {
+  schemaVersion?: number;
+  id?: string;
+  summary?: string;
+  capabilityInvocation?: string;
+  action?: string;
+  sideEffects?: string[];
+  riskSignals?: string[];
+  requiredEvidence?: string[];
+  targetPaths?: string[];
+  validation?: {
+    command?: string;
+    status?: string;
+    evidence?: string[];
+  };
+}
+
+export interface LoopDecisionResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  targetDir: string;
+  policyVersion: string;
+  actionId: string;
+  summary: string;
+  capabilityInvocation: string;
+  decision: LoopDecision;
+  confidence: LoopDecisionConfidence;
+  reason: string;
+  sideEffects: string[];
+  riskSignals: string[];
+  requiredEvidence: string[];
+  interruptReasons: string[];
+  continueReasons: string[];
+  ledgerPath: string;
+  recorded: boolean;
+  exitCode: 0 | 3;
+}
+
+export interface LoopScheduleResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  targetDir: string;
+  runId: string;
+  inputPath: string;
+  decisions: LoopDecisionResult[];
+  nextActionId: string | null;
+  interruptedActionIds: string[];
+  ledgerPath: string;
+  recorded: boolean;
+  exitCode: 0 | 3;
+  reason: string;
+}
 
 interface CliOptions {
   command: string;
   sourcePostAction: SourcePostCliAction | null;
+  loopAction: LoopCliAction | null;
   targetDir: string | null;
   agents: AgentName[];
   dryRun: boolean;
@@ -847,6 +905,58 @@ const MANAGED_COMPONENT_RENAMES: Readonly<Record<string, ManagedComponentRename>
 const VALID_RISKS = new Set<LifecycleRisk>(['low', 'medium', 'high']);
 const GLOB_CHARS = /[*?[\]{}]/;
 const MINIMAL_HARNESS_COMPONENT_ID = 'harness:minimal';
+const LOOP_POLICY_VERSION = 'interrupt-policy:v1';
+const LOOP_INTERRUPT_DECISION_LEDGER = '.harness-hub/state/interrupt-decisions.jsonl';
+const LOOP_RUN_LEDGER = '.harness-hub/state/loop-runs.jsonl';
+const LOOP_ALLOWED_SIDE_EFFECTS = new Set([
+  'read-only',
+  'local-files',
+  'local-state',
+  'test-run',
+  'validation-run',
+  'report-only',
+  'generated-local-report',
+]);
+const LOOP_INTERRUPT_SIDE_EFFECTS = new Set([
+  'remote-write',
+  'external-write',
+  'publish',
+  'deploy',
+  'push',
+  'merge',
+  'release',
+  'tag',
+  'global-state',
+  'global-install',
+  'credential-change',
+  'permission-change',
+  'secret-access',
+  'destructive',
+  'data-delete',
+  'schedule',
+  'webhook',
+]);
+const LOOP_INTERRUPT_RISK_SIGNALS = new Set([
+  'approval-required',
+  'canonical-rule-change',
+  'credential-change',
+  'data-loss',
+  'destructive-change',
+  'external-side-effect',
+  'global-state-change',
+  'human-review-needed',
+  'no-fabrication-risk',
+  'permission-change',
+  'publication-boundary',
+  'remote-side-effect',
+  'scope-drift',
+  'secret-risk',
+  'security-risk',
+  'unclear-causality',
+  'unclear-ownership',
+  'validation-failed',
+  'verification-missing',
+]);
 const HARNESS_COMPONENT_ID = MINIMAL_HARNESS_COMPONENT_ID;
 const HARNESS_TEMPLATE_KINDS = new Set(['harness-template', 'harness-pack']);
 const HARNESS_DEST = '.';
@@ -856,6 +966,9 @@ const HARNESS_STATE_FILES = Object.freeze([
   '.harness-hub/state/decisions.md',
   '.harness-hub/state/progress.md',
   '.harness-hub/state/session-handoff.md',
+  '.harness-hub/state/loop-runs.jsonl',
+  '.harness-hub/state/interrupt-decisions.jsonl',
+  '.harness-hub/state/capability-events.jsonl',
 ]);
 const HARNESS_STATE_FILE_SET = new Set<string>(HARNESS_STATE_FILES);
 const LEGACY_HARNESS_STATE_MIGRATIONS = Object.freeze({
@@ -871,6 +984,14 @@ const HARNESS_TEMPLATE_DESTINATIONS = Object.freeze({
   'state-templates/decisions.md': '.harness-hub/state/decisions.md',
   'state-templates/progress.md': '.harness-hub/state/progress.md',
   'state-templates/session-handoff.md': '.harness-hub/state/session-handoff.md',
+  'state-templates/loop-runs.jsonl': '.harness-hub/state/loop-runs.jsonl',
+  'state-templates/interrupt-decisions.jsonl': '.harness-hub/state/interrupt-decisions.jsonl',
+  'state-templates/capability-events.jsonl': '.harness-hub/state/capability-events.jsonl',
+  'loop-templates/policies/interrupt-policy.md': '.harness-hub/loop/policies/interrupt-policy.md',
+  'loop-templates/policies/action-audit-schema.md': '.harness-hub/loop/policies/action-audit-schema.md',
+  'loop-templates/evals/interrupt-policy/good-cases.jsonl': '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
+  'loop-templates/evals/interrupt-policy/bad-cases.jsonl': '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
+  'loop-templates/evals/interrupt-policy/regression-cases.jsonl': '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
 } satisfies Record<string, string>);
 const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   'AGENTS.md': 32 * 1024,
@@ -878,6 +999,9 @@ const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   '.harness-hub/state/progress.md': 16 * 1024,
   '.harness-hub/state/session-handoff.md': 16 * 1024,
   '.harness-hub/state/current-task.md': 16 * 1024,
+  '.harness-hub/state/loop-runs.jsonl': 64 * 1024,
+  '.harness-hub/state/interrupt-decisions.jsonl': 64 * 1024,
+  '.harness-hub/state/capability-events.jsonl': 64 * 1024,
 });
 const NON_CODEX_PLATFORM_FILES = ['CLAUDE.md'];
 const SOURCE_POST_SITE_ROOT = 'site';
@@ -2378,6 +2502,11 @@ function assessHarness(targetDir: string): HarnessAssessment {
   const progress = text('.harness-hub/state/progress.md');
   const handoff = text('.harness-hub/state/session-handoff.md');
   const currentTask = text('.harness-hub/state/current-task.md');
+  const interruptPolicy = text('.harness-hub/loop/policies/interrupt-policy.md');
+  const actionAuditSchema = text('.harness-hub/loop/policies/action-audit-schema.md');
+  const interruptGoodCases = text('.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl');
+  const interruptBadCases = text('.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl');
+  const interruptRegressionCases = text('.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl');
   const validationScript = text('scripts/harness-validate.mjs') || text('init.sh');
   const definitionOfDone = text('definition-of-done.md');
   const cleanState = text('clean-state-checklist.md');
@@ -2403,6 +2532,8 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentFileCheck(files, ['.harness-hub/state/progress.md'], 'Progress log exists'),
       assessmentTextCheck(progress, ['Current State', 'Recent Validation', 'Validation Records', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Review Feedback To Rules', 'Blockers', 'Next'], 'Progress log supports restart'),
       assessmentTextCheck(handoff, ['Current Status', 'Changed Files', 'Validation Evidence', 'Validation Records', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Review Feedback To Rules', 'Blockers', 'Next Action'], 'Handoff captures status, files, evidence, blockers, and next action'),
+      assessmentFileCheck(files, ['.harness-hub/state/loop-runs.jsonl', '.harness-hub/state/interrupt-decisions.jsonl', '.harness-hub/state/capability-events.jsonl'], 'Loop runtime ledgers exist as target-local state'),
+      assessmentTextCheck(actionAuditSchema, ['interrupt-decisions.jsonl', 'capability-events.jsonl', 'loop-runs.jsonl', 'continue|interrupt'], 'Loop audit ledger schema is documented'),
       assessmentFileCheck(files, ['quality-document.md'], 'Quality snapshot exists'),
       assessmentTextCheck(qualityDocument, ['Quality Snapshot', 'Product Areas', 'P0/P1/P2 validation status', 'Browser acceptance status', 'Architecture Layers', 'Change History'], 'Quality snapshot captures areas, browser acceptance, layers, and history'),
     ],
@@ -2412,6 +2543,7 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(validationScript, ['process.exit', 'set -e', 'failures'], 'Verification entrypoint can fail the run'),
       assessmentTextCheck(progress + handoff + currentTask, ['Validation Evidence', 'Recent Validation', 'Command', 'Status', 'Passed', 'Failed', 'Evidence', 'Commit'], 'Validation evidence has a durable place to be recorded'),
       assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'P0', 'P1', 'P2', 'Static', 'Runtime', 'User flow', 'Web browser acceptance', 'Runtime Signals', 'Standard startup path', 'PR Status', 'Mergeability', 'CI/check'], 'Static, runtime, startup, user-flow, priority, and PR closeout tiers are represented'),
+      assessmentTextCheck(interruptGoodCases + interruptBadCases + interruptRegressionCases, ['expectedDecision', 'continue', 'interrupt', 'riskSignals'], 'Interrupt policy eval cases are present and machine-readable'),
       assessmentFileCheck(files, ['evaluator-rubric.md'], 'Evaluator rubric exists'),
       assessmentTextCheck(evaluatorRubric, ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Handoff readiness', 'Verdict'], 'Evaluator rubric covers correctness, evidence, scope, reliability, browser acceptance, and handoff readiness'),
       assessmentCheck(project.verificationCommands.length > 0, 'Project verification command is detected', project.verificationCommands),
@@ -2428,6 +2560,8 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents + currentTask, ['Start from', 'Current Task', '.harness-hub/state/current-task.md'], 'Startup path points to the active task'),
       assessmentFileCheck(files, ['.harness-hub/state/session-handoff.md'], 'Session handoff template exists'),
       assessmentTextCheck(progress + decisions + handoff, ['Current Status', 'Current State', 'Next Action', 'Recommended Next Step', 'Active Decisions', 'Runtime Signals'], 'Session restart markers exist'),
+      assessmentFileCheck(files, ['.harness-hub/loop/policies/interrupt-policy.md', '.harness-hub/loop/policies/action-audit-schema.md'], 'Loop control-plane policies exist'),
+      assessmentTextCheck(agents + featureList + interruptPolicy, ['Loop Control Plane', 'Interrupt Policy', 'standalone', 'composable', 'loop-participant'], 'Loop control-plane boundary is documented'),
       assessmentFileCheck(files, ['clean-state-checklist.md', 'definition-of-done.md', 'quality-document.md', 'evaluator-rubric.md'], 'Clean state, quality, review, and done guidance exists'),
       assessmentTextCheck(agents + currentTask, ['Update `.harness-hub/state/progress.md`', 'Update `.harness-hub/state/decisions.md`', 'Update `.harness-hub/state/session-handoff.md`', 'handoff'], 'End-of-session update routine is explicit'),
     ],
@@ -2547,6 +2681,14 @@ function loadHarnessAssessmentFiles(targetDir: string): Map<string, string> {
     '.harness-hub/state/decisions.md',
     '.harness-hub/state/progress.md',
     '.harness-hub/state/session-handoff.md',
+    '.harness-hub/state/loop-runs.jsonl',
+    '.harness-hub/state/interrupt-decisions.jsonl',
+    '.harness-hub/state/capability-events.jsonl',
+    '.harness-hub/loop/policies/interrupt-policy.md',
+    '.harness-hub/loop/policies/action-audit-schema.md',
+    '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
+    '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
+    '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
     'clean-state-checklist.md',
     'definition-of-done.md',
     'evaluator-rubric.md',
@@ -2587,8 +2729,9 @@ function assessmentFeatureListCheck(text: string, message: string): HarnessAsses
       && isRecord(parsed.validation_priority_policy)
       && isRecord(parsed.web_acceptance_policy)
       && isRecord(parsed.pr_closeout_policy)
+      && isRecord(parsed.loop_control_policy)
       && isRecord(parsed.parallel_write_policy);
-    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'parallel_write_policy object']);
+    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'loop_control_policy object', 'parallel_write_policy object']);
   } catch {
     return assessmentCheck(false, message, ['valid JSON']);
   }
@@ -2795,6 +2938,8 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
   checks.push(validateFileContains(targetDir, 'AGENTS.md', [
     'Codex',
     'Initialization Gate',
+    'Loop Control Plane',
+    'Interrupt Policy',
     'harness-validate.mjs',
     'harness-hub check',
     'current-task.md',
@@ -2810,6 +2955,23 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'CI/check-run',
   ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/.gitignore', ['state/', 'reports/']));
+  checks.push(validateFileContains(targetDir, '.harness-hub/loop/policies/interrupt-policy.md', [
+    'Interrupt Policy',
+    'standalone',
+    'composable',
+    'loop-participant',
+    'Continue By Default',
+    'Interrupt',
+    'Audit Requirement',
+  ]));
+  checks.push(validateFileContains(targetDir, '.harness-hub/loop/policies/action-audit-schema.md', [
+    'Runtime Ledgers',
+    'loop-runs.jsonl',
+    'interrupt-decisions.jsonl',
+    'capability-events.jsonl',
+    'continue|interrupt',
+  ]));
+  checks.push(...validateInterruptPolicyEvals(targetDir));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/decisions.md', [
     'Active Decisions',
     'Resolved Decisions',
@@ -2835,6 +2997,9 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'CI/check runs',
     'Review Feedback To Rules',
   ]));
+  checks.push(validateJsonlFile(targetDir, '.harness-hub/state/loop-runs.jsonl', 'loop-policy'));
+  checks.push(validateJsonlFile(targetDir, '.harness-hub/state/interrupt-decisions.jsonl', 'loop-policy'));
+  checks.push(validateJsonlFile(targetDir, '.harness-hub/state/capability-events.jsonl', 'loop-policy'));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/session-handoff.md', [
     'Validation Evidence',
     'Validation Records',
@@ -2933,6 +3098,420 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
   checks.push(validateAgentArchitectureBoundary(targetDir));
   checks.push(validateSkillTriggerHygiene(targetDir));
   return checks;
+}
+
+function validateJsonlFile(
+  targetDir: string,
+  relativePath: string,
+  code: HarnessValidationCheck['code'] = 'structured-content',
+): HarnessValidationCheck {
+  const filePath = path.join(targetDir, relativePath);
+  if (!fs.existsSync(filePath)) {
+    return {
+      code,
+      state: 'fail',
+      path: relativePath,
+      reason: 'JSONL file is missing.',
+      evidence: ['valid JSON per non-empty line'],
+    };
+  }
+
+  const content = fs.readFileSync(filePath, 'utf8');
+  const lines = content.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const invalid: string[] = [];
+  lines.forEach((line, index) => {
+    try {
+      JSON.parse(line);
+    } catch {
+      invalid.push(`line ${index + 1}`);
+    }
+  });
+
+  return {
+    code,
+    state: invalid.length === 0 ? 'pass' : 'fail',
+    path: relativePath,
+    reason: invalid.length === 0
+      ? 'JSONL file is parseable.'
+      : `JSONL file has invalid JSON on ${invalid.join(', ')}.`,
+    evidence: invalid.length === 0 ? [`${lines.length} records`] : invalid,
+  };
+}
+
+function validateInterruptPolicyEvals(targetDir: string): HarnessValidationCheck[] {
+  return [
+    validateInterruptPolicyEvalFile(targetDir, '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl', 'continue'),
+    validateInterruptPolicyEvalFile(targetDir, '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl', 'interrupt'),
+    validateInterruptPolicyEvalFile(targetDir, '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl'),
+  ];
+}
+
+function validateInterruptPolicyEvalFile(
+  targetDir: string,
+  relativePath: string,
+  requiredDecision?: 'continue' | 'interrupt',
+): HarnessValidationCheck {
+  const parseCheck = validateJsonlFile(targetDir, relativePath, 'loop-policy');
+  if (parseCheck.state === 'fail') {
+    return parseCheck;
+  }
+
+  const records = fs.readFileSync(path.join(targetDir, relativePath), 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as unknown);
+  const issues: string[] = [];
+  if (records.length === 0) {
+    issues.push('file must contain at least one eval case');
+  }
+  for (const [index, record] of records.entries()) {
+    const prefix = `line ${index + 1}`;
+    if (!isRecord(record)) {
+      issues.push(`${prefix}: record must be an object`);
+      continue;
+    }
+    if (typeof record.id !== 'string' || record.id.trim().length === 0) {
+      issues.push(`${prefix}: missing id`);
+    }
+    if (typeof record.summary !== 'string' || record.summary.trim().length === 0) {
+      issues.push(`${prefix}: missing summary`);
+    }
+    if (record.expectedDecision !== 'continue' && record.expectedDecision !== 'interrupt') {
+      issues.push(`${prefix}: expectedDecision must be continue or interrupt`);
+    }
+    if (requiredDecision && record.expectedDecision !== requiredDecision) {
+      issues.push(`${prefix}: expectedDecision must be ${requiredDecision}`);
+    }
+    if (!Array.isArray(record.riskSignals) || record.riskSignals.length === 0) {
+      issues.push(`${prefix}: missing riskSignals`);
+    }
+    if (!Array.isArray(record.requiredEvidence) || record.requiredEvidence.length === 0) {
+      issues.push(`${prefix}: missing requiredEvidence`);
+    }
+  }
+
+  return {
+    code: 'loop-policy',
+    state: issues.length === 0 ? 'pass' : 'fail',
+    path: relativePath,
+    reason: issues.length === 0
+      ? 'Interrupt policy eval cases are machine-readable and semantically valid.'
+      : `Interrupt policy eval issues: ${issues.slice(0, 6).join('; ')}${issues.length > 6 ? `; +${issues.length - 6} more` : ''}.`,
+    evidence: issues.length === 0 ? [`${records.length} cases`] : issues.slice(0, 6),
+  };
+}
+
+export function evaluateLoopAction(
+  targetDir: string,
+  intent: LoopActionIntent,
+  options: { record?: boolean; generatedAt?: string; actionIndex?: number } = {},
+): LoopDecisionResult {
+  const resolvedTarget = path.resolve(targetDir);
+  const generatedAt = options.generatedAt || new Date().toISOString();
+  const normalized = normalizeLoopActionIntent(intent, options.actionIndex);
+  const inferredRiskSignals = inferLoopRiskSignals(normalized);
+  const riskSignals = uniqueStrings([...normalized.riskSignals, ...inferredRiskSignals]);
+  const sideEffects = normalized.sideEffects;
+  const interruptReasons = buildLoopInterruptReasons(normalized, riskSignals, sideEffects);
+  const decision: LoopDecision = interruptReasons.length > 0 ? 'interrupt' : 'continue';
+  const requiredEvidence = buildLoopRequiredEvidence(normalized.requiredEvidence, interruptReasons);
+  const continueReasons = decision === 'continue'
+    ? buildLoopContinueReasons(normalized, sideEffects, riskSignals)
+    : [];
+  const result: LoopDecisionResult = {
+    schemaVersion: 1,
+    generatedAt,
+    targetDir: resolvedTarget,
+    policyVersion: LOOP_POLICY_VERSION,
+    actionId: normalized.id,
+    summary: normalized.summary,
+    capabilityInvocation: normalized.capabilityInvocation,
+    decision,
+    confidence: interruptReasons.length > 0 || continueReasons.length > 1 ? 'high' : 'medium',
+    reason: decision === 'interrupt'
+      ? `Human checkpoint required: ${interruptReasons.join('; ')}.`
+      : 'No interrupting risk signals matched; action can continue under the Loop policy.',
+    sideEffects,
+    riskSignals,
+    requiredEvidence,
+    interruptReasons,
+    continueReasons,
+    ledgerPath: path.join(resolvedTarget, LOOP_INTERRUPT_DECISION_LEDGER),
+    recorded: false,
+    exitCode: decision === 'interrupt' ? 3 : 0,
+  };
+
+  return options.record ? recordLoopDecision(result) : result;
+}
+
+export function scheduleLoopActions(
+  targetDir: string,
+  inputPath: string,
+  intents: LoopActionIntent[],
+  options: { record?: boolean; generatedAt?: string } = {},
+): LoopScheduleResult {
+  const resolvedTarget = path.resolve(targetDir);
+  const generatedAt = options.generatedAt || new Date().toISOString();
+  const decisions = intents.map((intent, index) => evaluateLoopAction(resolvedTarget, intent, {
+    generatedAt,
+    actionIndex: index,
+    record: false,
+  }));
+  const nextAction = decisions.find((decision) => decision.decision === 'continue') || null;
+  const result: LoopScheduleResult = {
+    schemaVersion: 1,
+    generatedAt,
+    targetDir: resolvedTarget,
+    runId: `loop-run-${hashText(`${inputPath}:${generatedAt}:${decisions.map((item) => item.actionId).join(',')}`).slice(0, 12)}`,
+    inputPath: path.resolve(inputPath),
+    decisions,
+    nextActionId: nextAction?.actionId || null,
+    interruptedActionIds: decisions
+      .filter((decision) => decision.decision === 'interrupt')
+      .map((decision) => decision.actionId),
+    ledgerPath: path.join(resolvedTarget, LOOP_RUN_LEDGER),
+    recorded: false,
+    exitCode: nextAction ? 0 : 3,
+    reason: nextAction
+      ? `Next action: ${nextAction.actionId}. ${decisions.length} actions evaluated.`
+      : `No action can continue without a human checkpoint. ${decisions.length} actions evaluated.`,
+  };
+
+  return options.record ? recordLoopSchedule(result) : result;
+}
+
+function normalizeLoopActionIntent(intent: LoopActionIntent, actionIndex = 0): Required<Pick<LoopActionIntent, 'id' | 'summary' | 'capabilityInvocation' | 'action' | 'sideEffects' | 'riskSignals' | 'requiredEvidence' | 'targetPaths'>> & {
+  validation: NonNullable<LoopActionIntent['validation']>;
+} {
+  if (!isRecord(intent)) {
+    throw new CliError('Loop action input must be a JSON object.', 2);
+  }
+  const action = typeof intent.action === 'string' && intent.action.trim().length > 0
+    ? intent.action.trim()
+    : typeof intent.summary === 'string' && intent.summary.trim().length > 0
+      ? intent.summary.trim()
+      : 'unspecified action';
+  const summary = typeof intent.summary === 'string' && intent.summary.trim().length > 0
+    ? intent.summary.trim()
+    : action;
+  const id = typeof intent.id === 'string' && intent.id.trim().length > 0
+    ? intent.id.trim()
+    : `loop-action-${actionIndex + 1}-${hashText(`${summary}:${actionIndex}`).slice(0, 8)}`;
+
+  return {
+    id,
+    summary,
+    capabilityInvocation: typeof intent.capabilityInvocation === 'string' && intent.capabilityInvocation.trim().length > 0
+      ? normalizeToken(intent.capabilityInvocation)
+      : 'standalone',
+    action,
+    sideEffects: normalizeTokenArray(intent.sideEffects),
+    riskSignals: normalizeTokenArray(intent.riskSignals),
+    requiredEvidence: normalizeStringArray(intent.requiredEvidence),
+    targetPaths: normalizeStringArray(intent.targetPaths),
+    validation: isRecord(intent.validation) ? {
+      command: typeof intent.validation.command === 'string' ? intent.validation.command : undefined,
+      status: typeof intent.validation.status === 'string' ? normalizeToken(intent.validation.status) : undefined,
+      evidence: normalizeStringArray(intent.validation.evidence),
+    } : {},
+  };
+}
+
+function inferLoopRiskSignals(intent: ReturnType<typeof normalizeLoopActionIntent>): string[] {
+  const signals: string[] = [];
+  const actionText = `${intent.action} ${intent.summary}`.toLowerCase();
+  const joinedPaths = intent.targetPaths.join(' ').toLowerCase();
+  const validationStatus = intent.validation.status || '';
+
+  if (/publish|deploy|push|merge|release|tag|github pages|npm publish|remote/.test(actionText)) {
+    signals.push('remote-side-effect');
+  }
+  if (/delete|remove|rm -rf|reset --hard|drop table|wipe/.test(actionText)) {
+    signals.push('destructive-change');
+  }
+  if (/\b(credential|secret|token|permission|auth)\b/.test(actionText)) {
+    signals.push('credential-change');
+  }
+  if (/agents\.md|claude\.md|policy|rule|governance/.test(actionText) || /agents\.md|claude\.md|\.harness-hub\/loop\/policies/.test(joinedPaths)) {
+    signals.push('canonical-rule-change');
+  }
+  if (validationStatus === 'fail' || validationStatus === 'failed' || validationStatus === 'error') {
+    signals.push('validation-failed');
+  }
+
+  return signals;
+}
+
+function buildLoopInterruptReasons(
+  intent: ReturnType<typeof normalizeLoopActionIntent>,
+  riskSignals: string[],
+  sideEffects: string[],
+): string[] {
+  const reasons: string[] = [];
+  for (const signal of riskSignals) {
+    if (LOOP_INTERRUPT_RISK_SIGNALS.has(signal)) {
+      reasons.push(`risk signal '${signal}'`);
+    }
+  }
+
+  for (const sideEffect of sideEffects) {
+    if (LOOP_INTERRUPT_SIDE_EFFECTS.has(sideEffect)) {
+      reasons.push(`side effect '${sideEffect}'`);
+      continue;
+    }
+    if (!LOOP_ALLOWED_SIDE_EFFECTS.has(sideEffect)) {
+      reasons.push(`unknown side effect '${sideEffect}'`);
+    }
+  }
+
+  if (intent.capabilityInvocation !== 'standalone'
+    && intent.capabilityInvocation !== 'composable'
+    && intent.capabilityInvocation !== 'loop-participant') {
+    reasons.push(`unknown capability invocation '${intent.capabilityInvocation}'`);
+  }
+
+  return uniqueStrings(reasons);
+}
+
+function buildLoopContinueReasons(
+  intent: ReturnType<typeof normalizeLoopActionIntent>,
+  sideEffects: string[],
+  riskSignals: string[],
+): string[] {
+  const reasons = ['no interrupting risk signal matched'];
+  if (sideEffects.length === 0 || sideEffects.every((sideEffect) => LOOP_ALLOWED_SIDE_EFFECTS.has(sideEffect))) {
+    reasons.push('side effects are local, read-only, or validation-only');
+  }
+  if (intent.validation.status === 'pass' || intent.validation.status === 'passed') {
+    reasons.push('validation evidence is passing');
+  }
+  if (riskSignals.length > 0) {
+    reasons.push(`non-interrupting signals: ${riskSignals.join(', ')}`);
+  }
+  return uniqueStrings(reasons);
+}
+
+function buildLoopRequiredEvidence(provided: string[], interruptReasons: string[]): string[] {
+  const evidence = [...provided];
+  if (interruptReasons.some((reason) => /remote|publish|release|push|merge|deploy/.test(reason))) {
+    evidence.push('human approval record', 'publish or remote-action draft');
+  }
+  if (interruptReasons.some((reason) => /canonical-rule-change|governance|policy/.test(reason))) {
+    evidence.push('proposed governance diff', 'reason for durable rule change');
+  }
+  if (interruptReasons.some((reason) => /validation-failed|verification-missing|unclear-causality/.test(reason))) {
+    evidence.push('validation command and result', 'failure analysis');
+  }
+  if (interruptReasons.some((reason) => /credential|permission|secret|security/.test(reason))) {
+    evidence.push('security review note', 'credential or permission owner approval');
+  }
+  if (evidence.length === 0) {
+    evidence.push('action summary', 'affected paths', 'validation plan');
+  }
+  return uniqueStrings(evidence);
+}
+
+function recordLoopDecision(result: LoopDecisionResult): LoopDecisionResult {
+  if (!fs.existsSync(result.ledgerPath)) {
+    throw new CliError(`Loop decision ledger is missing at ${path.relative(result.targetDir, result.ledgerPath)}. Run init-harness first.`, 3);
+  }
+  const record = {
+    schemaVersion: 1,
+    event: 'interrupt_decision',
+    generatedAt: result.generatedAt,
+    policyVersion: result.policyVersion,
+    actionId: result.actionId,
+    summary: result.summary,
+    capabilityInvocation: result.capabilityInvocation,
+    decision: result.decision,
+    confidence: result.confidence,
+    sideEffects: result.sideEffects,
+    riskSignals: result.riskSignals,
+    requiredEvidence: result.requiredEvidence,
+    interruptReasons: result.interruptReasons,
+    continueReasons: result.continueReasons,
+    reason: result.reason,
+  };
+  fs.appendFileSync(result.ledgerPath, `${JSON.stringify(record)}\n`, 'utf8');
+  return { ...result, recorded: true };
+}
+
+function recordLoopSchedule(result: LoopScheduleResult): LoopScheduleResult {
+  if (!fs.existsSync(result.ledgerPath)) {
+    throw new CliError(`Loop run ledger is missing at ${path.relative(result.targetDir, result.ledgerPath)}. Run init-harness first.`, 3);
+  }
+  const recordedDecisions = result.decisions.map((decision) => recordLoopDecision(decision));
+  const record = {
+    schemaVersion: 1,
+    event: 'loop_run',
+    generatedAt: result.generatedAt,
+    runId: result.runId,
+    inputPath: result.inputPath,
+    policyVersion: LOOP_POLICY_VERSION,
+    status: result.nextActionId ? 'running' : 'interrupted',
+    nextActionId: result.nextActionId,
+    interruptedActionIds: result.interruptedActionIds,
+    evaluatedActionIds: recordedDecisions.map((decision) => decision.actionId),
+    reason: result.reason,
+  };
+  fs.appendFileSync(result.ledgerPath, `${JSON.stringify(record)}\n`, 'utf8');
+  return {
+    ...result,
+    decisions: recordedDecisions,
+    recorded: true,
+  };
+}
+
+function readLoopActionIntent(inputPath: string): LoopActionIntent {
+  const input = readJsonFile<unknown>(inputPath);
+  if (!isRecord(input)) {
+    throw new CliError('Loop evaluate input must be a JSON object.', 2);
+  }
+  return input as LoopActionIntent;
+}
+
+function readLoopScheduleIntents(inputPath: string): LoopActionIntent[] {
+  const content = fs.readFileSync(inputPath, 'utf8').replace(/^\uFEFF/, '').trim();
+  if (content.length === 0) {
+    throw new CliError('Loop schedule input must not be empty.', 2);
+  }
+  const records = content.startsWith('[')
+    ? JSON.parse(content) as unknown
+    : content.split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as unknown);
+  if (!Array.isArray(records) || records.length === 0 || records.some((record) => !isRecord(record))) {
+    throw new CliError('Loop schedule input must be a JSON array or JSONL file of action objects.', 2);
+  }
+  return records as LoopActionIntent[];
+}
+
+function normalizeTokenArray(value: unknown): string[] {
+  return normalizeStringArray(value).map(normalizeToken).filter(Boolean);
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return uniqueStrings(value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean));
+}
+
+function normalizeToken(value: string): string {
+  return value.trim().toLowerCase().replace(/[\s_]+/g, '-');
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values.filter((value) => value.trim().length > 0)));
+}
+
+function hashText(value: string): string {
+  return crypto.createHash('sha256').update(value).digest('hex');
 }
 
 function validateQaBoundary(targetDir: string): HarnessValidationCheck {
@@ -3046,7 +3625,7 @@ function parseSkillDescription(content: string): string | null {
 function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   const relativePath = 'feature_list.json';
   const filePath = path.join(targetDir, relativePath);
-  const evidence = ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'parallel_write_policy object'];
+  const evidence = ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'loop_control_policy object', 'parallel_write_policy object'];
   if (!fs.existsSync(filePath)) {
     return {
       code: 'structured-content',
@@ -3085,6 +3664,9 @@ function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   }
   if (!isRecord(data) || !isRecord(data.pr_closeout_policy)) {
     missing.push('pr_closeout_policy object');
+  }
+  if (!isRecord(data) || !isRecord(data.loop_control_policy)) {
+    missing.push('loop_control_policy object');
   }
   if (!isRecord(data) || !isRecord(data.parallel_write_policy)) {
     missing.push('parallel_write_policy object');
@@ -4568,7 +5150,7 @@ function renderSiteHomeHtml(posts: SourcePostBuildResult['posts']): string {
   <main>
     <p class="eyebrow">Repo-local agent harness toolkit</p>
     <h1>Harness Hub</h1>
-    <p class="lead">让 agent 在不同仓库里使用同一套可重复、可验证、可交接的工作方式。它负责技能安装、minimal harness 初始化、验证和托管文件生命周期安全。</p>
+    <p class="lead">让 agent 在不同仓库里使用同一套可重复、可验证、可交接的工作方式。它负责技能安装、standard 目标 harness 初始化、验证和托管文件生命周期安全。</p>
 
     <ul class="actions" aria-label="Primary links">
       <li><a class="primary" href="https://github.com/JasonxzWen/harness-hub/blob/main/README.zh-CN.md">阅读中文 README</a></li>
@@ -4585,7 +5167,7 @@ function renderSiteHomeHtml(posts: SourcePostBuildResult['posts']): string {
         </article>
         <article class="panel">
           <h3>再初始化 harness</h3>
-          <p><code>init-harness</code> 只在你明确确认后创建 minimal 根级 harness 文件。</p>
+          <p><code>init-harness --target standard</code> 只在你明确确认后创建 standard 目标 harness 文件。</p>
         </article>
         <article class="panel">
           <h3>只装技能时分开做</h3>
@@ -6712,6 +7294,7 @@ function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
     command: argv[0] || 'help',
     sourcePostAction: null,
+    loopAction: null,
     targetDir: null,
     agents: [],
     dryRun: false,
@@ -6738,6 +7321,15 @@ function parseArgs(argv: string[]): CliOptions {
       throw new CliError('Use "harness-hub source-post <generate|build|validate|publish>".', 2);
     }
     options.sourcePostAction = parseSourcePostAction(action);
+    firstOptionIndex = 2;
+  }
+
+  if (options.command === 'loop') {
+    const action = argv[1];
+    if (!action || action.startsWith('-')) {
+      throw new CliError('Use "harness-hub loop <evaluate|schedule>".', 2);
+    }
+    options.loopAction = parseLoopAction(action);
     firstOptionIndex = 2;
   }
 
@@ -6804,6 +7396,13 @@ function parseSourcePostAction(value: string): SourcePostCliAction {
     return value;
   }
   throw new CliError(`Unknown source-post action '${value}'. Available: generate, build, validate, publish`, 2);
+}
+
+function parseLoopAction(value: string): LoopCliAction {
+  if (value === 'evaluate' || value === 'schedule') {
+    return value;
+  }
+  throw new CliError(`Unknown loop action '${value}'. Available: evaluate, schedule`, 2);
 }
 
 export async function runCli(argv: string[]): Promise<number> {
@@ -6957,6 +7556,29 @@ async function runCliInner(argv: string[]): Promise<number> {
     }
   }
 
+  if (options.command === 'loop') {
+    if (!options.input) {
+      throw new CliError('Use --input <file> with "harness-hub loop evaluate" or "harness-hub loop schedule".', 2);
+    }
+    const inputPath = path.resolve(options.input);
+    if (options.loopAction === 'evaluate') {
+      const intent = readLoopActionIntent(inputPath);
+      const result = evaluateLoopAction(options.targetDir || process.cwd(), intent, {
+        record: options.yes,
+      });
+      emitReport(renderLifecycleReport('Harness Hub Loop Decision Report', result, options), options);
+      return result.exitCode;
+    }
+    if (options.loopAction === 'schedule') {
+      const intents = readLoopScheduleIntents(inputPath);
+      const result = scheduleLoopActions(options.targetDir || process.cwd(), inputPath, intents, {
+        record: options.yes,
+      });
+      emitReport(renderLifecycleReport('Harness Hub Loop Schedule Report', result, options), options);
+      return result.exitCode;
+    }
+  }
+
   if (options.command === 'insight') {
     throw new CliError(
       'Public publishing moved to "harness-hub source-post ..."; "harness-hub insight" is reserved for private collaboration audits and has no CLI in this release.',
@@ -7053,6 +7675,8 @@ type LifecycleReportData =
   | HarnessInitPlan
   | HarnessInitResult
   | HarnessValidationResult
+  | LoopDecisionResult
+  | LoopScheduleResult
   | SourcePostResult
   | SourcePostBuildResult
   | SourcePostValidationResult
@@ -7161,6 +7785,49 @@ function rowsForLifecycleData(
       })),
       ...data.target.updates.map((row) => ({ ...row, state: 'update-available' })),
       ...data.target.blockers.map((row) => ({ ...row, state: row.state })),
+    ];
+  }
+
+  if ('decision' in data) {
+    return [
+      {
+        id: data.actionId,
+        state: data.decision,
+        dest: data.reason,
+        version: data.policyVersion,
+        latestVersion: data.recorded ? 'recorded' : 'not-recorded',
+      },
+      ...data.riskSignals.map((signal) => ({
+        id: signal,
+        state: LOOP_INTERRUPT_RISK_SIGNALS.has(signal) ? 'interrupt-risk' : 'signal',
+        dest: data.requiredEvidence.join(', '),
+        version: 'risk-signal',
+      })),
+      ...data.sideEffects.map((sideEffect) => ({
+        id: sideEffect,
+        state: LOOP_ALLOWED_SIDE_EFFECTS.has(sideEffect) ? 'allowed' : 'interrupt-risk',
+        dest: data.actionId,
+        version: 'side-effect',
+      })),
+    ];
+  }
+
+  if ('decisions' in data && 'nextActionId' in data) {
+    return [
+      {
+        id: data.runId,
+        state: data.nextActionId ? 'scheduled' : 'interrupted',
+        dest: data.reason,
+        version: data.recorded ? 'recorded' : 'not-recorded',
+        latestVersion: data.nextActionId,
+      },
+      ...data.decisions.map((decision) => ({
+        id: decision.actionId,
+        state: decision.decision,
+        dest: decision.reason,
+        version: decision.policyVersion,
+        latestVersion: decision.recorded ? 'recorded' : 'not-recorded',
+      })),
     ];
   }
 
@@ -7428,6 +8095,14 @@ function summaryForLifecycleData(
     return data.reason;
   }
 
+  if ('decision' in data) {
+    return `${data.actionId}: ${data.decision}. ${data.recorded ? 'Recorded.' : 'Not recorded.'} ${data.reason}`;
+  }
+
+  if ('decisions' in data && 'nextActionId' in data) {
+    return `${data.decisions.length} loop actions evaluated, next action ${data.nextActionId || 'none'}, ${data.interruptedActionIds.length} interrupted. ${data.recorded ? 'Recorded.' : 'Not recorded.'} ${data.reason}`;
+  }
+
   if ('checks' in data && 'assessment' in data) {
     const failed = data.checks.filter((check) => check.state === 'fail').length;
     return `${data.checks.length - failed} passed, ${failed} failed. Assessment ${data.assessment.overall}/100, bottleneck ${data.assessment.bottleneck}. Benchmark ${data.benchmark.score}/100. ${data.reason}`;
@@ -7577,6 +8252,8 @@ Usage:
   harness-hub source-post build [target] [--json|--html] [--output file]
   harness-hub source-post validate [target] [--json|--html] [--output file]
   harness-hub source-post publish [target] --dry-run [--allow-dirty] [--json|--html] [--output file]
+  harness-hub loop evaluate [target] --input action.json [--yes] [--json|--html] [--output file]
+  harness-hub loop schedule [target] --input actions.jsonl [--yes] [--json|--html] [--output file]
   harness-hub status [target] [--json|--html] [--output file]
   harness-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
   harness-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
@@ -7589,7 +8266,8 @@ Use self-check for read-only aggregate status checks; strict harness validation 
 Install selects every standard skill component and overwrites same-name skill directories by default.
 Use init-harness for Codex-only dev bootstrap: standard skills plus root harness files.
 Use activate-codex to sync installed project-local skills into ignored .codex/skills without global installation.
-validate-harness includes minimal checks, five-subsystem assessment, and a structural benchmark.
+validate-harness includes standard harness checks, five-subsystem assessment, and a structural benchmark.
 Use source-post for structured source-post generation and GitHub Pages preflight.
+Use loop evaluate/schedule to decide continue vs interrupt and optionally append local Loop ledgers with --yes.
 `);
 }

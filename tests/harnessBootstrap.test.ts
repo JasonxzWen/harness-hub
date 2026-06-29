@@ -22,6 +22,14 @@ const REQUIRED_HARNESS_FILES = [
   '.harness-hub/state/decisions.md',
   '.harness-hub/state/progress.md',
   '.harness-hub/state/session-handoff.md',
+  '.harness-hub/state/loop-runs.jsonl',
+  '.harness-hub/state/interrupt-decisions.jsonl',
+  '.harness-hub/state/capability-events.jsonl',
+  '.harness-hub/loop/policies/interrupt-policy.md',
+  '.harness-hub/loop/policies/action-audit-schema.md',
+  '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
+  '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
+  '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
   'clean-state-checklist.md',
   'definition-of-done.md',
   'evaluator-rubric.md',
@@ -103,6 +111,8 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Web browser acceptance');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('PR Status');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Initialization Gate');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Loop Control Plane');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Interrupt Policy');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('checkpoint commit');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('P0/P1/P2');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('agent-run browser');
@@ -111,6 +121,12 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('validation_priority_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('web_acceptance_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('pr_closeout_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('loop_control_policy');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'loop', 'policies', 'interrupt-policy.md'), 'utf8')).toContain('Continue By Default');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'loop', 'policies', 'action-audit-schema.md'), 'utf8')).toContain('interrupt-decisions.jsonl');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'loop', 'evals', 'interrupt-policy', 'good-cases.jsonl'), 'utf8')).toContain('"expectedDecision":"continue"');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'loop', 'evals', 'interrupt-policy', 'bad-cases.jsonl'), 'utf8')).toContain('"expectedDecision":"interrupt"');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'interrupt-decisions.jsonl'), 'utf8')).toContain('"ledger":"interrupt-decisions"');
   expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Runtime reliability');
   expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Browser acceptance');
   expect(fs.readFileSync(path.join(targetDir, 'quality-document.md'), 'utf8')).toContain('Quality Snapshot');
@@ -413,6 +429,7 @@ test('harness validation requires durable validation records and feature evidenc
     && check.reason.includes('validation_priority_policy object')
     && check.reason.includes('web_acceptance_policy object')
     && check.reason.includes('pr_closeout_policy object')
+    && check.reason.includes('loop_control_policy object')
     && check.reason.includes('valid feature records features[0]')
   ))).toBe(true);
 });

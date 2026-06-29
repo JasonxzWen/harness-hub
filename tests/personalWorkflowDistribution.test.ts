@@ -11,6 +11,7 @@ const skillEvaluationPolicy = fs.readFileSync('docs/skill-evaluation-policy.md',
 const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
 const sourceSkillInventory = fs.readFileSync('docs/source-skill-inventory.md', 'utf8');
 const harnessVocabulary = fs.readFileSync('docs/harness-vocabulary.md', 'utf8');
+const standardTargetBoundary = fs.readFileSync('docs/standard-target-boundary.md', 'utf8');
 
 test('personal distribution contract is the project positioning source', () => {
   expect(personalDistribution).toContain('personal workflow distribution and repo-harness layer');
@@ -18,11 +19,17 @@ test('personal distribution contract is the project positioning source', () => {
   expect(personalDistribution).toContain('Preserve upstream skills by default');
   expect(personalDistribution).toContain('Put personal behavior in the overlay');
   expect(personalDistribution).toContain('Keep distribution simple');
+  expect(personalDistribution).toContain('Single Standard Target Policy');
+  expect(personalDistribution).toContain('one supported user-facing target experience: `standard`');
+  expect(personalDistribution).toContain('`harness:minimal` and `harness/minimal/` are internal component/template identifiers');
   expect(personalDistribution).toContain('Acceptance Criteria');
 
   expect(readme).toContain('personal repo harness toolkit');
+  expect(readme).toContain('one user-facing target path: `standard`');
+  expect(readme).toContain('`harness:minimal` is only the internal component/template ID');
   expect(readme).toContain('keep their upstream style');
   expect(readme).toContain('docs/personal-workflow-distribution.md');
+  expect(readme).toContain('docs/standard-target-boundary.md');
   expect(agents).toContain('repo-local agent harnesses');
   expect(agents).toContain('keep their upstream style by default');
   expect(agents).toContain('receives only this Harness Hub repository link');
@@ -42,6 +49,7 @@ test('README localization stays complete but entry-focused', () => {
   expect(readme).toContain('If you are an agent working in another repo and received only this Harness Hub repository link');
   expect(readme).toContain('do not copy this checkout into the target');
   expect(readme).toContain('npx @jasonwen/harness-hub@latest init-harness');
+  expect(readme).toContain('npx @jasonwen/harness-hub loop evaluate');
   expect(readme).toContain('If neither the npm CLI nor the source CLI can run, report a bootstrap blocker');
   expect(readmeZh).toContain('### Link-only agent bootstrap');
   expect(readmeZh).toContain('[Bootstrap A Target Repository](BOOTSTRAP-TARGET.md)');
@@ -52,6 +60,7 @@ test('README localization stays complete but entry-focused', () => {
   expect(readmeZh).toContain('## 选择入口');
   expect(readmeZh).toContain('flowchart TD');
   expect(readmeZh).toContain('npx @jasonwen/harness-hub init-harness');
+  expect(readmeZh).toContain('npx @jasonwen/harness-hub loop evaluate');
   expect(readmeZh).toContain('bun run validate');
 
   expect(personalDistribution).toContain('Keep README localization entry-focused');
@@ -111,7 +120,7 @@ test('package metadata reflects personal distribution scope', () => {
 
   expect(packageJson.description).toContain('Personal repo harness toolkit');
   expect(capabilityIndex.components['harness:minimal'].recommendation).toContain(
-    'minimal repo-local harness',
+    'standard target harness',
   );
   expect(capabilityIndex.components['skill:workflow-router'].recommendation).toContain(
     'exactly one workflow owner',
@@ -119,6 +128,15 @@ test('package metadata reflects personal distribution scope', () => {
   expect(capabilityIndex.components['skill:workflow-router'].recommendation).not.toContain(
     'public workflow owner',
   );
+});
+
+test('standard target boundary replaces stale harness pack policy', () => {
+  expect(fs.existsSync('docs/harness-packs.md')).toBe(false);
+  expect(standardTargetBoundary).toContain('Harness Hub has one user-facing target path: `standard`');
+  expect(standardTargetBoundary).toContain('`harness:minimal` and `harness/minimal/` are internal component/template identifiers');
+  expect(standardTargetBoundary).toContain('must not create pack levels');
+  expect(personalDistribution).toContain('The only supported target experience is `standard`');
+  expect(sourceProjects).toContain('single `standard` path');
 });
 
 test('default distributed imported skills have source registry coverage', () => {

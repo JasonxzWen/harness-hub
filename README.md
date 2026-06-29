@@ -2,7 +2,7 @@
 
 [简体中文](README.zh-CN.md) | English
 
-Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects. It installs the full standard skill/routing set, initializes the minimal repo harness when requested, validates the result, and keeps managed files safe through lock-backed lifecycle commands.
+Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects. It installs the full standard skill/routing set, initializes the standard target harness when requested, validates the result, and keeps managed files safe through lock-backed lifecycle commands.
 
 Imported skills can keep their upstream style; Harness Hub mainly owns routing, source records, harness templates, and lifecycle safety.
 
@@ -13,8 +13,9 @@ Agent execution rules live in [AGENTS.md](AGENTS.md). Human-facing workflow deta
 Harness Hub does four bounded jobs:
 
 - `check` and `analyze` inspect a target repo and stay read-only.
-- `init-harness` creates the minimal root harness only when you explicitly approve it.
+- `init-harness --target standard` creates the root harness only when you explicitly approve it.
 - `install` installs the standard skill set only; it does not create root harness files.
+- `loop evaluate` and `loop schedule` decide continue vs interrupt and can append local Loop ledgers after `--yes`.
 - `source-post` creates, builds, validates, and preflights source-backed public posts.
 
 For a new target repo, start with a dry run:
@@ -30,12 +31,13 @@ Move to `--yes` only after reviewing the planned files. Harness Hub does not cre
 ```mermaid
 flowchart TD
   Start["I have a repo"] --> Analyze["Analyze readiness"]
-  Analyze --> Init["Initialize minimal harness"]
+  Analyze --> Init["Initialize standard target harness"]
   Init --> Work["Run SDD + TDD work"]
   Work --> Validate["Validate and hand off"]
 
   Start --> Skills["Install standard skills only"]
   Start --> Maintain["Maintain Harness Hub itself"]
+  Start --> Loop["Run Loop runtime decisions"]
   Start --> SourcePost["Publish source-backed public posts"]
 
   Analyze --> A1["harness-hub analyze --agent-readiness --harness"]
@@ -44,6 +46,7 @@ flowchart TD
   Work --> W1["workflow-router -> sdd-workflow -> tdd-workflow"]
   Validate --> V1["validate-harness / bun run validate"]
   Maintain --> M1["hub-maintenance-workflow"]
+  Loop --> L1["loop evaluate -> loop schedule"]
   SourcePost --> P1["source-post generate -> source-post build -> source-post validate"]
 ```
 
@@ -57,10 +60,11 @@ flowchart TD
 | Run a routine status self-check | `self-check --json` | Read-only aggregate status, advisory/failure split, and conditional harness validation. |
 | Make installed skills visible to local Codex | `activate-codex --yes` | Sync project-local `skills/<name>` into `.codex/skills` without global installation. |
 | Validate a bootstrapped repo | `validate-harness --json` | Required files, state, QA boundaries, trigger hygiene, and structural scores. |
+| Evaluate Loop risk | `loop evaluate --input action.json --json` | Continue/interrupt decision, risk signals, evidence needs, and optional ledger recording with `--yes`. |
 | Maintain this hub | `workflow-router` then `hub-maintenance-workflow` | Source records, routing, capability metadata, docs, templates, and lifecycle safety. |
 | Create a public source-backed post | `source-post generate` | Source ledger, Effective Interact adaptation, Pages output, and publish preflight. |
 
-Harness Hub has one standard skill install set and one `minimal` harness path. There are no named skill install variants, harness pack levels, or bundle selectors. Confirmed `install` overwrites an existing same-name skill directory; use `--dry-run` first when a target may already have local skills.
+Harness Hub has one user-facing target path: `standard`. There are no named skill install variants, harness pack levels, or bundle selectors. `harness:minimal` is only the internal component/template ID for the root harness files. Confirmed `install` overwrites an existing same-name skill directory; use `--dry-run` first when a target may already have local skills.
 
 ## One-Step Target Bootstrap
 
@@ -127,6 +131,8 @@ npx @jasonwen/harness-hub activate-codex D:\path\to\target --yes
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
+npx @jasonwen/harness-hub loop evaluate D:\path\to\target --input action.json --json
+npx @jasonwen/harness-hub loop schedule D:\path\to\target --input actions.jsonl --yes --json
 npx @jasonwen/harness-hub install D:\path\to\target --target standard --dry-run
 npx @jasonwen/harness-hub install D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub status D:\path\to\target --json
@@ -166,12 +172,12 @@ Harness Hub does not create the schedule, webhook, commit, push, tool install, o
 | Web and artifacts | `frontend-design`, `design-taste-frontend`, `webapp-testing`, `e2e-testing`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`. |
 | Platform extension | `claude-api`, `mcp-builder`, `skill-creator`, source records, capability metadata. |
 | External tool advice | `check.externalTools` and `analyze --agent-readiness` signals for explicit CodeGraph and Headroom setup. |
-| Harness lifecycle | `check`, `self-check`, `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update`, `remove`, `harness-quality-check`. |
+| Harness lifecycle | `check`, `self-check`, `analyze`, `init-harness`, `validate-harness`, `loop evaluate`, `loop schedule`, `install`, `status`, `update`, `remove`, `harness-quality-check`. |
 | Source-post publishing | `source-post generate`, `source-post build`, `source-post validate`, `source-post publish`. |
 
 ## Source Layout
 
-This is the Harness Hub source checkout layout, not the target initialization output. Target initialization never copies `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`, this repo's README files, or this repo's source tree into the target root; it writes only lock-managed `skills/<name>/` entries plus the explicit minimal harness files.
+This is the Harness Hub source checkout layout, not the target initialization output. Target initialization never copies `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`, this repo's README files, or this repo's source tree into the target root; it writes only lock-managed `skills/<name>/` entries plus the explicit standard target harness files.
 
 ```text
 skills/
@@ -181,7 +187,7 @@ skills/
     scripts/      # optional
     assets/       # optional
 harness/
-  minimal/          # the only supported target bootstrap harness
+  minimal/          # internal template for the standard target harness
   website-cloner/  # explicit authorized website clone smoke scaffold
 .claude-plugin/
   plugin.json
@@ -195,11 +201,12 @@ harness/
 | `README.md` / `README.zh-CN.md` | Human-facing entry and visual navigation. |
 | `AGENTS.md` | Agent-facing repo rules and execution workflow. |
 | `skills/` | Platform-neutral skill source of truth. |
-| `harness/` | Minimal bootstrap harness and explicit-only smoke scaffolds. |
+| `harness/` | Standard target harness template and explicit-only smoke scaffolds. |
 | `capabilities/index.json` | Skill and harness component metadata. |
 | `docs/development-workflow.md` | SDD+TDD workflow guide and state-file responsibilities. |
 | `docs/skill-routing.md` | Skill overlap and routing rules. |
 | `docs/personal-workflow-distribution.md` | Personal distribution policy. |
+| `docs/standard-target-boundary.md` | Single target/install boundary and source-intake rules. |
 | `docs/source-projects.md` | Upstream source and decision log. |
 | `src/harnessHub.ts` | CLI implementation. |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy. |

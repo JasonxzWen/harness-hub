@@ -50,7 +50,7 @@ test('development workflow guide documents state files, TDD, and skill extension
   }
 });
 
-test('minimal harness state templates capture planning and handoff memory', () => {
+test('standard harness state templates capture planning and handoff memory', () => {
   const currentTask = read('harness/minimal/state-templates/current-task.md');
   const progress = read('harness/minimal/state-templates/progress.md');
   const decisions = read('harness/minimal/state-templates/decisions.md');
@@ -75,7 +75,7 @@ test('minimal harness state templates capture planning and handoff memory', () =
   expect(handoff).toContain('P0/P1/P2 test matrix status');
 });
 
-test('minimal harness state templates expose the full SDD and TDD memory contract', () => {
+test('standard harness state templates expose the full SDD and TDD memory contract', () => {
   const files = {
     currentTask: read('harness/minimal/state-templates/current-task.md'),
     progress: read('harness/minimal/state-templates/progress.md'),
