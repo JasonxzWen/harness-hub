@@ -9,7 +9,7 @@ The Harness Hub CLI manages a repo-local agent harness lifecycle in target repos
 - Keep `install` limited to standard skill folders in `skills/<name>/`.
 - Keep full Codex dev harness bootstrap explicit through `init-harness`.
 - Validate root harness files through side-effect-free `validate-harness`.
-- Keep source-backed insight publishing explicit through `harness-hub insight <action>`.
+- Keep source-backed post publishing explicit through `harness-hub source-post <action>`.
 - Track managed files with `.harness-hub/lock.json`.
 - Remove and update only lock-recorded files.
 - Keep host-specific packaging outside the lifecycle CLI.
@@ -32,10 +32,10 @@ harness-hub install <target> --target standard --yes
 harness-hub init-harness <target> --target standard --dry-run
 harness-hub init-harness <target> --target standard --yes
 harness-hub validate-harness <target> --json
-harness-hub insight generate <target> --input input.json --json
-harness-hub insight build <target> --json
-harness-hub insight validate <target> --json
-harness-hub insight publish <target> --dry-run --json
+harness-hub source-post generate <target> --input input.json --json
+harness-hub source-post build <target> --json
+harness-hub source-post validate <target> --json
+harness-hub source-post publish <target> --dry-run --json
 harness-hub status <target> --json
 harness-hub update <target> --dry-run --json
 harness-hub migrate-lock <target> --dry-run --json
@@ -56,7 +56,7 @@ harness-hub remove <target> --dry-run --json
 
 Local Codex dogfooding is intentionally outside the managed target lifecycle: `scripts/sync-codex-skills.mjs` mirrors `skills/` into ignored `.codex/skills/` copies for this checkout, without adding `.codex/` to the capability graph or lock-backed install targets. Fresh Codex worktrees must pass the read-only preflight `node scripts/check-codex-worktree.mjs --write-task` or the equivalent `bun run codex:worktree-check -- --write-task` before write tasks rely on repo-local skill activation, because git worktree creation does not copy ignored generated directories. Read-only tasks may use `bun run codex:worktree-check` as a soft warning. Codex worktree setup should call the repo-relative command `node scripts/setup-codex-worktree.mjs` or the equivalent `bun run codex:worktree-setup` from the worktree root. That setup syncs `.codex/skills/`, creates missing ignored `.harness-hub/state/` files from the minimal templates, preserves existing task state on reruns, and does not create a checkpoint commit for setup-only work. `scripts/install-codex-worktree-hook.mjs` provides an explicit local convenience path: `bun run codex:worktree-hook:install` installs a managed advisory `post-checkout` hook in the Git hooks path so ordinary `git worktree add` runs the same setup automatically unless `--no-checkout` is used. Hook failures exit zero and leave the preflight/setup commands as the deterministic fallback. `--reset-state` or `--fresh` is required to intentionally discard local task state and recreate clean templates. Host-local absolute paths must stay out of the project design.
 
-Insight publishing is also explicit, but it is not a target-repo install lifecycle. `post.json` is the editable source of truth, `effective-interact.input.json` is the generation adapter, and `site/` is the Git-only GitHub Pages output. Local publish is preflight-only; `.github/workflows/publish-insights.yml` owns the actual Pages deployment after review.
+Source-post publishing is also explicit, but it is not a target-repo install lifecycle. `post.json` is the editable source of truth, `effective-interact.input.json` is the generation adapter, and `site/` is the Git-only GitHub Pages output. Local publish is preflight-only; `.github/workflows/publish-source-posts.yml` owns the actual Pages deployment after review.
 
 ## Data Model
 

@@ -554,12 +554,12 @@
       "docsBoundary": "`skill-creator` loads for creating, updating, adapting, or evaluating standard agent skills."
     },
     {
-      "id": "source-to-insight-blog-positive-source-blog",
-      "skill": "source-to-insight-blog",
+      "id": "source-post-positive-source-post",
+      "skill": "source-post",
       "kind": "positive",
-      "prompt": "Turn this external OpenAI article into a Chinese source-backed insight blog, preserve figures and links, add an effective-interact summary, and decide whether the repo should change.",
-      "expectedSkill": "source-to-insight-blog",
-      "docsBoundary": "`source-to-insight-blog` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed insight blog posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
+      "prompt": "Turn this external OpenAI article into a Chinese source-backed public post, preserve figures and links, add an effective-interact summary, and decide whether the repo should change.",
+      "expectedSkill": "source-post",
+      "docsBoundary": "`source-post` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed public posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
     },
     {
       "id": "insight-positive-private-interaction-audit",
@@ -567,15 +567,15 @@
       "kind": "positive",
       "prompt": "Run a private repository interaction insight audit from recent Codex and Claude Code work traces, including agent task profile, tool-call decision audit, and collaboration bottlenecks.",
       "expectedSkill": "insight",
-      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source blog posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
     },
     {
-      "id": "insight-negative-public-source-blog",
+      "id": "insight-negative-public-source-post",
       "skill": "insight",
       "kind": "negative",
-      "prompt": "Turn this external OpenAI article into a Chinese source-backed insight blog, preserve figures and links, add an effective-interact summary, and decide whether the repo should change.",
-      "expectedSkill": "source-to-insight-blog",
-      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source blog posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+      "prompt": "Turn this external OpenAI article into a Chinese source-backed public post, preserve figures and links, add an effective-interact summary, and decide whether the repo should change.",
+      "expectedSkill": "source-post",
+      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
     },
     {
       "id": "insight-forbidden-single-agent-loop",
@@ -583,7 +583,7 @@
       "kind": "forbidden-load",
       "prompt": "The agent is stuck in a repeated tool loop and burning context without progress; capture state and recover.",
       "expectedSkill": "agent-introspection-debugging",
-      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source blog posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
     },
     {
       "id": "doc-coauthoring-positive-prd",
@@ -890,20 +890,20 @@
       "docsBoundary": "`skill-creator` loads for creating, updating, adapting, or evaluating standard agent skills."
     },
     {
-      "id": "source-to-insight-blog-negative-simple-summary",
-      "skill": "source-to-insight-blog",
+      "id": "source-post-negative-simple-summary",
+      "skill": "source-post",
       "kind": "negative",
-      "prompt": "Summarize this article in five bullets without creating a public blog or repo artifact.",
+      "prompt": "Summarize this article in five bullets without creating a public post or repo artifact.",
       "expectedSkill": null,
-      "docsBoundary": "`source-to-insight-blog` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed insight blog posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
+      "docsBoundary": "`source-post` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed public posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
     },
     {
-      "id": "source-to-insight-blog-forbidden-production-site",
-      "skill": "source-to-insight-blog",
+      "id": "source-post-forbidden-production-site",
+      "skill": "source-post",
       "kind": "forbidden-load",
       "prompt": "Design and implement a polished production marketing blog site with responsive layout and custom interactions.",
       "expectedSkill": "frontend-design",
-      "docsBoundary": "`source-to-insight-blog` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed insight blog posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
+      "docsBoundary": "`source-post` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed public posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
     },
     {
       "id": "doc-coauthoring-forbidden-implementation",

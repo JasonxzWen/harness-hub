@@ -1,0 +1,287 @@
+{
+  "title": "Supermemory 给 Harness Hub 的启发：AI 记忆不是更大的 RAG，而是可治理的上下文基础设施",
+  "date": "2026-06-01",
+  "summary": "Supermemory 的价值不在于把第三方记忆服务直接塞进默认 harness，而在于给 Harness Hub 提供一组可借鉴的边界：显式/隐式记忆分层、项目与用户作用域、隐私红线、上下文注入、以及用基准测试验证记忆质量。",
+  "sources": [
+    {
+      "id": "sm-repo",
+      "title": "supermemoryai/supermemory repository",
+      "url": "https://github.com/supermemoryai/supermemory",
+      "type": "repository",
+      "accessedAt": "2026-06-01",
+      "excerpt": "Supermemory describes itself as the memory and context layer for AI, with Memory API, user profiles, hybrid search, connectors, and multi-modal extractors.",
+      "notes": "Used for the project-level positioning, repo status, license, and monorepo surface."
+    },
+    {
+      "id": "sm-skill",
+      "title": "supermemory skill in supermemoryai/supermemory",
+      "url": "https://github.com/supermemoryai/supermemory/tree/main/skills/supermemory",
+      "type": "skill",
+      "accessedAt": "2026-06-01",
+      "excerpt": "The skill presents Supermemory as memory infrastructure for agents, covering Memory API, user profiles, RAG, container tags, metadata, thresholds, and batch operations.",
+      "notes": "Used to judge whether a standard skill could be imported or adapted."
+    },
+    {
+      "id": "sm-quickstart",
+      "title": "Supermemory Quickstart",
+      "url": "https://supermemory.ai/docs/quickstart",
+      "type": "documentation",
+      "accessedAt": "2026-06-01",
+      "excerpt": "The quickstart uses profile retrieval for static and dynamic context, then adds the conversation back into Supermemory for future context.",
+      "notes": "Used for the retrieve-before-answer and capture-after-conversation loop."
+    },
+    {
+      "id": "sm-memory-vs-rag",
+      "title": "Memory vs RAG: Understanding the Difference",
+      "url": "https://supermemory.ai/docs/concepts/memory-vs-rag",
+      "type": "documentation",
+      "accessedAt": "2026-06-01",
+      "excerpt": "The docs separate documents as stateless raw knowledge from memories as contextual, temporal, personal, and relational understanding.",
+      "notes": "Used for the conceptual distinction between memory and ordinary retrieval."
+    },
+    {
+      "id": "sm-mcp",
+      "title": "Supermemory MCP Server 4.0",
+      "url": "https://github.com/supermemoryai/supermemory/tree/main/apps/mcp",
+      "type": "repository-doc",
+      "accessedAt": "2026-06-01",
+      "excerpt": "The MCP server exposes memory, recall, whoAmI, profile and projects resources, and a context prompt, with OAuth or API-key authentication.",
+      "notes": "Used for MCP/tool integration shape and side-effect boundaries."
+    },
+    {
+      "id": "sm-self-hosting",
+      "title": "Supermemory Self Hosting",
+      "url": "https://supermemory.ai/docs/deployment/self-hosting",
+      "type": "documentation",
+      "accessedAt": "2026-06-01",
+      "excerpt": "The self-hosting guide is for enterprise customers and requires a deployment package from the Supermemory team, Cloudflare resources, PostgreSQL with pgvector, and provider keys.",
+      "notes": "Used for the integration risk that the public repository is not a simple local engine drop-in."
+    },
+    {
+      "id": "sm-codex",
+      "title": "supermemoryai/codex-supermemory",
+      "url": "https://github.com/supermemoryai/codex-supermemory",
+      "type": "repository",
+      "accessedAt": "2026-06-01",
+      "excerpt": "codex-supermemory wires Supermemory into Codex CLI hooks for automatic recall and capture, with project plus user scoping and private-tag redaction.",
+      "notes": "Used for Codex-specific iteration patterns."
+    },
+    {
+      "id": "sm-opencode",
+      "title": "supermemoryai/opencode-supermemory",
+      "url": "https://github.com/supermemoryai/opencode-supermemory",
+      "type": "repository",
+      "accessedAt": "2026-06-01",
+      "excerpt": "opencode-supermemory injects user profile, project memories, and relevant memories, supports keyword-triggered saving, codebase indexing, and preemptive compaction.",
+      "notes": "Used for agent-harness iteration ideas around compaction and codebase indexing."
+    },
+    {
+      "id": "sm-smfs",
+      "title": "supermemoryai/smfs",
+      "url": "https://github.com/supermemoryai/smfs",
+      "type": "repository",
+      "accessedAt": "2026-06-01",
+      "excerpt": "smfs exposes a Supermemory container as a filesystem and makes flagless grep inside a mount perform semantic search.",
+      "notes": "Used for filesystem-shaped memory and agent-friendly local affordance ideas."
+    },
+    {
+      "id": "sm-memorybench",
+      "title": "supermemoryai/memorybench",
+      "url": "https://github.com/supermemoryai/memorybench",
+      "type": "repository",
+      "accessedAt": "2026-06-01",
+      "excerpt": "MemoryBench is a pluggable benchmark with ingest, indexing, search, answer, evaluate, and report phases, plus provider comparison and checkpointing.",
+      "notes": "Used for Harness Hub validation and benchmark inspiration."
+    }
+  ],
+  "sourceClaims": [
+    {
+      "id": "claim-core-positioning",
+      "sourceId": "sm-repo",
+      "statement": "Supermemory 将自己定位为 AI 的记忆与上下文层，把记忆抽取、用户画像、混合搜索、连接器和多模态摄取放在同一套上下文栈里。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-skill-surface",
+      "sourceId": "sm-skill",
+      "statement": "上游 `skills/supermemory` 不是单纯命令包装，而是在技能描述中写入了持久记忆、个性化、长期上下文和语义搜索的触发语义。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-loop",
+      "sourceId": "sm-quickstart",
+      "statement": "官方 quickstart 展示的基本闭环是：生成前取用户画像和相关记忆，生成后把对话内容写回 Supermemory。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-memory-not-rag",
+      "sourceId": "sm-memory-vs-rag",
+      "statement": "Supermemory 文档明确区分无状态的文档检索和带时间、用户、关系语义的记忆。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-mcp-tools",
+      "sourceId": "sm-mcp",
+      "statement": "MCP 实现通过认证服务暴露带副作用的记忆写入/遗忘、召回、身份查询、profile/project 资源和 context prompt。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-self-hosting-boundary",
+      "sourceId": "sm-self-hosting",
+      "statement": "官方 self-hosting 文档把自托管写成企业路径，需要 Supermemory 团队提供部署包和外部基础设施，而不是普通克隆仓库即可运行。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-codex-iteration",
+      "sourceId": "sm-codex",
+      "statement": "`codex-supermemory` 的迭代使用 Codex 生命周期 hooks 做隐式召回/捕获，同时提供显式 skills 做搜索、保存、遗忘和登录。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-opencode-iteration",
+      "sourceId": "sm-opencode",
+      "statement": "`opencode-supermemory` 的迭代包含代码库索引、关键词触发保存、用户/项目作用域和 compaction-aware 的记忆保留。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-smfs-iteration",
+      "sourceId": "sm-smfs",
+      "statement": "`smfs` 把 Supermemory 容器重塑成可挂载文件系统，让普通文件操作和语义 grep 成为 agent 可理解的接口。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-memorybench-iteration",
+      "sourceId": "sm-memorybench",
+      "statement": "MemoryBench 把记忆质量视为可评估流水线，包含 checkpointed 阶段、provider 对比和报告输出。",
+      "kind": "fact"
+    },
+    {
+      "id": "claim-hub-default-risk",
+      "sourceId": "sm-self-hosting",
+      "statement": "对 Harness Hub 来说，把 Supermemory 默认启用会引入外部凭证、托管服务依赖和带副作用的自动捕获路径，这与本仓库 minimal、显式、可回滚的生命周期边界冲突。",
+      "kind": "project-judgment"
+    },
+    {
+      "id": "claim-reference-fit",
+      "sourceId": "sm-codex",
+      "statement": "Supermemory 很适合作为 Harness Hub 未来显式记忆能力的参考，尤其是隐式 hooks 与显式 fallback skills 的分层。",
+      "kind": "project-judgment"
+    }
+  ],
+  "viewpoints": [
+    {
+      "id": "view-what-it-is",
+      "statement": "Supermemory 更像 agent 周围的一层托管上下文基底：它存储和更新用户/项目事实，只召回相关上下文，再通过 SDK、MCP、插件和文件系统形态暴露给 agent。",
+      "sourceClaimIds": [
+        "claim-core-positioning",
+        "claim-loop",
+        "claim-mcp-tools",
+        "claim-smfs-iteration"
+      ]
+    },
+    {
+      "id": "view-not-default-integration",
+      "statement": "Harness Hub 不应导入上游 skill 或默认启用记忆捕获。默认 harness 必须保持本地、显式、可撤销；托管记忆应放在单独的 opt-in 命令或集成说明之后。",
+      "sourceClaimIds": [
+        "claim-skill-surface",
+        "claim-self-hosting-boundary",
+        "claim-hub-default-risk"
+      ]
+    },
+    {
+      "id": "view-iteration-patterns",
+      "statement": "真正可迁移的是一套可治理的记忆生命周期：按用户和项目划分作用域，遮蔽 private 片段，区分显式记忆命令和隐式 hooks，并在信任召回前验证质量。",
+      "sourceClaimIds": [
+        "claim-codex-iteration",
+        "claim-opencode-iteration",
+        "claim-memorybench-iteration"
+      ]
+    },
+    {
+      "id": "view-blog-conclusion",
+      "statement": "Harness Hub 的正确下一步不是复制 Supermemory，而是先写一个小而显式的记忆能力设计：本地 source ledger 优先，可选 provider adapter 后置，任何自动召回/捕获都必须先有 MemoryBench 式验收。",
+      "sourceClaimIds": [
+        "claim-memory-not-rag",
+        "claim-memorybench-iteration",
+        "claim-reference-fit"
+      ]
+    }
+  ],
+  "integration": [
+    "暂不作为 Harness Hub 默认集成：Supermemory 的生产价值依赖 hosted API、认证、外部数据存储和 hook side effects；这些都不应进入默认 `minimal` harness。",
+    "作为参考非常有价值：它把 agent 记忆拆成 profile、search、capture、project scope、privacy redaction、MCP/skill/tool 多入口、benchmark evaluation，这些正好对应 Harness Hub 未来可能需要治理的上下文能力。",
+    "如果后续要做本项目迭代，应从显式能力开始：先写 `memory-provider`/`context-ledger` 的设计与验收，再考虑可拔插 provider；自动 hooks 只能在安全审查、dry-run、用户显式启用和可撤销状态都完成后进入。"
+  ],
+  "projectMapping": [
+    {
+      "area": "docs/source-projects.md",
+      "impact": "把 `supermemoryai/supermemory` 记录为 reference-only source，保留 commit、MIT 许可和不默认导入的理由。",
+      "action": "本次已新增评估记录，明确未来只作为显式、可验证的 memory/context 能力参考。"
+    },
+    {
+      "area": "workflow-router / hub-maintenance-workflow",
+      "impact": "如果未来用户请求 agent memory、persistent context、MCP memory provider，应先进入 Hub maintenance 或 SDD，而不是直接安装 hosted hooks。",
+      "action": "后续可增加路由案例，但本次不改 routing，避免为一次研究博客扩大触发面。"
+    },
+    {
+      "area": "capabilities/index.json",
+      "impact": "当前不新增 capability，因为没有实现本地可验证、可卸载、无凭证副作用的 memory adapter。",
+      "action": "等有设计和测试后再加 capability；本次只发布理解博客和来源记录。"
+    },
+    {
+      "area": "future-memory-work",
+      "impact": "可参考 codex-supermemory 的 user/project scope、private redaction、explicit fallback skills，以及 opencode-supermemory 的 compaction-aware capture。",
+      "action": "把它们写进博客的迭代章节，作为未来方案的候选约束，而不是现在实现。"
+    },
+    {
+      "area": "validation",
+      "impact": "MemoryBench 提供了一个适合借鉴的验收形状：ingest、index、search、answer、evaluate、report，而不是只看召回是否看起来有用。",
+      "action": "未来若实现 memory 能力，应先定义最小 benchmark fixture 和 pass/fail 指标。"
+    }
+  ],
+  "iterationRecord": {
+    "changed": [
+      "新增 Supermemory reference-only source record。",
+      "生成一篇源证据驱动的 GitHub Pages source post。",
+      "把 Supermemory 生态的 Codex、OpenCode、Claude、smfs、MemoryBench 迭代写入博客，而不是只总结主仓库。"
+    ],
+    "confirmed": [
+      "不把 Supermemory skill 或插件导入默认 `skills/` 分发。",
+      "不在 Harness Hub 默认安装流程中加入 hosted API key、hook capture、远程 memory 写入或自动上下文注入。",
+      "不把 RAG 等同于 agent memory；博客明确区分静态知识检索和时间/用户/项目相关的记忆治理。"
+    ],
+    "open": [
+      "Harness Hub 是否需要自己的本地 context-ledger 或 memory-provider adapter，还需要单独 SDD。",
+      "如果接入 hosted provider，应由哪个命令拥有安装、状态、撤销和隐私检查。",
+      "未来 benchmark fixture 应覆盖哪些 repo-harness 记忆任务。"
+    ],
+    "watch": [
+      "Supermemory 的 Codex plugin hook API 和 Codex 本身 hook 支持是否稳定。",
+      "Supermemory 自托管路径是否从企业包变为普通开源可部署。",
+      "MemoryBench 的 provider API、指标和基准集合是否继续变化。"
+    ]
+  },
+  "actionBoundary": {
+    "now": [
+      "发布博客到 `site/source-posts/posts/2026-06-01-supermemory-harness-hub-reference/` 并重建 Pages 索引。",
+      "保留 `supermemoryai/supermemory` 的 reference-only 评估记录。",
+      "运行 source-post validation、publish dry-run、技能校验和必要的仓库校验。"
+    ],
+    "observe": [
+      "观察是否出现用户明确要求的 persistent memory / context provider 需求。",
+      "跟踪 codex-supermemory 的 hooks、private redaction 和 custom containers 是否成为稳定模式。",
+      "跟踪 MemoryBench 是否可作为本项目未来 memory capability 的验收工具。"
+    ],
+    "notNow": [
+      "不安装或复制 supermemory upstream skill。",
+      "不创建 Harness Hub memory capability 或 routing trigger。",
+      "不要求用户配置 Supermemory API key，也不写任何自动远程记忆 hook。"
+    ]
+  },
+  "assumptions": [
+    "“发布到 GitHub Page”在本仓库语境中指生成并提交 `site/` 输出；实际部署由现有 GitHub Actions 在合并后执行。",
+    "“基于此 repo 的迭代”按 Supermemory 生态内基于主仓库/服务的 Codex、OpenCode、Claude、smfs、MemoryBench 等公开仓库理解。",
+    "本次目标是研究、记录和发布博客，不实现新的 memory provider。"
+  ],
+  "slug": "2026-06-01-supermemory-harness-hub-reference"
+}

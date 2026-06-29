@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rename public source-backed publishing from `insight` to `source-post`, including the CLI command group, installable skill, docs, workflow, OpenSpec change, tests, and GitHub Pages output path; old `harness-hub insight ...` public publishing commands now fail with migration guidance, and `insight` is reserved for private repository interaction audits.
+
 ## 0.2.0 - 2026-06-25
 
 - Add the standard `insight` skill for private repository interaction audits across Codex and Claude Code traces.

@@ -19,7 +19,7 @@ The system SHALL document the stable lifecycle commands and their side effects.
 
 #### Scenario: Help lists lifecycle commands
 - **WHEN** the user runs `harness-hub --help`
-- **THEN** help output includes `check`, `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update --dry-run`, `update --yes`, `update --force --yes`, `update --component <id>`, `migrate-lock`, `remove`, `components`, and the `insight <action>` commands
+- **THEN** help output includes `check`, `analyze`, `init-harness`, `validate-harness`, `install`, `status`, `update --dry-run`, `update --yes`, `update --force --yes`, `update --component <id>`, `migrate-lock`, `remove`, `components`, and the `source-post <action>` commands
 
 #### Scenario: Documentation distinguishes read-only and mutating commands
 - **WHEN** the user reads README command examples
