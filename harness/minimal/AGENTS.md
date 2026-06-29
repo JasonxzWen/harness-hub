@@ -8,7 +8,7 @@ This repository is prepared for Codex-driven development. Treat tracked harness 
 
 Do not start implementation until the harness is fully landed and the active task is goal-ready.
 
-- Required files must exist: `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, and `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}`.
+- Required files must exist: `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}`, and `.harness-hub/context/{AGENTS.md,README.md,llm-wiki-schema.md,wiki/index.md}`.
 - If any required file is missing, stop and run the approved harness init path before coding.
 - Run `harness-hub check . --json` as a read-only startup check when the command is available; if it is unavailable, use `npx @jasonwen/harness-hub@latest check . --json`. Treat CLI updates, target updates, missing locks, missing project-local Codex activation, and registry failures as advisory unless the current task explicitly requires updating.
 - If startup check recommends `harness-hub activate-codex`, run the dry-run first and then confirm only when local Codex skill activation is needed: `harness-hub activate-codex . --dry-run --json`, then `harness-hub activate-codex . --yes`.
@@ -21,6 +21,7 @@ Do not start implementation until the harness is fully landed and the active tas
 
 - Keep this file short. Move detailed or historical context to task files, docs, or archives.
 - Use `feature_list.json` as the stable feature and parallel-write policy inventory.
+- Use the LLM Wiki under `.harness-hub/context/wiki/` as the stable knowledge middle layer. Raw sources remain authoritative; do not duplicate code facts or native agent memory. Follow `.harness-hub/context/AGENTS.md` and `.harness-hub/context/llm-wiki-schema.md`; write wiki knowledge only after human confirmation and record updates in `wiki/update-log.md`.
 - Treat Loop Control Plane rules as the top-level automation boundary. Prompt, context, harness, and tool capabilities may be `standalone`, `composable`, or `loop-participant`; do not force standalone capabilities into fixed workflows.
 - Follow the Interrupt Policy in `.harness-hub/loop/policies/interrupt-policy.md`: continue low-risk local work when scope and validation are clear, but interrupt when risk signals require human review.
 - Record auditable loop decisions in `.harness-hub/state/interrupt-decisions.jsonl`, loop runs in `.harness-hub/state/loop-runs.jsonl`, and capability events in `.harness-hub/state/capability-events.jsonl`.

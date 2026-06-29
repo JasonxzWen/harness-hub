@@ -10,11 +10,12 @@ Agent execution rules live in [AGENTS.md](AGENTS.md). Human-facing workflow deta
 
 ## First-Use Summary
 
-Harness Hub does four bounded jobs:
+Harness Hub does a small set of bounded jobs:
 
 - `check` and `analyze` inspect a target repo and stay read-only.
 - `init-harness --target standard` creates the root harness only when you explicitly approve it.
 - `install` installs the standard skill set only; it does not create root harness files.
+- the standard harness includes an LLM Wiki context pack under `.harness-hub/context/`.
 - `loop evaluate` and `loop schedule` decide continue vs interrupt and can append local Loop ledgers after `--yes`.
 - `source-post` creates, builds, validates, and preflights source-backed public posts.
 
@@ -37,6 +38,7 @@ flowchart TD
 
   Start --> Skills["Install standard skills only"]
   Start --> Maintain["Maintain Harness Hub itself"]
+  Start --> Context["Open stable LLM Wiki context"]
   Start --> Loop["Run Loop runtime decisions"]
   Start --> SourcePost["Publish source-backed public posts"]
 
@@ -46,6 +48,7 @@ flowchart TD
   Work --> W1["workflow-router -> sdd-workflow -> tdd-workflow"]
   Validate --> V1["validate-harness / bun run validate"]
   Maintain --> M1["hub-maintenance-workflow"]
+  Context --> C1[".harness-hub/context/wiki"]
   Loop --> L1["loop evaluate -> loop schedule"]
   SourcePost --> P1["source-post generate -> source-post build -> source-post validate"]
 ```
@@ -60,6 +63,7 @@ flowchart TD
 | Run a routine status self-check | `self-check --json` | Read-only aggregate status, advisory/failure split, and conditional harness validation. |
 | Make installed skills visible to local Codex | `activate-codex --yes` | Sync project-local `skills/<name>` into `.codex/skills` without global installation. |
 | Validate a bootstrapped repo | `validate-harness --json` | Required files, state, QA boundaries, trigger hygiene, and structural scores. |
+| Reuse stable project context | `.harness-hub/context/wiki/index.md` | LLM Wiki schema, source index, contradiction register, update log, and portable Obsidian profile. |
 | Evaluate Loop risk | `loop evaluate --input action.json --json` | Continue/interrupt decision, risk signals, evidence needs, and optional ledger recording with `--yes`. |
 | Maintain this hub | `workflow-router` then `hub-maintenance-workflow` | Source records, routing, capability metadata, docs, templates, and lifecycle safety. |
 | Create a public source-backed post | `source-post generate` | Source ledger, Effective Interact adaptation, Pages output, and publish preflight. |
@@ -169,6 +173,7 @@ Harness Hub does not create the schedule, webhook, commit, push, tool install, o
 | Planning and implementation | `grill-me`, `product-capability`, `tdd-workflow`, `karpathy-guidelines`, `verification-loop`. |
 | Diagnosis and review | `diagnosis-workflow`, `diagnose`, `review-workflow`, `compound-code-review`, `security-review`. |
 | Communication and handoff | `effective-interact`, `handoff`, `doc-coauthoring`, `internal-comms`, `documentation-lookup`. |
+| Context engineering | LLM Wiki schema, stable Markdown wiki, contradiction register, update log, portable Obsidian profile. |
 | Web and artifacts | `frontend-design`, `design-taste-frontend`, `webapp-testing`, `e2e-testing`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`. |
 | Platform extension | `claude-api`, `mcp-builder`, `skill-creator`, source records, capability metadata. |
 | External tool advice | `check.externalTools` and `analyze --agent-readiness` signals for explicit CodeGraph and Headroom setup. |

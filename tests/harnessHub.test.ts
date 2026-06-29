@@ -52,6 +52,20 @@ const REQUIRED_HARNESS_FILES = [
   '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
   '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
   '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
+  '.harness-hub/context/AGENTS.md',
+  '.harness-hub/context/README.md',
+  '.harness-hub/context/llm-wiki-schema.md',
+  '.harness-hub/context/wiki/index.md',
+  '.harness-hub/context/wiki/sources/README.md',
+  '.harness-hub/context/wiki/concepts/README.md',
+  '.harness-hub/context/wiki/topics/README.md',
+  '.harness-hub/context/wiki/people/README.md',
+  '.harness-hub/context/wiki/contradictions.md',
+  '.harness-hub/context/wiki/update-log.md',
+  '.harness-hub/context/wiki/templates/wiki-page.md',
+  '.harness-hub/context/wiki/.obsidian/app.json',
+  '.harness-hub/context/wiki/.obsidian/core-plugins.json',
+  '.harness-hub/context/wiki/.obsidian/graph.json',
   'scripts/harness-validate.mjs',
 ] as const;
 
@@ -379,6 +393,7 @@ test('harness local state edits do not report managed-file modifications', () =>
   fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'local task\n');
   fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'decisions.md'), 'local decisions\n');
   fs.writeFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'local handoff\n');
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'context', 'wiki', 'index.md'), 'local wiki index\n');
 
   const status = getStatus({ targetDir, index: readCapabilityIndex() });
   const removePreview = getRemovePlan(targetDir);
@@ -388,6 +403,7 @@ test('harness local state edits do not report managed-file modifications', () =>
   expect(removePreview.blocked).toEqual([]);
   expect(removePreview.removed).toContain('.harness-hub/state/decisions.md');
   expect(removePreview.removed).toContain('.harness-hub/state/progress.md');
+  expect(removePreview.removed).toContain('.harness-hub/context/wiki/index.md');
 });
 
 test('harness init force preserves existing worktree-local state', () => {
@@ -426,6 +442,14 @@ test('harness init force preserves existing worktree-local state', () => {
   }
   const component = lock.data.components.find((entry) => entry.id === 'harness:minimal');
   expect(component?.files.filter((file) => file.role === 'local-state').map((file) => file.path).sort()).toEqual([
+    '.harness-hub/context/wiki/concepts/README.md',
+    '.harness-hub/context/wiki/contradictions.md',
+    '.harness-hub/context/wiki/index.md',
+    '.harness-hub/context/wiki/people/README.md',
+    '.harness-hub/context/wiki/sources/README.md',
+    '.harness-hub/context/wiki/templates/wiki-page.md',
+    '.harness-hub/context/wiki/topics/README.md',
+    '.harness-hub/context/wiki/update-log.md',
     '.harness-hub/state/capability-events.jsonl',
     '.harness-hub/state/current-task.md',
     '.harness-hub/state/decisions.md',
@@ -476,11 +500,13 @@ test('harness update refreshes stable lock-owned files without overwriting local
   const decisionsPath = path.join(targetDir, '.harness-hub', 'state', 'decisions.md');
   const handoffPath = path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md');
   const interruptLedgerPath = path.join(targetDir, '.harness-hub', 'state', 'interrupt-decisions.jsonl');
+  const wikiIndexPath = path.join(targetDir, '.harness-hub', 'context', 'wiki', 'index.md');
   fs.writeFileSync(progressPath, 'local progress must stay\n');
   fs.writeFileSync(taskPath, 'local current task must stay\n');
   fs.writeFileSync(decisionsPath, 'local decisions must stay\n');
   fs.writeFileSync(handoffPath, 'local handoff must stay\n');
   fs.writeFileSync(interruptLedgerPath, '{"schemaVersion":1,"event":"local decision must stay"}\n');
+  fs.writeFileSync(wikiIndexPath, 'local wiki knowledge must stay\n');
 
   const result = updateManaged(targetDir, { yes: true, components: ['harness:minimal'] });
 
@@ -492,32 +518,15 @@ test('harness update refreshes stable lock-owned files without overwriting local
   expect(fs.readFileSync(decisionsPath, 'utf8')).toBe('local decisions must stay\n');
   expect(fs.readFileSync(handoffPath, 'utf8')).toBe('local handoff must stay\n');
   expect(fs.readFileSync(interruptLedgerPath, 'utf8')).toBe('{"schemaVersion":1,"event":"local decision must stay"}\n');
+  expect(fs.readFileSync(wikiIndexPath, 'utf8')).toBe('local wiki knowledge must stay\n');
   const lock = readLock(targetDir);
   if (!lock || lock.data.schemaVersion !== 2) {
     throw new Error('expected schema version 2 lock');
   }
   const harness = lock.data.components.find((entry) => entry.id === 'harness:minimal');
-  expect(harness?.files.map((file) => file.path).sort()).toEqual([
-    '.harness-hub/.gitignore',
-    '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
-    '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
-    '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
-    '.harness-hub/loop/policies/action-audit-schema.md',
-    '.harness-hub/loop/policies/interrupt-policy.md',
-    '.harness-hub/state/capability-events.jsonl',
-    '.harness-hub/state/current-task.md',
-    '.harness-hub/state/decisions.md',
-    '.harness-hub/state/interrupt-decisions.jsonl',
-    '.harness-hub/state/loop-runs.jsonl',
-    '.harness-hub/state/progress.md',
-    '.harness-hub/state/session-handoff.md',
-    'clean-state-checklist.md',
-    'definition-of-done.md',
-    'evaluator-rubric.md',
-    'feature_list.json',
-    'quality-document.md',
-    'scripts/harness-validate.mjs',
-  ]);
+  expect(harness?.files.map((file) => file.path).sort()).toEqual(
+    REQUIRED_HARNESS_FILES.filter((file) => file !== 'AGENTS.md').sort(),
+  );
 });
 
 test('harness update migrates legacy root state into ignored local state', () => {

@@ -11,7 +11,7 @@ harness-hub install <target> --target standard --dry-run
 harness-hub install <target> --target standard --yes
 ```
 
-`standard` is the complete personal migration path. `init-harness --target standard --yes` installs the full standard skill and routing surface, writes the root harness contract, creates local task state, validates the target, and records ownership in `.harness-hub/lock.json`.
+`standard` is the complete personal migration path. `init-harness --target standard --yes` installs the full standard skill and routing surface, writes the root harness contract, creates local task state, initializes the LLM Wiki context pack under `.harness-hub/context/`, validates the target, and records ownership in `.harness-hub/lock.json`.
 
 `harness:minimal` and `harness/minimal/` are internal component/template identifiers. They are not a second user-facing target, pack, level, or reduced install mode.
 
@@ -23,7 +23,7 @@ Third-party harness projects remain useful as source material. `walkinglabs/lear
 
 Those ideas must be evaluated by ROI and folded into the existing `standard` target path. They must not create pack levels, optional install tiers, host-specific harness trees, hidden hooks, external writes, credential dependencies, or remote runners.
 
-The local `validate-harness` command already adapts source ideas: five-subsystem assessment, HTML report surface, structural benchmark framing, generic verification-command detection, durable validation records, checkpoint-commit policy, feature-state evidence, runtime signal capture, evaluator rubric, quality snapshot, QA boundary checks, agent architecture boundary checks, trigger-hygiene checks, and Loop Control Plane policy/eval validation. It does not copy or activate upstream writers, host metadata, or generated advanced packs.
+The local `validate-harness` command already adapts source ideas: five-subsystem assessment, HTML report surface, structural benchmark framing, generic verification-command detection, durable validation records, checkpoint-commit policy, feature-state evidence, runtime signal capture, evaluator rubric, quality snapshot, QA boundary checks, agent architecture boundary checks, trigger-hygiene checks, Loop Control Plane policy/eval validation, and LLM Wiki context-pack validation. It does not copy or activate upstream writers, host metadata, or generated advanced packs.
 
 ## Non-Goals
 

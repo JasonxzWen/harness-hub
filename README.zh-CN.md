@@ -1,5 +1,12 @@
 # Harness Hub
 
+## Current Standard Surface
+
+- `standard` is the only user-facing target path.
+- `init-harness --target standard` installs standard skills, root harness files, Loop policy/runtime ledgers, and the LLM Wiki context pack.
+- The LLM Wiki entry is `.harness-hub/context/wiki/index.md`; schema and update rules live under `.harness-hub/context/`.
+- Public source-backed posts use `source-post`, not the old public `insight` CLI.
+
 简体中文 | [English](README.md)
 
 Harness Hub 是一个个人仓库 harness 工具箱，用来让 agent 在多个项目中的工作方式可重复、可验证、可交接。它会安装完整的标准 skill/路由集合，在明确请求时初始化 `standard` 目标 harness，验证结果，并通过 lock-backed lifecycle 命令安全维护托管文件。

@@ -30,6 +30,20 @@ const REQUIRED_HARNESS_FILES = [
   '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
   '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
   '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
+  '.harness-hub/context/AGENTS.md',
+  '.harness-hub/context/README.md',
+  '.harness-hub/context/llm-wiki-schema.md',
+  '.harness-hub/context/wiki/index.md',
+  '.harness-hub/context/wiki/sources/README.md',
+  '.harness-hub/context/wiki/concepts/README.md',
+  '.harness-hub/context/wiki/topics/README.md',
+  '.harness-hub/context/wiki/people/README.md',
+  '.harness-hub/context/wiki/contradictions.md',
+  '.harness-hub/context/wiki/update-log.md',
+  '.harness-hub/context/wiki/templates/wiki-page.md',
+  '.harness-hub/context/wiki/.obsidian/app.json',
+  '.harness-hub/context/wiki/.obsidian/core-plugins.json',
+  '.harness-hub/context/wiki/.obsidian/graph.json',
   'clean-state-checklist.md',
   'definition-of-done.md',
   'evaluator-rubric.md',
@@ -112,6 +126,7 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('PR Status');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Initialization Gate');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Loop Control Plane');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('LLM Wiki');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Interrupt Policy');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('checkpoint commit');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('P0/P1/P2');
@@ -122,6 +137,12 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('web_acceptance_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('pr_closeout_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('loop_control_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('context_engineering_policy');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'context', 'AGENTS.md'), 'utf8')).toContain('No Redundant Facts');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'context', 'llm-wiki-schema.md'), 'utf8')).toContain('Stable Knowledge Boundary');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'context', 'wiki', 'index.md'), 'utf8')).toContain('LLM Wiki Index');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'context', 'wiki', 'update-log.md'), 'utf8')).toContain('Human confirmation');
+  expect(JSON.parse(fs.readFileSync(path.join(targetDir, '.harness-hub', 'context', 'wiki', '.obsidian', 'app.json'), 'utf8')).alwaysUpdateLinks).toBe(true);
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'loop', 'policies', 'interrupt-policy.md'), 'utf8')).toContain('Continue By Default');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'loop', 'policies', 'action-audit-schema.md'), 'utf8')).toContain('interrupt-decisions.jsonl');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'loop', 'evals', 'interrupt-policy', 'good-cases.jsonl'), 'utf8')).toContain('"expectedDecision":"continue"');
