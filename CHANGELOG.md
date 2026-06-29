@@ -2,7 +2,13 @@
 
 ## Unreleased
 
+## 0.3.0 - 2026-06-29
+
+- Make `standard` the only user-facing target path, replace stale harness-pack/minimal wording with a standard target boundary, and verify external target bootstrap/install output does not copy Harness Hub source-repo material.
+- Add Loop Control Plane assets to the standard harness, including interrupt policy/evals, local runtime ledgers, and `harness-hub loop evaluate` / `harness-hub loop schedule` commands for auditable continue-or-interrupt decisions.
+- Add the standard LLM Wiki/context pack with managed schema, update rules, Markdown wiki templates, validation, local-state content pages, and a portable Obsidian profile under `.harness-hub/context`.
 - Rename public source-backed publishing from `insight` to `source-post`, including the CLI command group, installable skill, docs, workflow, OpenSpec change, tests, and GitHub Pages output path; old `harness-hub insight ...` public publishing commands now fail with migration guidance, and `insight` is reserved for private repository interaction audits.
+- Fix localized Chinese README publishing guidance so public source-backed posts use `source-post` while `insight` remains private repository interaction audit terminology.
 
 ## 0.2.0 - 2026-06-25
 
