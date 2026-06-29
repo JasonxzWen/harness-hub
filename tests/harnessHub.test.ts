@@ -1269,16 +1269,16 @@ test('help lists the full public command surface', async () => {
   expect(result.stdout).toContain('harness-hub check');
   expect(result.stdout).toContain('harness-hub init-harness');
   expect(result.stdout).toContain('harness-hub activate-codex');
-  expect(result.stdout).toContain('harness-hub insight generate');
-  expect(result.stdout).toContain('harness-hub insight build');
-  expect(result.stdout).toContain('harness-hub insight validate');
-  expect(result.stdout).toContain('harness-hub insight publish');
+  expect(result.stdout).toContain('harness-hub source-post generate');
+  expect(result.stdout).toContain('harness-hub source-post build');
+  expect(result.stdout).toContain('harness-hub source-post validate');
+  expect(result.stdout).toContain('harness-hub source-post publish');
   expect(result.stdout).toContain('harness-hub loop evaluate');
   expect(result.stdout).toContain('harness-hub loop schedule');
-  expect(result.stdout).not.toContain('harness-hub insight-generate');
-  expect(result.stdout).not.toContain('harness-hub insight-build');
-  expect(result.stdout).not.toContain('harness-hub insight-validate');
-  expect(result.stdout).not.toContain('harness-hub insight-publish');
+  expect(result.stdout).not.toContain('harness-hub source-post-generate');
+  expect(result.stdout).not.toContain('harness-hub source-post-build');
+  expect(result.stdout).not.toContain('harness-hub source-post-validate');
+  expect(result.stdout).not.toContain('harness-hub source-post-publish');
   expect(result.stdout).toContain('harness-hub migrate-lock');
 });
 

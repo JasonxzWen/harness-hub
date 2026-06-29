@@ -763,7 +763,7 @@
       ],
       "overlapsWith": [
         "skill:documentation-lookup",
-        "skill:source-to-insight-blog",
+        "skill:source-post",
         "skill:answer-workflow",
         "skill:tdd-workflow"
       ],
@@ -1232,9 +1232,9 @@
       "risk": "low",
       "recommendation": "Add a skill authoring atom for local skills and routing evaluation without host-specific eval runners."
     },
-    "skill:source-to-insight-blog": {
+    "skill:source-post": {
       "kind": "skill",
-      "path": "skills/source-to-insight-blog",
+      "path": "skills/source-post",
       "version": "0.1.1",
       "source": "local-original",
       "provides": [
@@ -1250,13 +1250,13 @@
         "skill:doc-coauthoring",
         "skill:frontend-design"
       ],
-      "routing": "Load when turning external articles, blogs, release notes, interviews, or reports into source-backed insight blog posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; do not use for ordinary summaries, full copyrighted reposts, or production site design.",
+      "routing": "Load when turning external articles, blogs, release notes, interviews, or reports into source-backed public posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; do not use for ordinary summaries, full copyrighted reposts, or production site design.",
       "detects": [
         {
-          "path": "skills/source-to-insight-blog/SKILL.md"
+          "path": "skills/source-post/SKILL.md"
         },
         {
-          "path": "skills/source-to-insight-blog/scripts/validate-source-blog.mjs"
+          "path": "skills/source-post/scripts/validate-source-post.mjs"
         }
       ],
       "agents": [
@@ -1278,13 +1278,13 @@
         "tool-call-decision-audits"
       ],
       "overlapsWith": [
-        "skill:source-to-insight-blog",
+        "skill:source-post",
         "skill:agent-introspection-debugging",
         "skill:effective-interact",
         "skill:answer-workflow",
         "skill:harness-quality-check"
       ],
-      "routing": "Load when the user asks for a private repository interaction insight audit, Codex or Claude Code trace review, agent task profile, tool-call decision audit, or collaboration bottleneck analysis; use source-to-insight-blog for public external-source posts and agent-introspection-debugging for single-run failures.",
+      "routing": "Load when the user asks for a private repository interaction insight audit, Codex or Claude Code trace review, agent task profile, tool-call decision audit, or collaboration bottleneck analysis; use source-post for public external-source posts and agent-introspection-debugging for single-run failures.",
       "detects": [
         {
           "path": "skills/insight/SKILL.md"

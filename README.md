@@ -16,7 +16,7 @@ Harness Hub does four bounded jobs:
 - `init-harness --target standard` creates the root harness only when you explicitly approve it.
 - `install` installs the standard skill set only; it does not create root harness files.
 - `loop evaluate` and `loop schedule` decide continue vs interrupt and can append local Loop ledgers after `--yes`.
-- `insight` creates, builds, validates, and preflights source-backed insight posts.
+- `source-post` creates, builds, validates, and preflights source-backed public posts.
 
 For a new target repo, start with a dry run:
 
@@ -38,7 +38,7 @@ flowchart TD
   Start --> Skills["Install standard skills only"]
   Start --> Maintain["Maintain Harness Hub itself"]
   Start --> Loop["Run Loop runtime decisions"]
-  Start --> Insight["Publish source-backed insight posts"]
+  Start --> SourcePost["Publish source-backed public posts"]
 
   Analyze --> A1["harness-hub analyze --agent-readiness --harness"]
   Init --> I1["harness-hub init-harness --target standard"]
@@ -47,7 +47,7 @@ flowchart TD
   Validate --> V1["validate-harness / bun run validate"]
   Maintain --> M1["hub-maintenance-workflow"]
   Loop --> L1["loop evaluate -> loop schedule"]
-  Insight --> P1["insight generate -> insight build -> insight validate"]
+  SourcePost --> P1["source-post generate -> source-post build -> source-post validate"]
 ```
 
 ## Choose A Path
@@ -62,7 +62,7 @@ flowchart TD
 | Validate a bootstrapped repo | `validate-harness --json` | Required files, state, QA boundaries, trigger hygiene, and structural scores. |
 | Evaluate Loop risk | `loop evaluate --input action.json --json` | Continue/interrupt decision, risk signals, evidence needs, and optional ledger recording with `--yes`. |
 | Maintain this hub | `workflow-router` then `hub-maintenance-workflow` | Source records, routing, capability metadata, docs, templates, and lifecycle safety. |
-| Create a public source-backed insight post | `insight generate` | Source ledger, Effective Interact adaptation, Pages output, and publish preflight. |
+| Create a public source-backed post | `source-post generate` | Source ledger, Effective Interact adaptation, Pages output, and publish preflight. |
 
 Harness Hub has one user-facing target path: `standard`. There are no named skill install variants, harness pack levels, or bundle selectors. `harness:minimal` is only the internal component/template ID for the root harness files. Confirmed `install` overwrites an existing same-name skill directory; use `--dry-run` first when a target may already have local skills.
 
@@ -140,13 +140,13 @@ npx @jasonwen/harness-hub update D:\path\to\target --dry-run --json
 npx @jasonwen/harness-hub remove D:\path\to\target --dry-run --json
 ```
 
-Insight publishing:
+Source-post publishing:
 
 ```powershell
-npx @jasonwen/harness-hub insight generate . --input input.json --json
-npx @jasonwen/harness-hub insight build . --json
-npx @jasonwen/harness-hub insight validate . --json
-npx @jasonwen/harness-hub insight publish . --dry-run --json
+npx @jasonwen/harness-hub source-post generate . --input input.json --json
+npx @jasonwen/harness-hub source-post build . --json
+npx @jasonwen/harness-hub source-post validate . --json
+npx @jasonwen/harness-hub source-post publish . --dry-run --json
 ```
 
 `check` is a read-only startup check. It reports the released CLI package status from npm registry in `cli`, the target repository's lock-managed component status in `target`, and explicit CodeGraph/Headroom configuration advice in `externalTools`; update availability, registry failures, missing locks, missing project-local Codex activation, and external tool suggestions are advisory and do not apply updates, install tools, or block the agent startup path.
@@ -173,7 +173,7 @@ Harness Hub does not create the schedule, webhook, commit, push, tool install, o
 | Platform extension | `claude-api`, `mcp-builder`, `skill-creator`, source records, capability metadata. |
 | External tool advice | `check.externalTools` and `analyze --agent-readiness` signals for explicit CodeGraph and Headroom setup. |
 | Harness lifecycle | `check`, `self-check`, `analyze`, `init-harness`, `validate-harness`, `loop evaluate`, `loop schedule`, `install`, `status`, `update`, `remove`, `harness-quality-check`. |
-| Insight publishing | `insight generate`, `insight build`, `insight validate`, `insight publish`. |
+| Source-post publishing | `source-post generate`, `source-post build`, `source-post validate`, `source-post publish`. |
 
 ## Source Layout
 

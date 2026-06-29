@@ -502,7 +502,7 @@ export interface DevBootstrapResult extends DevBootstrapPlan {
   reason: string;
 }
 
-export interface InsightSource {
+export interface SourcePostSource {
   id: string;
   title: string;
   url: string;
@@ -512,56 +512,56 @@ export interface InsightSource {
   notes?: string;
 }
 
-export type InsightClaimKind = 'fact' | 'inference' | 'assumption' | 'project-judgment';
+export type SourcePostClaimKind = 'fact' | 'inference' | 'assumption' | 'project-judgment';
 
-export interface InsightSourceClaim {
+export interface SourcePostSourceClaim {
   id: string;
   sourceId: string;
   statement: string;
-  kind: InsightClaimKind;
+  kind: SourcePostClaimKind;
 }
 
-export interface InsightViewpoint {
+export interface SourcePostViewpoint {
   id: string;
   statement: string;
   sourceClaimIds: string[];
 }
 
-export interface InsightProjectMapping {
+export interface SourcePostProjectMapping {
   area: string;
   impact: string;
   action: string;
 }
 
-export interface InsightIterationRecord {
+export interface SourcePostIterationRecord {
   changed: string[];
   confirmed: string[];
   open: string[];
   watch: string[];
 }
 
-export interface InsightActionBoundary {
+export interface SourcePostActionBoundary {
   now: string[];
   observe: string[];
   notNow: string[];
 }
 
-export interface InsightPostInput {
+export interface SourcePostInput {
   title: string;
   date: string;
   summary: string;
   slug?: string;
-  sources: InsightSource[];
-  sourceClaims: InsightSourceClaim[];
-  viewpoints: InsightViewpoint[];
+  sources: SourcePostSource[];
+  sourceClaims: SourcePostSourceClaim[];
+  viewpoints: SourcePostViewpoint[];
   integration: string[];
-  projectMapping: InsightProjectMapping[];
-  iterationRecord: InsightIterationRecord;
-  actionBoundary: InsightActionBoundary;
+  projectMapping: SourcePostProjectMapping[];
+  iterationRecord: SourcePostIterationRecord;
+  actionBoundary: SourcePostActionBoundary;
   assumptions?: string[];
 }
 
-export type InsightValidationCode =
+export type SourcePostValidationCode =
   | 'required-field'
   | 'utf8'
   | 'source-link'
@@ -577,8 +577,8 @@ export type InsightValidationCode =
   | 'branch'
   | 'worktree';
 
-export interface InsightValidationCheck {
-  code: InsightValidationCode;
+export interface SourcePostValidationCheck {
+  code: SourcePostValidationCode;
   state: 'pass' | 'fail';
   path: string;
   reason: string;
@@ -587,16 +587,16 @@ export interface InsightValidationCheck {
   limit?: number;
 }
 
-export interface InsightValidationResult {
+export interface SourcePostValidationResult {
   schemaVersion: 1;
   generatedAt: string;
   targetDir: string;
   exitCode: number;
-  checks: InsightValidationCheck[];
+  checks: SourcePostValidationCheck[];
   reason: string;
 }
 
-export interface InsightPostResult {
+export interface SourcePostResult {
   schemaVersion: 1;
   generatedAt: string;
   repoRoot: string;
@@ -607,29 +607,29 @@ export interface InsightPostResult {
   effectiveInteractInputPath: string;
   effectiveInteractSummaryPath: string;
   htmlPath: string;
-  validation: InsightValidationResult;
+  validation: SourcePostValidationResult;
   reason: string;
 }
 
-export interface InsightBuildResult {
+export interface SourcePostBuildResult {
   schemaVersion: 1;
   generatedAt: string;
   repoRoot: string;
   siteDir: string;
   posts: Array<{ slug: string; title: string; date: string; summary: string; href: string }>;
   files: string[];
-  validation: InsightValidationResult;
+  validation: SourcePostValidationResult;
   exitCode: number;
   reason: string;
 }
 
-export interface InsightPreflightResult {
+export interface SourcePostPreflightResult {
   schemaVersion: 1;
   generatedAt: string;
   repoRoot: string;
   mode: 'dry-run' | 'publish';
   exitCode: number;
-  checks: InsightValidationCheck[];
+  checks: SourcePostValidationCheck[];
   reason: string;
 }
 
@@ -752,7 +752,7 @@ interface LatestPackageVersionResult {
   reason: string;
 }
 
-type InsightCliAction = 'generate' | 'build' | 'validate' | 'publish';
+type SourcePostCliAction = 'generate' | 'build' | 'validate' | 'publish';
 type LoopCliAction = 'evaluate' | 'schedule';
 export type LoopDecision = 'continue' | 'interrupt';
 export type LoopDecisionConfidence = 'high' | 'medium';
@@ -812,7 +812,7 @@ export interface LoopScheduleResult {
 
 interface CliOptions {
   command: string;
-  insightAction: InsightCliAction | null;
+  sourcePostAction: SourcePostCliAction | null;
   loopAction: LoopCliAction | null;
   targetDir: string | null;
   agents: AgentName[];
@@ -1004,10 +1004,10 @@ const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   '.harness-hub/state/capability-events.jsonl': 64 * 1024,
 });
 const NON_CODEX_PLATFORM_FILES = ['CLAUDE.md'];
-const INSIGHT_SITE_ROOT = 'site';
-const INSIGHT_POSTS_ROOT = 'site/insights/posts';
-const INSIGHT_SOURCE_EXCERPT_WORD_LIMIT = 220;
-const INSIGHT_WORKFLOW_PATH = '.github/workflows/publish-insights.yml';
+const SOURCE_POST_SITE_ROOT = 'site';
+const SOURCE_POSTS_ROOT = 'site/source-posts/posts';
+const SOURCE_POST_SOURCE_EXCERPT_WORD_LIMIT = 220;
+const SOURCE_POST_WORKFLOW_PATH = '.github/workflows/publish-source-posts.yml';
 
 export function readCapabilityIndex(hubRoot = HUB_ROOT): CapabilityIndex {
   const indexPath = path.join(hubRoot, 'capabilities', 'index.json');
@@ -3753,19 +3753,19 @@ function validateFileContainsWithCode(
   };
 }
 
-export function createInsightPost(
-  input: InsightPostInput,
+export function createSourcePost(
+  input: SourcePostInput,
   options: { repoRoot?: string; slug?: string; writeInvalid?: boolean } = {},
-): InsightPostResult {
+): SourcePostResult {
   const repoRoot = path.resolve(options.repoRoot || process.cwd());
-  const slug = resolveInsightSlug(input, options.slug);
-  const postDir = assertSafeRelativePath(repoRoot, path.posix.join(INSIGHT_POSTS_ROOT, slug));
+  const slug = resolveSourcePostSlug(input, options.slug);
+  const postDir = assertSafeRelativePath(repoRoot, path.posix.join(SOURCE_POSTS_ROOT, slug));
   const postJsonPath = path.join(postDir, 'post.json');
   const sourceLedgerPath = path.join(postDir, 'source-ledger.json');
   const effectiveInteractInputPath = path.join(postDir, 'effective-interact.input.json');
   const effectiveInteractSummaryPath = path.join(postDir, 'effective-interact-summary.html');
   const htmlPath = path.join(postDir, 'index.html');
-  const validation = validateInsightPostInput(input, repoRoot);
+  const validation = validateSourcePostInput(input, repoRoot);
   const generatedAt = new Date().toISOString();
 
   if (validation.exitCode !== 0) {
@@ -3781,15 +3781,15 @@ export function createInsightPost(
       effectiveInteractSummaryPath,
       htmlPath,
       validation,
-      reason: 'Insight post generation skipped because source validation failed.',
+      reason: 'Source post generation skipped because source validation failed.',
     };
   }
 
   fs.mkdirSync(postDir, { recursive: true });
   const post = { ...input, slug };
   writeJsonFile(postJsonPath, post);
-  writeJsonFile(sourceLedgerPath, buildInsightSourceLedger(post, slug, generatedAt));
-  writeJsonFile(effectiveInteractInputPath, adaptInsightToEffectiveInteract(post, slug, generatedAt));
+  writeJsonFile(sourceLedgerPath, buildSourcePostSourceLedger(post, slug, generatedAt));
+  writeJsonFile(effectiveInteractInputPath, adaptSourcePostToEffectiveInteract(post, slug, generatedAt));
 
   execFileSync(process.execPath, [
     path.join(HUB_ROOT, 'skills', 'effective-interact', 'scripts', 'create-interaction.mjs'),
@@ -3805,7 +3805,7 @@ export function createInsightPost(
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  fs.writeFileSync(htmlPath, renderInsightArticleHtml(post, slug, generatedAt), 'utf8');
+  fs.writeFileSync(htmlPath, renderSourcePostArticleHtml(post, slug, generatedAt), 'utf8');
 
   return {
     schemaVersion: 1,
@@ -3819,31 +3819,31 @@ export function createInsightPost(
     effectiveInteractSummaryPath,
     htmlPath,
     validation,
-    reason: 'Insight post generated from structured source truth.',
+    reason: 'Source post generated from structured source truth.',
   };
 }
 
-export function buildInsightSite(options: { repoRoot?: string } = {}): InsightBuildResult {
+export function buildSourcePostSite(options: { repoRoot?: string } = {}): SourcePostBuildResult {
   const repoRoot = path.resolve(options.repoRoot || process.cwd());
-  const siteDir = assertSafeRelativePath(repoRoot, INSIGHT_SITE_ROOT);
-  const insightsDir = assertSafeRelativePath(repoRoot, 'site/insights');
-  const posts = collectInsightPostSummaries(repoRoot);
+  const siteDir = assertSafeRelativePath(repoRoot, SOURCE_POST_SITE_ROOT);
+  const sourcePostsDir = assertSafeRelativePath(repoRoot, 'site/source-posts');
+  const posts = collectSourcePostSummaries(repoRoot);
   const files = [
     path.join(siteDir, 'index.html'),
-    path.join(insightsDir, 'index.html'),
-    path.join(insightsDir, 'index.json'),
+    path.join(sourcePostsDir, 'index.html'),
+    path.join(sourcePostsDir, 'index.json'),
   ];
 
-  fs.mkdirSync(insightsDir, { recursive: true });
-  writeJsonFile(path.join(insightsDir, 'index.json'), {
+  fs.mkdirSync(sourcePostsDir, { recursive: true });
+  writeJsonFile(path.join(sourcePostsDir, 'index.json'), {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     posts,
   });
-  fs.writeFileSync(path.join(insightsDir, 'index.html'), renderInsightsIndexHtml(posts), 'utf8');
+  fs.writeFileSync(path.join(sourcePostsDir, 'index.html'), renderSourcePostsIndexHtml(posts), 'utf8');
   fs.writeFileSync(path.join(siteDir, 'index.html'), renderSiteHomeHtml(posts), 'utf8');
 
-  const validation = validateInsightSite({ repoRoot });
+  const validation = validateSourcePostSite({ repoRoot });
   return {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
@@ -3854,16 +3854,16 @@ export function buildInsightSite(options: { repoRoot?: string } = {}): InsightBu
     validation,
     exitCode: validation.exitCode,
     reason: validation.exitCode === 0
-      ? 'Insight site indexes are ready for GitHub Pages.'
-      : 'Insight site indexes were written, but validation failed.',
+      ? 'Source-post site indexes are ready for GitHub Pages.'
+      : 'Source-post site indexes were written, but validation failed.',
   };
 }
 
-export function validateInsightSite(options: { repoRoot?: string } = {}): InsightValidationResult {
+export function validateSourcePostSite(options: { repoRoot?: string } = {}): SourcePostValidationResult {
   const repoRoot = path.resolve(options.repoRoot || process.cwd());
-  const siteDir = path.join(repoRoot, INSIGHT_SITE_ROOT);
-  const checks: InsightValidationCheck[] = [];
-  const requiredIndexes = ['site/index.html', 'site/insights/index.html', 'site/insights/index.json'];
+  const siteDir = path.join(repoRoot, SOURCE_POST_SITE_ROOT);
+  const checks: SourcePostValidationCheck[] = [];
+  const requiredIndexes = ['site/index.html', 'site/source-posts/index.html', 'site/source-posts/index.json'];
 
   for (const relativePath of requiredIndexes) {
     const filePath = path.join(repoRoot, relativePath);
@@ -3873,13 +3873,13 @@ export function validateInsightSite(options: { repoRoot?: string } = {}): Insigh
       path: relativePath,
       reason: fs.existsSync(filePath)
         ? 'Public site index file exists.'
-        : 'Public site index file is missing; run harness-hub insight build first.',
+        : 'Public site index file is missing; run harness-hub source-post build first.',
     });
   }
 
   checks.push(validatePublicArtifactBoundary(repoRoot));
 
-  for (const postDir of listInsightPostDirs(repoRoot)) {
+  for (const postDir of listSourcePostDirs(repoRoot)) {
     const slug = path.basename(postDir);
     const postJsonPath = path.join(postDir, 'post.json');
     const sourceLedgerPath = path.join(postDir, 'source-ledger.json');
@@ -3899,8 +3899,8 @@ export function validateInsightSite(options: { repoRoot?: string } = {}): Insigh
         state: fs.existsSync(filePath) ? 'pass' : 'fail',
         path: relativePath,
         reason: fs.existsSync(filePath)
-          ? 'Required insight post file exists.'
-          : `Required insight post file is missing for ${slug}.`,
+          ? 'Required source post file exists.'
+          : `Required source post file is missing for ${slug}.`,
       });
     }
 
@@ -3909,14 +3909,14 @@ export function validateInsightSite(options: { repoRoot?: string } = {}): Insigh
     }
 
     try {
-      const post = readJsonFile<InsightPostInput>(postJsonPath);
-      checks.push(...validateInsightPostInput(post, repoRoot).checks);
+      const post = readJsonFile<SourcePostInput>(postJsonPath);
+      checks.push(...validateSourcePostInput(post, repoRoot).checks);
     } catch {
       checks.push({
         code: 'post-file',
         state: 'fail',
         path: toPortablePath(path.relative(repoRoot, postJsonPath)),
-        reason: 'Insight post source JSON is not valid JSON.',
+        reason: 'Source post source JSON is not valid JSON.',
       });
     }
 
@@ -3933,27 +3933,27 @@ export function validateInsightSite(options: { repoRoot?: string } = {}): Insigh
     }
   }
 
-  return makeInsightValidationResult(repoRoot, checks, 'Insight site validation');
+  return makeSourcePostValidationResult(repoRoot, checks, 'Source-post site validation');
 }
 
-export function publishInsightPreflight(
+export function publishSourcePostPreflight(
   options: { repoRoot?: string; dryRun?: boolean; allowDirty?: boolean } = {},
-): InsightPreflightResult {
+): SourcePostPreflightResult {
   const repoRoot = path.resolve(options.repoRoot || process.cwd());
-  const mode: InsightPreflightResult['mode'] = options.dryRun === false ? 'publish' : 'dry-run';
-  const checks: InsightValidationCheck[] = [];
-  const siteValidation = validateInsightSite({ repoRoot });
+  const mode: SourcePostPreflightResult['mode'] = options.dryRun === false ? 'publish' : 'dry-run';
+  const checks: SourcePostValidationCheck[] = [];
+  const siteValidation = validateSourcePostSite({ repoRoot });
 
   checks.push({
     code: 'workflow',
-    state: fs.existsSync(path.join(repoRoot, INSIGHT_WORKFLOW_PATH)) ? 'pass' : 'fail',
-    path: INSIGHT_WORKFLOW_PATH,
-    reason: fs.existsSync(path.join(repoRoot, INSIGHT_WORKFLOW_PATH))
+    state: fs.existsSync(path.join(repoRoot, SOURCE_POST_WORKFLOW_PATH)) ? 'pass' : 'fail',
+    path: SOURCE_POST_WORKFLOW_PATH,
+    reason: fs.existsSync(path.join(repoRoot, SOURCE_POST_WORKFLOW_PATH))
       ? 'GitHub Pages workflow exists.'
       : 'GitHub Pages workflow is missing.',
   });
 
-  for (const relativePath of ['site/index.html', 'site/insights/index.html', 'site/insights/index.json']) {
+  for (const relativePath of ['site/index.html', 'site/source-posts/index.html', 'site/source-posts/index.json']) {
     const filePath = path.join(repoRoot, relativePath);
     checks.push({
       code: 'pages-output',
@@ -3961,13 +3961,13 @@ export function publishInsightPreflight(
       path: relativePath,
       reason: fs.existsSync(filePath)
         ? 'GitHub Pages output file exists.'
-        : 'GitHub Pages output file is missing; run harness-hub insight build first.',
+        : 'GitHub Pages output file is missing; run harness-hub source-post build first.',
     });
   }
 
   checks.push(...siteValidation.checks);
   checks.push(checkGitBranch(repoRoot));
-  checks.push(checkInsightWorktree(repoRoot, options.allowDirty === true));
+  checks.push(checkSourcePostWorktree(repoRoot, options.allowDirty === true));
 
   const failures = checks.filter((check) => check.state === 'fail');
   return {
@@ -3978,12 +3978,12 @@ export function publishInsightPreflight(
     exitCode: failures.length > 0 ? 3 : 0,
     checks,
     reason: failures.length > 0
-      ? `${failures.length} insight publish preflight checks failed.`
-      : 'Insight publish preflight passed.',
+      ? `${failures.length} source-post publish preflight checks failed.`
+      : 'Source-post publish preflight passed.',
   };
 }
 
-function validateInsightPostInput(input: InsightPostInput, targetDir: string): InsightValidationResult {
+function validateSourcePostInput(input: SourcePostInput, targetDir: string): SourcePostValidationResult {
   const sources = Array.isArray(input.sources) ? input.sources : [];
   const sourceClaims = Array.isArray(input.sourceClaims) ? input.sourceClaims : [];
   const viewpoints = Array.isArray(input.viewpoints) ? input.viewpoints : [];
@@ -3991,7 +3991,7 @@ function validateInsightPostInput(input: InsightPostInput, targetDir: string): I
   const projectMapping = Array.isArray(input.projectMapping) ? input.projectMapping : [];
   const sourceIds = new Set(sources.map((source) => source.id));
   const claimIds = new Set(sourceClaims.map((claim) => claim.id));
-  const checks: InsightValidationCheck[] = [];
+  const checks: SourcePostValidationCheck[] = [];
 
   const requiredFieldsPresent = Boolean(
     input.title
@@ -4010,8 +4010,8 @@ function validateInsightPostInput(input: InsightPostInput, targetDir: string): I
     state: requiredFieldsPresent ? 'pass' : 'fail',
     path: 'post.json',
     reason: requiredFieldsPresent
-      ? 'Required insight post fields are present.'
-      : 'Insight post source is missing required fields.',
+      ? 'Required source post fields are present.'
+      : 'Source post source is missing required fields.',
   });
 
   checks.push({
@@ -4019,8 +4019,8 @@ function validateInsightPostInput(input: InsightPostInput, targetDir: string): I
     state: hasLikelyMojibake(JSON.stringify(input)) ? 'fail' : 'pass',
     path: 'post.json',
     reason: hasLikelyMojibake(JSON.stringify(input))
-      ? 'Insight post source contains likely mojibake; write files as UTF-8.'
-      : 'Insight post source has no likely mojibake markers.',
+      ? 'Source post source contains likely mojibake; write files as UTF-8.'
+      : 'Source post source has no likely mojibake markers.',
   });
 
   const sourceAttributionOk = Array.isArray(input.sources)
@@ -4048,19 +4048,19 @@ function validateInsightPostInput(input: InsightPostInput, targetDir: string): I
 
   const oversizedSources = sources
     .map((source) => ({ source, words: countWords(source.excerpt || '') }))
-    .filter((entry) => entry.words > INSIGHT_SOURCE_EXCERPT_WORD_LIMIT);
+    .filter((entry) => entry.words > SOURCE_POST_SOURCE_EXCERPT_WORD_LIMIT);
   checks.push({
     code: 'source-size',
     state: oversizedSources.length === 0 ? 'pass' : 'fail',
     path: 'sources[].excerpt',
     reason: oversizedSources.length === 0
       ? 'Source excerpts stay within copyright-safe size limits.'
-      : `Source excerpts exceed ${INSIGHT_SOURCE_EXCERPT_WORD_LIMIT} words: ${oversizedSources.map((entry) => entry.source.id).join(', ')}.`,
+      : `Source excerpts exceed ${SOURCE_POST_SOURCE_EXCERPT_WORD_LIMIT} words: ${oversizedSources.map((entry) => entry.source.id).join(', ')}.`,
     size: oversizedSources[0]?.words,
-    limit: INSIGHT_SOURCE_EXCERPT_WORD_LIMIT,
+    limit: SOURCE_POST_SOURCE_EXCERPT_WORD_LIMIT,
   });
 
-  const validClaimKinds = new Set<InsightClaimKind>(['fact', 'inference', 'assumption', 'project-judgment']);
+  const validClaimKinds = new Set<SourcePostClaimKind>(['fact', 'inference', 'assumption', 'project-judgment']);
   const factInferenceOk = sourceClaims.length > 0
     && viewpoints.length > 0
     && sourceClaims.every((claim) => validClaimKinds.has(claim.kind));
@@ -4070,7 +4070,7 @@ function validateInsightPostInput(input: InsightPostInput, targetDir: string): I
     path: 'sourceClaims',
     reason: factInferenceOk
       ? 'Source claims and viewpoints keep explicit claim kinds and trace links.'
-      : 'Insight posts must separate source-backed claims from viewpoint extraction with explicit claim kinds.',
+      : 'Source posts must separate source-backed claims from viewpoint extraction with explicit claim kinds.',
   });
 
   const invalidClaimRefs = sourceClaims.filter((claim) => !sourceIds.has(claim.sourceId));
@@ -4097,14 +4097,14 @@ function validateInsightPostInput(input: InsightPostInput, targetDir: string): I
       code: 'required-field',
       state: 'fail',
       path: 'integration/projectMapping',
-      reason: 'Insight post source needs project integration and project mapping entries.',
+      reason: 'Source post source needs project integration and project mapping entries.',
     });
   }
 
-  return makeInsightValidationResult(path.resolve(targetDir), checks, 'Insight post validation');
+  return makeSourcePostValidationResult(path.resolve(targetDir), checks, 'Source post validation');
 }
 
-function makeInsightValidationResult(targetDir: string, checks: InsightValidationCheck[], label: string): InsightValidationResult {
+function makeSourcePostValidationResult(targetDir: string, checks: SourcePostValidationCheck[], label: string): SourcePostValidationResult {
   const failures = checks.filter((check) => check.state === 'fail');
   return {
     schemaVersion: 1,
@@ -4116,11 +4116,11 @@ function makeInsightValidationResult(targetDir: string, checks: InsightValidatio
   };
 }
 
-function renderInsightArticleHtml(input: InsightPostInput, slug: string, generatedAt: string): string {
-  const dictionaryInsight = isAiCodingDictionaryInsight(input);
-  const sourceGuide = dictionaryInsight
+function renderSourcePostArticleHtml(input: SourcePostInput, slug: string, generatedAt: string): string {
+  const dictionarySourcePost = isAiCodingDictionarySourcePost(input);
+  const sourceGuide = dictionarySourcePost
     ? renderAiDictionarySourceGuide(input)
-    : renderDefaultInsightSourceGuide(input);
+    : renderDefaultSourcePostSourceGuide(input);
   const localChanges = input.projectMapping.map((item) => `
         <li>
           <strong>${escapeHtml(item.area)}</strong>
@@ -4131,11 +4131,11 @@ function renderInsightArticleHtml(input: InsightPostInput, slug: string, generat
         <li><a href="${escapeAttr(source.url)}">${escapeHtml(source.title)}</a><span>${escapeHtml(source.type)} · ${escapeHtml(source.accessedAt)}</span></li>`).join('');
 
   return `<!doctype html>
-<html lang="zh-CN" data-insight-blog data-source-to-insight-blog>
+<html lang="zh-CN" data-source-post>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="${escapeAttr(trimInsightPrefix(input.summary))}">
+  <meta name="description" content="${escapeAttr(trimSourcePostPrefix(input.summary))}">
   <title>${escapeHtml(input.title)}</title>
   <style>
     :root {
@@ -4291,9 +4291,9 @@ function renderInsightArticleHtml(input: InsightPostInput, slug: string, generat
 <body>
   <main>
     <header>
-      <p class="eyebrow">Source-backed insight · ${escapeHtml(input.date)}</p>
+      <p class="eyebrow">Source-backed post ? ${escapeHtml(input.date)}</p>
       <h1>${escapeHtml(input.title)}</h1>
-      <p class="summary">${escapeHtml(trimInsightPrefix(input.summary))}</p>
+      <p class="summary">${escapeHtml(trimSourcePostPrefix(input.summary))}</p>
       <nav aria-label="文章结构">
         <a href="#source-guide">原仓库导读</a>
         <a href="#local-changes">本地变更</a>
@@ -4352,15 +4352,15 @@ function renderInsightArticleHtml(input: InsightPostInput, slug: string, generat
 `;
 }
 
-function renderAiDictionarySourceGuide(input: InsightPostInput): string {
-  const purpose = firstMatchingInsightStatement(input, ['术语不透明', '白话解释'])
+function renderAiDictionarySourceGuide(input: SourcePostInput): string {
+  const purpose = firstMatchingSourcePostStatement(input, ['术语不透明', '白话解释'])
     || '它把 AI coding 中容易混淆的基础术语整理成读者能快速建立边界的词典。';
-  const boundary = firstMatchingInsightStatement(input, ['LICENSE', '全文翻译', 'reference-only'])
+  const boundary = firstMatchingSourcePostStatement(input, ['LICENSE', '全文翻译', 'reference-only'])
     || '当前没有足够授权证据，所以本文只做结构导读和项目反思，不发布完整中文词条。';
 
   return `
       <h3>一分钟结论</h3>
-      <p class="lead">${escapeHtml(trimInsightPrefix(input.summary))}</p>
+      <p class="lead">${escapeHtml(trimSourcePostPrefix(input.summary))}</p>
       <p>${escapeHtml(purpose)}</p>
       <p>${escapeHtml(boundary)}</p>
       <h3>原仓库内容树</h3>
@@ -4374,22 +4374,22 @@ function renderAiDictionarySourceGuide(input: InsightPostInput): string {
       </ul>`;
 }
 
-function renderDefaultInsightSourceGuide(input: InsightPostInput): string {
+function renderDefaultSourcePostSourceGuide(input: SourcePostInput): string {
   return `
       <h3>一分钟结论</h3>
-      <p class="lead">${escapeHtml(trimInsightPrefix(input.summary))}</p>
+      <p class="lead">${escapeHtml(trimSourcePostPrefix(input.summary))}</p>
       <p>${escapeHtml(input.viewpoints[0]?.statement || input.integration[0] || '这篇文章只保留读者理解项目判断所需的来源结构和本地影响。')}</p>
       <h3>来源结构</h3>
       <ul>${input.sources.slice(0, 6).map((source) => `<li>${escapeHtml(source.title)}：${escapeHtml(source.notes || source.excerpt || source.type)}</li>`).join('')}</ul>`;
 }
 
-function buildInsightSourceLedger(input: InsightPostInput, slug: string, generatedAt: string): Record<string, unknown> {
+function buildSourcePostSourceLedger(input: SourcePostInput, slug: string, generatedAt: string): Record<string, unknown> {
   return {
     schemaVersion: 1,
     slug,
     generatedAt,
     sourceOfTruth: 'post.json',
-    excerptWordLimit: INSIGHT_SOURCE_EXCERPT_WORD_LIMIT,
+    excerptWordLimit: SOURCE_POST_SOURCE_EXCERPT_WORD_LIMIT,
     copyrightBoundary: 'Use short excerpts and project-specific analysis; do not archive or rewrite source articles.',
     sources: input.sources,
     sourceClaims: input.sourceClaims,
@@ -4397,8 +4397,8 @@ function buildInsightSourceLedger(input: InsightPostInput, slug: string, generat
   };
 }
 
-function adaptInsightToEffectiveInteract(input: InsightPostInput, slug: string, generatedAt: string): Record<string, unknown> {
-  const dictionaryInsight = isAiCodingDictionaryInsight(input);
+function adaptSourcePostToEffectiveInteract(input: SourcePostInput, slug: string, generatedAt: string): Record<string, unknown> {
+  const dictionarySourcePost = isAiCodingDictionarySourcePost(input);
   return {
     title: input.title,
     summary: input.summary,
@@ -4408,14 +4408,14 @@ function adaptInsightToEffectiveInteract(input: InsightPostInput, slug: string, 
     renderMode: 'pre-rendered',
     intent: {
       audience: '中文读者与 Harness Hub maintainer',
-      primaryQuestion: dictionaryInsight
+      primaryQuestion: dictionarySourcePost
         ? '原仓库讲了什么，本地改了什么，改得值不值？'
         : '读者如何快速理解这篇译注和本项目迭代？',
-      decision: dictionaryInsight
+      decision: dictionarySourcePost
         ? '原仓库是 62 个术语的 7 层词典；本地只该借结构、边界和验证语言。'
         : '只借结构，不复制正文；把术语边界落到本地迭代。',
       artifactKind: 'research',
-      successCriteria: dictionaryInsight
+      successCriteria: dictionarySourcePost
         ? [
           '简单概括原仓库核心思想，并用树形结构组织内容。',
           '梳理本地已根据该仓库做出的变更。',
@@ -4427,7 +4427,7 @@ function adaptInsightToEffectiveInteract(input: InsightPostInput, slug: string, 
           '事实、推断和项目判断仍能追溯到来源 metadata。',
         ],
     },
-    sections: dictionaryInsight ? buildAiCodingDictionarySections(input) : buildDefaultInsightSections(input),
+    sections: dictionarySourcePost ? buildAiCodingDictionarySections(input) : buildDefaultSourcePostSections(input),
     evidence: input.sources.map((source) => ({
       id: source.id,
       kind: 'source',
@@ -4448,7 +4448,7 @@ function adaptInsightToEffectiveInteract(input: InsightPostInput, slug: string, 
   };
 }
 
-function buildDefaultInsightSections(input: InsightPostInput): Array<Record<string, unknown>> {
+function buildDefaultSourcePostSections(input: SourcePostInput): Array<Record<string, unknown>> {
   return [
     {
       type: 'summary-cards',
@@ -4456,7 +4456,7 @@ function buildDefaultInsightSections(input: InsightPostInput): Array<Record<stri
       group: 'summary',
       status: 'complete',
       summary: '先回答读者最关心的结论、边界、项目落点和验证方式。',
-      cards: buildInsightSummaryCards(input),
+      cards: buildSourcePostSummaryCards(input),
     },
     {
       type: 'data-table',
@@ -4469,7 +4469,7 @@ function buildDefaultInsightSections(input: InsightPostInput): Array<Record<stri
         { key: 'question', label: '读者问题', width: '24ch' },
         { key: 'answer', label: '答案' },
       ],
-      rows: buildInsightReadingPathRows(input),
+      rows: buildSourcePostReadingPathRows(input),
     },
     {
       type: 'data-table',
@@ -4482,7 +4482,7 @@ function buildDefaultInsightSections(input: InsightPostInput): Array<Record<stri
         { key: 'judgment', label: '判断', width: '28ch' },
         { key: 'impact', label: '对本文的影响' },
       ],
-      rows: buildInsightBoundaryRows(input),
+      rows: buildSourcePostBoundaryRows(input),
     },
     {
       type: 'data-table',
@@ -4495,7 +4495,7 @@ function buildDefaultInsightSections(input: InsightPostInput): Array<Record<stri
         { key: 'readerTranslation', label: '中文读法', width: '34ch' },
         { key: 'why', label: '为什么重要' },
       ],
-      rows: buildInsightConceptMapRows(input),
+      rows: buildSourcePostConceptMapRows(input),
     },
     {
       type: 'data-table',
@@ -4508,7 +4508,7 @@ function buildDefaultInsightSections(input: InsightPostInput): Array<Record<stri
         { key: 'impact', label: '读者应理解' },
         { key: 'action', label: '本项目动作' },
       ],
-      rows: buildInsightProjectRows(input),
+      rows: buildSourcePostProjectRows(input),
     },
     {
       type: 'timeline',
@@ -4516,7 +4516,7 @@ function buildDefaultInsightSections(input: InsightPostInput): Array<Record<stri
       group: 'changes',
       status: 'ready',
       summary: '把“之前根据这个项目做过什么”放到时间线上读。',
-      items: buildInsightIterationTimeline(input.iterationRecord),
+      items: buildSourcePostIterationTimeline(input.iterationRecord),
     },
     {
       type: 'tabs',
@@ -4524,7 +4524,7 @@ function buildDefaultInsightSections(input: InsightPostInput): Array<Record<stri
       group: 'next',
       status: 'ready',
       summary: '不同读者直接看自己关心的行动面。',
-      tabs: buildInsightReaderTabs(input),
+      tabs: buildSourcePostReaderTabs(input),
     },
     {
       type: 'markdown',
@@ -4536,7 +4536,7 @@ function buildDefaultInsightSections(input: InsightPostInput): Array<Record<stri
   ];
 }
 
-function buildAiCodingDictionarySections(input: InsightPostInput): Array<Record<string, unknown>> {
+function buildAiCodingDictionarySections(input: SourcePostInput): Array<Record<string, unknown>> {
   return [
     {
       type: 'markdown',
@@ -4603,9 +4603,9 @@ function buildAiCodingDictionarySections(input: InsightPostInput): Array<Record<
   ];
 }
 
-function buildAiDictionaryIntroMarkdown(input: InsightPostInput): string {
+function buildAiDictionaryIntroMarkdown(input: SourcePostInput): string {
   return [
-    `**结论：${trimInsightPrefix(input.summary)}**`,
+    `**结论：${trimSourcePostPrefix(input.summary)}**`,
     '',
     '原仓库 `mattpocock/dictionary-of-ai-coding` 不是一个可安装工具，也不是一套工作流。它是一份 AI coding 术语词典：把初学者经常听到、但很难定位的词，按实际使用场景分组解释。',
     '',
@@ -4656,7 +4656,7 @@ function buildAiDictionaryCoreMarkdown(): string {
   ].join('\n');
 }
 
-function buildAiDictionaryLocalChangesMarkdown(input: InsightPostInput): string {
+function buildAiDictionaryLocalChangesMarkdown(input: SourcePostInput): string {
   const rows = input.projectMapping.length > 0 ? input.projectMapping : [
     {
       area: 'docs/harness-vocabulary.md',
@@ -4697,7 +4697,7 @@ function buildAiDictionaryReflectionRows(): Array<Record<string, string>> {
       next: '继续作为审查规则；不要把它扩成第二套词典。',
     },
     {
-      item: 'Pages insight post',
+      item: 'Pages source post',
       assessment: '当前版本需要收敛。发布链路有效，但文章结构必须服务读者。',
       redundancy: '中。若每篇都生成 source-ledger 式报告，会不像 blog。',
       next: '固定本文三段式：原仓库导读、本地变更、有效性反思。',
@@ -4705,7 +4705,7 @@ function buildAiDictionaryReflectionRows(): Array<Record<string, string>> {
   ];
 }
 
-function buildAiDictionaryNextMarkdown(input: InsightPostInput): string {
+function buildAiDictionaryNextMarkdown(input: SourcePostInput): string {
   return [
     '**现在该做：**',
     ...input.actionBoundary.now.map((action) => `- ${action}`),
@@ -4718,25 +4718,25 @@ function buildAiDictionaryNextMarkdown(input: InsightPostInput): string {
   ].join('\n');
 }
 
-function buildInsightSummaryCards(input: InsightPostInput): Array<Record<string, string>> {
+function buildSourcePostSummaryCards(input: SourcePostInput): Array<Record<string, string>> {
   const landing = input.projectMapping
     .map((item) => item.area)
     .slice(0, 3)
     .join(' / ');
   return [
-    { label: '结论', value: trimInsightPrefix(input.summary) },
+    { label: '结论', value: trimSourcePostPrefix(input.summary) },
     { label: '边界', value: input.actionBoundary.notNow[0] || '不复制来源正文，保留来源追溯。' },
     { label: '落点', value: landing || '项目映射见下方表格。' },
     { label: '验证', value: `${input.sources.length} 个来源 / ${input.sourceClaims.length} 条 claim / source-ledger 可审计` },
   ];
 }
 
-function buildInsightReadingPathRows(input: InsightPostInput): Array<Record<string, string>> {
+function buildSourcePostReadingPathRows(input: SourcePostInput): Array<Record<string, string>> {
   return [
     {
       order: '1',
       question: '这篇到底说什么？',
-      answer: trimInsightPrefix(input.summary),
+      answer: trimSourcePostPrefix(input.summary),
     },
     {
       order: '2',
@@ -4746,7 +4746,7 @@ function buildInsightReadingPathRows(input: InsightPostInput): Array<Record<stri
     {
       order: '3',
       question: '上游值得借什么？',
-      answer: firstMatchingInsightStatement(input, ['层译法', '术语', 'taxonomy'])
+      answer: firstMatchingSourcePostStatement(input, ['层译法', '术语', 'taxonomy'])
         || '借术语分层和概念边界，不复制条目正文。',
     },
     {
@@ -4757,11 +4757,11 @@ function buildInsightReadingPathRows(input: InsightPostInput): Array<Record<stri
   ];
 }
 
-function buildInsightBoundaryRows(input: InsightPostInput): Array<Record<string, string>> {
+function buildSourcePostBoundaryRows(input: SourcePostInput): Array<Record<string, string>> {
   return [
     {
       issue: '上游授权',
-      judgment: firstMatchingInsightStatement(input, ['无许可证', 'reference-only'])
+      judgment: firstMatchingSourcePostStatement(input, ['无许可证', 'reference-only'])
         || '未确认可再分发授权前，按 reference-only 来源处理。',
       impact: '不发布全文翻译，也不逐条复制上游 entry。',
     },
@@ -4783,8 +4783,8 @@ function buildInsightBoundaryRows(input: InsightPostInput): Array<Record<string,
   ];
 }
 
-function buildInsightConceptMapRows(input: InsightPostInput): Array<Record<string, string>> {
-  if (!isAiCodingDictionaryInsight(input)) {
+function buildSourcePostConceptMapRows(input: SourcePostInput): Array<Record<string, string>> {
+  if (!isAiCodingDictionarySourcePost(input)) {
     return input.projectMapping.map((item) => ({
       layer: item.area,
       readerTranslation: item.impact,
@@ -4831,7 +4831,7 @@ function buildInsightConceptMapRows(input: InsightPostInput): Array<Record<strin
   ];
 }
 
-function buildInsightProjectRows(input: InsightPostInput): Array<Record<string, string>> {
+function buildSourcePostProjectRows(input: SourcePostInput): Array<Record<string, string>> {
   return input.projectMapping.map((item) => ({
     area: item.area,
     impact: item.impact,
@@ -4839,7 +4839,7 @@ function buildInsightProjectRows(input: InsightPostInput): Array<Record<string, 
   }));
 }
 
-function buildInsightIterationTimeline(record: InsightIterationRecord): Array<Record<string, string>> {
+function buildSourcePostIterationTimeline(record: SourcePostIterationRecord): Array<Record<string, string>> {
   const changed = record.changed.length > 0 ? record.changed : record.confirmed;
   return changed.map((item, index) => {
     const match = item.match(/^(\d{4}-\d{2}-\d{2})\s+(.+)$/);
@@ -4850,13 +4850,13 @@ function buildInsightIterationTimeline(record: InsightIterationRecord): Array<Re
   });
 }
 
-function buildInsightReaderTabs(input: InsightPostInput): Array<Record<string, string>> {
+function buildSourcePostReaderTabs(input: SourcePostInput): Array<Record<string, string>> {
   return [
     {
       label: '快速读者',
       content: [
         '- 先看“先读这三点”和“阅读路径”。',
-        `- 结论：${trimInsightPrefix(input.summary)}`,
+        `- 结论：${trimSourcePostPrefix(input.summary)}`,
         `- 重点边界：${input.actionBoundary.notNow[0] || '不复制来源正文。'}`,
       ].join('\n'),
     },
@@ -4877,7 +4877,7 @@ function buildInsightReaderTabs(input: InsightPostInput): Array<Record<string, s
   ];
 }
 
-function isAiCodingDictionaryInsight(input: InsightPostInput): boolean {
+function isAiCodingDictionarySourcePost(input: SourcePostInput): boolean {
   const haystack = [
     input.title,
     ...input.sources.map((source) => `${source.title} ${source.url}`),
@@ -4885,7 +4885,7 @@ function isAiCodingDictionaryInsight(input: InsightPostInput): boolean {
   return haystack.includes('dictionary-of-ai-coding') || haystack.includes('ai coding dictionary');
 }
 
-function firstMatchingInsightStatement(input: InsightPostInput, needles: string[]): string {
+function firstMatchingSourcePostStatement(input: SourcePostInput, needles: string[]): string {
   const statements = [
     ...input.viewpoints.map((item) => item.statement),
     ...input.sourceClaims.map((item) => item.statement),
@@ -4895,37 +4895,37 @@ function firstMatchingInsightStatement(input: InsightPostInput, needles: string[
   return statements.find((statement) => lowerNeedles.some((needle) => statement.toLowerCase().includes(needle))) || '';
 }
 
-function trimInsightPrefix(value: string): string {
+function trimSourcePostPrefix(value: string): string {
   return value.replace(/^(?:结论|判断)[:：]\s*/, '');
 }
 
-function formatInsightClaimKindLabel(kind: InsightClaimKind): string {
+function formatSourcePostClaimKindLabel(kind: SourcePostClaimKind): string {
   if (kind === 'fact') return '事实';
   if (kind === 'inference') return '推断';
   if (kind === 'assumption') return '假设';
   return '项目判断';
 }
 
-function formatSourceClaimsMarkdown(input: InsightPostInput): string {
+function formatSourceClaimsMarkdown(input: SourcePostInput): string {
   return input.sourceClaims
     .map((claim) => {
       const source = input.sources.find((item) => item.id === claim.sourceId);
-      return `- **${formatInsightClaimKindLabel(claim.kind)}** \`${claim.id}\`: ${claim.statement}\n  - 来源：${source ? `[${source.title}](${source.url})` : claim.sourceId}`;
+      return `- **${formatSourcePostClaimKindLabel(claim.kind)}** \`${claim.id}\`: ${claim.statement}\n  - 来源：${source ? `[${source.title}](${source.url})` : claim.sourceId}`;
     })
     .join('\n');
 }
 
-function collectInsightPostSummaries(repoRoot: string): InsightBuildResult['posts'] {
-  return listInsightPostDirs(repoRoot)
+function collectSourcePostSummaries(repoRoot: string): SourcePostBuildResult['posts'] {
+  return listSourcePostDirs(repoRoot)
     .flatMap((postDir) => {
       const postJsonPath = path.join(postDir, 'post.json');
       if (!fs.existsSync(postJsonPath)) {
         return [];
       }
       const slug = path.basename(postDir);
-      let post: InsightPostInput;
+      let post: SourcePostInput;
       try {
-        post = readJsonFile<InsightPostInput>(postJsonPath);
+        post = readJsonFile<SourcePostInput>(postJsonPath);
       } catch {
         return [];
       }
@@ -4940,8 +4940,8 @@ function collectInsightPostSummaries(repoRoot: string): InsightBuildResult['post
     .sort((left, right) => right.date.localeCompare(left.date) || left.title.localeCompare(right.title));
 }
 
-function listInsightPostDirs(repoRoot: string): string[] {
-  const postsDir = path.join(repoRoot, INSIGHT_POSTS_ROOT);
+function listSourcePostDirs(repoRoot: string): string[] {
+  const postsDir = path.join(repoRoot, SOURCE_POSTS_ROOT);
   if (!fs.existsSync(postsDir)) {
     return [];
   }
@@ -4951,16 +4951,16 @@ function listInsightPostDirs(repoRoot: string): string[] {
     .sort();
 }
 
-function renderInsightsIndexHtml(posts: InsightBuildResult['posts']): string {
+function renderSourcePostsIndexHtml(posts: SourcePostBuildResult['posts']): string {
   const postItems = posts.length > 0
     ? posts.map((post) => `<li><a href="${escapeAttr(post.href)}">${escapeHtml(post.title)}</a><span>${escapeHtml(post.date)}</span><p>${escapeHtml(post.summary)}</p></li>`).join('\n')
-    : '<li>No insight posts yet.</li>';
+    : '<li>No source posts yet.</li>';
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Harness Hub Insights</title>
+  <title>Harness Hub Source Posts</title>
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; color: #172033; background: #f7f8fb; }
     main { max-width: 880px; margin: 0 auto; padding: 32px 20px; }
@@ -4974,7 +4974,7 @@ function renderInsightsIndexHtml(posts: InsightBuildResult['posts']): string {
 </head>
 <body>
   <main>
-    <h1>Harness Hub Insights</h1>
+    <h1>Harness Hub Source Posts</h1>
     <p>Source-backed project thinking and iteration notes.</p>
     <ul>
       ${postItems}
@@ -4985,11 +4985,11 @@ function renderInsightsIndexHtml(posts: InsightBuildResult['posts']): string {
 `;
 }
 
-function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
+function renderSiteHomeHtml(posts: SourcePostBuildResult['posts']): string {
   const latest = posts[0];
   const latestHtml = latest
-    ? `<p><a href="insights/${escapeAttr(latest.href)}">${escapeHtml(latest.title)}</a></p>`
-    : '<p>No insight posts yet.</p>';
+    ? `<p><a href="source-posts/${escapeAttr(latest.href)}">${escapeHtml(latest.title)}</a></p>`
+    : '<p>No source posts yet.</p>';
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -5155,7 +5155,7 @@ function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
     <ul class="actions" aria-label="Primary links">
       <li><a class="primary" href="https://github.com/JasonxzWen/harness-hub/blob/main/README.zh-CN.md">阅读中文 README</a></li>
       <li><a href="https://github.com/JasonxzWen/harness-hub/blob/main/README.md">English README</a></li>
-      <li><a href="insights/">Insights</a></li>
+      <li><a href="source-posts/">Source Posts</a></li>
     </ul>
 
     <section class="section" aria-labelledby="first-use">
@@ -5197,8 +5197,8 @@ function renderSiteHomeHtml(posts: InsightBuildResult['posts']): string {
 `;
 }
 
-function validatePublicArtifactBoundary(repoRoot: string): InsightValidationCheck {
-  const siteDir = path.join(repoRoot, INSIGHT_SITE_ROOT);
+function validatePublicArtifactBoundary(repoRoot: string): SourcePostValidationCheck {
+  const siteDir = path.join(repoRoot, SOURCE_POST_SITE_ROOT);
   const leaked = fs.existsSync(siteDir)
     ? listFilesRecursive(siteDir)
       .map((file) => toPortablePath(path.relative(repoRoot, file)))
@@ -5211,7 +5211,7 @@ function validatePublicArtifactBoundary(repoRoot: string): InsightValidationChec
   return {
     code: 'public-artifact-boundary',
     state: leaked.length === 0 ? 'pass' : 'fail',
-    path: INSIGHT_SITE_ROOT,
+    path: SOURCE_POST_SITE_ROOT,
     reason: leaked.length === 0
       ? 'Public site does not reuse ignored local artifact directories.'
       : 'Public site contains files from ignored local artifact directories.',
@@ -5219,7 +5219,7 @@ function validatePublicArtifactBoundary(repoRoot: string): InsightValidationChec
   };
 }
 
-function checkGitBranch(repoRoot: string): InsightValidationCheck {
+function checkGitBranch(repoRoot: string): SourcePostValidationCheck {
   try {
     const branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
       cwd: repoRoot,
@@ -5246,7 +5246,7 @@ function checkGitBranch(repoRoot: string): InsightValidationCheck {
   }
 }
 
-function checkInsightWorktree(repoRoot: string, allowDirty: boolean): InsightValidationCheck {
+function checkSourcePostWorktree(repoRoot: string, allowDirty: boolean): SourcePostValidationCheck {
   const dirty = detectDirtyWorktree(repoRoot);
   return {
     code: 'worktree',
@@ -5261,7 +5261,7 @@ function checkInsightWorktree(repoRoot: string, allowDirty: boolean): InsightVal
   };
 }
 
-function resolveInsightSlug(input: InsightPostInput, explicitSlug?: string): string {
+function resolveSourcePostSlug(input: SourcePostInput, explicitSlug?: string): string {
   if (explicitSlug || input.slug) {
     return slugifyForUrl(explicitSlug || input.slug || '');
   }
@@ -7293,7 +7293,7 @@ function escapeAttr(value: unknown): string {
 function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
     command: argv[0] || 'help',
-    insightAction: null,
+    sourcePostAction: null,
     loopAction: null,
     targetDir: null,
     agents: [],
@@ -7315,12 +7315,12 @@ function parseArgs(argv: string[]): CliOptions {
   const positional: string[] = [];
   let firstOptionIndex = 1;
 
-  if (options.command === 'insight') {
+  if (options.command === 'source-post') {
     const action = argv[1];
     if (!action || action.startsWith('-')) {
-      throw new CliError('Use "harness-hub insight <generate|build|validate|publish>".', 2);
+      throw new CliError('Use "harness-hub source-post <generate|build|validate|publish>".', 2);
     }
-    options.insightAction = parseInsightAction(action);
+    options.sourcePostAction = parseSourcePostAction(action);
     firstOptionIndex = 2;
   }
 
@@ -7391,11 +7391,11 @@ function parseAgentName(value: string): AgentName {
   throw new Error(`Unsupported agent '${value}'. Available: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}`);
 }
 
-function parseInsightAction(value: string): InsightCliAction {
+function parseSourcePostAction(value: string): SourcePostCliAction {
   if (value === 'generate' || value === 'build' || value === 'validate' || value === 'publish') {
     return value;
   }
-  throw new CliError(`Unknown insight action '${value}'. Available: generate, build, validate, publish`, 2);
+  throw new CliError(`Unknown source-post action '${value}'. Available: generate, build, validate, publish`, 2);
 }
 
 function parseLoopAction(value: string): LoopCliAction {
@@ -7515,43 +7515,43 @@ async function runCliInner(argv: string[]): Promise<number> {
     return result.exitCode;
   }
 
-  if (options.command === 'insight') {
-    if (options.insightAction === 'generate') {
+  if (options.command === 'source-post') {
+    if (options.sourcePostAction === 'generate') {
       if (!options.input) {
-        throw new CliError('Use --input <file> with "harness-hub insight generate".', 2);
+        throw new CliError('Use --input <file> with "harness-hub source-post generate".', 2);
       }
       const inputPath = path.resolve(options.input);
-      const input = readJsonFile<InsightPostInput>(inputPath);
-      const result = createInsightPost(input, {
+      const input = readJsonFile<SourcePostInput>(inputPath);
+      const result = createSourcePost(input, {
         repoRoot: options.targetDir || undefined,
         slug: options.slug || undefined,
       });
-      emitReport(renderLifecycleReport('Harness Hub Insight Generation Report', result, options), options);
+      emitReport(renderLifecycleReport('Harness Hub Source Post Generation Report', result, options), options);
       return result.validation.exitCode;
     }
 
-    if (options.insightAction === 'build') {
-      const result = buildInsightSite({ repoRoot: options.targetDir || undefined });
-      emitReport(renderLifecycleReport('Harness Hub Insight Build Report', result, options), options);
+    if (options.sourcePostAction === 'build') {
+      const result = buildSourcePostSite({ repoRoot: options.targetDir || undefined });
+      emitReport(renderLifecycleReport('Harness Hub Source Post Build Report', result, options), options);
       return result.exitCode;
     }
 
-    if (options.insightAction === 'validate') {
-      const result = validateInsightSite({ repoRoot: options.targetDir || undefined });
-      emitReport(renderLifecycleReport('Harness Hub Insight Validation Report', result, options), options);
+    if (options.sourcePostAction === 'validate') {
+      const result = validateSourcePostSite({ repoRoot: options.targetDir || undefined });
+      emitReport(renderLifecycleReport('Harness Hub Source Post Validation Report', result, options), options);
       return result.exitCode;
     }
 
-    if (options.insightAction === 'publish') {
+    if (options.sourcePostAction === 'publish') {
       if (!options.dryRun) {
-        throw new CliError('Use --dry-run for local insight publish preflight. GitHub Actions performs the actual Pages deploy.', 2);
+        throw new CliError('Use --dry-run for local source-post publish preflight. GitHub Actions performs the actual Pages deploy.', 2);
       }
-      const result = publishInsightPreflight({
+      const result = publishSourcePostPreflight({
         repoRoot: options.targetDir || undefined,
         dryRun: true,
         allowDirty: options.allowDirty,
       });
-      emitReport(renderLifecycleReport('Harness Hub Insight Publish Preflight Report', result, options), options);
+      emitReport(renderLifecycleReport('Harness Hub Source Post Publish Preflight Report', result, options), options);
       return result.exitCode;
     }
   }
@@ -7577,6 +7577,13 @@ async function runCliInner(argv: string[]): Promise<number> {
       emitReport(renderLifecycleReport('Harness Hub Loop Schedule Report', result, options), options);
       return result.exitCode;
     }
+  }
+
+  if (options.command === 'insight') {
+    throw new CliError(
+      'Public publishing moved to "harness-hub source-post ..."; "harness-hub insight" is reserved for private collaboration audits and has no CLI in this release.',
+      2,
+    );
   }
 
   if (options.command === 'init' || options.command === 'install') {
@@ -7668,12 +7675,12 @@ type LifecycleReportData =
   | HarnessInitPlan
   | HarnessInitResult
   | HarnessValidationResult
-  | InsightPostResult
-  | InsightBuildResult
-  | InsightValidationResult
-  | InsightPreflightResult
   | LoopDecisionResult
   | LoopScheduleResult
+  | SourcePostResult
+  | SourcePostBuildResult
+  | SourcePostValidationResult
+  | SourcePostPreflightResult
   | HarnessHubStatus
   | HarnessHubCheckResult
   | HarnessHubSelfCheckResult
@@ -8111,7 +8118,7 @@ function summaryForLifecycleData(
   }
 
   if ('siteDir' in data) {
-    return `${data.posts.length} insight posts indexed. ${data.reason}`;
+    return `${data.posts.length} source posts indexed. ${data.reason}`;
   }
 
   if ('harnessComponentId' in data) {
@@ -8241,10 +8248,10 @@ Usage:
   harness-hub activate-codex [target] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
-  harness-hub insight generate [target] --input file [--slug slug] [--json|--html] [--output file]
-  harness-hub insight build [target] [--json|--html] [--output file]
-  harness-hub insight validate [target] [--json|--html] [--output file]
-  harness-hub insight publish [target] --dry-run [--allow-dirty] [--json|--html] [--output file]
+  harness-hub source-post generate [target] --input file [--slug slug] [--json|--html] [--output file]
+  harness-hub source-post build [target] [--json|--html] [--output file]
+  harness-hub source-post validate [target] [--json|--html] [--output file]
+  harness-hub source-post publish [target] --dry-run [--allow-dirty] [--json|--html] [--output file]
   harness-hub loop evaluate [target] --input action.json [--yes] [--json|--html] [--output file]
   harness-hub loop schedule [target] --input actions.jsonl [--yes] [--json|--html] [--output file]
   harness-hub status [target] [--json|--html] [--output file]
@@ -8260,7 +8267,7 @@ Install selects every standard skill component and overwrites same-name skill di
 Use init-harness for Codex-only dev bootstrap: standard skills plus root harness files.
 Use activate-codex to sync installed project-local skills into ignored .codex/skills without global installation.
 validate-harness includes standard harness checks, five-subsystem assessment, and a structural benchmark.
-Use insight for structured source-to-blog generation and GitHub Pages preflight.
+Use source-post for structured source-post generation and GitHub Pages preflight.
 Use loop evaluate/schedule to decide continue vs interrupt and optionally append local Loop ledgers with --yes.
 `);
 }

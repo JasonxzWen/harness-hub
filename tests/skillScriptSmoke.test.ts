@@ -82,10 +82,10 @@ const smokes: ScriptSmoke[] = [
     expected: 'Evaluate MCP servers using test questions',
   },
   {
-    name: 'source-to-insight-blog validate',
+    name: 'source-post validate',
     command: process.execPath,
-    args: ['skills/source-to-insight-blog/scripts/validate-source-blog.mjs', '--help'],
-    expected: 'Validates a source-backed insight blog',
+    args: ['skills/source-post/scripts/validate-source-post.mjs', '--help'],
+    expected: 'Validates a source-backed public post',
   },
 ];
 
