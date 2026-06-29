@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-29T05:19:36.773Z",
+  "posts": [
+    {
+      "slug": "2026-06-01-trustworthy-third-party-evals-harness-hub",
+      "title": "可信第三方评估：为什么 Harness 是评估结果的一部分",
+      "date": "2026-06-01",
+      "summary": "对 OpenAI 可信第三方评估 playbook 的高保真中文重建：评估报告必须同时说明 claim、harness、预算、elicitation、validity hazards 和证据；Harness Hub 本次把该流程固化为 source-post skill。",
+      "href": "posts/2026-06-01-trustworthy-third-party-evals-harness-hub/"
+    },
+    {
+      "slug": "2026-06-01-ai-coding-dictionary-harness-vocabulary",
+      "title": "AI Coding Dictionary 中文译注：从术语到 Harness Hub 迭代",
+      "date": "2026-06-01",
+      "summary": "判断：上游是 62 个术语的 7 层词典；本地变更有用，但要收敛展示层。",
+      "href": "posts/2026-06-01-ai-coding-dictionary-harness-vocabulary/"
+    },
+    {
+      "slug": "2026-06-01-supermemory-harness-hub-reference",
+      "title": "Supermemory 给 Harness Hub 的启发：AI 记忆不是更大的 RAG，而是可治理的上下文基础设施",
+      "date": "2026-06-01",
+      "summary": "Supermemory 的价值不在于把第三方记忆服务直接塞进默认 harness，而在于给 Harness Hub 提供一组可借鉴的边界：显式/隐式记忆分层、项目与用户作用域、隐私红线、上下文注入、以及用基准测试验证记忆质量。",
+      "href": "posts/2026-06-01-supermemory-harness-hub-reference/"
+    }
+  ]
+}

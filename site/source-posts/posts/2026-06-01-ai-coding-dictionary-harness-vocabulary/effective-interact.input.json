@@ -1,0 +1,278 @@
+{
+  "title": "AI Coding Dictionary 中文译注：从术语到 Harness Hub 迭代",
+  "summary": "判断：上游是 62 个术语的 7 层词典；本地变更有用，但要收敛展示层。",
+  "status": "complete",
+  "generatedAt": "2026-06-01T09:32:13.258Z",
+  "template": "research-explainer",
+  "renderMode": "pre-rendered",
+  "intent": {
+    "audience": "中文读者与 Harness Hub maintainer",
+    "primaryQuestion": "原仓库讲了什么，本地改了什么，改得值不值？",
+    "decision": "原仓库是 62 个术语的 7 层词典；本地只该借结构、边界和验证语言。",
+    "artifactKind": "research",
+    "successCriteria": [
+      "简单概括原仓库核心思想，并用树形结构组织内容。",
+      "梳理本地已根据该仓库做出的变更。",
+      "反思变更是否有效、冗余，以及下一步优化。"
+    ]
+  },
+  "sections": [
+    {
+      "type": "markdown",
+      "title": "一分钟读完",
+      "group": "summary",
+      "status": "complete",
+      "summary": "先用正常文章语言回答：它是什么，为什么值得看，本项目为什么要管它。",
+      "content": "**结论：上游是 62 个术语的 7 层词典；本地变更有用，但要收敛展示层。**\n\n原仓库 `mattpocock/dictionary-of-ai-coding` 不是一个可安装工具，也不是一套工作流。它是一份 AI coding 术语词典：把初学者经常听到、但很难定位的词，按实际使用场景分组解释。\n\n这篇文章只回答三个问题：\n\n- 原仓库到底讲了什么：62 个术语，分成 7 个层次。\n- 本项目根据它做了什么：补了本地术语边界、来源策略、解释器约束和发布记录。\n- 这些改动值不值：大部分有效，但展示层已经显得过重，应该收敛。"
+    },
+    {
+      "type": "code",
+      "title": "原仓库内容树",
+      "group": "main",
+      "status": "ready",
+      "summary": "树只保留读者需要的骨架，完整词条留给上游 README。",
+      "language": "text",
+      "content": "AI Coding Dictionary\n|\n|-- 1. The Model\n|   `-- 模型、参数、训练、推理、token、provider、harness、缓存与成本\n|\n|-- 2. Sessions, Context Windows & Turns\n|   `-- context、context window、agent、system prompt、session、turn\n|\n|-- 3. Tools & Environment\n|   `-- environment、filesystem、tool call/result、MCP、permission、sandbox\n|\n|-- 4. Failure Modes\n|   `-- sycophancy、hallucination、knowledge cutoff、attention budget/degradation\n|\n|-- 5. Handoffs\n|   `-- clearing、handoff、handoff artifact、spec、ticket、compaction\n|\n|-- 6. Memory and Steering\n|   `-- memory system、AGENTS.md、progressive disclosure、context pointer、skill、subagent\n|\n`-- 7. Patterns of Work\n    `-- human-in-the-loop、AFK、automated check/review、human review、vibe coding、grilling"
+    },
+    {
+      "type": "markdown",
+      "title": "核心思想",
+      "group": "main",
+      "status": "ready",
+      "summary": "把词典翻成一个读者能带走的判断框架。",
+      "content": "读者不用背词条，先抓住这几条线：\n\n- **model 不是 agent**：model 只生成文本；agent 是 model 加上上下文、工具、权限和运行环境。\n- **context 是预算**：上下文窗口、attention budget、compaction、handoff 都是在处理“模型一次能看多少、能忠实处理多少”。\n- **tool 是边界**：tool call、MCP、sandbox、permission 决定 agent 能不能碰文件、终端和外部系统。\n- **失败模式要转成动作**：幻觉、迎合、知识截止、注意力衰减，分别对应查证、反驳、加载新文档、清理或交接上下文。\n- **自动化检查和人审不能混用**：test/typecheck 是 deterministic check；agent review 是判断；human review 是人看真实 diff 或产物。"
+    },
+    {
+      "type": "markdown",
+      "title": "本地已做的变更",
+      "group": "changes",
+      "status": "ready",
+      "summary": "只列和 dictionary-of-ai-coding 直接相关的本地变化。",
+      "content": "- **docs/source-projects.md**：记录上游无许可证证据和 reference-only 决策，防止误把字典正文作为可复制素材。\n- **docs/harness-vocabulary.md**：把外部术语启发转成 Harness Hub 自己的概念边界，避免 model、agent、harness、skill、tool、check、review 混用。\n- **skills/effective-interact**：把词汇解释沉淀成 research-explainer 形态：先定义，再相邻概念边界，再使用场景、证据和验收边界。\n- **docs/skill-quality-guide.md**：把术语治理纳入技能质量规则，避免为了统一风格重写 imported skill bodies。\n- **site/source-posts**：把这次中文译注和历史迭代记录变成 GitHub Pages 可发布的 source-backed public post。"
+    },
+    {
+      "type": "data-table",
+      "title": "反思结果",
+      "group": "decision",
+      "status": "review",
+      "summary": "直接回答：有效吗、冗余吗、下一步怎么收敛。",
+      "columns": [
+        {
+          "key": "item",
+          "label": "对象",
+          "width": "24ch"
+        },
+        {
+          "key": "assessment",
+          "label": "结论"
+        },
+        {
+          "key": "redundancy",
+          "label": "冗余判断"
+        },
+        {
+          "key": "next",
+          "label": "下一步"
+        }
+      ],
+      "rows": [
+        {
+          "item": "source-projects reference-only 记录",
+          "assessment": "有效。它把授权不明和用途边界写清楚，避免误复制上游正文。",
+          "redundancy": "低。它是后续所有使用的约束入口。",
+          "next": "保留；若上游许可证变化，再重新评估能否扩大引用方式。"
+        },
+        {
+          "item": "docs/harness-vocabulary.md",
+          "assessment": "有效。它解决本项目最容易混淆的术语：model、agent、harness、skill、tool、review。",
+          "redundancy": "中。若继续扩写成完整 glossary，就会重复上游词典。",
+          "next": "只在影响 routing、safety、validation 或 handoff 时新增术语。"
+        },
+        {
+          "item": "effective-interact 解释器和 fixture",
+          "assessment": "部分有效。它把术语解释变成可验证产物，但展示层容易过度。",
+          "redundancy": "中高。上一版 blog 的问题就是交互组件多于读者问题。",
+          "next": "保留结构化生成和验证；公开文章优先导读、变更、反思。"
+        },
+        {
+          "item": "skill-quality-guide 术语治理",
+          "assessment": "有效。它防止为了统一风格去改 imported skill body。",
+          "redundancy": "低。它是维护政策，不是正文内容。",
+          "next": "继续作为审查规则；不要把它扩成第二套词典。"
+        },
+        {
+          "item": "Pages source post",
+          "assessment": "当前版本需要收敛。发布链路有效，但文章结构必须服务读者。",
+          "redundancy": "中。若每篇都生成 source-ledger 式报告，会不像 blog。",
+          "next": "固定本文三段式：原仓库导读、本地变更、有效性反思。"
+        }
+      ]
+    },
+    {
+      "type": "markdown",
+      "title": "下一步优化",
+      "group": "next",
+      "status": "ready",
+      "summary": "优化方向不是继续加内容，而是删掉读者不需要先看的复杂度。",
+      "content": "**现在该做：**\n- 把文章重排为：原仓库内容树、本地变更、有效性与冗余反思。\n- 保留源码、source ledger 和 generated HTML 的验证链路。\n- 在最终交付中说明这不是未授权全文翻译。\n\n**继续观察：**\n- 观察上游授权状态和术语更新。\n- 观察本项目后续是否真的需要更完整的中文 glossary；没有高频使用证据就不扩写。\n\n**暂时不做：**\n- 不复制或逐条翻译上游 entry 正文。\n- 不把 dictionary-of-ai-coding 安装成 skill。\n- 不为了这篇文章引入 CMS、主题系统或新的 Pages 框架。"
+    },
+    {
+      "type": "markdown",
+      "title": "来源声明",
+      "group": "evidence",
+      "status": "info",
+      "content": "- **事实** `claim-upstream-purpose`: 上游把 AI coding 的混乱归因于术语不透明，目标是用白话解释基础词，而不是写产品文档。\n  - 来源：[mattpocock/dictionary-of-ai-coding README](https://github.com/mattpocock/dictionary-of-ai-coding/blob/2afee4819aaea83108bd662258ba5d35343dc7bb/README.md)\n- **事实** `claim-upstream-taxonomy`: 上游术语按七组组织：模型、会话与上下文、工具与环境、失败模式、交接、记忆与引导、工作模式。\n  - 来源：[mattpocock/dictionary-of-ai-coding internal/Curriculum.md](https://github.com/mattpocock/dictionary-of-ai-coding/blob/2afee4819aaea83108bd662258ba5d35343dc7bb/internal/Curriculum.md)\n- **事实** `claim-upstream-license-gap`: 所审上游快照没有 LICENSE 和 package license；无额外授权前，不应公开全文翻译。\n  - 来源：[mattpocock/dictionary-of-ai-coding package.json](https://github.com/mattpocock/dictionary-of-ai-coding/blob/2afee4819aaea83108bd662258ba5d35343dc7bb/package.json)\n- **事实** `claim-local-reference-only`: Harness Hub 已将该仓库记为 reference-only，禁止复制条目正文、再分发内容或安装成 skill。\n  - 来源：[Harness Hub docs/source-projects.md](https://github.com/JasonxzWen/harness-hub/blob/4841caaabb9fa790597b17cffe0347a2a17bc5c1/docs/source-projects.md)\n- **事实** `claim-local-vocabulary`: Harness Hub 已把外部术语启发改写成本地原创边界，覆盖 model、agent、harness、context、skill、tool、check、review 等词。\n  - 来源：[Harness Hub docs/harness-vocabulary.md](https://github.com/JasonxzWen/harness-hub/blob/4841caaabb9fa790597b17cffe0347a2a17bc5c1/docs/harness-vocabulary.md)\n- **事实** `claim-effective-interact-boundary`: effective-interact 要求词汇解释使用本地定义、相邻概念对比和来源引用，且不复制外部 glossary 文本。\n  - 来源：[Harness Hub effective-interact interaction patterns](https://github.com/JasonxzWen/harness-hub/blob/4841caaabb9fa790597b17cffe0347a2a17bc5c1/skills/effective-interact/references/interaction-patterns.md)\n- **事实** `claim-quality-boundary`: skill quality guide 把 glossary 源当作路由和语义参考，而不是改写 imported skill 或复制定义的理由。\n  - 来源：[Harness Hub docs/skill-quality-guide.md](https://github.com/JasonxzWen/harness-hub/blob/4841caaabb9fa790597b17cffe0347a2a17bc5c1/docs/skill-quality-guide.md)\n- **项目判断** `claim-source-post-publishing`: source-post publishing 适合承载本文：来源、claims、观点、映射、验证在同一链路。\n  - 来源：[Harness Hub docs/source-post-publishing.md](https://github.com/JasonxzWen/harness-hub/blob/main/docs/source-post-publishing.md)\n- **事实** `claim-vocabulary-iteration`: 此前 dictionary-driven 迭代不是导入内容，而是新增本地词汇文档、解释器支持、来源策略和测试。\n  - 来源：[Harness Hub commit 80729a1](https://github.com/JasonxzWen/harness-hub/commit/80729a17408281dcb6e4871afd0b501d478f9ccb)"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "upstream-readme",
+      "kind": "source",
+      "label": "mattpocock/dictionary-of-ai-coding README",
+      "value": "Used for structure and source attribution only; this post does not reproduce entry text.",
+      "status": "info",
+      "sourceUrl": "https://github.com/mattpocock/dictionary-of-ai-coding/blob/2afee4819aaea83108bd662258ba5d35343dc7bb/README.md",
+      "sourceTitle": "mattpocock/dictionary-of-ai-coding README",
+      "sourceType": "repository-readme",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-ai-coding-dictionary-harness-vocabulary"
+      ]
+    },
+    {
+      "id": "upstream-curriculum",
+      "kind": "source",
+      "label": "mattpocock/dictionary-of-ai-coding internal/Curriculum.md",
+      "value": "Used to translate the taxonomy at a section level.",
+      "status": "info",
+      "sourceUrl": "https://github.com/mattpocock/dictionary-of-ai-coding/blob/2afee4819aaea83108bd662258ba5d35343dc7bb/internal/Curriculum.md",
+      "sourceTitle": "mattpocock/dictionary-of-ai-coding internal/Curriculum.md",
+      "sourceType": "repository-source",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-ai-coding-dictionary-harness-vocabulary"
+      ]
+    },
+    {
+      "id": "upstream-package",
+      "kind": "source",
+      "label": "mattpocock/dictionary-of-ai-coding package.json",
+      "value": "Checked with the repository tree; no LICENSE file was present at the reviewed commit.",
+      "status": "info",
+      "sourceUrl": "https://github.com/mattpocock/dictionary-of-ai-coding/blob/2afee4819aaea83108bd662258ba5d35343dc7bb/package.json",
+      "sourceTitle": "mattpocock/dictionary-of-ai-coding package.json",
+      "sourceType": "repository-metadata",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-ai-coding-dictionary-harness-vocabulary"
+      ]
+    },
+    {
+      "id": "local-source-projects",
+      "kind": "source",
+      "label": "Harness Hub docs/source-projects.md",
+      "value": "Local policy source for copyright and redistribution boundary.",
+      "status": "info",
+      "sourceUrl": "https://github.com/JasonxzWen/harness-hub/blob/4841caaabb9fa790597b17cffe0347a2a17bc5c1/docs/source-projects.md",
+      "sourceTitle": "Harness Hub docs/source-projects.md",
+      "sourceType": "project-documentation",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-ai-coding-dictionary-harness-vocabulary"
+      ]
+    },
+    {
+      "id": "local-vocabulary",
+      "kind": "source",
+      "label": "Harness Hub docs/harness-vocabulary.md",
+      "value": "Local term source for model, agent, harness, context, skill, tool, review, and validation boundaries.",
+      "status": "info",
+      "sourceUrl": "https://github.com/JasonxzWen/harness-hub/blob/4841caaabb9fa790597b17cffe0347a2a17bc5c1/docs/harness-vocabulary.md",
+      "sourceTitle": "Harness Hub docs/harness-vocabulary.md",
+      "sourceType": "project-documentation",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-ai-coding-dictionary-harness-vocabulary"
+      ]
+    },
+    {
+      "id": "local-effective-interact",
+      "kind": "source",
+      "label": "Harness Hub effective-interact interaction patterns",
+      "value": "Local rendering and explanation pattern source.",
+      "status": "info",
+      "sourceUrl": "https://github.com/JasonxzWen/harness-hub/blob/4841caaabb9fa790597b17cffe0347a2a17bc5c1/skills/effective-interact/references/interaction-patterns.md",
+      "sourceTitle": "Harness Hub effective-interact interaction patterns",
+      "sourceType": "skill-reference",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-ai-coding-dictionary-harness-vocabulary"
+      ]
+    },
+    {
+      "id": "local-skill-quality",
+      "kind": "source",
+      "label": "Harness Hub docs/skill-quality-guide.md",
+      "value": "Governance source for local-original terminology.",
+      "status": "info",
+      "sourceUrl": "https://github.com/JasonxzWen/harness-hub/blob/4841caaabb9fa790597b17cffe0347a2a17bc5c1/docs/skill-quality-guide.md",
+      "sourceTitle": "Harness Hub docs/skill-quality-guide.md",
+      "sourceType": "project-governance",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-ai-coding-dictionary-harness-vocabulary"
+      ]
+    },
+    {
+      "id": "local-source-post-publishing",
+      "kind": "source",
+      "label": "Harness Hub docs/source-post-publishing.md",
+      "value": "Publishing workflow source for this post.",
+      "status": "info",
+      "sourceUrl": "https://github.com/JasonxzWen/harness-hub/blob/main/docs/source-post-publishing.md",
+      "sourceTitle": "Harness Hub docs/source-post-publishing.md",
+      "sourceType": "project-documentation",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-ai-coding-dictionary-harness-vocabulary"
+      ]
+    },
+    {
+      "id": "local-vocabulary-commit",
+      "kind": "source",
+      "label": "Harness Hub commit 80729a1",
+      "value": "Project iteration evidence.",
+      "status": "info",
+      "sourceUrl": "https://github.com/JasonxzWen/harness-hub/commit/80729a17408281dcb6e4871afd0b501d478f9ccb",
+      "sourceTitle": "Harness Hub commit 80729a1",
+      "sourceType": "project-commit",
+      "accessedAt": "2026-06-01",
+      "trustLevel": "mixed-trust",
+      "knownLimits": [
+        "Source text is used for attribution and bounded excerpts only.",
+        "Canonical post slug: 2026-06-01-ai-coding-dictionary-harness-vocabulary"
+      ]
+    }
+  ],
+  "nextActions": [
+    "把文章重排为：原仓库内容树、本地变更、有效性与冗余反思。",
+    "保留源码、source ledger 和 generated HTML 的验证链路。",
+    "在最终交付中说明这不是未授权全文翻译。"
+  ]
+}

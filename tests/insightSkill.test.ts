@@ -79,7 +79,7 @@ test('insight documents private read-only repository interaction audits', () => 
   expect(skill).toContain('repository interaction insight audit');
   expect(skill).toContain('Default to read-only analysis');
   expect(skill).toContain('ignored or outside-repo local path');
-  expect(skill).toContain('Do not confuse this with `source-to-insight-blog`');
+  expect(skill).toContain('Do not confuse this with `source-post`');
   expect(skill).toContain('Do not confuse this with `agent-introspection-debugging`');
   expect(dataSources).toContain('Read project-related local evidence broadly');
   expect(dataSources).toContain('`confirmed`');
@@ -103,7 +103,7 @@ test('insight capability metadata registers standard install surface and boundar
   expect(component.path).toBe('skills/insight');
   expect(component.provides).toContain('repository-interaction-insight-audits');
   expect(component.provides).toContain('private-insight-reports');
-  expect(component.overlapsWith).toContain('skill:source-to-insight-blog');
+  expect(component.overlapsWith).toContain('skill:source-post');
   expect(component.overlapsWith).toContain('skill:agent-introspection-debugging');
   expect(component.routing).toContain('private repository interaction insight audit');
   expect(component.recommendation).toContain('ignored private reports');
@@ -432,7 +432,7 @@ test('insight collector samples large JSONL tails without losing readable Chines
   expect(manifest.warnings.some((warning) => warning.includes('Sampled tail of large JSONL file'))).toBe(true);
 });
 
-test('insight activation selects private audits without stealing adjacent insight blog or agent-debug prompts', () => {
+test('insight activation selects private audits without stealing adjacent source post or agent-debug prompts', () => {
   const positive = spawnSync(process.execPath, [
     activationScript,
     '--prompt',
@@ -442,7 +442,7 @@ test('insight activation selects private audits without stealing adjacent insigh
   const blog = spawnSync(process.execPath, [
     activationScript,
     '--prompt',
-    'Turn this external OpenAI article into a Chinese source-backed insight blog with media references and repo iteration review.',
+    'Turn this external OpenAI article into a Chinese source-backed public post with media references and repo iteration review.',
     '--json',
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
   const singleRun = spawnSync(process.execPath, [
@@ -453,6 +453,6 @@ test('insight activation selects private audits without stealing adjacent insigh
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
 
   expect(JSON.parse(positive.stdout).selectedSkill).toBe('insight');
-  expect(JSON.parse(blog.stdout).selectedSkill).toBe('source-to-insight-blog');
+  expect(JSON.parse(blog.stdout).selectedSkill).toBe('source-post');
   expect(JSON.parse(singleRun.stdout).selectedSkill).toBe('agent-introspection-debugging');
 });
