@@ -11,10 +11,10 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 | Area | Current count | Notes |
 |---|---:|---|
 | Install bundles | 0 | The CLI no longer supports selectable install bundles. |
-| Installable components | 41 | All active components are standard skills under `skills/<name>/`. |
-| Local `skills` directories | 41 | Matches installable skill component directories after Ralph retirement, `stop-slop`, and `design-taste-frontend` installation. |
-| Packaged `skills` directories | 41 | npm publishes the personal distributed skill source tree. |
-| First-class workflow target | 1 | `standard` installs into `skills/<name>/`; host packaging stays outside skill bodies. |
+| Installable skill components | 47 | All active default skill components are under `skills/<name>/`. Harness templates are lifecycle components, not skill-install payloads. |
+| Local `skills` directories | 47 | Matches installable skill component directories after later additions such as `insight`, `harness-quality-check`, `package-release-sniffer`, and selected platform atoms. |
+| Packaged `skills` directories | 47 | npm publishes the personal distributed skill source tree. |
+| First-class target path | 1 | `standard` is the only user-facing target path. `install` writes skills only; `init-harness --target standard` writes the root harness contract. Host packaging stays outside skill bodies. |
 
 ## Keep In Standard Install
 
@@ -35,7 +35,7 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 | Superpowers | Reference-only | Not installed. Keep as source evidence for intent routing, subagent discipline, and finish hygiene. |
 | Matt Pocock non-installed skills | Reference-only or rejected | Keep decisions in docs; do not import wholesale. |
 | Compound Engineering non-review lanes | Rejected or reference-only | Keep code review adaptation; leave commit, PR, Slack, Proof, Gemini, and autonomous work lanes out of Harness Hub. |
-| Harness templates | Removed from distribution | Root repo scaffolding is not a skill and no longer has a lifecycle CLI installation path. |
+| Harness templates | Explicit lifecycle distribution | Root repo scaffolding is not a skill install payload. The internal `harness:minimal` template is installed only by `init-harness --target standard` and remains lock-backed. |
 
 ## Keep As Library Skills
 
@@ -58,7 +58,7 @@ Post-cleanup disposable target smoke passed on 2026-05-21 for `harness-hub insta
 | Content, media, docs, and format library lanes | `algorithmic-art`, `article-writing`, `brand-guidelines`, `brand-voice`, `canvas-design`, `content-engine`, `crosspost`, `doc-coauthoring`, `docx`, `fal-ai-media`, `internal-comms`, `investor-materials`, `investor-outreach`, `market-research`, `pdf`, `pptx`, `slack-gif-creator`, `theme-factory`, `video-editing`, `x-api`, `xlsx` |
 | Vercel React reference skills | `vercel-composition-patterns`, `vercel-react-best-practices`, `vercel-react-view-transitions` |
 | Retired Ralph goal-loop skills | `ralph-prd`, `ralph-loop` |
-| Retired repo harness templates | `harness/` |
+| Retired legacy repo harness templates | Former broad or profile-based harness directories, excluding the active internal `harness/minimal/` standard template and explicit-only smoke scaffolds. |
 
 ## Future Cleanup Requiring Approval
 

@@ -6,7 +6,7 @@
       "kind": "harness-template",
       "path": "harness/minimal",
       "dest": ".",
-      "version": "0.5.2",
+      "version": "0.6.0",
       "source": "local",
       "provides": [
         "repo-harness-initialization",
@@ -25,6 +25,11 @@
         "web-browser-acceptance-policy",
         "pr-status-closeout-policy",
         "runtime-signal-capture",
+        "loop-control-plane",
+        "auditable-interrupt-policy",
+        "interrupt-policy-evals",
+        "loop-runtime-ledgers",
+        "capability-invocation-boundary",
         "evaluator-rubric",
         "quality-snapshot",
         "pr-handoff-policy"
@@ -58,6 +63,30 @@
           "path": ".harness-hub/state/session-handoff.md"
         },
         {
+          "path": ".harness-hub/state/loop-runs.jsonl"
+        },
+        {
+          "path": ".harness-hub/state/interrupt-decisions.jsonl"
+        },
+        {
+          "path": ".harness-hub/state/capability-events.jsonl"
+        },
+        {
+          "path": ".harness-hub/loop/policies/interrupt-policy.md"
+        },
+        {
+          "path": ".harness-hub/loop/policies/action-audit-schema.md"
+        },
+        {
+          "path": ".harness-hub/loop/evals/interrupt-policy/good-cases.jsonl"
+        },
+        {
+          "path": ".harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl"
+        },
+        {
+          "path": ".harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl"
+        },
+        {
           "path": "clean-state-checklist.md"
         },
         {
@@ -77,7 +106,7 @@
         "standard"
       ],
       "risk": "medium",
-      "recommendation": "Initialize a minimal repo-local harness with stable tracked rules, ignored worktree-local task state, validation, and managed ownership only through an explicit bootstrap command."
+      "recommendation": "Initialize the standard target harness with stable tracked rules, ignored worktree-local task state, loop control-plane policy/evals, validation, and managed ownership only through an explicit bootstrap command."
     },
     "harness:website-cloner": {
       "kind": "harness-template",

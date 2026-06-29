@@ -21,6 +21,9 @@ Do not start implementation until the harness is fully landed and the active tas
 
 - Keep this file short. Move detailed or historical context to task files, docs, or archives.
 - Use `feature_list.json` as the stable feature and parallel-write policy inventory.
+- Treat Loop Control Plane rules as the top-level automation boundary. Prompt, context, harness, and tool capabilities may be `standalone`, `composable`, or `loop-participant`; do not force standalone capabilities into fixed workflows.
+- Follow the Interrupt Policy in `.harness-hub/loop/policies/interrupt-policy.md`: continue low-risk local work when scope and validation are clear, but interrupt when risk signals require human review.
+- Record auditable loop decisions in `.harness-hub/state/interrupt-decisions.jsonl`, loop runs in `.harness-hub/state/loop-runs.jsonl`, and capability events in `.harness-hub/state/capability-events.jsonl`.
 - Use a separate git worktree or branch for each write task.
 - Start from `.harness-hub/state/current-task.md` before changing files.
 - Respect the task's allowed paths and forbidden paths.

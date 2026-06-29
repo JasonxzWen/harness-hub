@@ -44,6 +44,14 @@ const REQUIRED_HARNESS_FILES = [
   '.harness-hub/state/decisions.md',
   '.harness-hub/state/progress.md',
   '.harness-hub/state/session-handoff.md',
+  '.harness-hub/state/loop-runs.jsonl',
+  '.harness-hub/state/interrupt-decisions.jsonl',
+  '.harness-hub/state/capability-events.jsonl',
+  '.harness-hub/loop/policies/interrupt-policy.md',
+  '.harness-hub/loop/policies/action-audit-schema.md',
+  '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
+  '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
+  '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
   'scripts/harness-validate.mjs',
 ] as const;
 
@@ -397,10 +405,16 @@ test('harness init force preserves existing worktree-local state', () => {
   const plan = planHarnessInit({ targetDir, force: true });
   const localStateActions = plan.items
     .filter((item) => item.relativePath.startsWith('.harness-hub/state/'))
-    .map((item) => item.action);
+    .map((item) => [item.relativePath, item.action]);
   const result = applyHarnessInit(plan);
 
-  expect(localStateActions).toEqual(['skip', 'skip', 'skip', 'skip']);
+  expect(localStateActions).toContainEqual(['.harness-hub/state/current-task.md', 'skip']);
+  expect(localStateActions).toContainEqual(['.harness-hub/state/decisions.md', 'skip']);
+  expect(localStateActions).toContainEqual(['.harness-hub/state/progress.md', 'skip']);
+  expect(localStateActions).toContainEqual(['.harness-hub/state/session-handoff.md', 'skip']);
+  expect(localStateActions).toContainEqual(['.harness-hub/state/loop-runs.jsonl', 'create']);
+  expect(localStateActions).toContainEqual(['.harness-hub/state/interrupt-decisions.jsonl', 'create']);
+  expect(localStateActions).toContainEqual(['.harness-hub/state/capability-events.jsonl', 'create']);
   expect(result.exitCode).toBe(0);
   expect(fs.readFileSync(progressPath, 'utf8')).toBe('existing progress\n');
   expect(fs.readFileSync(taskPath, 'utf8')).toBe('existing task\n');
@@ -412,8 +426,11 @@ test('harness init force preserves existing worktree-local state', () => {
   }
   const component = lock.data.components.find((entry) => entry.id === 'harness:minimal');
   expect(component?.files.filter((file) => file.role === 'local-state').map((file) => file.path).sort()).toEqual([
+    '.harness-hub/state/capability-events.jsonl',
     '.harness-hub/state/current-task.md',
     '.harness-hub/state/decisions.md',
+    '.harness-hub/state/interrupt-decisions.jsonl',
+    '.harness-hub/state/loop-runs.jsonl',
     '.harness-hub/state/progress.md',
     '.harness-hub/state/session-handoff.md',
   ]);
@@ -458,10 +475,12 @@ test('harness update refreshes stable lock-owned files without overwriting local
   const taskPath = path.join(targetDir, '.harness-hub', 'state', 'current-task.md');
   const decisionsPath = path.join(targetDir, '.harness-hub', 'state', 'decisions.md');
   const handoffPath = path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md');
+  const interruptLedgerPath = path.join(targetDir, '.harness-hub', 'state', 'interrupt-decisions.jsonl');
   fs.writeFileSync(progressPath, 'local progress must stay\n');
   fs.writeFileSync(taskPath, 'local current task must stay\n');
   fs.writeFileSync(decisionsPath, 'local decisions must stay\n');
   fs.writeFileSync(handoffPath, 'local handoff must stay\n');
+  fs.writeFileSync(interruptLedgerPath, '{"schemaVersion":1,"event":"local decision must stay"}\n');
 
   const result = updateManaged(targetDir, { yes: true, components: ['harness:minimal'] });
 
@@ -472,6 +491,7 @@ test('harness update refreshes stable lock-owned files without overwriting local
   expect(fs.readFileSync(taskPath, 'utf8')).toBe('local current task must stay\n');
   expect(fs.readFileSync(decisionsPath, 'utf8')).toBe('local decisions must stay\n');
   expect(fs.readFileSync(handoffPath, 'utf8')).toBe('local handoff must stay\n');
+  expect(fs.readFileSync(interruptLedgerPath, 'utf8')).toBe('{"schemaVersion":1,"event":"local decision must stay"}\n');
   const lock = readLock(targetDir);
   if (!lock || lock.data.schemaVersion !== 2) {
     throw new Error('expected schema version 2 lock');
@@ -479,8 +499,16 @@ test('harness update refreshes stable lock-owned files without overwriting local
   const harness = lock.data.components.find((entry) => entry.id === 'harness:minimal');
   expect(harness?.files.map((file) => file.path).sort()).toEqual([
     '.harness-hub/.gitignore',
+    '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
+    '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
+    '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
+    '.harness-hub/loop/policies/action-audit-schema.md',
+    '.harness-hub/loop/policies/interrupt-policy.md',
+    '.harness-hub/state/capability-events.jsonl',
     '.harness-hub/state/current-task.md',
     '.harness-hub/state/decisions.md',
+    '.harness-hub/state/interrupt-decisions.jsonl',
+    '.harness-hub/state/loop-runs.jsonl',
     '.harness-hub/state/progress.md',
     '.harness-hub/state/session-handoff.md',
     'clean-state-checklist.md',
@@ -1245,11 +1273,137 @@ test('help lists the full public command surface', async () => {
   expect(result.stdout).toContain('harness-hub insight build');
   expect(result.stdout).toContain('harness-hub insight validate');
   expect(result.stdout).toContain('harness-hub insight publish');
+  expect(result.stdout).toContain('harness-hub loop evaluate');
+  expect(result.stdout).toContain('harness-hub loop schedule');
   expect(result.stdout).not.toContain('harness-hub insight-generate');
   expect(result.stdout).not.toContain('harness-hub insight-build');
   expect(result.stdout).not.toContain('harness-hub insight-validate');
   expect(result.stdout).not.toContain('harness-hub insight-publish');
   expect(result.stdout).toContain('harness-hub migrate-lock');
+});
+
+test('loop evaluate continues low-risk local actions and interrupts risky actions', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-eval-'));
+  const continueInput = path.join(targetDir, 'continue-action.json');
+  const interruptInput = path.join(targetDir, 'interrupt-action.json');
+  fs.writeFileSync(continueInput, `${JSON.stringify({
+    schemaVersion: 1,
+    id: 'local-fix',
+    summary: 'Patch a scoped local unit test and rerun the focused test.',
+    capabilityInvocation: 'standalone',
+    action: 'edit local unit test expectation',
+    sideEffects: ['local-files', 'validation-run'],
+    riskSignals: ['validation-passed'],
+    requiredEvidence: ['focused test command'],
+    validation: { status: 'pass', command: 'bun test tests/example.test.ts' },
+  }, null, 2)}\n`);
+  fs.writeFileSync(interruptInput, `${JSON.stringify({
+    schemaVersion: 1,
+    id: 'publish-report',
+    summary: 'Publish a generated report to GitHub Pages.',
+    capabilityInvocation: 'loop-participant',
+    action: 'publish report to GitHub Pages',
+    sideEffects: ['remote-write'],
+    riskSignals: ['publication-boundary'],
+    requiredEvidence: ['publish draft'],
+  }, null, 2)}\n`);
+
+  const continued = await captureCli(['loop', 'evaluate', targetDir, '--input', continueInput, '--json']);
+  const interrupted = await captureCli(['loop', 'evaluate', targetDir, '--input', interruptInput, '--json']);
+
+  expect(continued.code).toBe(0);
+  const continueReport = JSON.parse(continued.stdout);
+  expect(continueReport.decision).toBe('continue');
+  expect(continueReport.recorded).toBe(false);
+  expect(continueReport.continueReasons).toContain('side effects are local, read-only, or validation-only');
+
+  expect(interrupted.code).toBe(3);
+  const interruptReport = JSON.parse(interrupted.stdout);
+  expect(interruptReport.decision).toBe('interrupt');
+  expect(interruptReport.riskSignals).toContain('publication-boundary');
+  expect(interruptReport.interruptReasons).toContain("risk signal 'publication-boundary'");
+  expect(interruptReport.requiredEvidence).toContain('human approval record');
+});
+
+test('loop evaluate records auditable decisions only with confirmation', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-record-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  const inputPath = path.join(targetDir, 'local-action.json');
+  const ledgerPath = path.join(targetDir, '.harness-hub', 'state', 'interrupt-decisions.jsonl');
+  fs.writeFileSync(inputPath, `${JSON.stringify({
+    schemaVersion: 1,
+    id: 'document-local-fix',
+    summary: 'Update a local progress note after validation passes.',
+    capabilityInvocation: 'standalone',
+    action: 'append local progress evidence',
+    sideEffects: ['local-state'],
+    riskSignals: ['validation-passed'],
+    validation: { status: 'passed' },
+  }, null, 2)}\n`);
+  const before = fs.readFileSync(ledgerPath, 'utf8').trim().split(/\r?\n/).length;
+
+  const result = await captureCli(['loop', 'evaluate', targetDir, '--input', inputPath, '--yes', '--json']);
+
+  expect(result.code).toBe(0);
+  const report = JSON.parse(result.stdout);
+  expect(report.recorded).toBe(true);
+  expect(report.decision).toBe('continue');
+  const lines = fs.readFileSync(ledgerPath, 'utf8').trim().split(/\r?\n/);
+  expect(lines.length).toBe(before + 1);
+  expect(JSON.parse(lines.at(-1) || '{}')).toMatchObject({
+    event: 'interrupt_decision',
+    actionId: 'document-local-fix',
+    decision: 'continue',
+  });
+});
+
+test('loop schedule chooses the next continue action and records scheduler state', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-schedule-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  const inputPath = path.join(targetDir, 'actions.jsonl');
+  const decisionLedger = path.join(targetDir, '.harness-hub', 'state', 'interrupt-decisions.jsonl');
+  const runLedger = path.join(targetDir, '.harness-hub', 'state', 'loop-runs.jsonl');
+  fs.writeFileSync(inputPath, [
+    JSON.stringify({
+      schemaVersion: 1,
+      id: 'publish-draft',
+      summary: 'Publish a draft report to a remote page.',
+      capabilityInvocation: 'loop-participant',
+      action: 'publish draft report',
+      sideEffects: ['remote-write'],
+      riskSignals: ['publication-boundary'],
+    }),
+    JSON.stringify({
+      schemaVersion: 1,
+      id: 'local-test-fix',
+      summary: 'Apply a scoped local fix and run validation.',
+      capabilityInvocation: 'composable',
+      action: 'apply scoped local fix',
+      sideEffects: ['local-files', 'validation-run'],
+      riskSignals: ['validation-passed'],
+      validation: { status: 'pass' },
+    }),
+  ].join('\n'));
+  const decisionBefore = fs.readFileSync(decisionLedger, 'utf8').trim().split(/\r?\n/).length;
+  const runBefore = fs.readFileSync(runLedger, 'utf8').trim().split(/\r?\n/).length;
+
+  const result = await captureCli(['loop', 'schedule', targetDir, '--input', inputPath, '--yes', '--json']);
+
+  expect(result.code).toBe(0);
+  const report = JSON.parse(result.stdout);
+  expect(report.nextActionId).toBe('local-test-fix');
+  expect(report.interruptedActionIds).toEqual(['publish-draft']);
+  expect(report.recorded).toBe(true);
+  expect(report.decisions.map((decision: { decision: string }) => decision.decision)).toEqual(['interrupt', 'continue']);
+  expect(fs.readFileSync(decisionLedger, 'utf8').trim().split(/\r?\n/).length).toBe(decisionBefore + 2);
+  const runLines = fs.readFileSync(runLedger, 'utf8').trim().split(/\r?\n/);
+  expect(runLines.length).toBe(runBefore + 1);
+  expect(JSON.parse(runLines.at(-1) || '{}')).toMatchObject({
+    event: 'loop_run',
+    status: 'running',
+    nextActionId: 'local-test-fix',
+    interruptedActionIds: ['publish-draft'],
+  });
 });
 
 test('activate-codex CLI requires confirmation and supports json output', async () => {

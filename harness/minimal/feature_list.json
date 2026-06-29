@@ -89,6 +89,27 @@
     ],
     "merge_boundary": "Do not merge a PR unless the user explicitly requests that remote mutation."
   },
+  "loop_control_policy": {
+    "control_plane": "Loop Engineering decides when to continue, validate, interrupt, and record auditable action decisions.",
+    "capability_invocations": [
+      "standalone",
+      "composable",
+      "loop-participant"
+    ],
+    "default_behavior": "Continue low-risk local work when scope, ownership, and validation are clear; interrupt when risk signals require human review.",
+    "interrupt_policy": ".harness-hub/loop/policies/interrupt-policy.md",
+    "audit_schema": ".harness-hub/loop/policies/action-audit-schema.md",
+    "evals": [
+      ".harness-hub/loop/evals/interrupt-policy/good-cases.jsonl",
+      ".harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl",
+      ".harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl"
+    ],
+    "runtime_ledgers": [
+      ".harness-hub/state/loop-runs.jsonl",
+      ".harness-hub/state/interrupt-decisions.jsonl",
+      ".harness-hub/state/capability-events.jsonl"
+    ]
+  },
   "worktree_policy": {
     "write_task_isolation": "Use one git worktree or branch per write task.",
     "code_organization": "Keep source code organized by project architecture, not by agent task folders."

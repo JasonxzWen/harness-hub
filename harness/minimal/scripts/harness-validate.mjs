@@ -10,6 +10,14 @@ const requiredFiles = [
   '.harness-hub/state/decisions.md',
   '.harness-hub/state/progress.md',
   '.harness-hub/state/session-handoff.md',
+  '.harness-hub/state/loop-runs.jsonl',
+  '.harness-hub/state/interrupt-decisions.jsonl',
+  '.harness-hub/state/capability-events.jsonl',
+  '.harness-hub/loop/policies/interrupt-policy.md',
+  '.harness-hub/loop/policies/action-audit-schema.md',
+  '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl',
+  '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl',
+  '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl',
   'clean-state-checklist.md',
   'definition-of-done.md',
   'evaluator-rubric.md',
@@ -24,10 +32,15 @@ const sizeLimits = {
   '.harness-hub/state/progress.md': 16 * 1024,
   '.harness-hub/state/session-handoff.md': 16 * 1024,
   '.harness-hub/state/current-task.md': 16 * 1024,
+  '.harness-hub/state/loop-runs.jsonl': 64 * 1024,
+  '.harness-hub/state/interrupt-decisions.jsonl': 64 * 1024,
+  '.harness-hub/state/capability-events.jsonl': 64 * 1024,
 };
 const requiredMarkers = {
-  'AGENTS.md': ['Codex', 'Initialization Gate', 'harness-validate.mjs', 'harness-hub check', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run'],
+  'AGENTS.md': ['Codex', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run'],
   '.harness-hub/.gitignore': ['state/', 'reports/'],
+  '.harness-hub/loop/policies/interrupt-policy.md': ['Interrupt Policy', 'standalone', 'composable', 'loop-participant', 'Continue By Default', 'Interrupt', 'Audit Requirement'],
+  '.harness-hub/loop/policies/action-audit-schema.md': ['Runtime Ledgers', 'loop-runs.jsonl', 'interrupt-decisions.jsonl', 'capability-events.jsonl', 'continue|interrupt'],
   '.harness-hub/state/decisions.md': ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'],
   '.harness-hub/state/progress.md': ['Recent Validation', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Review Feedback To Rules'],
   '.harness-hub/state/session-handoff.md': ['Validation Evidence', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Review Feedback To Rules'],
@@ -170,6 +183,9 @@ if (fs.existsSync(featureStatePath)) {
     if (!isRecord(featureState) || !isRecord(featureState.pr_closeout_policy)) {
       missing.push('pr_closeout_policy object');
     }
+    if (!isRecord(featureState) || !isRecord(featureState.loop_control_policy)) {
+      missing.push('loop_control_policy object');
+    }
     if (!isRecord(featureState) || !isRecord(featureState.parallel_write_policy)) {
       missing.push('parallel_write_policy object');
     }
@@ -190,6 +206,28 @@ if (fs.existsSync(featureStatePath)) {
   }
 }
 
+for (const file of [
+  '.harness-hub/state/loop-runs.jsonl',
+  '.harness-hub/state/interrupt-decisions.jsonl',
+  '.harness-hub/state/capability-events.jsonl',
+]) {
+  const issues = parseJsonlIssues(file);
+  if (issues.length > 0) {
+    failures.push(`${file}: invalid JSONL ${issues.join(', ')}`);
+  }
+}
+
+for (const evalCase of [
+  { file: '.harness-hub/loop/evals/interrupt-policy/good-cases.jsonl', expectedDecision: 'continue' },
+  { file: '.harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl', expectedDecision: 'interrupt' },
+  { file: '.harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl' },
+]) {
+  const issues = validateInterruptEvalFile(evalCase.file, evalCase.expectedDecision);
+  if (issues.length > 0) {
+    failures.push(`${evalCase.file}: interrupt policy eval issues ${issues.slice(0, 6).join('; ')}${issues.length > 6 ? `; +${issues.length - 6} more` : ''}`);
+  }
+}
+
 if (failures.length > 0) {
   console.error('Harness validation failed:');
   for (const failure of failures) {
@@ -202,6 +240,68 @@ console.log('Harness validation passed.');
 
 function isRecord(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function parseJsonlIssues(relativePath) {
+  const filePath = path.join(root, relativePath);
+  if (!fs.existsSync(filePath)) {
+    return ['missing'];
+  }
+  const lines = fs.readFileSync(filePath, 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const issues = [];
+  lines.forEach((line, index) => {
+    try {
+      JSON.parse(line);
+    } catch {
+      issues.push(`line ${index + 1}`);
+    }
+  });
+  return issues;
+}
+
+function validateInterruptEvalFile(relativePath, expectedDecision) {
+  const parseIssues = parseJsonlIssues(relativePath);
+  if (parseIssues.length > 0) {
+    return parseIssues;
+  }
+  const records = fs.readFileSync(path.join(root, relativePath), 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  const issues = [];
+  if (records.length === 0) {
+    issues.push('file must contain at least one eval case');
+  }
+  records.forEach((record, index) => {
+    const prefix = `line ${index + 1}`;
+    if (!isRecord(record)) {
+      issues.push(`${prefix}: record must be an object`);
+      return;
+    }
+    if (typeof record.id !== 'string' || record.id.trim().length === 0) {
+      issues.push(`${prefix}: missing id`);
+    }
+    if (typeof record.summary !== 'string' || record.summary.trim().length === 0) {
+      issues.push(`${prefix}: missing summary`);
+    }
+    if (record.expectedDecision !== 'continue' && record.expectedDecision !== 'interrupt') {
+      issues.push(`${prefix}: expectedDecision must be continue or interrupt`);
+    }
+    if (expectedDecision && record.expectedDecision !== expectedDecision) {
+      issues.push(`${prefix}: expectedDecision must be ${expectedDecision}`);
+    }
+    if (!Array.isArray(record.riskSignals) || record.riskSignals.length === 0) {
+      issues.push(`${prefix}: missing riskSignals`);
+    }
+    if (!Array.isArray(record.requiredEvidence) || record.requiredEvidence.length === 0) {
+      issues.push(`${prefix}: missing requiredEvidence`);
+    }
+  });
+  return issues;
 }
 
 function parseSkillDescription(content) {

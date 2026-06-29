@@ -27,7 +27,7 @@ flowchart LR
 
 | Phase | Agent behavior | Harness state write | Typical helpers |
 |---|---|---|---|
-| 0. Harness gate | Verify the target has the minimal harness files and run `node scripts/harness-validate.mjs` before product edits. | Preserve existing local state; fill missing `current-task.md` fields before coding. | `workflow-router` |
+| 0. Harness gate | Verify the target has the standard harness files and run `node scripts/harness-validate.mjs` before product edits. | Preserve existing local state; fill missing `current-task.md` fields before coding. | `workflow-router` |
 | 1. Requirement intake | Restate actor, outcome, pain, constraints, non-goals, and success target. Inspect repo evidence before asking. | `current-task.md`: Goal, assumptions, non-goals, allowed/forbidden paths. | `answer-workflow` for evidence lookup |
 | 2. Discovery and brainstorming | Produce 2-3 viable directions from repo context, recommend one, and record rejected alternatives. Do not add a standalone brainstorming skill unless a routing gap proves it. | `current-task.md`: Discovery and brainstorming; `decisions.md`: accepted direction and alternatives. | `grill-me`, `prototype`, `product-capability` |
 | 3. Spec and acceptance | Define target behavior, boundaries, compatibility, acceptance criteria, and validation commands. | `current-task.md`: Target spec, acceptance criteria, validation tiers, web acceptance if relevant. | `product-capability`, OpenSpec only when explicit |
