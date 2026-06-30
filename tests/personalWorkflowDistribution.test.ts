@@ -10,6 +10,8 @@ const skillQualityGuide = fs.readFileSync('docs/skill-quality-guide.md', 'utf8')
 const skillEvaluationPolicy = fs.readFileSync('docs/skill-evaluation-policy.md', 'utf8');
 const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
 const sourceSkillInventory = fs.readFileSync('docs/source-skill-inventory.md', 'utf8');
+const workflowSourceDossier = fs.readFileSync('docs/workflow-source-dossier.md', 'utf8');
+const capabilityMap = fs.readFileSync('docs/capability-map.md', 'utf8');
 const harnessVocabulary = fs.readFileSync('docs/harness-vocabulary.md', 'utf8');
 const standardTargetBoundary = fs.readFileSync('docs/standard-target-boundary.md', 'utf8');
 
@@ -108,6 +110,33 @@ test('local vocabulary governs concept boundaries without rewriting imported ski
   expect(harnessVocabulary).toContain('`automated check`');
   expect(harnessVocabulary).toContain('`automated review`');
   expect(harnessVocabulary).toContain('Effective Interact Explainer Shape');
+});
+
+test('Matt Pocock source refresh records selective absorption without expanding install surface', () => {
+  const docs = `${sourceProjects}\n${sourceSkillInventory}\n${workflowSourceDossier}\n${capabilityMap}`;
+
+  expect(sourceProjects).toContain('999745ead1b37119380ad1f4de2bcdda5aa5bc84');
+  expect(sourceSkillInventory).toContain('37 total `SKILL.md`; 17 plugin-registered active');
+  expect(sourceSkillInventory).toContain('`mattpocock/skills` 2026-06-30 Refresh Decision');
+
+  expect(docs).toContain('`codebase-design`');
+  expect(docs).toContain('`improve-codebase-architecture`');
+  expect(docs).toContain('deep modules');
+  expect(docs).toContain('review/refactor rubrics');
+
+  expect(docs).toContain('`domain-modeling`');
+  expect(docs).toContain('docs-consistency');
+  expect(docs).toContain('LLM Wiki');
+  expect(docs).toContain('human-confirmed');
+
+  expect(docs).toContain('`writing-great-skills`');
+  expect(docs).toContain('skill-quality');
+  expect(docs).toContain('evals');
+
+  expect(sourceProjects).toContain('`to-prd`, `to-issues`, `triage`, `setup-matt-pocock-skills`, and `implement`');
+  expect(sourceProjects).toContain('Reject by default');
+  expect(sourceProjects).toContain('external issue-tracker');
+  expect(sourceProjects).toContain('Do not import the hard rule to always resolve and never abort');
 });
 
 test('package metadata reflects personal distribution scope', () => {
