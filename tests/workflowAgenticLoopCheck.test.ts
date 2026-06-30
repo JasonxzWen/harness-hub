@@ -67,6 +67,47 @@ test('agentic loop check accepts complete host-neutral loop evidence', () => {
   expect(result.json.findings).toEqual([]);
 });
 
+test('agentic loop check accepts docs-consistency evidence with iteration bounds', () => {
+  const result = runLoopCheck({
+    loops: [
+      {
+        loop: 'docs-consistency',
+        stage: 'finish-closeout',
+        task: 'Check whether docs and code drifted after a workflow change.',
+        acceptanceCriteria: [
+          'Documentation names the implemented public behavior.',
+          'Tests or code evidence agree with the documentation contract.',
+        ],
+        iteration: 1,
+        maxIterations: 2,
+        stopCondition: 'deliver',
+        producer: {
+          type: 'main-agent',
+          evidence: 'current diff and updated docs',
+          currentDiff: 'agentic loop docs, checker, and harness templates',
+        },
+        verifier: {
+          type: 'deterministic-check',
+          evidence: 'rg confirms docs-consistency appears in canonical docs and templates',
+        },
+        arbiter: {
+          type: 'delegated-agent',
+          readOnly: true,
+          evidence: 'compared docs, checker behavior, tests, and target templates',
+        },
+        evidence: 'docs/code consistency review',
+        verdict: 'pass',
+        mainAgentDecision: 'deliver',
+      },
+    ],
+  });
+
+  expect(result.status).toBe(0);
+  expect(result.json.ok).toBe(true);
+  expect(result.json.recordsChecked).toBe(1);
+  expect(result.json.findings).toEqual([]);
+});
+
 test('agentic loop check rejects missing verifier and non-read-only arbiter evidence', () => {
   const result = runLoopCheck({
     loops: [
@@ -156,4 +197,70 @@ test('agentic loop check requires task, acceptance criteria, and producer output
   expect(result.json.findings.map((finding) => finding.id)).toContain('missing-task-or-target-spec');
   expect(result.json.findings.map((finding) => finding.id)).toContain('missing-acceptance-criteria');
   expect(result.json.findings.map((finding) => finding.id)).toContain('missing-producer-output');
+});
+
+test('agentic loop check rejects invalid iteration controls and stop conditions', () => {
+  const result = runLoopCheck({
+    loop: 'docs-consistency',
+    stage: 'finish-closeout',
+    task: 'Review docs/code drift.',
+    acceptanceCriteria: 'Loop iteration controls must be bounded.',
+    iteration: 3,
+    maxIterations: 2,
+    stopCondition: 'auto-merge',
+    producer: {
+      type: 'main-agent',
+      evidence: 'diff summary',
+      currentDiff: 'docs and checker changes',
+    },
+    verifier: {
+      type: 'deterministic-check',
+      evidence: 'loop checker output',
+    },
+    arbiter: {
+      type: 'delegated-agent',
+      readOnly: true,
+      evidence: 'read-only arbitration',
+    },
+    evidence: 'invalid loop record fixture',
+    verdict: 'warn',
+    mainAgentDecision: 'revise',
+  });
+
+  expect(result.status).toBe(1);
+  expect(result.json.ok).toBe(false);
+  expect(result.json.findings.map((finding) => finding.id)).toContain('iteration-exceeds-max');
+  expect(result.json.findings.map((finding) => finding.id)).toContain('invalid-stop-condition');
+});
+
+test('agentic loop check requires a stop condition when iteration controls are recorded', () => {
+  const result = runLoopCheck({
+    loop: 'docs-consistency',
+    stage: 'finish-closeout',
+    task: 'Review docs/code drift.',
+    acceptanceCriteria: 'Bounded loop records must explain why the loop stops.',
+    iteration: 1,
+    maxIterations: 2,
+    producer: {
+      type: 'main-agent',
+      evidence: 'diff summary',
+      currentDiff: 'docs and checker changes',
+    },
+    verifier: {
+      type: 'deterministic-check',
+      evidence: 'loop checker output',
+    },
+    arbiter: {
+      type: 'delegated-agent',
+      readOnly: true,
+      evidence: 'read-only arbitration',
+    },
+    evidence: 'missing stopCondition fixture',
+    verdict: 'warn',
+    mainAgentDecision: 'revise',
+  });
+
+  expect(result.status).toBe(1);
+  expect(result.json.ok).toBe(false);
+  expect(result.json.findings.map((finding) => finding.id)).toContain('missing-stop-condition');
 });

@@ -10,6 +10,7 @@ const ALLOWED_LOOPS = new Set([
   'implementation-review',
   'frontend-acceptance',
   'diagnosis-regression',
+  'docs-consistency',
   'pr-closeout',
   'insight-retro',
 ]);
@@ -23,6 +24,15 @@ const ALLOWED_VERDICTS = new Set([
 ]);
 
 const DELIVERY_DECISIONS = new Set([
+  'deliver',
+  'handoff',
+  'complete',
+]);
+
+const ALLOWED_STOP_CONDITIONS = new Set([
+  'continue',
+  'revise',
+  'interrupt',
   'deliver',
   'handoff',
   'complete',
@@ -102,6 +112,8 @@ export function evaluateAgenticLoopRecords(input) {
       findings.push(finding('invalid-verdict', `Unsupported verdict '${verdict}'.`, `${pathPrefix}.verdict`));
     }
 
+    validateIterationControls(record, pathPrefix, findings);
+
     validateParticipant(record, 'producer', pathPrefix, findings);
     validateParticipant(record, 'verifier', pathPrefix, findings);
     validateParticipant(record, 'arbiter', pathPrefix, findings);
@@ -125,6 +137,11 @@ export function evaluateAgenticLoopRecords(input) {
     if ((verdict === 'fail' || verdict === 'blocked') && DELIVERY_DECISIONS.has(mainDecision)) {
       findings.push(finding('unsafe-delivery-after-failed-loop', 'Failing or blocked loop verdict must not be marked as deliver/complete.', `${pathPrefix}.mainAgentDecision`));
     }
+
+    const stopCondition = stringField(record, 'stopCondition');
+    if ((verdict === 'fail' || verdict === 'blocked') && DELIVERY_DECISIONS.has(stopCondition)) {
+      findings.push(finding('unsafe-stop-after-failed-loop', 'Failing or blocked loop verdict must not use a delivery stop condition.', `${pathPrefix}.stopCondition`));
+    }
   });
 
   return {
@@ -135,6 +152,40 @@ export function evaluateAgenticLoopRecords(input) {
     recordsChecked: records.length,
     findings,
   };
+}
+
+function validateIterationControls(record, pathPrefix, findings) {
+  const hasIteration = Object.prototype.hasOwnProperty.call(record, 'iteration');
+  const hasMaxIterations = Object.prototype.hasOwnProperty.call(record, 'maxIterations');
+  const hasStopCondition = Object.prototype.hasOwnProperty.call(record, 'stopCondition');
+
+  if (hasIteration || hasMaxIterations) {
+    if (!isPositiveInteger(record.iteration)) {
+      findings.push(finding('invalid-iteration', 'iteration must be a positive integer when loop iteration controls are used.', `${pathPrefix}.iteration`));
+    }
+    if (!isPositiveInteger(record.maxIterations)) {
+      findings.push(finding('invalid-max-iterations', 'maxIterations must be a positive integer when loop iteration controls are used.', `${pathPrefix}.maxIterations`));
+    }
+    if (isPositiveInteger(record.iteration) && isPositiveInteger(record.maxIterations) && record.iteration > record.maxIterations) {
+      findings.push(finding('iteration-exceeds-max', 'iteration must be less than or equal to maxIterations.', `${pathPrefix}.iteration`));
+    }
+    if (!hasStopCondition) {
+      findings.push(finding('missing-stop-condition', 'stopCondition must be recorded when loop iteration controls are used.', `${pathPrefix}.stopCondition`));
+    }
+  }
+
+  if (hasStopCondition) {
+    const stopCondition = stringField(record, 'stopCondition');
+    if (!stopCondition) {
+      findings.push(finding('missing-stop-condition', 'stopCondition must be non-empty when present.', `${pathPrefix}.stopCondition`));
+    } else if (!ALLOWED_STOP_CONDITIONS.has(stopCondition)) {
+      findings.push(finding('invalid-stop-condition', `Unsupported stopCondition '${stopCondition}'.`, `${pathPrefix}.stopCondition`));
+    }
+  }
+}
+
+function isPositiveInteger(value) {
+  return Number.isInteger(value) && value > 0;
 }
 
 function normalizeRecords(input) {
@@ -225,6 +276,11 @@ Each record requires:
   loop, stage, producer{type,evidence}, verifier{type,evidence}, arbiter{type,readOnly:true},
   task or targetSpec, acceptanceCriteria, producer output/artifact/currentDiff/currentVersion,
   evidence, verdict, and mainAgentDecision.
+
+Optional bounded-loop fields:
+  single-pass records may omit iteration, maxIterations, and stopCondition;
+  when either iteration field is present, iteration and maxIterations must be positive integers and stopCondition is required;
+  stopCondition may be continue, revise, interrupt, deliver, handoff, or complete.
 
 Supported loops:
   ${[...ALLOWED_LOOPS].join(', ')}`);

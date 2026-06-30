@@ -53,9 +53,9 @@
 
 ## Agentic Loop Records
 
-| Loop | Status | Producer | Verifier | Arbiter | Evidence | Main Agent Decision | Follow-up |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Not planned yet. | skipped | n/a | n/a | n/a | Fill current task first. | n/a | Decide whether the task needs delegated-agent or deterministic arbitration. |
+| Loop | Status | Iteration | Max iterations | Stop condition | Producer | Verifier | Arbiter | Evidence | Main Agent Decision | Follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Not planned yet. | skipped |  |  |  | n/a | n/a | n/a | Fill current task first. | n/a | Decide whether the task needs delegated-agent or deterministic arbitration. |
 
 ## Finish Closeout
 

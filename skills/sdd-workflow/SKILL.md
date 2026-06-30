@@ -66,6 +66,7 @@ Use host-neutral agentic loops from `workflow-router/references/agentic-loops.md
 - `test-design` before implementation when P0/P1/P2 coverage or deterministic substitutes are uncertain.
 - `implementation-review` after a behavior slice when a delegated-agent or independent review can inspect technical debt, first-principles fit, test gaps, and rule drift.
 - `frontend-acceptance` when Web UI work needs fresh-context browser evidence and a separate acceptance arbiter.
+- `docs-consistency` during closeout when workflow, public behavior, templates, tests, and docs/code drift matter.
 
 Record planned loops in `current-task.md` and actual loop evidence in `progress.md`. The main agent owns final synthesis and user-facing decisions.
 

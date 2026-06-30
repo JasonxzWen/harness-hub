@@ -46,6 +46,8 @@
           "workflow-loop-separation",
           "agentic-loop-policy",
           "agentic-loop-records",
+          "docs-consistency-loop-policy",
+          "bounded-agentic-loop-iterations",
           "delegated-agent-arbitration"
       ],
       "overlapsWith": [
@@ -215,6 +217,8 @@
         "finish-closeout-gate-routing",
           "finish-closeout-advisory-evidence",
           "agentic-loop-evidence-check",
+          "docs-consistency-loop-check",
+          "bounded-agentic-loop-iteration-check",
           "agentic-loop-advisory-evidence"
       ],
       "overlapsWith": [

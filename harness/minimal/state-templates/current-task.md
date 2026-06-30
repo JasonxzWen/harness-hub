@@ -101,9 +101,11 @@ State the concrete outcome for the active Codex goal.
 
 Use host-neutral loop roles from `skills/workflow-router/references/agentic-loops.md`: Producer, Verifier, Arbiter, and Main Agent Decision. `delegated-agent` may map to a host-native subagent, another isolated session, a browser run, a CI check, or a deterministic command. Arbiters are read-only and must not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions.
 
-| Stage | Loop | Producer | Verifier | Arbiter | Evidence | Stop condition |
-| --- | --- | --- | --- | --- | --- | --- |
-| Add stage. | plan-review / test-design / implementation-review / frontend-acceptance / diagnosis-regression / pr-closeout / insight-retro | Add owner. | delegated-agent / deterministic-check / browser / CI / explicit skip | delegated-agent arbiter / local read-only arbiter / explicit skip | Add evidence path or summary. | continue / revise / interrupt / deliver |
+| Stage | Loop | Iteration | Max iterations | Producer | Verifier | Arbiter | Evidence | Stop condition |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Add stage. | plan-review / test-design / implementation-review / frontend-acceptance / diagnosis-regression / docs-consistency / pr-closeout / insight-retro | 1 | 1-3, or leave blank for a single-pass loop | Add owner. | delegated-agent / deterministic-check / browser / CI / explicit skip | delegated-agent arbiter / local read-only arbiter / explicit skip | Add evidence path or summary. | continue / revise / interrupt / deliver / handoff / complete |
+
+When a loop may repeat, record `iteration`, `maxIterations`, and a stop condition. Single-pass loops may leave those fields blank in Markdown records; JSON loop records should omit unused fields rather than write `n/a`. Do not continue another loop iteration after the maximum is reached without interrupting for a user-visible decision.
 
 ## Web browser acceptance
 

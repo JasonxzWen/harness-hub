@@ -46,9 +46,9 @@
 
 ## Agentic Loop Records
 
-| Loop | Status | Producer | Verifier | Arbiter | Evidence | Main Agent Decision | Follow-up |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Not run yet. | skipped | n/a | n/a | n/a | No loop evidence recorded yet. | n/a | Record delegated-agent, deterministic-check, browser, CI, or explicit skip evidence before material handoff. |
+| Loop | Status | Iteration | Max iterations | Stop condition | Producer | Verifier | Arbiter | Evidence | Main Agent Decision | Follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Not run yet. | skipped |  |  |  | n/a | n/a | n/a | No loop evidence recorded yet. | n/a | Record delegated-agent, deterministic-check, browser, CI, or explicit skip evidence before material handoff. |
 
 ## Finish Closeout
 

@@ -18,7 +18,7 @@ Harness Hub MUST provide a personal workflow routing overlay where each non-triv
 | Workflow owner | The single skill responsible for driving a task state from entry to handoff. |
 | Helper skill | A narrow domain skill used underneath a workflow owner. It must not compete for top-level ownership. |
 | Loop control plane | The auditable continue/interrupt decision layer for capability actions. It records autonomy decisions but does not replace workflow stages or owners. |
-| Agentic loop | A stage-level producer/verifier/arbiter/main-agent decision pattern for context-isolated acceptance, review, PR closeout, or workflow learning. It can use delegated agents or deterministic checks, but it does not replace the workflow owner. |
+| Agentic loop | A stage-level producer/verifier/arbiter/main-agent decision pattern for context-isolated acceptance, review, docs/code consistency, PR closeout, or workflow learning. It can use delegated agents or deterministic checks, but it does not replace the workflow owner. |
 | Delegated agent | Host-neutral role for a host-native subagent, isolated agent session, browser run, CI check, deterministic command, or bounded worker. Generic skills and state records should use `delegated-agent` instead of host-specific tool names. |
 | Arbiter | Read-only loop role that evaluates task intent, acceptance criteria, current evidence, and risk. It must not edit files, resolve conflicts, push, merge, or make final user-facing decisions. |
 | Interaction layer | `effective-interact`, used to reduce human interpretation cost through HTML reports, comparisons, maps, and handoffs. |
@@ -56,7 +56,7 @@ Every non-trivial change request MUST follow this order unless the selected stat
 
 Loop decisions MAY help decide whether a concrete closeout action continues or interrupts, but Loop MUST NOT remove the closeout stage or bypass its review, PR, insight, and handoff evidence.
 
-Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. A loop MUST record producer, verifier, arbiter, evidence, and main-agent decision when material. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
+Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. A loop MUST record producer, verifier, arbiter, evidence, and main-agent decision when material. Bounded loops SHOULD record `iteration`, `maxIterations`, and `stopCondition`; deterministic checks MUST reject loop records where the current iteration exceeds the maximum. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
 
 ## Requirements
 
@@ -249,6 +249,8 @@ After a requested PR is created or updated, delivery MUST verify the remote PR s
 - do not merge the PR unless the user explicitly requests that remote mutation.
 
 Finish closeout MUST also run or explicitly skip an `insight` audit. The audit should inspect the current session's tool-calling quality, repeated low-value lookups, misleading evidence, code/docs conflicts, AI infrastructure lessons, candidate harness rules, and whether the workflow should become a skill, source record, eval case, or change to an existing workflow. External self-evolution systems such as Hermes-style skill evaluation are source material for this audit, not default runtime dependencies.
+
+Material workflow or harness changes SHOULD also use a `docs-consistency` loop or an explicit skip reason during closeout. The loop compares user-facing docs, installable skill or template behavior, tests, and source implementation so code/docs drift is surfaced before handoff.
 
 ### WR-13: Non-Goals
 

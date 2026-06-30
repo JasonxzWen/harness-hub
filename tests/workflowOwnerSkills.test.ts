@@ -112,12 +112,15 @@ test('workflow owners expose agentic loops as stage mechanics', () => {
   expect(sdd).toContain('plan-review');
   expect(sdd).toContain('test-design');
   expect(sdd).toContain('implementation-review');
+  expect(sdd).toContain('docs-consistency');
   expect(delivery).toContain('frontend-acceptance');
   expect(delivery).toContain('pr-closeout');
+  expect(delivery).toContain('docs-consistency');
   expect(delivery).toContain('insight-retro');
   expect(diagnosis).toContain('diagnosis-regression');
   expect(review).toContain('read-only arbiter');
   expect(maintenance).toContain('delegated-agent');
+  expect(maintenance).toContain('docs-consistency');
 });
 
 test('workflow owners mark UI helper skills as conditional', () => {

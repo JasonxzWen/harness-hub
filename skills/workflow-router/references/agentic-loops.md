@@ -20,6 +20,7 @@ Use `delegated-agent` as the host-neutral term. It may map to a host-native suba
 - `implementation-review`
 - `frontend-acceptance`
 - `diagnosis-regression`
+- `docs-consistency`
 - `pr-closeout`
 - `insight-retro`
 
@@ -34,6 +35,8 @@ Record loop evidence with:
 - producer output or current diff/artifact;
 - verifier evidence or explicit skip reason;
 - arbiter verdict or explicit skip reason;
+- stop condition when the loop may repeat or iteration controls are recorded;
+- iteration and maxIterations when the loop may repeat;
 - main-agent decision and follow-up.
 
 ## Boundaries
@@ -42,3 +45,4 @@ Record loop evidence with:
 - Hooks and deterministic checks may request or validate loop evidence, but must not auto-dispatch delegated agents.
 - A failing deterministic check outranks a delegated-agent pass.
 - A failing or blocked arbiter verdict must not be marked as deliver/complete.
+- When `iteration` or `maxIterations` is recorded, both values must be positive integers, `iteration` must not exceed `maxIterations`, and `stopCondition` must be recorded.

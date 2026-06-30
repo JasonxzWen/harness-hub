@@ -6,6 +6,16 @@ Workflow and Loop are separate layers. The workflow is the canonical development
 
 This document is the practical entrypoint for change work. Routing details remain in [Skill Routing](skill-routing.md), lifecycle source evidence remains in [Workflow Source Dossier](workflow-source-dossier.md), installable agentic loop rules live in [`workflow-router/references/agentic-loops.md`](../skills/workflow-router/references/agentic-loops.md), and source-level examples live in [Agentic Loop Catalog](agentic-loop-catalog.md). Target-repo state lives under `.harness-hub/state/` after `init-harness`.
 
+## Current State Model
+
+Harness Hub has three stateful layers today:
+
+- workflow state: `workflow-router` classifies a request into one owner state and advisory phase gates check whether the current task has enough scope, spec, acceptance, validation, and closeout evidence;
+- loop evidence state: agentic loop records capture Producer, Verifier, Arbiter, iteration, maxIterations, stop condition, evidence, verdict, and Main Agent Decision;
+- Loop control state: `harness-hub loop evaluate` and `loop schedule` write continue/interrupt decisions to local JSONL ledgers only when explicitly confirmed.
+
+This is not yet a full multi-agent orchestrator. There is no default dispatcher, retry scheduler, cross-host agent lifecycle manager, merge queue, trace normalizer, or lock-backed work allocator for delegated agents. Building that layer requires an explicit security and rollout design because it would decide when to start agents, retry work, write files, and trust or reject agent outputs.
+
 ## Capability Map
 
 ```mermaid
@@ -53,7 +63,7 @@ Producer -> Verifier -> Arbiter -> Main Agent Decision
 
 The loop roles are host-neutral. `delegated-agent` may be a host-native subagent, isolated session, browser run, CI check, deterministic command, or bounded worker. Arbiters are read-only and must not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions. The main agent owns integration and the final handoff.
 
-Common loops include `plan-review`, `test-design`, `implementation-review`, `frontend-acceptance`, `diagnosis-regression`, `pr-closeout`, and `insight-retro`. Record planned loops in `current-task.md` and actual loop evidence in `progress.md` and `session-handoff.md` under `Agentic Loop Records`.
+Common loops include `plan-review`, `test-design`, `implementation-review`, `frontend-acceptance`, `diagnosis-regression`, `docs-consistency`, `pr-closeout`, and `insight-retro`. Record planned loops in `current-task.md` and actual loop evidence in `progress.md` and `session-handoff.md` under `Agentic Loop Records`. When a loop may repeat, record `iteration`, `maxIterations`, and a stop condition so the main agent cannot silently keep asking for more reviews.
 
 Host-specific execution details belong in [Codex agentic loops](host-adapters/codex-agentic-loops.md) and [Claude Code agentic loops](host-adapters/claude-code-agentic-loops.md), not in generic skill bodies.
 

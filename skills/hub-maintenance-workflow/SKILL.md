@@ -19,7 +19,7 @@ Use this owner for Harness Hub repository work.
 8. Finish closeout: run a final independent review when material, expose any routing/spec drift or technical debt, and run or explicitly skip `insight` for tool-calling quality and skill/workflow improvement candidates.
 9. Use `effective-interact` for material handoff reports.
 
-Use agentic loops from `workflow-router/references/agentic-loops.md` for material Harness Hub changes. Prefer `plan-review` for workflow or harness architecture changes, `implementation-review` for routing/CLI/template changes, `pr-closeout` for release-bound work, and `insight-retro` when repeated corrections or tool-calling lessons should become rules, eval cases, source records, or workflow changes. Verifiers may be `delegated-agent` passes or deterministic checks.
+Use agentic loops from `workflow-router/references/agentic-loops.md` for material Harness Hub changes. Prefer `plan-review` for workflow or harness architecture changes, `implementation-review` for routing/CLI/template changes, `docs-consistency` when docs, templates, tests, and implementation must stay aligned, `pr-closeout` for release-bound work, and `insight-retro` when repeated corrections or tool-calling lessons should become rules, eval cases, source records, or workflow changes. Verifiers may be `delegated-agent` passes or deterministic checks; record `iteration`, `maxIterations`, and a stop condition when a loop may repeat.
 
 ## Source And Evaluation Inputs
 

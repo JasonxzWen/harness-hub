@@ -117,6 +117,9 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Parallel writes');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Agentic loops');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('skills/workflow-router/references/agentic-loops.md');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('docs-consistency');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('maxIterations');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Stop condition');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('P0');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('P1');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('P2');
@@ -128,12 +131,14 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Web browser acceptance');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('PR Status');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Agentic Loop Records');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Stop condition');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Finish Closeout');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Insight Recommendations');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Failed');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Web browser acceptance');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('PR Status');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Agentic Loop Records');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Stop condition');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Finish Closeout');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Insight Recommendations');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Initialization Gate');
@@ -153,6 +158,9 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('pr_closeout_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('finish_closeout_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('agentic_loop_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('docs-consistency');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('maxIterations');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('stopCondition');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('loop_control_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('context_engineering_policy');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'context', 'AGENTS.md'), 'utf8')).toContain('No Redundant Facts');

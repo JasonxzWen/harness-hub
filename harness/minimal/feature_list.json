@@ -115,6 +115,7 @@
       "implementation-review",
       "frontend-acceptance",
       "diagnosis-regression",
+      "docs-consistency",
       "pr-closeout",
       "insight-retro"
     ],
@@ -131,8 +132,23 @@
       "producer output or current diff",
       "verifier evidence or explicit skip reason",
       "arbiter verdict or explicit skip reason",
+      "stop condition when a loop may repeat or iteration controls are recorded",
+      "iteration and maxIterations when a loop may repeat",
       "main agent decision"
     ],
+    "iteration_policy": {
+      "fields": [
+        "iteration",
+        "maxIterations",
+        "stopCondition"
+      ],
+      "rules": [
+        "single-pass loops may omit iteration, maxIterations, and stopCondition",
+        "when either iteration field is present, both values must be positive integers and stopCondition is required",
+        "iteration must be less than or equal to maxIterations",
+        "allowed stopCondition values are continue, revise, interrupt, deliver, handoff, and complete"
+      ]
+    },
     "arbiter_boundary": "Arbiters are read-only. They do not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions.",
     "dispatch_boundary": "Hooks and deterministic checks may request or validate loop evidence, but must not auto-dispatch delegated agents.",
     "main_agent_responsibility": "The main agent owns synthesis, user-visible decisions, integration, and final handoff."

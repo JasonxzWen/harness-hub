@@ -24,7 +24,8 @@ Every loop record should capture:
 - input contract: original task, target spec, acceptance criteria, current diff or artifact, commands, and risk boundaries;
 - evidence: command output, screenshots, traces, source links, review findings, or explicit skip reason;
 - verdict: pass, fail, warn, blocked, or skipped;
-- stop condition: continue implementation, run another verifier, interrupt for user decision, or deliver.
+- iteration controls: optional `iteration` and `maxIterations` positive integers when the loop may repeat; if either field is recorded, both fields and a stop condition are required;
+- stop condition: `continue`, `revise`, `interrupt`, `deliver`, `handoff`, or `complete`; required for bounded or repeating loops.
 
 The arbiter must use evidence, not majority vote. If reviewers disagree, the arbiter reports the conflict, severity, and confidence; the main agent makes the integration decision.
 
@@ -37,6 +38,7 @@ The arbiter must use evidence, not majority vote. If reviewers disagree, the arb
 | `implementation-review` | After a slice | Implementer | Parallel code-review lenses | Review arbiter | Fix, defer with risk, or continue. |
 | `frontend-acceptance` | Acceptance | Current app/version | Fresh-context browser verifier | UX/acceptance arbiter | Fix UI, record skip, or deliver. |
 | `diagnosis-regression` | Diagnosis | Fix candidate | Reproducer and regression check | Root-cause arbiter | Continue diagnosis or accept fix. |
+| `docs-consistency` | Finish closeout | Current docs/code/spec diff | Documentation reader and code reader, or deterministic drift check | Docs/code drift arbiter | Fix docs or code, record accepted drift, or deliver. |
 | `pr-closeout` | Delivery | Branch/PR | PR status checker | Release-risk arbiter | Fix in scope, ask user, or hand off. |
 | `insight-retro` | Finish closeout | Session trace | `insight` report | Workflow-learning arbiter | Add rule, eval case, skill follow-up, or no-op. |
 
@@ -47,6 +49,7 @@ The arbiter must use evidence, not majority vote. If reviewers disagree, the arb
 - Arbiters do not edit files, close review threads, resolve conflicts, push, publish, merge, or mutate third-party resources.
 - Human interrupt is required for product tradeoffs, data ownership, safety, credentials, permissions, protected-branch overrides, external service failures, and remote mutations.
 - Loop evidence is advisory until the active workflow owner and deterministic validation agree that the stage can proceed.
+- Bounded loops must stop or interrupt when `iteration` reaches `maxIterations`; they should not silently continue with another review pass.
 
 ## Host Adapter Boundary
 

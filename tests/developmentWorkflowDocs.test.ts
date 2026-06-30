@@ -48,6 +48,9 @@ test('development workflow guide documents state files, TDD, and skill extension
     'Open Question Discipline',
     'State File Responsibilities',
     'Skill Extension Rules',
+    'Current State Model',
+    'not yet a full multi-agent orchestrator',
+    'maxIterations',
     'New workflow owner',
     'Helper atom',
     'Source-only idea',
@@ -203,7 +206,9 @@ test('agentic loop catalog documents host-neutral arbitration and adapters', () 
     'Producer -> Verifier -> Arbiter -> Main Agent Decision',
     'delegated-agent',
     'frontend-acceptance',
+    'docs-consistency',
     'insight-retro',
+    'maxIterations',
     'Arbiter',
     'must not edit code',
     'Host Adapter Boundary',
@@ -214,6 +219,8 @@ test('agentic loop catalog documents host-neutral arbitration and adapters', () 
     'Producer -> Verifier -> Arbiter -> Main Agent Decision',
     'delegated-agent',
     'frontend-acceptance',
+    'docs-consistency',
+    'maxIterations',
     'Arbiters must not edit files',
     'must not auto-dispatch delegated agents',
   ]) {
@@ -224,6 +231,8 @@ test('agentic loop catalog documents host-neutral arbitration and adapters', () 
   expect(codex).toContain('parent Codex agent');
   expect(claude).toContain('Claude Code subagent');
   expect(claude).toContain('custom subagent');
+  expect(claude).toContain('stream-json');
+  expect(claude).toContain('task_started');
   expect(catalog).not.toContain('mcp__');
 });
 
