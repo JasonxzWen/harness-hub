@@ -29,6 +29,8 @@ type RouteResult = {
 
 const routeScript = 'skills/workflow-router/scripts/route-intent.mjs';
 const workflowCheckScript = 'skills/workflow-router/scripts/workflow-check.mjs';
+const advisoryCheckScript = 'skills/workflow-router/scripts/advisory-check.mjs';
+const agenticLoopCheckScript = 'skills/workflow-router/scripts/agentic-loop-check.mjs';
 const skillActivationCheckScript = 'skills/workflow-router/scripts/skill-activation-check.mjs';
 const ownerContractCheckScript = 'skills/workflow-router/scripts/owner-contract-check.mjs';
 const helperContractCheckScript = 'skills/workflow-router/scripts/helper-contract-check.mjs';
@@ -331,6 +333,7 @@ test('workflow check routes Harness Hub install policy requests into maintenance
     'missing-acceptance',
     'missing-plan',
   ]);
+  expect(result.ownerContract.ok).toBe(true);
   expect(result.mutates).toBe(false);
   expect(result.dispatchesSubagents).toBe(false);
 });
@@ -442,7 +445,7 @@ test('workflow check warns when an explicit phase does not match the selected ow
   expect(result.dispatchesSubagents).toBe(false);
 });
 
-test('workflow check warns when material delivery lacks required HTML handoff', () => {
+test('workflow check warns when material delivery lacks closeout evidence or required HTML handoff', () => {
   const missing = runWorkflowCheck(workflowCheckScript, [
     '--prompt',
     'Finish the accepted work: run validation and produce the handoff.',
@@ -450,6 +453,15 @@ test('workflow check warns when material delivery lacks required HTML handoff', 
     'pre-delivery',
     '--material-changes',
     '--has-validation',
+  ]);
+  const missingCloseout = runWorkflowCheck(workflowCheckScript, [
+    '--prompt',
+    'Finish the accepted work: run validation and produce the handoff.',
+    '--phase',
+    'pre-delivery',
+    '--material-changes',
+    '--has-validation',
+    '--has-html-handoff',
   ]);
   const present = runWorkflowCheck(workflowCheckScript, [
     '--prompt',
@@ -459,11 +471,28 @@ test('workflow check warns when material delivery lacks required HTML handoff', 
     '--material-changes',
     '--has-validation',
     '--has-html-handoff',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-insight',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
   ]);
 
   expect(missing.advisory.expectedOutputMode).toBe('html-artifact');
   expect(missing.advisory.warnings.map((warning) => warning.id)).toEqual([
+    'missing-closeout-review',
+    'missing-pr-readiness',
+    'missing-insight-audit',
+    'missing-acceptance-arbiter',
+    'missing-final-review-arbiter',
     'missing-effective-interact-html-handoff',
+  ]);
+  expect(missingCloseout.advisory.warnings.map((warning) => warning.id)).toEqual([
+    'missing-closeout-review',
+    'missing-pr-readiness',
+    'missing-insight-audit',
+    'missing-acceptance-arbiter',
+    'missing-final-review-arbiter',
   ]);
   expect(present.advisory.ok).toBe(true);
   expect(present.advisory.warnings).toEqual([]);
@@ -537,7 +566,7 @@ test('installed workflow check warns when the selected owner skill is missing', 
 test('workflow-router executable classifier is tracked as an installable capability', () => {
   const component = readCapabilityIndex().components['skill:workflow-router'];
 
-  expect(component.version).toBe('0.12.3');
+  expect(component.version).toBe('0.14.0');
   expect(component.provides).toContain('executable-intent-classifier');
   expect(component.provides).toContain('workflow-gate-preflight');
   expect(component.provides).toContain('executable-skill-activation-smoke');
@@ -549,11 +578,17 @@ test('workflow-router executable classifier is tracked as an installable capabil
   expect(component.provides).toContain('explicit-read-only-mutation-guard');
   expect(component.provides).toContain('expected-output-mode-routing');
   expect(component.provides).toContain('html-handoff-advisory-gate');
+  expect(component.provides).toContain('finish-closeout-advisory-evidence');
+  expect(component.provides).toContain('agentic-loop-evidence-check');
+  expect(component.provides).toContain('agentic-loop-advisory-evidence');
   expect(component.provides).toContain('visual-language-report-activation');
   expect(component.provides).toContain('owner-workflow-structure-contract');
   expect(component.provides).toContain('executable-owner-contract-smoke');
+  expect(component.provides).toContain('finish-closeout-gate-routing');
   expect(component.detects.map((entry) => entry.path)).toContain(routeScript);
   expect(component.detects.map((entry) => entry.path)).toContain(workflowCheckScript);
+  expect(component.detects.map((entry) => entry.path)).toContain(advisoryCheckScript);
+  expect(component.detects.map((entry) => entry.path)).toContain(agenticLoopCheckScript);
   expect(component.detects.map((entry) => entry.path)).toContain(skillActivationCheckScript);
   expect(component.detects.map((entry) => entry.path)).toContain(ownerContractCheckScript);
   expect(component.detects.map((entry) => entry.path)).toContain(helperContractCheckScript);

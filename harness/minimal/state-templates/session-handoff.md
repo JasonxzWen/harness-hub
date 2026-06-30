@@ -44,6 +44,28 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Not created yet. | n/a | skipped | skipped | n/a | n/a | none | none |
 
+## Agentic Loop Records
+
+| Loop | Status | Iteration | Max iterations | Stop condition | Producer | Verifier | Arbiter | Evidence | Main Agent Decision | Follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Not run yet. | skipped |  |  |  | n/a | n/a | n/a | No loop evidence recorded yet. | n/a | Record delegated-agent, deterministic-check, browser, CI, or explicit skip evidence before material handoff. |
+
+## Finish Closeout
+
+| Check | Status | Evidence | Follow-up |
+| --- | --- | --- | --- |
+| Final independent review | not run | No review evidence recorded yet. | Decide subagent, independent pass, or skip reason. |
+| Technical debt / drift review | not run | No closeout findings recorded yet. | Record refactor recommendations or warnings. |
+| PR / merge readiness | not applicable | No PR yet. | Record mergeability, conflicts, and user-visible decisions when a PR exists. |
+
+## Insight Recommendations
+
+| Area | Recommendation | Evidence | Disposition |
+| --- | --- | --- | --- |
+| Tool calling | Not run yet. | No insight audit recorded. | pending |
+| AI infrastructure | Not run yet. | No insight audit recorded. | pending |
+| Skill or workflow extraction | Not run yet. | No insight audit recorded. | pending |
+
 ## Review Feedback To Rules
 
 - Nothing recorded yet.

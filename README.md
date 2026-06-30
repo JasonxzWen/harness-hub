@@ -6,7 +6,7 @@ Harness Hub is a personal repo harness toolkit for making agent work repeatable 
 
 Imported skills can keep their upstream style; Harness Hub mainly owns routing, source records, harness templates, and lifecycle safety.
 
-Agent execution rules live in [AGENTS.md](AGENTS.md). Human-facing workflow detail lives in [Development Workflow](docs/development-workflow.md).
+Agent execution rules live in [AGENTS.md](AGENTS.md). Human-facing workflow detail lives in [Development Workflow](docs/development-workflow.md), with delegated-agent acceptance and arbitration patterns in [Agentic Loop Catalog](docs/agentic-loop-catalog.md).
 
 ## First-Use Summary
 
@@ -18,6 +18,8 @@ Harness Hub does a small set of bounded jobs:
 - the standard harness includes an LLM Wiki context pack under `.harness-hub/context/`.
 - `loop evaluate` and `loop schedule` decide continue vs interrupt and can append local Loop ledgers after `--yes`.
 - `source-post` creates, builds, validates, and preflights source-backed public posts.
+- the development workflow keeps Loop as a control plane and adds finish closeout before final handoff: final review, PR/merge readiness, and insight learning.
+- agentic loops separate Producer, Verifier, Arbiter, and Main Agent Decision for subagent/delegated-agent acceptance, parallel review, PR closeout, and workflow learning.
 
 For a new target repo, start with a dry run:
 
@@ -169,7 +171,7 @@ Harness Hub does not create the schedule, webhook, commit, push, tool install, o
 
 | Area | Included surface |
 |---|---|
-| Routing and lifecycle | `workflow-router`, owner workflow skills, SDD-first change flow, delivery closeout. |
+| Routing and lifecycle | `workflow-router`, owner workflow skills, SDD-first change flow, finish closeout, delivery closeout. |
 | Planning and implementation | `grill-me`, `product-capability`, `tdd-workflow`, `karpathy-guidelines`, `verification-loop`. |
 | Diagnosis and review | `diagnosis-workflow`, `diagnose`, `review-workflow`, `compound-code-review`, `security-review`. |
 | Communication and handoff | `effective-interact`, `handoff`, `doc-coauthoring`, `internal-comms`, `documentation-lookup`. |

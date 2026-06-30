@@ -17,7 +17,7 @@ Current direction note: Harness Hub is now treated as a personal workflow distri
 
 Use Option A: build one thin `workflow-router` that identifies the user's task state, then hands the session to exactly one workflow owner. The hub should stop acting like an undifferentiated pile of imported skill packs and instead expose a small personal routing overlay inspired by, but not copied from, upstream projects.
 
-The workflow owner must drive this lifecycle: align user need -> gather required material -> write spec and acceptance -> write executable plan and align -> clean unneeded files -> implement -> test -> deliver report.
+The workflow owner must drive this lifecycle: align user need -> gather required material -> write spec and acceptance -> write executable plan and align -> clean unneeded files -> implement -> test -> finish closeout -> deliver report.
 
 ## Assumptions
 

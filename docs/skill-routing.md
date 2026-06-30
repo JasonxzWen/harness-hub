@@ -19,7 +19,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 | Requirement intake, lightweight brainstorming, direction selection, or implementation planning inside change work | `sdd-workflow` | Treat brainstorming as a phase action, not a separate top-level owner; inspect repo evidence, compare 2-3 directions, and record the selected direction, rejected alternatives, tests, and open questions in harness state. |
 | Failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure report | `diagnosis-workflow` | Reproduce or bound the failure before choosing helper skills. |
 | Code, plan, release, UI, or security review | `review-workflow` | Findings first; do not implement fixes unless redirected. |
-| Validation closeout, cleanup, release notes, handoff, or post-PR status triage | `delivery-workflow` | Run accepted checks, inspect PR mergeability/CI/conflicts after PR creation or update, resolve actionable blockers, and report residual risk. |
+| Validation closeout, finish closeout, cleanup, release notes, handoff, or post-PR status triage | `delivery-workflow` | Run accepted checks, final review/insight closeout, inspect PR mergeability/CI/conflicts after PR creation or update, resolve actionable blockers, and report residual risk. |
 | Harness Hub source, routing, capability metadata, npm lifecycle, or managed cleanup work | `hub-maintenance-workflow` | Use source records and CLI dry-runs instead of removed broad helper skills. |
 | Plan/design pressure testing before implementation | `grill-me` | Ask one hard question at a time and surface assumptions. |
 | Diagnose runtime bug, failing command, flaky behavior, or performance regression | `diagnose` | `diagnose` owns unknown runtime bugs and performance regressions; use `tdd-workflow` after the behavior is understood. |
@@ -63,7 +63,8 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Use `mcp-builder` for MCP servers; use `claude-api` for Anthropic API clients and `security-review` when secret/tool-execution risk is central.
 - Treat CodeGraph and Headroom as external tool configuration suggestions surfaced by `harness-hub check` and readiness analysis, not as skill owners or managed install components. Any MCP config, proxy, hook, provider routing, or memory setup remains explicit and reviewed.
 - Use `skill-creator` for standard skill content; `hub-maintenance-workflow` still owns source records, capability metadata, and Harness Hub lifecycle decisions.
-- Use `delivery-workflow` after a requested PR is created or updated to inspect remote PR state, mergeability, CI/check runs, conflicts, and branch-protection blockers; do not treat local validation alone as PR-ready evidence.
+- Use `delivery-workflow` after accepted validation to run finish closeout: final independent review when material, insight audit or skip reason, PR/merge-readiness checks, and residual-risk handoff. After a requested PR is created or updated, inspect remote PR state, mergeability, CI/check runs, conflicts, and branch-protection blockers; do not treat local validation alone as PR-ready evidence.
+- Use agentic loops as stage mechanics inside the selected owner workflow when separation of context improves quality: plan review, test design, implementation review, frontend acceptance, diagnosis regression, PR closeout, and insight retro. Record Producer, Verifier, read-only Arbiter, evidence, verdict, and Main Agent Decision; do not route them as standalone owners.
 - Use OpenSpec skills only when the user explicitly wants the formal OpenSpec lifecycle.
 - Native goal/story loops are handled by current Codex and Claude Code capabilities; Harness Hub no longer distributes Ralph PRD or loop skills.
 - Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
@@ -90,7 +91,8 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `compound-code-review` loads for deep structured review; focused security and final command gates route elsewhere.
 - `security-review` loads for focused security-sensitive code, auth, secrets, injection, unsafe IO, or payments.
 - `verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis.
-- `delivery-workflow` loads for accepted closeout and post-PR status triage, including mergeability, CI/check-run, conflict, branch-protection, and environment cleanup checks; it does not merge or publish unless explicitly requested.
+- `delivery-workflow` loads for accepted closeout and post-PR status triage, including final review, insight audit, mergeability, CI/check-run, conflict, branch-protection, and environment cleanup checks; it does not merge or publish unless explicitly requested.
+- Agentic loops do not load as a skill owner. They are host-neutral stage patterns documented in `workflow-router/references/agentic-loops.md`; Codex and Claude Code invocation details belong in host adapter docs.
 - `feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions.
 - `coding-standards` loads for cross-project code quality conventions after an owner workflow has selected scope.
 - `karpathy-guidelines` loads after a workflow owner has selected implementation, review, or refactor scope and the agent needs behavior guardrails for assumptions, simplicity, surgical diffs, or verifiable success; it is not a top-level workflow, requirements workflow, TDD workflow, or review workflow.
@@ -135,7 +137,9 @@ Use [Development Workflow](development-workflow.md) for the practical intake che
 
 ## Subagents And Hooks
 
-Subagents are parent-workflow controlled. Use native subagents only for independent source gathering, docs lookup, review, verification, or disjoint write scopes named in the executable plan. The main workflow owner keeps synthesis, integration, validation, and final user-facing conclusions.
+Subagents are parent-workflow controlled. Use native subagents only for independent source gathering, docs lookup, review, verification, finish closeout review, agentic loop verifier/arbiter passes, or disjoint write scopes named in the executable plan. The main workflow owner keeps synthesis, integration, validation, and final user-facing conclusions.
+
+Generic routing uses `delegated-agent`, `verifier`, and `arbiter` rather than host-specific tool names. Arbiters are read-only: they do not edit files, resolve conflicts, push, publish, merge, post, or make the final user-facing decision.
 
 Advisory hooks only until a security review, deterministic tests, and explicit rollout approval exist. No automatic subagent dispatch is allowed. No remote writes from hooks are allowed. Hooks must not bypass SDD alignment or mutate credentials, third-party resources, publishing state, or git remotes.
 

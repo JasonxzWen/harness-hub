@@ -6,7 +6,7 @@
       "kind": "harness-template",
       "path": "harness/minimal",
       "dest": ".",
-      "version": "0.7.0",
+        "version": "0.9.0",
       "source": "local",
       "provides": [
         "repo-harness-initialization",
@@ -39,7 +39,16 @@
         "context-pack-validation",
         "evaluator-rubric",
         "quality-snapshot",
-        "pr-handoff-policy"
+        "pr-handoff-policy",
+        "finish-closeout-policy",
+        "final-review-closeout",
+        "insight-closeout-audit",
+          "workflow-loop-separation",
+          "agentic-loop-policy",
+          "agentic-loop-records",
+          "docs-consistency-loop-policy",
+          "bounded-agentic-loop-iterations",
+          "delegated-agent-arbitration"
       ],
       "overlapsWith": [
         "skill:workflow-router",
@@ -185,7 +194,7 @@
     "skill:workflow-router": {
       "kind": "skill",
       "path": "skills/workflow-router",
-      "version": "0.12.3",
+        "version": "0.14.0",
       "source": "local",
       "provides": [
         "workflow-intent-routing",
@@ -204,7 +213,13 @@
         "html-handoff-advisory-gate",
         "visual-language-report-activation",
         "owner-workflow-structure-contract",
-        "executable-owner-contract-smoke"
+        "executable-owner-contract-smoke",
+        "finish-closeout-gate-routing",
+          "finish-closeout-advisory-evidence",
+          "agentic-loop-evidence-check",
+          "docs-consistency-loop-check",
+          "bounded-agentic-loop-iteration-check",
+          "agentic-loop-advisory-evidence"
       ],
       "overlapsWith": [
         "skill:openspec-explore",
@@ -220,18 +235,24 @@
         {
           "path": "skills/workflow-router/scripts/route-intent.mjs"
         },
-        {
-          "path": "skills/workflow-router/scripts/workflow-check.mjs"
-        },
-        {
-          "path": "skills/workflow-router/scripts/skill-activation-check.mjs"
-        },
+          {
+            "path": "skills/workflow-router/scripts/workflow-check.mjs"
+          },
+          {
+            "path": "skills/workflow-router/scripts/advisory-check.mjs"
+          },
+          {
+            "path": "skills/workflow-router/scripts/skill-activation-check.mjs"
+          },
         {
           "path": "skills/workflow-router/scripts/owner-contract-check.mjs"
         },
-        {
-          "path": "skills/workflow-router/scripts/helper-contract-check.mjs"
-        }
+          {
+            "path": "skills/workflow-router/scripts/helper-contract-check.mjs"
+          },
+          {
+            "path": "skills/workflow-router/scripts/agentic-loop-check.mjs"
+          }
       ],
       "agents": [
         "standard"
@@ -267,12 +288,14 @@
     "skill:sdd-workflow": {
       "kind": "skill",
       "path": "skills/sdd-workflow",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "local",
       "provides": [
         "sdd-first-change-workflow",
         "embedded-tdd",
-        "pre-implementation-alignment"
+        "pre-implementation-alignment",
+        "finish-closeout-lifecycle",
+        "insight-closeout-audit"
       ],
       "overlapsWith": [
         "skill:product-capability",
@@ -296,11 +319,12 @@
     "skill:diagnosis-workflow": {
       "kind": "skill",
       "path": "skills/diagnosis-workflow",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "local",
       "provides": [
         "diagnosis-owner-workflow",
-        "failure-reproduction-gate"
+        "failure-reproduction-gate",
+        "diagnosis-finish-closeout"
       ],
       "overlapsWith": [
         "skill:diagnose",
@@ -350,13 +374,16 @@
     "skill:delivery-workflow": {
       "kind": "skill",
       "path": "skills/delivery-workflow",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "source": "local",
       "provides": [
         "delivery-owner-workflow",
         "validation-handoff-cleanup",
         "post-pr-status-triage",
-        "pr-closeout-handoff"
+        "pr-closeout-handoff",
+        "finish-closeout-delivery",
+        "pr-merge-readiness-closeout",
+        "insight-closeout-audit"
       ],
       "overlapsWith": [
         "skill:verification-loop",
@@ -377,12 +404,14 @@
     "skill:hub-maintenance-workflow": {
       "kind": "skill",
       "path": "skills/hub-maintenance-workflow",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "local",
       "provides": [
         "harness-hub-maintenance-workflow",
         "source-evaluation-workflow",
-        "capability-lifecycle-governance"
+        "capability-lifecycle-governance",
+        "maintenance-finish-closeout",
+        "source-evaluation-closeout"
       ],
       "overlapsWith": [],
       "routing": "Use for maintaining Harness Hub sources, routing, capabilities, npm lifecycle, and managed update/remove behavior.",

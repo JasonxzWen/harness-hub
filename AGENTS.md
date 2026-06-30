@@ -32,6 +32,10 @@ Keep every distributed skill in the standard layout under `skills/<skill-name>/S
    - If the PR is not clean because of conflicts, failed CI, or another actionable issue, diagnose and resolve it, rerun relevant validation, and push the fix.
    - Stop and ask the user only when the blocker requires a user decision, credential, permission, reviewer action, protected-branch override, or external service recovery.
    - Do not merge the PR unless the user explicitly asks for that remote mutation.
+6. Finish closeout is a development stage.
+   - After validation and before final handoff, run a final independent review when material. Use a subagent when the scope is independent and read-only; focus on technical debt, first-principles implementation fit, project-rule drift, and refactor or warning recommendations.
+   - For PR work, expose conflict, merge, behavior, compatibility, and release-risk decisions to the user instead of handling them silently.
+   - Run or explicitly skip `insight` to review tool-calling quality, repeated low-value lookup loops, misleading evidence, docs/code conflicts, AI infrastructure lessons, and whether the work should become a skill, source record, eval case, or existing workflow change.
 
 ## Personal Distribution Policy
 
@@ -84,7 +88,7 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 - SDD change work: use `sdd-workflow`; align core details, target spec, and acceptance criteria before implementation.
 - Runtime bug reports that start from failure evidence: use `diagnosis-workflow`.
 - Code, plan, release, UI, or security review: use `review-workflow`.
-- Delivery, validation closeout, cleanup, or handoff: use `delivery-workflow`.
+- Delivery, validation closeout, finish closeout, cleanup, or handoff: use `delivery-workflow`.
 - Harness Hub source, routing, capability, npm lifecycle, harness templates, or cleanup work: use `hub-maintenance-workflow`.
 - Plan/design pressure testing: use `grill-me`.
 - Runtime bugs/performance regressions: use `diagnose`.
@@ -104,6 +108,8 @@ The target architecture is a thin, executable `workflow-router` that classifies 
 Subagents are an optimization owned by the active workflow, not a default behavior of every skill. Use them only for independent read-only research, review, docs work, verification, or clearly disjoint write scopes; the main agent keeps final decisions, integration, and user-facing conclusions.
 
 Hooks should start as advisory or deterministic local checks only. Do not introduce blocking hooks, remote actions, credential changes, posting, pushing, publishing, or agent dispatch without explicit user approval and security review.
+
+Agentic loops are workflow-stage mechanics, not a replacement for workflow owners. Use `skills/workflow-router/references/agentic-loops.md` for Producer -> Verifier -> Arbiter -> Main Agent Decision patterns; `docs/agentic-loop-catalog.md` is the source-repo explainer. Keep generic rules host-neutral with `delegated-agent`; Codex and Claude Code details belong in host adapter docs. Arbiters are read-only and do not edit files, resolve conflicts, push, publish, merge, or make final user-facing decisions.
 
 ## Agent Development Workflow
 

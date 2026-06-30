@@ -17,7 +17,8 @@ The workflow system must serve this order:
 5. Clean unneeded files.
 6. Implement.
 7. Test and accept.
-8. Deliver report.
+8. Finish closeout.
+9. Deliver report.
 
 ## Source Index
 
@@ -30,6 +31,7 @@ The workflow system must serve this order:
 | Compound Engineering Plugin | `compound-code-review` adapted; rest explicit-only or reference. | Structured review, reviewer lenses, doc-review candidates, side-effect-heavy work loops. | Keep review lane; postpone broader workflows. |
 | Effective Interact | Original local skill. | Chinese-first interaction-cost reduction, answer-first visual handoffs, evidence, option comparison, validation dashboards. | High-priority interaction layer across all non-trivial lifecycle phases. |
 | Harness Hub CLI lifecycle | Implemented and documented locally. | Lock-backed install/status/update/remove and safe cleanup ownership. | Preserve as mandatory distribution and cleanup boundary. |
+| Hermes Agent / Self-Evolution | Reviewed as source evidence on 2026-06-30; not installed. | Session traces, eval datasets, guardrails, and PR-reviewed skill evolution. | Reference for `insight` closeout audits and skill-evaluation candidates only; do not import runtime, optimizer, cron, or automatic mutation. |
 | Vercel/Web/React skills | `web-design-guidelines` remains active; other Vercel Web/React skills are source-retained only. | Frontend implementation and UI quality for target repos that need it. | Helper/reference sources only; not top-level lifecycle owners. |
 | Anthropic skills | Selective atoms installed or locally wrapped: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, `slack-gif-creator`. | Provider API, MCP server, skill authoring, doc/comms, visual theme, and Slack GIF atoms. | Helper atoms under owner workflows; document four-pack remains reference-only due licensing. |
 | Karpathy Guidelines | `karpathy-guidelines` installed as a helper baseline. | Coding behavior discipline: state assumptions, keep implementation simple, preserve surgical diffs, and define verifiable success criteria. | Use only under a selected owner workflow; do not let it replace SDD, TDD, review, or pressure-test owners. |
@@ -74,6 +76,7 @@ The workflow system must serve this order:
 |---|---|---|---|
 | Superpowers | Planning discipline and finish/worktree habits. | Full pack would duplicate existing skills. | Adapt only plan discipline and explicit completion gates. |
 | ECC rules | Conservative execution, hooks, agents, and verification practices. | Avoid turning broad conventions into another prompt pack. | Keep broad rules in `AGENTS.md`; conditional details in workflow skills. |
+| Superpowers subagent-driven development | Split implementation evidence from independent review and acceptance. | Do not auto-dispatch agents or add host-specific commands to generic skills. | Adapt as host-neutral `delegated-agent` verifier/arbiter loops under workflow owners. |
 | Ralph PRD/story loop | Historical story sizing and autonomous execution boundaries. | Native Codex and Claude Code goal/story workflows now cover this lane. | Retire the distributed Ralph helpers; keep repeated execution behind explicit user approval. |
 | OpenSpec tasks | Implementation task checklist tied to spec artifacts. | Do not require OpenSpec for every change. | Borrow task/acceptance traceability in `sdd-workflow`. |
 
@@ -105,8 +108,20 @@ The workflow system must serve this order:
 | `e2e-testing` and `webapp-testing` | Durable Playwright suites and one-off browser validation. | Only for repos/surfaces that actually need browser validation. | Helper skills based on target-repo evidence. |
 | Compound code review | Findings-first structured review with confidence and fix routing. | Do not import CE's commit/PR/tracker side effects by default. | Use under `review-workflow`. |
 | Effective Interact validator | Browser-validated HTML artifacts and evidence checks. | Validator warnings are advisory unless they reduce decision quality. | Required for material HTML handoffs. |
+| Agentic acceptance loops | Independent verifiers can test the current version from a fresh context, and arbiters can judge evidence against the original task. | A delegated-agent pass must not override failing deterministic validation. | Record Producer, Verifier, read-only Arbiter, verdict, and Main Agent Decision in task state. |
 
-### 8. Deliver Report
+### 8. Finish Closeout
+
+| Source | Useful idea | Reject or constrain | Local decision |
+|---|---|---|---|
+| Superpowers finish/worktree discipline | Make the end of a branch an explicit phase rather than an afterthought. | Do not import full worktree workflow or automatic subagent dispatch. | Closeout becomes a required workflow stage after tests and before final handoff. |
+| Compound code review | Independent review lenses catch technical debt and implementation drift. | Do not import side-effect-heavy issue/PR automation. | Use subagents or an independent review pass when scope-safe; main agent owns synthesis. |
+| Delivery PR closeout feedback | Local tests are insufficient when remote PR state is dirty. | Do not silently resolve high-risk conflicts or auto-merge. | Expose conflict decisions and risks, drive to merge-ready, and merge only with explicit authorization. |
+| `insight` | Repository interaction traces can reveal poor tool-calling loops, repeated manual corrections, doc/code conflicts, and candidate AI-infrastructure improvements. | Do not write tracked docs, memory, schedules, remotes, or public artifacts by default. | Run or explicitly skip an insight audit during closeout for material work. |
+| Hermes Agent / Self-Evolution | Uses traces, eval datasets, constraint gates, and PR review to improve skills and prompts. | Do not import optimizer/runtime or let automated evolution mutate the standard skill tree. | Treat as a source pattern for insight recommendations: create eval cases, guardrails, candidate skill records, or workflow changes after human review. |
+| Agentic loop catalog | Standardizes `plan-review`, `test-design`, `implementation-review`, `frontend-acceptance`, `diagnosis-regression`, `docs-consistency`, `pr-closeout`, and `insight-retro`. | Do not make loop types router states or new skill owners. | Install the canonical reference under `skills/workflow-router/references/agentic-loops.md` so target repos do not depend on source `docs/`. |
+
+### 9. Deliver Report
 
 | Source | Useful idea | Reject or constrain | Local decision |
 |---|---|---|---|
@@ -134,5 +149,5 @@ Before implementing workflow-router or workflow owners:
 2. Keep source refresh separate from local workflow design.
 3. Ask the user before any install-surface expansion, blocking hook, or future broad cleanup.
 
-Subagent and hook source decision: Superpowers and ECC are useful references for orchestration, but local policy keeps Subagents are parent-workflow controlled, Advisory hooks only, No automatic subagent dispatch, and No remote writes from hooks.
+Subagent and hook source decision: Superpowers and ECC are useful references for orchestration, but local policy keeps Subagents are parent-workflow controlled, Agentic loop arbiters are read-only, Advisory hooks only, No automatic subagent dispatch, and No remote writes from hooks.
 4. Preserve source notes even when a referenced skill is demoted or rejected.

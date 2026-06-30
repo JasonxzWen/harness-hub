@@ -166,11 +166,16 @@ test('advisory check warns when material delivery lacks an effective-interact ha
   expect(result.htmlRequired).toBe(true);
   expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
     'missing-validation',
+    'missing-closeout-review',
+    'missing-pr-readiness',
+    'missing-insight-audit',
+    'missing-acceptance-arbiter',
+    'missing-final-review-arbiter',
     'missing-effective-interact-html-handoff',
   ]);
 });
 
-test('advisory check passes delivery when validation and HTML handoff are present', () => {
+test('advisory check passes delivery when validation, closeout evidence, and HTML handoff are present', () => {
   const result = runAdvisory([
     '--state',
     'delivery',
@@ -179,6 +184,11 @@ test('advisory check passes delivery when validation and HTML handoff are presen
     '--material-changes',
     '--has-validation',
     '--has-html-handoff',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-insight',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
   ]);
 
   expect(result.ok).toBe(true);
@@ -196,6 +206,11 @@ test('advisory check can explicitly require html-artifact output mode', () => {
     '--material-changes',
     '--has-validation',
     '--has-handoff',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-insight',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
     '--expected-output-mode',
     'html-artifact',
   ]);

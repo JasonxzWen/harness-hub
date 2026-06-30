@@ -61,6 +61,7 @@ test('sdd-workflow enforces the canonical lifecycle before implementation', () =
     'Clean unneeded files',
     'Implement',
     'Test and accept',
+    'Finish closeout',
     'Deliver report',
   ]) {
     expect(skill).toContain(phrase);
@@ -68,6 +69,7 @@ test('sdd-workflow enforces the canonical lifecycle before implementation', () =
 
   expect(skill).toContain('Do not start implementation');
   expect(skill).toContain('TDD');
+  expect(skill).toContain('insight');
   expect(skill).toContain('goal/story workflows');
   expect(skill).toContain('without approval');
 });
@@ -88,9 +90,37 @@ test('delivery workflow captures PR closeout without remote side effects', () =>
   expect(delivery).toContain('mergeability');
   expect(delivery).toContain('CI/check runs');
   expect(delivery).toContain('Resolve actionable PR blockers in scope');
+  expect(delivery).toContain('finish closeout');
+  expect(delivery).toContain('insight recommendations');
   expect(delivery).toContain('PR URL or number');
   expect(delivery).toContain('Do not mark a PR ready');
   expect(delivery).toContain('resolve review threads');
+  expect(delivery).toContain('Do not silently resolve conflicts');
+});
+
+test('workflow owners expose agentic loops as stage mechanics', () => {
+  const sdd = read('skills/sdd-workflow/SKILL.md');
+  const diagnosis = read('skills/diagnosis-workflow/SKILL.md');
+  const review = read('skills/review-workflow/SKILL.md');
+  const delivery = read('skills/delivery-workflow/SKILL.md');
+  const maintenance = read('skills/hub-maintenance-workflow/SKILL.md');
+
+  for (const skill of [sdd, diagnosis, review, delivery, maintenance]) {
+    expect(skill).toContain('workflow-router/references/agentic-loops.md');
+  }
+
+  expect(sdd).toContain('plan-review');
+  expect(sdd).toContain('test-design');
+  expect(sdd).toContain('implementation-review');
+  expect(sdd).toContain('docs-consistency');
+  expect(delivery).toContain('frontend-acceptance');
+  expect(delivery).toContain('pr-closeout');
+  expect(delivery).toContain('docs-consistency');
+  expect(delivery).toContain('insight-retro');
+  expect(diagnosis).toContain('diagnosis-regression');
+  expect(review).toContain('read-only arbiter');
+  expect(maintenance).toContain('delegated-agent');
+  expect(maintenance).toContain('docs-consistency');
 });
 
 test('workflow owners mark UI helper skills as conditional', () => {

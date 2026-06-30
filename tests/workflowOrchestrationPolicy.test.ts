@@ -38,6 +38,32 @@ test('workflow orchestration policy keeps hooks advisory before security review'
   }
 });
 
+test('workflow orchestration policy records agentic loop boundaries', () => {
+  const policy = read('skills/workflow-router/references/orchestration-policy.md');
+  const catalog = read('skills/workflow-router/references/agentic-loops.md');
+
+  for (const phrase of [
+    'workflow-stage mechanics',
+    'workflow-router/references/agentic-loops.md',
+    'delegated-agent',
+    'read-only arbiters',
+    'No hook dispatches delegated agents',
+  ]) {
+    expect(policy).toContain(phrase);
+  }
+
+  for (const phrase of [
+    'Producer -> Verifier -> Arbiter -> Main Agent Decision',
+    'plan-review',
+    'frontend-acceptance',
+    'pr-closeout',
+    'insight-retro',
+    'A failing deterministic check outranks a delegated-agent pass',
+  ]) {
+    expect(catalog).toContain(phrase);
+  }
+});
+
 test('workflow owner skills point to the shared orchestration policy', () => {
   for (const name of [
     'workflow-router',

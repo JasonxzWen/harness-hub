@@ -15,6 +15,7 @@ test('README exposes human-facing visual navigation', () => {
   expect(readme).toContain('harness-hub init-harness --target standard');
   expect(readme).toContain('.harness-hub/context/wiki');
   expect(readme).toContain('docs/development-workflow.md');
+  expect(readme).toContain('docs/agentic-loop-catalog.md');
 });
 
 test('AGENTS owns the agent-facing development checklist', () => {
@@ -39,10 +40,17 @@ test('development workflow guide documents state files, TDD, and skill extension
   for (const phrase of [
     'SDD-first with embedded TDD',
     'Discovery and brainstorming',
+    'Finish Closeout',
+    'Agentic Loops',
+    'Producer -> Verifier -> Arbiter -> Main Agent Decision',
+    'workflow-router/references/agentic-loops.md',
     'P0/P1/P2',
     'Open Question Discipline',
     'State File Responsibilities',
     'Skill Extension Rules',
+    'Current State Model',
+    'not yet a full multi-agent orchestrator',
+    'maxIterations',
     'New workflow owner',
     'Helper atom',
     'Source-only idea',
@@ -70,10 +78,18 @@ test('standard harness state templates capture planning and handoff memory', () 
 
   expect(progress).toContain('Plan Checkpoints');
   expect(progress).toContain('Discovery and brainstorming');
+  expect(progress).toContain('Finish Closeout');
+  expect(progress).toContain('Agentic Loop Records');
+  expect(progress).toContain('Main Agent Decision');
+  expect(progress).toContain('Insight Recommendations');
   expect(decisions).toContain('Alternatives considered');
   expect(decisions).toContain('State-file impact');
   expect(handoff).toContain('Active Plan Snapshot');
   expect(handoff).toContain('P0/P1/P2 test matrix status');
+  expect(handoff).toContain('Finish Closeout');
+  expect(handoff).toContain('Agentic Loop Records');
+  expect(handoff).toContain('Main Agent Decision');
+  expect(handoff).toContain('Insight Recommendations');
 });
 
 test('standard harness state templates expose the full SDD and TDD memory contract', () => {
@@ -101,9 +117,11 @@ test('standard harness state templates expose the full SDD and TDD memory contra
     '## Standard startup path',
     '## Validation commands',
     '## Validation tiers',
+    '## Agentic loops',
     '## Web browser acceptance',
     '## Runtime signals',
     '## PR closeout',
+    '## Finish closeout',
     '## Checkpoint policy',
     '## Spec updates',
     '## Decision log',
@@ -120,6 +138,9 @@ test('standard harness state templates expose the full SDD and TDD memory contra
     '## Runtime Signals',
     '## Web browser acceptance',
     '## PR Status',
+    '## Agentic Loop Records',
+    '## Finish Closeout',
+    '## Insight Recommendations',
     '## Review Feedback To Rules',
     '## Blockers',
     '## Next',
@@ -133,6 +154,9 @@ test('standard harness state templates expose the full SDD and TDD memory contra
     '## Runtime Signals',
     '## Web browser acceptance',
     '## PR Status',
+    '## Agentic Loop Records',
+    '## Finish Closeout',
+    '## Insight Recommendations',
     '## Review Feedback To Rules',
     '## Residual Risk',
     '## Blockers',
@@ -165,8 +189,51 @@ test('standard harness state templates expose the full SDD and TDD memory contra
   expect(files.currentTask).toContain('P0');
   expect(files.currentTask).toContain('P1');
   expect(files.currentTask).toContain('P2');
+  expect(files.currentTask).toContain('Insight audit');
+  expect(files.currentTask).toContain('delegated-agent');
+  expect(files.currentTask).toContain('Arbiters are read-only');
   expect(files.progress).toContain('| Command | Status | Exit code | Passed | Failed | Evidence | Commit |');
   expect(files.handoff).toContain('| Command | Status | Exit code | Passed | Failed | Evidence | Commit |');
+});
+
+test('agentic loop catalog documents host-neutral arbitration and adapters', () => {
+  const catalog = read('docs/agentic-loop-catalog.md');
+  const reference = read('skills/workflow-router/references/agentic-loops.md');
+  const codex = read('docs/host-adapters/codex-agentic-loops.md');
+  const claude = read('docs/host-adapters/claude-code-agentic-loops.md');
+
+  for (const phrase of [
+    'Producer -> Verifier -> Arbiter -> Main Agent Decision',
+    'delegated-agent',
+    'frontend-acceptance',
+    'docs-consistency',
+    'insight-retro',
+    'maxIterations',
+    'Arbiter',
+    'must not edit code',
+    'Host Adapter Boundary',
+  ]) {
+    expect(catalog).toContain(phrase);
+  }
+  for (const phrase of [
+    'Producer -> Verifier -> Arbiter -> Main Agent Decision',
+    'delegated-agent',
+    'frontend-acceptance',
+    'docs-consistency',
+    'maxIterations',
+    'Arbiters must not edit files',
+    'must not auto-dispatch delegated agents',
+  ]) {
+    expect(reference).toContain(phrase);
+  }
+
+  expect(codex).toContain('Codex subagent');
+  expect(codex).toContain('parent Codex agent');
+  expect(claude).toContain('Claude Code subagent');
+  expect(claude).toContain('custom subagent');
+  expect(claude).toContain('stream-json');
+  expect(claude).toContain('task_started');
+  expect(catalog).not.toContain('mcp__');
 });
 
 test('standard harness initializes durable LLM wiki context pack', () => {
