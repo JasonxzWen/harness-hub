@@ -25,6 +25,12 @@ function parseArgs(argv) {
     hasReproduction: false,
     hasValidation: false,
     hasHtmlHandoff: false,
+    hasCloseoutReview: false,
+    hasInsight: false,
+    hasPrReadiness: false,
+    hasAgenticLoopPlan: false,
+    hasAcceptanceArbiter: false,
+    hasFinalReviewArbiter: false,
     materialChanges: false,
     willMutate: false,
     expectedOutputMode: null,
@@ -61,6 +67,18 @@ function parseArgs(argv) {
     } else if (arg === '--has-html-handoff') {
       options.hasHtmlHandoff = true;
       options.hasHandoff = true;
+    } else if (arg === '--has-closeout-review') {
+      options.hasCloseoutReview = true;
+    } else if (arg === '--has-insight') {
+      options.hasInsight = true;
+    } else if (arg === '--has-pr-readiness') {
+      options.hasPrReadiness = true;
+    } else if (arg === '--has-agentic-loop-plan') {
+      options.hasAgenticLoopPlan = true;
+    } else if (arg === '--has-acceptance-arbiter') {
+      options.hasAcceptanceArbiter = true;
+    } else if (arg === '--has-final-review-arbiter') {
+      options.hasFinalReviewArbiter = true;
     } else if (arg === '--material-changes') {
       options.materialChanges = true;
     } else if (arg === '--will-mutate') {
@@ -120,6 +138,12 @@ export function checkWorkflow(options) {
     hasReproduction: Boolean(options.hasReproduction),
     hasValidation: Boolean(options.hasValidation),
     hasHtmlHandoff: Boolean(options.hasHtmlHandoff),
+    hasCloseoutReview: Boolean(options.hasCloseoutReview),
+    hasInsight: Boolean(options.hasInsight),
+    hasPrReadiness: Boolean(options.hasPrReadiness),
+    hasAgenticLoopPlan: Boolean(options.hasAgenticLoopPlan),
+    hasAcceptanceArbiter: Boolean(options.hasAcceptanceArbiter),
+    hasFinalReviewArbiter: Boolean(options.hasFinalReviewArbiter),
     materialChanges: Boolean(options.materialChanges),
     willMutate: Boolean(options.willMutate),
     expectedOutputMode: options.expectedOutputMode || route.expectedOutputMode,
@@ -156,6 +180,12 @@ Flags mirror advisory-check.mjs:
   --has-reproduction
   --has-validation
   --has-html-handoff
+  --has-closeout-review
+  --has-insight
+  --has-pr-readiness
+  --has-agentic-loop-plan
+  --has-acceptance-arbiter
+  --has-final-review-arbiter
   --material-changes
   --will-mutate
   --expected-output-mode <mode>

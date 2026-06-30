@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add host-neutral agentic loop workflow-stage policy, target harness Agentic Loop Records, deterministic loop-evidence validation, finish closeout gates, and Codex/Claude Code adapter docs.
+
 ## 0.3.0 - 2026-06-29
 
 - Make `standard` the only user-facing target path, replace stale harness-pack/minimal wording with a standard target boundary, and verify external target bootstrap/install output does not copy Harness Hub source-repo material.

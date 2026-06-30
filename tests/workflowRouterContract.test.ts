@@ -9,6 +9,7 @@ type LifecycleGate =
   | 'clean-unneeded-files'
   | 'implement'
   | 'test-and-accept'
+  | 'finish-closeout'
   | 'deliver-report';
 
 type WorkflowState =
@@ -46,6 +47,7 @@ const lifecycleGates: LifecycleGate[] = [
   'clean-unneeded-files',
   'implement',
   'test-and-accept',
+  'finish-closeout',
   'deliver-report',
 ];
 
@@ -66,6 +68,7 @@ const lifecyclePhrases: Record<LifecycleGate, string> = {
   'clean-unneeded-files': 'Clean unneeded files',
   implement: 'Implement',
   'test-and-accept': 'Test and accept',
+  'finish-closeout': 'Finish closeout',
   'deliver-report': 'Deliver report',
 };
 

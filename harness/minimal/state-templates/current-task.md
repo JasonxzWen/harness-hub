@@ -97,6 +97,14 @@ State the concrete outcome for the active Codex goal.
 - Runtime: tests, build, startup, smoke, or health checks.
 - User flow: end-to-end, integration, browser, CLI, or scenario checks.
 
+## Agentic loops
+
+Use host-neutral loop roles from `skills/workflow-router/references/agentic-loops.md`: Producer, Verifier, Arbiter, and Main Agent Decision. `delegated-agent` may map to a host-native subagent, another isolated session, a browser run, a CI check, or a deterministic command. Arbiters are read-only and must not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions.
+
+| Stage | Loop | Producer | Verifier | Arbiter | Evidence | Stop condition |
+| --- | --- | --- | --- | --- | --- | --- |
+| Add stage. | plan-review / test-design / implementation-review / frontend-acceptance / diagnosis-regression / pr-closeout / insight-retro | Add owner. | delegated-agent / deterministic-check / browser / CI / explicit skip | delegated-agent arbiter / local read-only arbiter / explicit skip | Add evidence path or summary. | continue / revise / interrupt / deliver |
+
 ## Web browser acceptance
 
 - Required: yes/no.
@@ -129,6 +137,20 @@ State the concrete outcome for the active Codex goal.
 - Stop policy: ask the user only for decisions, credentials, permissions, reviewer action, protected-branch overrides, or external outages.
 - Merge policy: do not merge unless explicitly requested.
 
+## Finish closeout
+
+- Final independent review required: yes/no.
+- Review method: subagent / independent local pass / explicit skip.
+- Review focus: technical debt, first-principles implementation fit, project-rule drift, refactor or warning recommendations.
+- Review findings:
+- Insight audit required: yes/no.
+- Insight focus: tool-calling quality, repeated low-value lookup loops, misleading evidence, docs/code conflicts, AI infrastructure lessons, workflow/skill extraction candidates.
+- Insight recommendations:
+- Skill or workflow candidate: none / source record / eval case / new skill / existing workflow change.
+- PR or merge readiness:
+- Conflict decisions surfaced to user:
+- Closeout blockers:
+
 ## Checkpoint policy
 
 - Commits permitted: yes/no.
@@ -156,5 +178,5 @@ State the concrete outcome for the active Codex goal.
 - Update `quality-document.md` when validation evidence changes the quality snapshot.
 - Fill `evaluator-rubric.md` for material implementation or review work.
 - Record validation command status, passed/failed counts when available, output location or summary, and checkpoint commit state.
-- Record standard startup status, runtime signals, PR status when a PR was created or updated, and review feedback that should become a rule or follow-up.
+- Record standard startup status, runtime signals, agentic loop records, finish closeout findings, insight recommendations, PR status when a PR was created or updated, and review feedback that should become a rule or follow-up.
 - Run `node scripts/harness-validate.mjs`.

@@ -51,7 +51,7 @@ const sizeLimits = {
   '.harness-hub/state/capability-events.jsonl': 64 * 1024,
 };
 const requiredMarkers = {
-  'AGENTS.md': ['Codex', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'LLM Wiki', '.harness-hub/context/wiki', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run'],
+  'AGENTS.md': ['Codex', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'LLM Wiki', '.harness-hub/context/wiki', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run', 'agentic loops', 'delegated-agent', 'Arbiters are read-only', 'finish closeout', 'insight'],
   '.harness-hub/.gitignore': ['state/', 'reports/'],
   '.harness-hub/context/AGENTS.md': ['LLM Wiki', 'Raw sources', 'No Redundant Facts', 'human confirmation', 'Contradiction Register'],
   '.harness-hub/context/README.md': ['Agent Context Pack', 'Raw sources', 'Wiki pages', 'Obsidian', 'Update Flow'],
@@ -62,8 +62,8 @@ const requiredMarkers = {
   '.harness-hub/loop/policies/interrupt-policy.md': ['Interrupt Policy', 'standalone', 'composable', 'loop-participant', 'Continue By Default', 'Interrupt', 'Audit Requirement'],
   '.harness-hub/loop/policies/action-audit-schema.md': ['Runtime Ledgers', 'loop-runs.jsonl', 'interrupt-decisions.jsonl', 'capability-events.jsonl', 'continue|interrupt'],
   '.harness-hub/state/decisions.md': ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'],
-  '.harness-hub/state/progress.md': ['Recent Validation', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Review Feedback To Rules'],
-  '.harness-hub/state/session-handoff.md': ['Validation Evidence', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Review Feedback To Rules'],
+  '.harness-hub/state/progress.md': ['Recent Validation', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Agentic Loop Records', 'Main Agent Decision', 'Finish Closeout', 'Insight Recommendations', 'Review Feedback To Rules'],
+  '.harness-hub/state/session-handoff.md': ['Validation Evidence', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Agentic Loop Records', 'Main Agent Decision', 'Finish Closeout', 'Insight Recommendations', 'Review Feedback To Rules'],
   '.harness-hub/state/current-task.md': [
     'Goal',
     'Assumptions',
@@ -81,18 +81,25 @@ const requiredMarkers = {
     'Web browser acceptance',
     'agent-run browser',
     'Runtime signals',
+    'Agentic loops',
+    'Producer',
+    'Verifier',
+    'Arbiter',
+    'Main Agent Decision',
     'PR closeout',
     'Mergeability',
     'CI/check-run status',
+    'Finish closeout',
+    'Insight audit',
     'Checkpoint policy',
     'Spec updates',
     'Decision log',
     'Parallel writes',
     'Handoff requirements',
   ],
-  'clean-state-checklist.md': ['Standard startup path', 'harness-hub check', 'Runtime signals', 'P0', 'P1', 'P2', 'Web browser acceptance', 'PR status', 'PR URL', 'mergeability', 'CI/check-run', 'Review Feedback', 'evaluator-rubric.md', 'quality-document.md'],
-  'definition-of-done.md': ['Static checks', 'runtime checks', 'end-to-end', 'P0', 'P1', 'P2', 'agent-run browser', 'Standard startup path', 'harness-hub check', 'Runtime logs', 'PR status', 'mergeability', 'CI/check-run', 'evaluator rubric', 'quality snapshot'],
-  'evaluator-rubric.md': ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Handoff readiness', 'Verdict'],
+  'clean-state-checklist.md': ['Standard startup path', 'harness-hub check', 'Runtime signals', 'P0', 'P1', 'P2', 'Web browser acceptance', 'Agentic loop records', 'main-agent decision', 'PR status', 'PR URL', 'mergeability', 'CI/check-run', 'Finish closeout', 'insight', 'Review Feedback', 'evaluator-rubric.md', 'quality-document.md'],
+  'definition-of-done.md': ['Static checks', 'runtime checks', 'end-to-end', 'P0', 'P1', 'P2', 'agent-run browser', 'Standard startup path', 'harness-hub check', 'Runtime logs', 'Agentic loop evidence', 'producer/verifier/arbiter', 'PR status', 'mergeability', 'CI/check-run', 'finish closeout', 'insight', 'evaluator rubric', 'quality snapshot'],
+  'evaluator-rubric.md': ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Agentic loops', 'Finish closeout', 'Insight recommendations', 'Handoff readiness', 'Verdict'],
   'quality-document.md': ['Quality Snapshot', 'Rating Standard', 'Product Areas', 'P0/P1/P2 validation status', 'Browser acceptance status', 'Architecture Layers', 'Change History'],
 };
 const agentArchitectureMarkers = [
@@ -203,6 +210,12 @@ if (fs.existsSync(featureStatePath)) {
     if (!isRecord(featureState) || !isRecord(featureState.pr_closeout_policy)) {
       missing.push('pr_closeout_policy object');
     }
+    if (!isRecord(featureState) || !isRecord(featureState.finish_closeout_policy)) {
+      missing.push('finish_closeout_policy object');
+    }
+    if (!isRecord(featureState) || !isRecord(featureState.agentic_loop_policy)) {
+      missing.push('agentic_loop_policy object');
+    }
     if (!isRecord(featureState) || !isRecord(featureState.loop_control_policy)) {
       missing.push('loop_control_policy object');
     }
@@ -222,7 +235,7 @@ if (fs.existsSync(featureStatePath)) {
       }
     }
     if (missing.length > 0) {
-      failures.push(`feature_list.json: missing required structure ${missing.join(', ')}`);
+        failures.push(`feature_list.json: missing required structure ${missing.join(', ')}`);
     }
   } catch {
     failures.push('feature_list.json: must be valid JSON');

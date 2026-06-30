@@ -40,6 +40,12 @@ function parseArgs(argv) {
     hasReproduction: false,
     hasValidation: false,
     hasHtmlHandoff: false,
+    hasCloseoutReview: false,
+    hasInsight: false,
+    hasPrReadiness: false,
+    hasAgenticLoopPlan: false,
+    hasAcceptanceArbiter: false,
+    hasFinalReviewArbiter: false,
     materialChanges: false,
     willMutate: false,
     expectedOutputMode: null,
@@ -72,6 +78,18 @@ function parseArgs(argv) {
     } else if (arg === '--has-html-handoff') {
       options.hasHtmlHandoff = true;
       options.hasHandoff = true;
+    } else if (arg === '--has-closeout-review') {
+      options.hasCloseoutReview = true;
+    } else if (arg === '--has-insight') {
+      options.hasInsight = true;
+    } else if (arg === '--has-pr-readiness') {
+      options.hasPrReadiness = true;
+    } else if (arg === '--has-agentic-loop-plan') {
+      options.hasAgenticLoopPlan = true;
+    } else if (arg === '--has-acceptance-arbiter') {
+      options.hasAcceptanceArbiter = true;
+    } else if (arg === '--has-final-review-arbiter') {
+      options.hasFinalReviewArbiter = true;
     } else if (arg === '--material-changes') {
       options.materialChanges = true;
     } else if (arg === '--will-mutate') {
@@ -186,6 +204,39 @@ export function evaluateAdvisory(options) {
     });
   }
 
+  if (hydratedOptions.state === 'delivery' && hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges) {
+    if (!hydratedOptions.hasCloseoutReview) {
+      warnings.push({
+        id: 'missing-closeout-review',
+        message: 'Material delivery should record final independent review evidence or an explicit skip reason before handoff.',
+      });
+    }
+    if (!hydratedOptions.hasPrReadiness) {
+      warnings.push({
+        id: 'missing-pr-readiness',
+        message: 'Material delivery should record PR readiness, mergeability, conflict status, or an explicit no-PR/skip reason before handoff.',
+      });
+    }
+    if (!hydratedOptions.hasInsight) {
+      warnings.push({
+        id: 'missing-insight-audit',
+        message: 'Material delivery should run insight or record an explicit skip reason before handoff.',
+      });
+    }
+    if (!hydratedOptions.hasAcceptanceArbiter) {
+      warnings.push({
+        id: 'missing-acceptance-arbiter',
+        message: 'Material delivery should record agentic loop acceptance arbiter evidence or an explicit skip reason before handoff.',
+      });
+    }
+    if (!hydratedOptions.hasFinalReviewArbiter) {
+      warnings.push({
+        id: 'missing-final-review-arbiter',
+        message: 'Material delivery should record final review arbiter evidence or an explicit skip reason before handoff.',
+      });
+    }
+  }
+
   if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges && htmlRequired && !hydratedOptions.hasHtmlHandoff) {
     warnings.push({
       id: 'missing-effective-interact-html-handoff',
@@ -246,6 +297,12 @@ function hydrateFromCurrentTask(options) {
       hasPlan: Boolean(options.hasPlan || inferred.hasPlan),
       hasHtmlHandoff: Boolean(options.hasHtmlHandoff),
       hasHandoff: Boolean(options.hasHandoff || options.hasHtmlHandoff),
+      hasCloseoutReview: Boolean(options.hasCloseoutReview || inferred.hasCloseoutReview),
+      hasInsight: Boolean(options.hasInsight || inferred.hasInsight),
+      hasPrReadiness: Boolean(options.hasPrReadiness || inferred.hasPrReadiness),
+      hasAgenticLoopPlan: Boolean(options.hasAgenticLoopPlan || inferred.hasAgenticLoopPlan),
+      hasAcceptanceArbiter: Boolean(options.hasAcceptanceArbiter || inferred.hasAcceptanceArbiter),
+      hasFinalReviewArbiter: Boolean(options.hasFinalReviewArbiter || inferred.hasFinalReviewArbiter),
     },
     detection,
   };
@@ -292,7 +349,28 @@ function inferCurrentTaskGates(markdown) {
     hasAcceptance: sectionHasMeaningfulContent(markdown, 'Acceptance criteria'),
     hasPlan: sectionHasMeaningfulContent(markdown, 'Test matrix')
       || sectionHasMeaningfulContent(markdown, 'Validation commands'),
+    hasCloseoutReview: sectionHasEvidencePhrase(markdown, 'Finish closeout', ['review', 'subagent', 'independent']),
+    hasInsight: sectionHasEvidencePhrase(markdown, 'Finish closeout', ['insight'])
+      || sectionHasMeaningfulContent(markdown, 'Insight Recommendations'),
+    hasPrReadiness: sectionHasEvidencePhrase(markdown, 'PR closeout', ['merge', 'conflict', 'ci/check', 'no pr', 'skip'])
+      || sectionHasEvidencePhrase(markdown, 'Finish closeout', ['pr', 'merge', 'conflict', 'no pr', 'skip']),
+    hasAgenticLoopPlan: sectionHasMeaningfulContent(markdown, 'Agentic loops'),
+    hasAcceptanceArbiter: sectionHasEvidencePhrase(markdown, 'Agentic loops', ['acceptance', 'arbiter', 'skip'])
+      || sectionHasEvidencePhrase(markdown, 'Web browser acceptance', ['arbiter', 'skip']),
+    hasFinalReviewArbiter: sectionHasEvidencePhrase(markdown, 'Finish closeout', ['arbiter', 'review', 'skip']),
   };
+}
+
+function sectionHasEvidencePhrase(markdown, heading, fragments) {
+  return sectionText(markdown, heading)
+    .split(/\r?\n/)
+    .some((line) => {
+      if (!isMeaningfulLine(line)) {
+        return false;
+      }
+      const normalized = line.toLowerCase();
+      return fragments.some((fragment) => normalized.includes(fragment));
+    });
 }
 
 function sectionHasMeaningfulContent(markdown, heading) {
@@ -323,6 +401,9 @@ function isMeaningfulLine(line) {
     return false;
   }
   if (/^\|\s*(priority|question|command|phase|url|pr|signal|date)\s*\|/i.test(trimmed)) {
+    return false;
+  }
+  if (/^[*-]?\s*(final independent review|technical debt \/ drift review|technical debt \/ drift|insight audit|insight recommendations|pr\/merge readiness|pr \/ merge readiness|conflict decisions|blockers):\s*$/i.test(trimmed)) {
     return false;
   }
 
@@ -373,6 +454,9 @@ function isMeaningfulLine(line) {
     'yes/no',
     'not run yet',
     'not required yet',
+    'no review evidence recorded yet',
+    'no closeout findings recorded yet',
+    'no insight audit recorded',
     'none recorded',
     'nothing recorded',
     'no active task',
@@ -394,6 +478,12 @@ Flags:
   --has-reproduction
   --has-validation
   --has-html-handoff
+  --has-closeout-review
+  --has-insight
+  --has-pr-readiness
+  --has-agentic-loop-plan
+  --has-acceptance-arbiter
+  --has-final-review-arbiter
   --material-changes
   --will-mutate
   --expected-output-mode <mode>

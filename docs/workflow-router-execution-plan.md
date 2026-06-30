@@ -6,7 +6,9 @@ This document turns the accepted workflow-router direction into implementation w
 
 ## Goal
 
-Ship a personal workflow routing overlay where each non-trivial request is routed to one top-level workflow owner, SDD is the default change lane, TDD is embedded inside accepted specs, and `effective-interact` lowers human interpretation cost at alignment and handoff points.
+Ship a personal workflow routing overlay where each non-trivial request is routed to one top-level workflow owner, SDD is the default change lane, TDD is embedded inside accepted specs, closeout is explicit before handoff, and `effective-interact` lowers human interpretation cost at alignment and handoff points.
+
+Loop is not the workflow. Loop is the control plane for auditable continue/interrupt decisions inside an accepted workflow; it must not replace owner workflows, lifecycle gates, PR closeout, or final handoff.
 
 ## Canonical Work Lifecycle
 
@@ -21,7 +23,8 @@ Every non-trivial change request should move through this order. The implementat
 | 5 | Clean unneeded files | Removal or demotion plan for obsolete skills, docs, generated files, capability entries, or managed assets. | Only approved, owned, lock-backed, or clearly obsolete files are removed; unrelated/user-owned files are preserved. |
 | 6 | Implement | Minimal scoped code, docs, and capability changes following the accepted plan. | Every changed line traces to the accepted spec, cleanup, or test plan. |
 | 7 | Test and accept | Unit/integration/E2E/deterministic checks plus manual acceptance where needed. | The agreed acceptance criteria are satisfied or residual gaps are reported. |
-| 8 | Deliver report | `effective-interact` handoff with changes, evidence, validation, PR status when a PR was created or updated, decisions, risks, and next actions. | The user can understand outcome and remaining decisions without reading the whole diff. |
+| 8 | Finish closeout | Final independent review, PR/merge-readiness handling, and `insight` audit of tool-calling and workflow-learning opportunities. | Technical debt, drift, conflict, merge, and AI-infrastructure recommendations are visible before final handoff. |
+| 9 | Deliver report | `effective-interact` handoff with changes, evidence, validation, final review outcome, insight recommendations, PR status when a PR was created or updated, decisions, risks, and next actions. | The user can understand outcome and remaining decisions without reading the whole diff. |
 
 ## Release Strategy
 
@@ -37,7 +40,7 @@ Implementation status: the router skill, owner skills, routing fixture tests, an
 
 | Workstream | Files | Output | Acceptance |
 |---|---|---|---|
-| Lifecycle contract | `docs/workflow-router-spec.md`, `docs/workflow-router-execution-plan.md` | The canonical work lifecycle and phase gates. | User need -> source gathering -> spec -> plan -> cleanup -> implementation -> tests -> delivery is explicit and normative. |
+| Lifecycle contract | `docs/workflow-router-spec.md`, `docs/workflow-router-execution-plan.md` | The canonical work lifecycle and phase gates. | User need -> source gathering -> spec -> plan -> cleanup -> implementation -> tests -> finish closeout -> delivery is explicit and normative. |
 | Source dossier | `docs/workflow-source-dossier.md` | Phase-by-phase comparison of Matt Pocock skills, Superpowers, ECC, OpenSpec, Effective Interact, and local docs. | Each source entry has checked version/date, useful idea, rejected parts, and local decision. |
 | Router contract | `docs/workflow-router-spec.md`, `tests/fixtures/workflow-router-cases.json`, `tests/workflowRouterContract.test.ts` | One-owner routing rules and ambiguity handling. | Positive, negative, forbidden, and ambiguous cases prove exactly one top-level owner. |
 | Router skill | `skills/workflow-router/` | Thin intent classifier and state handoff rules. | `SKILL.md` stays short; detailed taxonomy lives in `references/`; no implementation workflow inside router. |
@@ -47,6 +50,7 @@ Implementation status: the router skill, owner skills, routing fixture tests, an
 | Hooks and subagents | `skills/workflow-router/references/orchestration-policy.md`, optional host packaging guidance | Advisory hooks and host-native subagent mappings only after core routing is stable. | No hook dispatches agents or performs remote writes; subagents are parent-workflow controlled. |
 | Handoff artifacts | `skills/effective-interact/assets/fixtures/`, ignored local `reports/` outputs | Fixture JSON is the durable source; generated HTML reports are local inspection outputs for routing choice, SDD alignment, review, and delivery. | Generated artifacts validate with `validate-interaction.mjs --require-browser` when handed off, but HTML outputs are not committed. |
 | PR closeout | `skills/delivery-workflow/`, `docs/skill-routing.md`, `tests/fixtures/workflow-router-cases.json` | Post-PR mergeability, CI/check-run, conflict, branch-protection, and remote blocker triage belongs to delivery after a requested PR is created or updated. | A task is not declared complete on local validation alone when the PR is dirty, failing checks, or blocked by an actionable remote state. |
+| Finish closeout | `docs/development-workflow.md`, `skills/sdd-workflow/`, `skills/delivery-workflow/`, `skills/insight/`, target harness templates | Final independent review, PR/merge readiness, and interaction insight become a required development stage before handoff. | Closeout exposes technical debt, project-rule drift, conflict/merge risk, tool-calling quality, and workflow/skill improvement candidates. |
 
 ## Milestones
 
@@ -56,7 +60,7 @@ Status: in progress.
 
 Tasks:
 
-1. Capture the canonical work lifecycle: align need, gather material, write spec and acceptance, align executable plan, clean unneeded files, implement, test, deliver.
+1. Capture the canonical work lifecycle: align need, gather material, write spec and acceptance, align executable plan, clean unneeded files, implement, test, finish closeout, deliver.
 2. Keep [Workflow router redesign](workflow-router-redesign.md) as the overview.
 3. Split execution details into this document.
 4. Split normative requirements into [Workflow router spec](workflow-router-spec.md).
@@ -223,6 +227,8 @@ Use this order as the default local gate:
 
 After a requested PR is created or updated, add a remote PR closeout gate: inspect mergeability, CI/check-run status, conflicts, and branch-protection blockers; fix in-scope actionable issues, rerun relevant validation, and push updates before final handoff.
 
+Before final handoff, add a finish closeout gate: run or record a final independent review, PR/merge-readiness handling, and `insight` audit; record any technical-debt, drift, conflict, tool-calling, AI-infrastructure, or skill/workflow improvement recommendations.
+
 ## Completion Definition
 
 The redesign is ready for broader use when:
@@ -233,6 +239,7 @@ The redesign is ready for broader use when:
 - required source gathering happens before spec and plan lock-in,
 - cleanup is planned and approved before new implementation starts,
 - TDD is embedded in the change workflow,
+- finish closeout makes final review, PR/merge readiness, and insight learning explicit,
 - Effective Interact produces validated handoff artifacts for material work,
 - standard-target installs are smoke-tested,
 - update/remove can clean up deleted managed workflow files safely,

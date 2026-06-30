@@ -23,6 +23,7 @@ Do not start implementation until the harness is fully landed and the active tas
 - Use `feature_list.json` as the stable feature and parallel-write policy inventory.
 - Use the LLM Wiki under `.harness-hub/context/wiki/` as the stable knowledge middle layer. Raw sources remain authoritative; do not duplicate code facts or native agent memory. Follow `.harness-hub/context/AGENTS.md` and `.harness-hub/context/llm-wiki-schema.md`; write wiki knowledge only after human confirmation and record updates in `wiki/update-log.md`.
 - Treat Loop Control Plane rules as the top-level automation boundary. Prompt, context, harness, and tool capabilities may be `standalone`, `composable`, or `loop-participant`; do not force standalone capabilities into fixed workflows.
+- Keep workflow and Loop separate: workflow stages define how development moves from requirement intake to handoff; Loop only decides whether concrete capability actions continue or interrupt and records auditable decisions.
 - Follow the Interrupt Policy in `.harness-hub/loop/policies/interrupt-policy.md`: continue low-risk local work when scope and validation are clear, but interrupt when risk signals require human review.
 - Record auditable loop decisions in `.harness-hub/state/interrupt-decisions.jsonl`, loop runs in `.harness-hub/state/loop-runs.jsonl`, and capability events in `.harness-hub/state/capability-events.jsonl`.
 - Use a separate git worktree or branch for each write task.
@@ -31,11 +32,16 @@ Do not start implementation until the harness is fully landed and the active tas
 - Treat Harness Hub source-repo packaging as non-target material: do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`, `README*`, source `AGENTS.md`, or this repo's source tree into target projects. Use the managed outputs from `harness-hub init-harness`, `install`, and `activate-codex` instead.
 - Do not run parallel writes against the same file, module, or feature state.
 - Use read-only parallel work only for research, review, log analysis, or validation.
+- Use agentic loops for material planning, implementation, acceptance, PR closeout, and workflow-learning work when they reduce risk: Producer -> Verifier -> Arbiter -> Main Agent Decision.
+- Keep loop roles host-neutral in repo state: `delegated-agent` may be a host-native subagent, isolated session, browser run, CI check, deterministic command, or bounded worker. Arbiters are read-only and must not edit files, resolve conflicts, push, publish, merge, or make final user-facing decisions.
+- Do not let hooks auto-dispatch delegated agents. Hooks and deterministic checks may only remind, validate evidence, or interrupt for human review.
 - Use P0/P1/P2 validation priorities for implementation tasks: P0 must pass before handoff, P1 is run or risk-assessed for affected boundaries, and P2 is hardening that may be deferred with a reason.
 - Treat lightweight brainstorming as part of SDD: inspect repo evidence, compare 2-3 viable directions, recommend one, record rejected alternatives, and ask only blocking open questions before implementation.
 - For Web user-visible changes, record and run agent-run browser acceptance against the local app before handoff, including URL, scenario, viewport, console or network findings, and screenshot or trace evidence when useful.
 - After creating or updating a PR, treat PR status as a delivery gate: check mergeability, CI/check-run status, conflicts, and branch-protection blockers before declaring done; resolve in-scope blockers, rerun validation, and push updates unless a user decision, credential, permission, reviewer action, protected-branch override, or external outage is required.
 - Do not merge a PR unless the user explicitly asks for that remote mutation.
+- Before final handoff for material changes, run finish closeout: use a subagent or independent review pass when scope-safe to look for technical debt, first-principles implementation fit, project-rule drift, and refactor or warning recommendations; expose findings instead of burying them.
+- During finish closeout, run or explicitly skip `insight` to review tool-calling quality, repeated low-value lookup loops, misleading evidence, code/docs conflicts, AI infrastructure lessons, and whether this workflow should become a skill, source record, eval case, or change to an existing workflow.
 - Use verified checkpoint commits for completed atomic work units when the task permits commits. Do not commit failing, unrelated, or half-done work. Record each checkpoint commit hash, or the reason commits were skipped, in progress and handoff state.
 - Promote repeated review feedback into a harness rule, validation command, or documented follow-up instead of relying on memory.
 - After creating or updating a PR, record the PR URL or number, branch, base, commit, validation status, skipped checks, residual risk, and next action in progress and handoff state.
@@ -45,4 +51,4 @@ Do not start implementation until the harness is fully landed and the active tas
 
 ## Required Handoff
 
-Before ending a session, update `.harness-hub/state/session-handoff.md` with the current status, changed files, validation evidence, PR status and PR handoff details when a PR was created or updated, blockers, and the next concrete action. Update `.harness-hub/state/decisions.md` when assumptions, acceptance criteria, allowed paths, validation, user-visible behavior, or risk changed.
+Before ending a session, update `.harness-hub/state/session-handoff.md` with the current status, changed files, validation evidence, agentic loop records, finish closeout findings, insight recommendations, PR status and PR handoff details when a PR was created or updated, blockers, and the next concrete action. Update `.harness-hub/state/decisions.md` when assumptions, acceptance criteria, allowed paths, validation, user-visible behavior, or risk changed.

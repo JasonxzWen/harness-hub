@@ -28,6 +28,12 @@ const smokes: ScriptSmoke[] = [
     expected: 'advisory and side-effect free',
   },
   {
+    name: 'workflow agentic loop check',
+    command: process.execPath,
+    args: ['skills/workflow-router/scripts/agentic-loop-check.mjs', '--help'],
+    expected: 'Validates recorded agentic loop evidence',
+  },
+  {
     name: 'workflow skill activation check',
     command: process.execPath,
     args: ['skills/workflow-router/scripts/skill-activation-check.mjs', '--help'],
