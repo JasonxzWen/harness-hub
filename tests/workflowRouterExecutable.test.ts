@@ -106,6 +106,8 @@ function runWorkflowCheck(scriptPath: string, args: string[]): {
     mutates: boolean;
     expectedOutputMode: 'plain-brief' | 'structured-markdown' | 'visual-markdown' | 'html-artifact' | null;
     htmlRequired: boolean;
+    handoffWaived: boolean;
+    handoffWaiver: string | null;
   };
   ownerContract: { ok: boolean; warnings: Array<{ id: string; owner?: string }> };
   mutates: boolean;
@@ -123,6 +125,8 @@ function runWorkflowCheck(scriptPath: string, args: string[]): {
       mutates: boolean;
       expectedOutputMode: 'plain-brief' | 'structured-markdown' | 'visual-markdown' | 'html-artifact' | null;
       htmlRequired: boolean;
+      handoffWaived: boolean;
+      handoffWaiver: string | null;
     };
     ownerContract: { ok: boolean; warnings: Array<{ id: string; owner?: string }> };
     mutates: boolean;
@@ -229,6 +233,9 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   const bareSummaryQuestion = await classify('\u603b\u7ed3\u4e00\u4e0b\u8fd9\u6bb5\u6750\u6599');
   const handoffSummaryDelivery = await classify('\u4ea4\u4ed8\u603b\u7ed3\u4e00\u4e0b\u672c\u6b21\u6539\u52a8');
   const validationSummaryDelivery = await classify('\u9a8c\u8bc1\u603b\u7ed3\u548c\u5269\u4f59\u98ce\u9669');
+  const skillExplainerQuestion = await classify('讲讲 insight 和 effective-interact 的作用，我怀疑这两个 skill 没有起效');
+  const insightMaintenance = await classify('修复 insight 没有给出会话洞察和改进建议的问题');
+  const effectiveInteractDesignRefresh = await classify('把 effective-interact 的报告模板改成 DESIGN.md 和组件优先，并复刻 html-effectiveness 的字体、排版、配色和组件间距。');
 
   expect(review.state).toBe('review');
   expect(review.owner).toBe('review-workflow');
@@ -254,6 +261,13 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   expect(handoffSummaryDelivery.owner).toBe('delivery-workflow');
   expect(validationSummaryDelivery.state).toBe('delivery');
   expect(validationSummaryDelivery.owner).toBe('delivery-workflow');
+  expect(skillExplainerQuestion.state).toBe('question');
+  expect(skillExplainerQuestion.owner).toBe('answer-workflow');
+  expect(insightMaintenance.state).toBe('harness-hub-maintenance');
+  expect(insightMaintenance.owner).toBe('hub-maintenance-workflow');
+  expect(effectiveInteractDesignRefresh.state).toBe('harness-hub-maintenance');
+  expect(effectiveInteractDesignRefresh.owner).toBe('hub-maintenance-workflow');
+  expect(effectiveInteractDesignRefresh.expectedOutputMode).toBe('html-artifact');
 });
 
 test('workflow-router modules can be imported without CLI argv', () => {
@@ -469,6 +483,26 @@ test('workflow check warns when material delivery lacks required HTML handoff', 
   expect(present.advisory.warnings).toEqual([]);
 });
 
+test('workflow check accepts explicit HTML handoff waiver for material delivery', () => {
+  const result = runWorkflowCheck(workflowCheckScript, [
+    '--prompt',
+    'Finish the accepted work: run validation and produce the handoff.',
+    '--phase',
+    'pre-delivery',
+    '--material-changes',
+    '--has-validation',
+    '--html-handoff-waiver',
+    'Tiny release-only change; no browser handoff needed.',
+  ]);
+
+  expect(result.route.state).toBe('delivery');
+  expect(result.advisory.ok).toBe(true);
+  expect(result.advisory.expectedOutputMode).toBe('html-artifact');
+  expect(result.advisory.htmlRequired).toBe(true);
+  expect(result.advisory.handoffWaived).toBe(true);
+  expect(result.advisory.warnings).toEqual([]);
+});
+
 test('workflow check only warns on read-only owners when mutation is explicitly planned', () => {
   const readOnly = runWorkflowCheck(workflowCheckScript, [
     '--prompt',
@@ -537,7 +571,7 @@ test('installed workflow check warns when the selected owner skill is missing', 
 test('workflow-router executable classifier is tracked as an installable capability', () => {
   const component = readCapabilityIndex().components['skill:workflow-router'];
 
-  expect(component.version).toBe('0.12.3');
+  expect(component.version).toBe('0.12.4');
   expect(component.provides).toContain('executable-intent-classifier');
   expect(component.provides).toContain('workflow-gate-preflight');
   expect(component.provides).toContain('executable-skill-activation-smoke');
@@ -549,6 +583,7 @@ test('workflow-router executable classifier is tracked as an installable capabil
   expect(component.provides).toContain('explicit-read-only-mutation-guard');
   expect(component.provides).toContain('expected-output-mode-routing');
   expect(component.provides).toContain('html-handoff-advisory-gate');
+  expect(component.provides).toContain('html-handoff-waiver-gate');
   expect(component.provides).toContain('visual-language-report-activation');
   expect(component.provides).toContain('owner-workflow-structure-contract');
   expect(component.provides).toContain('executable-owner-contract-smoke');

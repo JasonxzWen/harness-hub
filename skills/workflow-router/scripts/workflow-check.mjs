@@ -25,6 +25,8 @@ function parseArgs(argv) {
     hasReproduction: false,
     hasValidation: false,
     hasHtmlHandoff: false,
+    handoffWaiver: null,
+    htmlHandoffWaiver: null,
     materialChanges: false,
     willMutate: false,
     expectedOutputMode: null,
@@ -61,6 +63,10 @@ function parseArgs(argv) {
     } else if (arg === '--has-html-handoff') {
       options.hasHtmlHandoff = true;
       options.hasHandoff = true;
+    } else if (arg === '--handoff-waiver') {
+      options.handoffWaiver = readValue(argv, ++index, arg);
+    } else if (arg === '--html-handoff-waiver') {
+      options.htmlHandoffWaiver = readValue(argv, ++index, arg);
     } else if (arg === '--material-changes') {
       options.materialChanges = true;
     } else if (arg === '--will-mutate') {
@@ -120,6 +126,8 @@ export function checkWorkflow(options) {
     hasReproduction: Boolean(options.hasReproduction),
     hasValidation: Boolean(options.hasValidation),
     hasHtmlHandoff: Boolean(options.hasHtmlHandoff),
+    handoffWaiver: options.handoffWaiver,
+    htmlHandoffWaiver: options.htmlHandoffWaiver,
     materialChanges: Boolean(options.materialChanges),
     willMutate: Boolean(options.willMutate),
     expectedOutputMode: options.expectedOutputMode || route.expectedOutputMode,
@@ -156,6 +164,8 @@ Flags mirror advisory-check.mjs:
   --has-reproduction
   --has-validation
   --has-html-handoff
+  --handoff-waiver <reason>
+  --html-handoff-waiver <reason>
   --material-changes
   --will-mutate
   --expected-output-mode <mode>

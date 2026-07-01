@@ -216,7 +216,7 @@ git diff --check
 
 This plan is informed by:
 
-- Thariq Shihipar's HTML effectiveness examples: `https://thariqs.github.io/html-effectiveness/`
+- Thariq Shihipar's HTML effectiveness examples: `ThariqS/html-effectiveness` at `0e8d447494c81c661f2458b329e076a7ff7d75ec`, Apache-2.0; examples also published at `https://thariqs.github.io/html-effectiveness/`
 - W3C WAI accessibility principles: `https://www.w3.org/WAI/fundamentals/accessibility-principles/`
 - USWDS data visualization guidance: `https://designsystem.digital.gov/components/data-visualizations/`
 - Nielsen Norman Group dashboard cognition guidance: `https://www.nngroup.com/articles/dashboards-preattentive/`

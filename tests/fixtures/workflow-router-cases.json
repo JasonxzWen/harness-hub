@@ -204,6 +204,25 @@
       "docsBoundary": "The user asks to maintain this hub, evaluate skill sources, adjust routing, or change install/update/remove policy."
     },
     {
+      "id": "hub-maintenance-effective-interact-design-refresh",
+      "kind": "positive",
+      "prompt": "把 effective-interact 的报告模板改成 DESIGN.md 和组件优先，并复刻 html-effectiveness 的字体、排版、配色和组件间距。",
+      "expectedState": "harness-hub-maintenance",
+      "expectedOwner": "hub-maintenance-workflow",
+      "mutationAllowed": true,
+      "requiredGates": [
+        "align-user-need",
+        "gather-required-material",
+        "write-spec-and-acceptance",
+        "write-executable-plan-and-align",
+        "clean-unneeded-files",
+        "implement",
+        "test-and-accept",
+        "deliver-report"
+      ],
+      "docsBoundary": "Effective-interact report-template, DESIGN.md, component-first, and html-effectiveness visual refresh work is Harness Hub maintenance."
+    },
+    {
       "id": "ambiguous-clarify-plan-or-implement",
       "kind": "ambiguous",
       "prompt": "Let's do the workflow-router thing next.",

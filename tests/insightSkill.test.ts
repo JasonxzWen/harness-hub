@@ -8,8 +8,11 @@ const skillDir = 'skills/insight';
 const skill = fs.readFileSync(`${skillDir}/SKILL.md`, 'utf8');
 const dataSources = fs.readFileSync(`${skillDir}/references/data-sources.md`, 'utf8');
 const analysisRubric = fs.readFileSync(`${skillDir}/references/analysis-rubric.md`, 'utf8');
+const reportShape = fs.readFileSync(`${skillDir}/references/report-shape.md`, 'utf8');
 const collectScript = `${skillDir}/scripts/collect-insight-events.mjs`;
 const reportScript = `${skillDir}/scripts/build-insight-report.mjs`;
+const createInteractionScript = 'skills/effective-interact/scripts/create-interaction.mjs';
+const validateInteractionScript = 'skills/effective-interact/scripts/validate-interaction.mjs';
 const activationScript = 'skills/workflow-router/scripts/skill-activation-check.mjs';
 
 function writeFile(filePath: string, content: string) {
@@ -86,6 +89,15 @@ test('insight documents private read-only repository interaction audits', () => 
   expect(dataSources).toContain('`candidate`');
   expect(analysisRubric).toContain('Tool Decision Audit');
   expect(analysisRubric).toContain('at most three primary recommendations');
+  expect(skill).toContain('Use layered evidence and confidence levels');
+  expect(skill).toContain('Strong insights require confirmed, non-low-confidence interaction evidence');
+  expect(skill).toContain('Candidate traces, ordinary repo state, low-confidence evidence, or sparse samples can support only weak leads');
+  expect(skill).toContain('Do not fabricate patterns to fill the report shape');
+  expect(skill).toContain('It is acceptable to return fewer than three strong insights or recommendations when evidence is thin');
+  expect(skill).toContain('For high-volume, multi-session, multi-case, or option-heavy audits');
+  expect(skill).toContain('--effective-interact-input <input.json>');
+  expect(skill).toContain('Use `effective-interact` for dense final reports');
+  expect(reportShape).toContain('also generate an `effective-interact` visual-report input');
 });
 
 test('insight capability metadata registers standard install surface and boundaries', () => {
@@ -103,10 +115,13 @@ test('insight capability metadata registers standard install surface and boundar
   expect(component.path).toBe('skills/insight');
   expect(component.provides).toContain('repository-interaction-insight-audits');
   expect(component.provides).toContain('private-insight-reports');
+  expect(component.provides).toContain('effective-interact-visual-report-inputs');
   expect(component.overlapsWith).toContain('skill:source-post');
   expect(component.overlapsWith).toContain('skill:agent-introspection-debugging');
   expect(component.routing).toContain('private repository interaction insight audit');
+  expect(component.routing).toContain('effective-interact as the visual presentation layer');
   expect(component.recommendation).toContain('ignored private reports');
+  expect(component.recommendation).toContain('optional effective-interact visual report inputs');
   expect(component.recommendation).toContain('no default project');
 });
 
@@ -168,6 +183,7 @@ test('insight collection and report scripts produce a private audit from fixture
   expect(ledger.length).toBeLessThan(12);
 
   const reportPath = path.join(fixture.out, 'insight-report.md');
+  const effectiveInteractInputPath = path.join(fixture.out, 'insight-visual.input.json');
   const report = spawnSync(process.execPath, [
     reportScript,
     '--ledger',
@@ -176,17 +192,26 @@ test('insight collection and report scripts produce a private audit from fixture
     collectPayload.manifestPath,
     '--out',
     reportPath,
+    '--effective-interact-input',
+    effectiveInteractInputPath,
     '--json',
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
 
   expect(report.status, report.stderr || report.stdout).toBe(0);
-  const reportPayload = JSON.parse(report.stdout) as { ok: boolean; reportPath: string; counts: { total: number } };
+  const reportPayload = JSON.parse(report.stdout) as {
+    ok: boolean;
+    reportPath: string;
+    effectiveInteractInputPath: string;
+    counts: { total: number };
+  };
   const markdown = fs.readFileSync(reportPayload.reportPath, 'utf8');
 
   expect(reportPayload.ok).toBe(true);
+  expect(path.resolve(reportPayload.effectiveInteractInputPath)).toBe(path.resolve(effectiveInteractInputPath));
   expect(reportPayload.counts.total).toBeGreaterThanOrEqual(3);
   expect(markdown).toContain('## BLUF');
   expect(markdown).toContain('## Evidence Coverage');
+  expect(markdown).toContain('## Top Insights');
   expect(markdown).toContain('## Top Bottlenecks');
   expect(markdown).toContain('## Top Recommendations');
   expect(markdown).toContain('## Task Profile');
@@ -197,6 +222,40 @@ test('insight collection and report scripts produce a private audit from fixture
   expect(markdown).toContain('## Unknowns');
   expect(markdown).toContain('Strong confirmed interaction events');
   expect(markdown).toContain('evt-');
+  expect(fs.existsSync(effectiveInteractInputPath)).toBe(true);
+
+  const effectiveInteractInput = JSON.parse(fs.readFileSync(effectiveInteractInputPath, 'utf8')) as {
+    renderMode: string;
+    intent: { artifactKind: string };
+    sections: Array<{ type: string; title: string }>;
+    nextActions: string[];
+  };
+  expect(effectiveInteractInput.renderMode).toBe('pre-rendered');
+  expect(effectiveInteractInput.intent.artifactKind).toBe('status');
+  expect(effectiveInteractInput.sections.some((section) => section.type === 'data-table' && section.title === 'Top Insights')).toBe(true);
+  expect(effectiveInteractInput.sections.some((section) => section.type === 'data-table' && section.title === 'Evidence Coverage')).toBe(true);
+  expect(effectiveInteractInput.nextActions.length).toBeGreaterThan(0);
+
+  const generated = spawnSync(process.execPath, [
+    createInteractionScript,
+    '--input',
+    effectiveInteractInputPath,
+    '--out-dir',
+    fixture.out,
+    '--slug',
+    'insight-visual-report',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  expect(generated.status, generated.stderr || generated.stdout).toBe(0);
+  const generatedPayload = JSON.parse(generated.stdout) as { outputPath: string };
+  const validation = spawnSync(process.execPath, [
+    validateInteractionScript,
+    generatedPayload.outputPath,
+    '--json',
+    '--skip-browser',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  expect(validation.status, validation.stderr || validation.stdout).toBe(0);
+  expect(JSON.parse(validation.stdout).ok).toBe(true);
 });
 
 test('insight report weights bottlenecks toward primary interaction evidence', () => {

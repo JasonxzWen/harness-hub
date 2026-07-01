@@ -52,9 +52,10 @@ node skills/workflow-router/scripts/advisory-check.mjs --state sdd-change --phas
 node skills/workflow-router/scripts/advisory-check.mjs --state diagnosis --phase pre-implementation --has-reproduction --has-evidence --json
 node skills/workflow-router/scripts/advisory-check.mjs --state review --phase pre-implementation --will-mutate --json
 node skills/workflow-router/scripts/advisory-check.mjs --state delivery --phase pre-delivery --material-changes --json
+node skills/workflow-router/scripts/advisory-check.mjs --state delivery --phase pre-delivery --material-changes --has-validation --html-handoff-waiver "Tiny packaging-only change; chat handoff is sufficient." --json
 ```
 
-The script emits JSON warnings for missing SDD/maintenance scope/spec/acceptance/plan gates, explicit read-only owner mutation attempts, diagnosis without reproduction/evidence, state/phase mismatches, and delivery without validation or handoff. When `--current-task <path>` is provided, that file is inspected first. Without an explicit path, the script only auto-discovers `.harness-hub/state/current-task.md` in the current working directory; it does not recurse upward into parent directories. It always reports `blocking: false`, and never writes local or remote state.
+The script emits JSON warnings for missing SDD/maintenance scope/spec/acceptance/plan gates, explicit read-only owner mutation attempts, diagnosis without reproduction/evidence, state/phase mismatches, and delivery without validation or handoff. Use `--html-handoff-waiver <reason>` or `--handoff-waiver <reason>` only when the human-facing handoff is intentionally waived and the reason is explicit. When `--current-task <path>` is provided, that file is inspected first. Without an explicit path, the script only auto-discovers `.harness-hub/state/current-task.md` in the current working directory; it does not recurse upward into parent directories. It always reports `blocking: false`, and never writes local or remote state.
 
 ## Planning Contract
 

@@ -263,6 +263,13 @@ test('installed workflow check has a passing gate path for every owner state', (
       args: ['--has-scope', '--has-spec', '--has-acceptance', '--has-plan'],
     },
     {
+      prompt: '把 effective-interact 的报告模板改成 DESIGN.md 和组件优先，并复刻 html-effectiveness 的视觉风格。',
+      state: 'harness-hub-maintenance',
+      owner: 'hub-maintenance-workflow',
+      expectedOutputMode: 'html-artifact',
+      args: ['--has-scope', '--has-spec', '--has-acceptance', '--has-plan'],
+    },
+    {
       prompt: 'Finish the accepted work: run validation, clean artifacts, and write the handoff.',
       state: 'delivery',
       owner: 'delivery-workflow',
@@ -329,6 +336,38 @@ test('installed skill metadata selects high-overlap helper skills from user prom
   expect(visualLanguageReportSmoke.mutates).toBe(false);
   expect(visualLanguageReportSmoke.dispatchesSubagents).toBe(false);
 
+  const invisibleEffectiveInteractSmoke = runActivationCheck(
+    activationCheckScript,
+    'effective-interact 有他没他完全一样，我没有看到主动 HTML 汇报，也没有更好的结构化文本汇报。',
+  );
+  expect(invisibleEffectiveInteractSmoke.selectedSkill).toBe('effective-interact');
+  expect(invisibleEffectiveInteractSmoke.mutates).toBe(false);
+  expect(invisibleEffectiveInteractSmoke.dispatchesSubagents).toBe(false);
+
+  const notEffectiveInteractSmoke = runActivationCheck(
+    activationCheckScript,
+    '讲讲 insight 和 effective-interact 的作用，我怀疑这两个 skill 没有起效。',
+  );
+  expect(notEffectiveInteractSmoke.selectedSkill).toBe('effective-interact');
+  expect(notEffectiveInteractSmoke.mutates).toBe(false);
+  expect(notEffectiveInteractSmoke.dispatchesSubagents).toBe(false);
+
+  const insightRecommendationSmoke = runActivationCheck(
+    activationCheckScript,
+    '其他仓库追踪 insight 后仍然没有给出分析会话后的洞察和改进建议。',
+  );
+  expect(insightRecommendationSmoke.selectedSkill).toBe('insight');
+  expect(insightRecommendationSmoke.mutates).toBe(false);
+  expect(insightRecommendationSmoke.dispatchesSubagents).toBe(false);
+
+  const unnamedInsightAuditSmoke = runActivationCheck(
+    activationCheckScript,
+    '给我分析最近几十个 harness-hub 会话，输出哪些地方应该调用但没调用、哪些触发后过程和结果不对，以及改进建议。',
+  );
+  expect(unnamedInsightAuditSmoke.selectedSkill).toBe('insight');
+  expect(unnamedInsightAuditSmoke.mutates).toBe(false);
+  expect(unnamedInsightAuditSmoke.dispatchesSubagents).toBe(false);
+
   const versionSniffSmoke = runActivationCheck(
     activationCheckScript,
     '版本嗅探：找出今天 npm 和 PyPI 新发布的 AI agent 包。',
@@ -344,6 +383,46 @@ test('installed skill metadata selects high-overlap helper skills from user prom
   expect(repoCapabilityMapSmoke.selectedSkill).toBe('effective-interact');
   expect(repoCapabilityMapSmoke.mutates).toBe(false);
   expect(repoCapabilityMapSmoke.dispatchesSubagents).toBe(false);
+
+  const explorationPlanningSmoke = runActivationCheck(
+    activationCheckScript,
+    'Use Exploration & Planning to compare three implementation approaches with snippets, risks, acceptance gates, and a recommended path.',
+  );
+  expect(explorationPlanningSmoke.selectedSkill).toBe('effective-interact');
+  expect(explorationPlanningSmoke.mutates).toBe(false);
+  expect(explorationPlanningSmoke.dispatchesSubagents).toBe(false);
+
+  const codeUnderstandingSmoke = runActivationCheck(
+    activationCheckScript,
+    'Create a Code Review & Understanding artifact: file tour, module map, call path, source anchors, snippets, and gotchas.',
+  );
+  expect(codeUnderstandingSmoke.selectedSkill).toBe('effective-interact');
+  expect(codeUnderstandingSmoke.mutates).toBe(false);
+  expect(codeUnderstandingSmoke.dispatchesSubagents).toBe(false);
+
+  const designApprovalSmoke = runActivationCheck(
+    activationCheckScript,
+    '给我做一个 Design 方向可视化审批板，比较组件变体、视觉方向和风险，不要直接实现生产 UI。',
+  );
+  expect(designApprovalSmoke.selectedSkill).toBe('effective-interact');
+  expect(designApprovalSmoke.mutates).toBe(false);
+  expect(designApprovalSmoke.dispatchesSubagents).toBe(false);
+
+  const statusDashboardSmoke = runActivationCheck(
+    activationCheckScript,
+    'Create a weekly engineering status dashboard with progress, risks, owners, validation, and next actions.',
+  );
+  expect(statusDashboardSmoke.selectedSkill).toBe('effective-interact');
+  expect(statusDashboardSmoke.mutates).toBe(false);
+  expect(statusDashboardSmoke.dispatchesSubagents).toBe(false);
+
+  const featureFlagEditorSmoke = runActivationCheck(
+    activationCheckScript,
+    'Create a local feature flag editor with toggles, warnings, JSON preview, and diff export; do not write config files.',
+  );
+  expect(featureFlagEditorSmoke.selectedSkill).toBe('effective-interact');
+  expect(featureFlagEditorSmoke.mutates).toBe(false);
+  expect(featureFlagEditorSmoke.dispatchesSubagents).toBe(false);
 
   const ownerPromptSmoke = runActivationCheck(
     activationCheckScript,
