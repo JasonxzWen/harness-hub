@@ -1,17 +1,17 @@
 always respond in Chinese unless the user explicitly asks for another language.
 
-# Codex Harness
+# Agent Harness
 
-This repository is prepared for Codex-driven development. Treat tracked harness files as the stable rules, and use ignored local state under `.harness-hub/state/` for the active task, progress, decisions, and handoff.
+This repository is prepared for Codex and Claude Code development. Treat tracked harness files as the stable rules, and use ignored local state under `.harness-hub/state/` for the active task, progress, decisions, and handoff.
 
 ## Initialization Gate
 
 Do not start implementation until the harness is fully landed and the active task is goal-ready.
 
-- Required files must exist: `AGENTS.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}`, and `.harness-hub/context/{AGENTS.md,README.md,llm-wiki-schema.md,wiki/index.md}`.
+- Required files must exist: `AGENTS.md`, `CLAUDE.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}`, and `.harness-hub/context/{AGENTS.md,README.md,llm-wiki-schema.md,wiki/index.md}`.
 - If any required file is missing, stop and run the approved harness init path before coding.
-- Run `harness-hub check . --json` as a read-only startup check when the command is available; if it is unavailable, use `npx @jasonwen/harness-hub@latest check . --json`. Treat CLI updates, target updates, missing locks, missing project-local Codex activation, and registry failures as advisory unless the current task explicitly requires updating.
-- If startup check recommends `harness-hub activate-codex`, run the dry-run first and then confirm only when local Codex skill activation is needed: `harness-hub activate-codex . --dry-run --json`, then `harness-hub activate-codex . --yes`.
+- Run `harness-hub check . --json` as a read-only startup check when the command is available; if it is unavailable, use `npx @jasonwen/harness-hub@latest check . --json`. Treat CLI updates, target updates, missing locks, missing project-local agent activation, and registry failures as advisory unless the current task explicitly requires updating.
+- If startup check recommends `harness-hub activate-agents`, run the dry-run first and then confirm only when local Codex and Claude Code skill activation is needed: `harness-hub activate-agents . --dry-run --json`, then `harness-hub activate-agents . --yes`.
 - Run `node scripts/harness-validate.mjs`; fix harness failures before changing product files.
 - Fill `.harness-hub/state/current-task.md` with goal, assumptions, non-goals, allowed paths, forbidden paths, acceptance criteria, validation tiers, runtime signals, standard startup path, and checkpoint policy before editing.
 - For feature, bug-fix, refactor, or product/spec change work, fill requirement intake, discovery/brainstorming, target spec, P0/P1/P2 test matrix, open questions, and alignment status before editing.
@@ -29,7 +29,7 @@ Do not start implementation until the harness is fully landed and the active tas
 - Use a separate git worktree or branch for each write task.
 - Start from `.harness-hub/state/current-task.md` before changing files.
 - Respect the task's allowed paths and forbidden paths.
-- Treat Harness Hub source-repo packaging as non-target material: do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`, `README*`, source `AGENTS.md`, or this repo's source tree into target projects. Use the managed outputs from `harness-hub init-harness`, `install`, and `activate-codex` instead.
+- Treat Harness Hub source-repo packaging as non-target material: do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`, `README*`, source `AGENTS.md`, source `CLAUDE.md`, or this repo's source tree into target projects. Use the managed outputs from `harness-hub init-harness`, `install`, and `activate-agents` instead.
 - Do not run parallel writes against the same file, module, or feature state.
 - Use read-only parallel work only for research, review, log analysis, or validation.
 - Use agentic loops for material planning, implementation, acceptance, PR closeout, and workflow-learning work when they reduce risk: Producer -> Verifier -> Arbiter -> Main Agent Decision.

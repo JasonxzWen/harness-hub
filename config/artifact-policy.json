@@ -3,6 +3,7 @@
   "categories": {
     "publishAndGit": [
       "AGENTS.md",
+      "CLAUDE.md",
       "BOOTSTRAP-TARGET.md",
       "CHANGELOG.md",
       "README.md",
@@ -16,10 +17,7 @@
       "openspec/specs/",
       ".claude-plugin/",
       "skills/",
-      "scripts/check-codex-worktree.mjs",
-      "scripts/install-codex-worktree-hook.mjs",
-      "scripts/sync-codex-skills.mjs",
-      "scripts/setup-codex-worktree.mjs",
+      "scripts/sync-agent-skills.mjs",
       "scripts/run-validate-skills.mjs",
       "scripts/smoke-managed-update.ps1",
       "scripts/skill-quality-inventory.ts",
@@ -50,12 +48,14 @@
       "/tasks/current-task.md",
       "skills/effective-interact/artifacts/",
       ".codex/",
+      ".claude/",
       ".learning/"
     ]
   },
   "npm": {
     "files": [
       "AGENTS.md",
+      "CLAUDE.md",
       "BOOTSTRAP-TARGET.md",
       "CHANGELOG.md",
       "README.md",
@@ -70,10 +70,7 @@
       "openspec/specs/",
       ".claude-plugin/",
       "skills/",
-      "scripts/check-codex-worktree.mjs",
-      "scripts/install-codex-worktree-hook.mjs",
-      "scripts/sync-codex-skills.mjs",
-      "scripts/setup-codex-worktree.mjs",
+      "scripts/sync-agent-skills.mjs",
       "scripts/run-validate-skills.mjs",
       "scripts/smoke-managed-update.ps1",
       "scripts/skill-quality-inventory.ts",
@@ -89,6 +86,7 @@
       "reports/",
       "site/",
       ".codex/",
+      ".claude/",
       "skills/effective-interact/artifacts/",
       "src/",
       "tests/",
@@ -126,6 +124,7 @@
       "/tasks/current-task.md",
       "skills/effective-interact/artifacts/",
       ".codex/",
+      ".claude/",
       ".learning/"
     ]
   }

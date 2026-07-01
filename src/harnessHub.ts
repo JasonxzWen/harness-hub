@@ -310,36 +310,48 @@ export interface InstallResult {
   report: string;
 }
 
-export type CodexActivationAction = 'sync' | 'remove-stale' | 'block';
+export type AgentActivationAction = 'sync' | 'remove-stale' | 'block';
+export type AgentHostId = 'codex' | 'claude';
 
-export interface CodexActivationItem {
+export interface AgentActivationItem {
+  host: AgentHostId;
   skillName: string;
   source: string | null;
   dest: string;
-  action: CodexActivationAction;
+  action: AgentActivationAction;
   reason: string;
   exists: boolean;
   managed: boolean;
 }
 
-export interface CodexActivationPlan {
+export interface AgentActivationHostRoot {
+  host: AgentHostId;
+  relativePath: string;
+  path: string;
+}
+
+export interface AgentActivationPlan {
   schemaVersion: 1;
   generatedAt: string;
   targetDir: string;
   sourceSkillsRoot: string;
-  codexSkillsRoot: string;
+  hostSkillRoots: AgentActivationHostRoot[];
   dryRun: boolean;
-  items: CodexActivationItem[];
-  blockers: CodexActivationItem[];
+  items: AgentActivationItem[];
+  blockers: AgentActivationItem[];
 }
 
-export interface CodexActivationResult extends CodexActivationPlan {
+export interface AgentActivationResult extends AgentActivationPlan {
   exitCode: 0 | 1;
-  synced: CodexActivationItem[];
-  staleRemoved: CodexActivationItem[];
-  skipped: CodexActivationItem[];
+  synced: AgentActivationItem[];
+  staleRemoved: AgentActivationItem[];
+  skipped: AgentActivationItem[];
   reason: string;
 }
+
+export type CodexActivationItem = AgentActivationItem;
+export type CodexActivationPlan = AgentActivationPlan;
+export type CodexActivationResult = AgentActivationResult;
 
 export interface HarnessPlanItem {
   componentId: string;
@@ -434,7 +446,7 @@ export interface HarnessBenchmark {
   recommendation: string;
 }
 
-export type HarnessBlockerCode = 'dirty-worktree' | 'existing-file' | 'non-codex-platform-file' | 'unsafe-path';
+export type HarnessBlockerCode = 'dirty-worktree' | 'existing-file' | 'unsafe-path';
 
 export interface HarnessBlocker {
   code: HarnessBlockerCode;
@@ -475,7 +487,6 @@ export interface DevBootstrapPlan {
 export interface HarnessValidationCheck {
   code:
     | 'required-file'
-    | 'codex-only'
     | 'file-size'
     | 'required-content'
     | 'structured-content'
@@ -892,9 +903,12 @@ export const AGENT_SKILL_DIRS = Object.freeze({
   standard: 'skills',
 } satisfies Record<AgentName, string>);
 
-const CODEX_SKILLS_RELATIVE_DIR = '.codex/skills';
-const CODEX_MANAGED_MARKER = '.harness-hub-managed';
-const CODEX_PRESERVED_LOCAL_DIRS = new Set(['artifacts']);
+const AGENT_HOST_SKILL_DIRS = Object.freeze([
+  { host: 'codex', relativePath: '.codex/skills' },
+  { host: 'claude', relativePath: '.claude/skills' },
+] satisfies Array<{ host: AgentHostId; relativePath: string }>);
+const AGENT_MANAGED_MARKER = '.harness-hub-managed';
+const AGENT_PRESERVED_LOCAL_DIRS = new Set(['artifacts']);
 
 const MANAGED_COMPONENT_RENAMES: Readonly<Record<string, ManagedComponentRename>> = Object.freeze({
   'skill:html-work-reports': {
@@ -1020,6 +1034,7 @@ const HARNESS_TEMPLATE_DESTINATIONS = Object.freeze({
 } satisfies Record<string, string>);
 const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   'AGENTS.md': 32 * 1024,
+  'CLAUDE.md': 32 * 1024,
   '.harness-hub/state/decisions.md': 16 * 1024,
   '.harness-hub/state/progress.md': 16 * 1024,
   '.harness-hub/state/session-handoff.md': 16 * 1024,
@@ -1028,7 +1043,6 @@ const HARNESS_SIZE_LIMITS: Readonly<Record<string, number>> = Object.freeze({
   '.harness-hub/state/interrupt-decisions.jsonl': 64 * 1024,
   '.harness-hub/state/capability-events.jsonl': 64 * 1024,
 });
-const NON_CODEX_PLATFORM_FILES = ['CLAUDE.md'];
 const SOURCE_POST_SITE_ROOT = 'site';
 const SOURCE_POSTS_ROOT = 'site/source-posts/posts';
 const SOURCE_POST_SOURCE_EXCERPT_WORD_LIMIT = 220;
@@ -1918,13 +1932,22 @@ function listHarnessTemplateFiles(
     throw new Error(`Harness source does not exist: ${component.path}`);
   }
   return listFilesRecursive(source)
-    .map((sourceFile) => {
+    .flatMap((sourceFile) => {
       const sourceRelative = toPortablePath(path.relative(source, sourceFile));
-      return {
+      const relativePath = HARNESS_TEMPLATE_DESTINATIONS[sourceRelative as keyof typeof HARNESS_TEMPLATE_DESTINATIONS] || sourceRelative;
+      const files = [{
         sourceFile,
         sourceRelative,
-        relativePath: HARNESS_TEMPLATE_DESTINATIONS[sourceRelative as keyof typeof HARNESS_TEMPLATE_DESTINATIONS] || sourceRelative,
-      };
+        relativePath,
+      }];
+      if (sourceRelative === 'AGENTS.md') {
+        files.push({
+          sourceFile,
+          sourceRelative,
+          relativePath: 'CLAUDE.md',
+        });
+      }
+      return files;
     })
     .filter((file) => !file.sourceRelative.startsWith('.'))
     .map(({ sourceRelative: _sourceRelative, ...file }) => file)
@@ -2367,13 +2390,6 @@ function collectHarnessBlockers(
         path: file.relativePath,
         reason: `Harness destination already exists: ${file.relativePath}.`,
       })),
-    ...NON_CODEX_PLATFORM_FILES
-      .filter((relativePath) => fs.existsSync(path.join(targetDir, relativePath)))
-      .map((relativePath) => ({
-        code: 'non-codex-platform-file' as const,
-        path: relativePath,
-        reason: `Non-Codex platform instruction file already exists: ${relativePath}.`,
-      })),
   ].sort((left, right) => left.path.localeCompare(right.path) || left.code.localeCompare(right.code));
 }
 
@@ -2460,16 +2476,6 @@ export function validateHarness(targetDirInput: string): HarnessValidationResult
       state: exists ? 'pass' : 'fail',
       path: relativePath,
       reason: exists ? 'Required harness file exists.' : 'Required harness file is missing.',
-    });
-  }
-
-  for (const relativePath of NON_CODEX_PLATFORM_FILES) {
-    const exists = fs.existsSync(path.join(targetDir, relativePath));
-    checks.push({
-      code: 'codex-only',
-      state: exists ? 'fail' : 'pass',
-      path: relativePath,
-      reason: exists ? 'Non-Codex platform instruction file is present.' : 'No non-Codex platform instruction file detected.',
     });
   }
 
@@ -2661,10 +2667,6 @@ function benchmarkHarness({
     {
       pass: assessment.project.verificationCommands.length > 0,
       message: 'Project verification command is detected',
-    },
-    {
-      pass: !checks.some((check) => check.code === 'codex-only' && check.state === 'fail'),
-      message: 'No non-Codex platform instruction file conflicts with this harness',
     },
     {
       pass: !checks.some((check) => check.code === 'file-size' && check.state === 'fail'),
@@ -2992,8 +2994,9 @@ function dedupe(values: string[]): string[] {
 
 function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
   const checks: HarnessValidationCheck[] = [];
-  checks.push(validateFileContains(targetDir, 'AGENTS.md', [
+  const rootInstructionMarkers = [
     'Codex',
+    'Claude Code',
     'Initialization Gate',
     'Loop Control Plane',
     'Interrupt Policy',
@@ -3017,7 +3020,10 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Arbiters are read-only',
     'finish closeout',
     'insight',
-  ]));
+  ];
+  checks.push(validateFileContains(targetDir, 'AGENTS.md', rootInstructionMarkers));
+  checks.push(validateFileContains(targetDir, 'CLAUDE.md', rootInstructionMarkers));
+  checks.push(validateRootInstructionSync(targetDir));
   checks.push(validateFileContains(targetDir, '.harness-hub/.gitignore', ['state/', 'reports/']));
   checks.push(validateFileContainsWithCode(targetDir, '.harness-hub/context/AGENTS.md', [
     'LLM Wiki',
@@ -3893,6 +3899,29 @@ function validateFileContains(targetDir: string, relativePath: string, markers: 
     'Required harness guidance markers are present.',
     'Missing required harness guidance markers',
   );
+}
+
+function validateRootInstructionSync(targetDir: string): HarnessValidationCheck {
+  const agentsPath = path.join(targetDir, 'AGENTS.md');
+  const claudePath = path.join(targetDir, 'CLAUDE.md');
+  if (!fs.existsSync(agentsPath) || !fs.existsSync(claudePath)) {
+    return {
+      code: 'required-content',
+      state: 'fail',
+      path: 'AGENTS.md / CLAUDE.md',
+      reason: 'Root instruction sync could not be checked because one file is missing.',
+    };
+  }
+
+  const synced = fs.readFileSync(agentsPath, 'utf8') === fs.readFileSync(claudePath, 'utf8');
+  return {
+    code: 'required-content',
+    state: synced ? 'pass' : 'fail',
+    path: 'AGENTS.md / CLAUDE.md',
+    reason: synced
+      ? 'Root AGENTS.md and CLAUDE.md are synchronized.'
+      : 'Root AGENTS.md and CLAUDE.md must stay synchronized.',
+  };
 }
 
 function validateFileContainsWithCode(
@@ -5602,17 +5631,17 @@ function readSkillSourceNames(skillsRoot: string): string[] {
     .sort();
 }
 
-function hasCodexManagedMarker(targetDir: string): boolean {
-  return fs.existsSync(path.join(targetDir, CODEX_MANAGED_MARKER));
+function hasAgentManagedMarker(targetDir: string): boolean {
+  return fs.existsSync(path.join(targetDir, AGENT_MANAGED_MARKER));
 }
 
-function removeCodexManagedEntries(dir: string): void {
+function removeAgentManagedEntries(dir: string): void {
   if (!fs.existsSync(dir)) {
     return;
   }
 
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (CODEX_PRESERVED_LOCAL_DIRS.has(entry.name)) {
+    if (AGENT_PRESERVED_LOCAL_DIRS.has(entry.name)) {
       continue;
     }
 
@@ -5620,29 +5649,30 @@ function removeCodexManagedEntries(dir: string): void {
   }
 }
 
-function copySkillSourceForCodex(sourceDir: string, targetDir: string): void {
+function copySkillSourceForAgent(sourceDir: string, targetDir: string): void {
   fs.mkdirSync(targetDir, { recursive: true });
 
   for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
-    if (CODEX_PRESERVED_LOCAL_DIRS.has(entry.name)) {
+    if (AGENT_PRESERVED_LOCAL_DIRS.has(entry.name)) {
       continue;
     }
 
     const sourcePath = path.join(sourceDir, entry.name);
     const targetPath = path.join(targetDir, entry.name);
     if (entry.isDirectory()) {
-      copySkillSourceForCodex(sourcePath, targetPath);
+      copySkillSourceForAgent(sourcePath, targetPath);
     } else if (entry.isFile()) {
       fs.copyFileSync(sourcePath, targetPath);
     }
   }
 }
 
-function writeCodexManagedMarker(targetDir: string, skillName: string): void {
+function writeAgentManagedMarker(targetDir: string, skillName: string, host: AgentHostId): void {
   fs.writeFileSync(
-    path.join(targetDir, CODEX_MANAGED_MARKER),
+    path.join(targetDir, AGENT_MANAGED_MARKER),
     [
-      'Generated by harness-hub activate-codex.',
+      'Generated by harness-hub activate-agents.',
+      `Host: ${host}`,
       `Source: skills/${skillName}`,
       'Do not edit this copy; edit the source skill instead.',
       '',
@@ -5651,52 +5681,59 @@ function writeCodexManagedMarker(targetDir: string, skillName: string): void {
   );
 }
 
-export function planCodexActivation(options: { targetDir?: string; dryRun?: boolean } = {}): CodexActivationPlan {
+export function planAgentActivation(options: { targetDir?: string; dryRun?: boolean } = {}): AgentActivationPlan {
   const targetDir = path.resolve(options.targetDir || process.cwd());
   const sourceSkillsRoot = assertSafeRelativePath(targetDir, AGENT_SKILL_DIRS.standard);
-  const codexSkillsRoot = assertSafeRelativePath(targetDir, CODEX_SKILLS_RELATIVE_DIR);
+  const hostSkillRoots = AGENT_HOST_SKILL_DIRS.map((host) => ({
+    ...host,
+    path: assertSafeRelativePath(targetDir, host.relativePath),
+  }));
   const sourceSkillNames = readSkillSourceNames(sourceSkillsRoot);
   const sourceSkillSet = new Set(sourceSkillNames);
-  const items: CodexActivationItem[] = [];
+  const items: AgentActivationItem[] = [];
 
-  for (const skillName of sourceSkillNames) {
-    const source = path.join(sourceSkillsRoot, skillName);
-    const dest = path.join(codexSkillsRoot, skillName);
-    const exists = fs.existsSync(dest);
-    const managed = exists && hasCodexManagedMarker(dest);
-    items.push({
-      skillName,
-      source,
-      dest,
-      action: exists && !managed ? 'block' : 'sync',
-      reason: exists && !managed
-        ? 'Existing Codex skill directory is not marked as Harness Hub managed.'
-        : 'Sync source skill into project-local Codex activation cache.',
-      exists,
-      managed,
-    });
-  }
+  for (const host of hostSkillRoots) {
+    for (const skillName of sourceSkillNames) {
+      const source = path.join(sourceSkillsRoot, skillName);
+      const dest = path.join(host.path, skillName);
+      const exists = fs.existsSync(dest);
+      const managed = exists && hasAgentManagedMarker(dest);
+      items.push({
+        host: host.host,
+        skillName,
+        source,
+        dest,
+        action: exists && !managed ? 'block' : 'sync',
+        reason: exists && !managed
+          ? `Existing ${host.host} skill directory is not marked as Harness Hub managed.`
+          : `Sync source skill into project-local ${host.host} activation cache.`,
+        exists,
+        managed,
+      });
+    }
 
-  const existingTargetEntries = fs.existsSync(codexSkillsRoot)
-    ? fs.readdirSync(codexSkillsRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory())
-    : [];
-  for (const entry of existingTargetEntries) {
-    if (sourceSkillSet.has(entry.name)) {
-      continue;
+    const existingTargetEntries = fs.existsSync(host.path)
+      ? fs.readdirSync(host.path, { withFileTypes: true }).filter((entry) => entry.isDirectory())
+      : [];
+    for (const entry of existingTargetEntries) {
+      if (sourceSkillSet.has(entry.name)) {
+        continue;
+      }
+      const dest = path.join(host.path, entry.name);
+      if (!hasAgentManagedMarker(dest)) {
+        continue;
+      }
+      items.push({
+        host: host.host,
+        skillName: entry.name,
+        source: null,
+        dest,
+        action: 'remove-stale',
+        reason: `Remove stale Harness Hub managed ${host.host} activation cache entry.`,
+        exists: true,
+        managed: true,
+      });
     }
-    const dest = path.join(codexSkillsRoot, entry.name);
-    if (!hasCodexManagedMarker(dest)) {
-      continue;
-    }
-    items.push({
-      skillName: entry.name,
-      source: null,
-      dest,
-      action: 'remove-stale',
-      reason: 'Remove stale Harness Hub managed Codex activation cache entry.',
-      exists: true,
-      managed: true,
-    });
   }
 
   const blockers = items.filter((item) => item.action === 'block');
@@ -5705,35 +5742,37 @@ export function planCodexActivation(options: { targetDir?: string; dryRun?: bool
     generatedAt: new Date().toISOString(),
     targetDir,
     sourceSkillsRoot,
-    codexSkillsRoot,
+    hostSkillRoots,
     dryRun: options.dryRun === true,
-    items: items.sort((left, right) => left.skillName.localeCompare(right.skillName) || left.action.localeCompare(right.action)),
+    items: items.sort((left, right) => left.host.localeCompare(right.host) || left.skillName.localeCompare(right.skillName) || left.action.localeCompare(right.action)),
     blockers,
   };
 }
 
-export function activateCodex(options: { targetDir?: string; dryRun?: boolean } = {}): CodexActivationResult {
-  const plan = planCodexActivation(options);
+export function activateAgents(options: { targetDir?: string; dryRun?: boolean } = {}): AgentActivationResult {
+  const plan = planAgentActivation(options);
   const synced = plan.items.filter((item) => item.action === 'sync');
   const staleRemoved = plan.items.filter((item) => item.action === 'remove-stale');
   const skipped = plan.items.filter((item) => item.action === 'block');
 
   if (!plan.dryRun && plan.blockers.length === 0) {
-    fs.mkdirSync(plan.codexSkillsRoot, { recursive: true });
+    for (const host of plan.hostSkillRoots) {
+      fs.mkdirSync(host.path, { recursive: true });
+    }
     for (const item of staleRemoved) {
       fs.rmSync(item.dest, { recursive: true, force: true });
     }
     for (const item of synced) {
       if (!item.source) {
-        throw new Error(`Missing source for Codex activation item: ${item.skillName}`);
+        throw new Error(`Missing source for agent activation item: ${item.host}/${item.skillName}`);
       }
-      removeCodexManagedEntries(item.dest);
-      copySkillSourceForCodex(item.source, item.dest);
-      writeCodexManagedMarker(item.dest, item.skillName);
+      removeAgentManagedEntries(item.dest);
+      copySkillSourceForAgent(item.source, item.dest);
+      writeAgentManagedMarker(item.dest, item.skillName, item.host);
     }
   }
 
-  const exitCode: CodexActivationResult['exitCode'] = plan.blockers.length > 0 ? 1 : 0;
+  const exitCode: AgentActivationResult['exitCode'] = plan.blockers.length > 0 ? 1 : 0;
   const plannedLabel = plan.dryRun ? 'planned' : 'synced';
   return {
     ...plan,
@@ -5742,9 +5781,17 @@ export function activateCodex(options: { targetDir?: string; dryRun?: boolean } 
     staleRemoved,
     skipped,
     reason: plan.blockers.length > 0
-      ? `${plan.blockers.length} Codex activation blocker${plan.blockers.length === 1 ? '' : 's'} found.`
-      : `${synced.length} Codex skill activation cache entr${synced.length === 1 ? 'y' : 'ies'} ${plannedLabel}, ${staleRemoved.length} stale entr${staleRemoved.length === 1 ? 'y' : 'ies'} ${plan.dryRun ? 'planned for removal' : 'removed'}.`,
+      ? `${plan.blockers.length} agent activation blocker${plan.blockers.length === 1 ? '' : 's'} found.`
+      : `${synced.length} agent skill activation cache entr${synced.length === 1 ? 'y' : 'ies'} ${plannedLabel}, ${staleRemoved.length} stale entr${staleRemoved.length === 1 ? 'y' : 'ies'} ${plan.dryRun ? 'planned for removal' : 'removed'}.`,
   };
+}
+
+export function planCodexActivation(options: { targetDir?: string; dryRun?: boolean } = {}): AgentActivationPlan {
+  return planAgentActivation(options);
+}
+
+export function activateCodex(options: { targetDir?: string; dryRun?: boolean } = {}): AgentActivationResult {
+  return activateAgents(options);
 }
 
 export function applyInstall(plan: InstallPlan, options: { overwrite?: boolean } = {}): InstallResult {
@@ -6103,9 +6150,9 @@ function buildSelfCheckAdvisories(
       recommendedCommand: check.target.recommendedCommand,
     });
   }
-  if (check.target.state === 'current' && check.target.recommendedCommand?.includes('activate-codex')) {
+  if (check.target.state === 'current' && check.target.recommendedCommand?.includes('activate-agents')) {
     advisories.push({
-      id: 'target.codex-activation-missing',
+      id: 'target.agent-activation-missing',
       severity: 'advisory',
       message: check.target.message,
       evidence: check.target.evidence,
@@ -6371,11 +6418,11 @@ function buildTargetCheck({
     : hasUpdates
       ? 'update-available'
       : 'current';
-  const codexActivationMissing = state === 'current' && isCodexActivationMissing(resolvedTarget, status);
+  const agentActivationMissing = state === 'current' && isAgentActivationMissing(resolvedTarget, status);
   const message = [
     targetCheckMessage({ state, status, updatePlan }),
-    codexActivationMissing
-      ? 'Project-local Codex skill activation is missing; sync .codex/skills before relying on automatic skill triggers.'
+    agentActivationMissing
+      ? 'Project-local agent skill activation is missing; sync .codex/skills and .claude/skills before relying on automatic skill triggers.'
       : '',
   ].filter(Boolean).join(' ');
 
@@ -6391,12 +6438,18 @@ function buildTargetCheck({
     missing: status.missing,
     skipped: status.skipped,
     unknown: status.unknown,
-    recommendedCommand: codexActivationMissing
-      ? `harness-hub activate-codex "${resolvedTarget}" --dry-run --json`
+    recommendedCommand: agentActivationMissing
+      ? `harness-hub activate-agents "${resolvedTarget}" --dry-run --json`
       : targetRecommendedCommand(state, resolvedTarget),
     message,
-    evidence: codexActivationMissing
-      ? [status.lock.path, `${CODEX_SKILLS_RELATIVE_DIR}/workflow-router/SKILL.md`, `${CODEX_SKILLS_RELATIVE_DIR}/package-release-sniffer/SKILL.md`]
+    evidence: agentActivationMissing
+      ? [
+        status.lock.path,
+        ...AGENT_HOST_SKILL_DIRS.flatMap((host) => [
+          `${host.relativePath}/workflow-router/SKILL.md`,
+          `${host.relativePath}/package-release-sniffer/SKILL.md`,
+        ]),
+      ]
       : [status.lock.path],
   };
 }
@@ -6435,7 +6488,7 @@ function targetRecommendedCommand(state: HarnessHubTargetCheck['state'], targetD
   return null;
 }
 
-function isCodexActivationMissing(targetDir: string, status: HarnessHubStatus): boolean {
+function isAgentActivationMissing(targetDir: string, status: HarnessHubStatus): boolean {
   const hasActivationSource = status.rows.some((row) => (
     row.id === 'skill:workflow-router'
     || row.id === 'skill:package-release-sniffer'
@@ -6444,10 +6497,10 @@ function isCodexActivationMissing(targetDir: string, status: HarnessHubStatus): 
     return false;
   }
 
-  return [
-    path.join(targetDir, CODEX_SKILLS_RELATIVE_DIR, 'workflow-router', 'SKILL.md'),
-    path.join(targetDir, CODEX_SKILLS_RELATIVE_DIR, 'package-release-sniffer', 'SKILL.md'),
-  ].some((filePath) => !fs.existsSync(filePath));
+  return AGENT_HOST_SKILL_DIRS.flatMap((host) => [
+    path.join(targetDir, host.relativePath, 'workflow-router', 'SKILL.md'),
+    path.join(targetDir, host.relativePath, 'package-release-sniffer', 'SKILL.md'),
+  ]).some((filePath) => !fs.existsSync(filePath));
 }
 
 function buildExternalToolSuggestions({
@@ -7672,16 +7725,16 @@ async function runCliInner(argv: string[]): Promise<number> {
     return result.exitCode;
   }
 
-  if (options.command === 'activate-codex') {
+  if (options.command === 'activate-agents' || options.command === 'activate-codex') {
     if (!options.dryRun && !options.yes) {
-      throw new CliError('Use --yes to sync project-local Codex skill activation or --dry-run to preview.', 2);
+      throw new CliError('Use --yes to sync project-local agent skill activation or --dry-run to preview.', 2);
     }
-    const result = activateCodex({
+    const result = activateAgents({
       targetDir: options.targetDir || undefined,
       dryRun: options.dryRun,
     });
     emitReport(renderLifecycleReport(
-      options.dryRun ? 'Harness Hub Codex Activation Plan' : 'Harness Hub Codex Activation Report',
+      options.dryRun ? 'Harness Hub Agent Activation Plan' : 'Harness Hub Agent Activation Report',
       result,
       options,
     ), options);
@@ -8102,10 +8155,10 @@ function rowsForLifecycleData(
     ];
   }
 
-  if ('codexSkillsRoot' in data) {
+  if ('hostSkillRoots' in data) {
     return data.items.map((item) => ({
       id: item.skillName,
-      agent: 'codex',
+      agent: item.host,
       dest: path.relative(data.targetDir, item.dest).replaceAll(path.sep, '/'),
       state: item.action,
       version: item.managed ? 'managed' : item.exists ? 'unmanaged' : 'missing',
@@ -8302,14 +8355,14 @@ function summaryForLifecycleData(
     return `${installPlanned} skills planned, ${data.harnessFiles.length} harness files planned, ${data.blockers.length} blockers.`;
   }
 
-  if ('codexSkillsRoot' in data) {
+  if ('hostSkillRoots' in data) {
     const sync = data.items.filter((item) => item.action === 'sync').length;
     const stale = data.items.filter((item) => item.action === 'remove-stale').length;
     const blockers = data.items.filter((item) => item.action === 'block').length;
     if ('reason' in data) {
       return data.reason;
     }
-    return `${sync} Codex skill activation cache entries planned, ${stale} stale planned for removal, ${blockers} blockers.`;
+    return `${sync} agent skill activation cache entries planned, ${stale} stale planned for removal, ${blockers} blockers.`;
   }
 
   if ('findings' in data) {
@@ -8418,7 +8471,7 @@ Usage:
   harness-hub analyze [target] [--target standard] [--agent-readiness] [--harness] [--json|--html] [--output file]
   harness-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
   harness-hub validate-harness [target] [--json|--html] [--output file]
-  harness-hub activate-codex [target] [--dry-run|--yes] [--json|--html] [--output file]
+  harness-hub activate-agents [target] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub source-post generate [target] --input file [--slug slug] [--json|--html] [--output file]
@@ -8437,8 +8490,8 @@ Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
 Use check for read-only startup version checks: CLI package status and target managed-component status are reported separately.
 Use self-check for read-only aggregate status checks; strict harness validation runs only for initialized harness targets unless --validate-harness is provided.
 Install selects every standard skill component and overwrites same-name skill directories by default.
-Use init-harness for Codex-only dev bootstrap: standard skills plus root harness files.
-Use activate-codex to sync installed project-local skills into ignored .codex/skills without global installation.
+Use init-harness for agent dev bootstrap: standard skills plus root harness files for Codex and Claude Code.
+Use activate-agents to sync installed project-local skills into ignored .codex/skills and .claude/skills without global installation.
 validate-harness includes standard harness checks, five-subsystem assessment, and a structural benchmark.
 Use source-post for structured source-post generation and GitHub Pages preflight.
 Use loop evaluate/schedule to decide continue vs interrupt and optionally append local Loop ledgers with --yes.
