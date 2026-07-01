@@ -21,7 +21,8 @@ Harness Hub 只做四类有边界的事：
 
 - `check` 和 `analyze` 只读检查目标仓库。
 - `init-harness --target standard` 只在你显式确认后创建根级 harness。
-- `install` 只安装标准 skill set，不创建根级 harness 文件。
+- `install` 只安装可迁移到目标项目的标准 skill set，不创建根级 harness 文件。
+- `standard` 迁移 prompt/context/harness/loop engineering 资源和可复用 skills；Harness Hub 源仓库维护资源只留在本仓库。
 - `loop evaluate` 和 `loop schedule` 判断 continue/interrupt，并且只在 `--yes` 后追加本地 Loop ledger。
 - `source-post` 创建、构建、验证并预检 source-backed public posts。
 
@@ -72,7 +73,7 @@ flowchart TD
 | 维护 Harness Hub 自身 | `workflow-router` 再进入 `hub-maintenance-workflow` | source records、routing、capability metadata、docs、templates、lifecycle safety。 |
 | 创建公开 source-backed post | `source-post generate` | source ledger、Effective Interact adaptation、Pages 输出和发布预检。 |
 
-Harness Hub 只有一个面向用户的目标路径：`standard`。没有 named skill install variants、harness pack levels 或 bundle selectors。`harness:minimal` 只是根级 harness 文件的内部组件/模板 ID。确认执行 `install` 会覆盖同名 skill 目录；如果目标仓库可能已有本地 skills，先用 `--dry-run` 检查。
+Harness Hub 只有一个面向用户的目标路径：`standard`。没有 named skill install variants、harness pack levels 或 bundle selectors。`standard` 是 prompt/context/harness/loop engineering 和可迁移 reusable skills 的完整目标迁移面，包含 `insight`；`hub-maintenance-workflow` 这类 Harness Hub 源仓库维护 workflow 只留在本仓库。`harness:minimal` 只是根级 harness 文件的内部组件/模板 ID。确认执行 `install` 会覆盖同名 skill 目录；如果目标仓库可能已有本地 skills，先用 `--dry-run` 检查。
 
 ## 一步初始化目标仓库
 
@@ -219,6 +220,8 @@ harness/
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy。 |
 
 生成报告、worktree-local harness state、interaction artifacts 和 local agent skill mirrors 保持本地：`reports/`、`.harness-hub/reports/`、`.harness-hub/state/`、`skills/effective-interact/artifacts/`、`.codex/` 和 `.claude/` 被忽略。`site/` 是 Git-only Pages 输出，并且有意排除在 npm package 之外。
+
+`standard` 目标安装不包含 Harness Hub 源仓库维护资源。目标项目只接收托管的 prompt/context/harness/loop 资源和可迁移通用 skills。
 
 ## 验证
 

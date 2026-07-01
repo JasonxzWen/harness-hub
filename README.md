@@ -2,7 +2,7 @@
 
 [简体中文](README.zh-CN.md) | English
 
-Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects. It installs the full standard skill/routing set, initializes the standard target harness when requested, validates the result, and keeps managed files safe through lock-backed lifecycle commands.
+Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects. It installs the target-distributed standard skill/routing set, initializes the standard target harness when requested, validates the result, and keeps managed files safe through lock-backed lifecycle commands.
 
 Imported skills can keep their upstream style; Harness Hub mainly owns routing, source records, harness templates, and lifecycle safety.
 
@@ -14,7 +14,8 @@ Harness Hub does a small set of bounded jobs:
 
 - `check` and `analyze` inspect a target repo and stay read-only.
 - `init-harness --target standard` creates the root harness only when you explicitly approve it.
-- `install` installs the standard skill set only; it does not create root harness files.
+- `install` installs the target-distributed standard skill set only; it does not create root harness files.
+- `standard` migrates prompt, context, harness, and loop engineering resources plus reusable skills, while Harness Hub source-maintenance resources stay local to this repository.
 - the standard harness includes an LLM Wiki context pack under `.harness-hub/context/`.
 - `loop evaluate` and `loop schedule` decide continue vs interrupt and can append local Loop ledgers after `--yes`.
 - `source-post` creates, builds, validates, and preflights source-backed public posts.
@@ -71,7 +72,7 @@ flowchart TD
 | Maintain this hub | `workflow-router` then `hub-maintenance-workflow` | Source records, routing, capability metadata, docs, templates, and lifecycle safety. |
 | Create a public source-backed post | `source-post generate` | Source ledger, Effective Interact adaptation, Pages output, and publish preflight. |
 
-Harness Hub has one user-facing target path: `standard`. There are no named skill install variants, harness pack levels, or bundle selectors. `harness:minimal` is only the internal component/template ID for the root harness files. Confirmed `install` overwrites an existing same-name skill directory; use `--dry-run` first when a target may already have local skills.
+Harness Hub has one user-facing target path: `standard`. There are no named skill install variants, harness pack levels, or bundle selectors. `standard` is the complete target migration surface for prompt/context/harness/loop engineering and target-distributed reusable skills, including `insight`; Harness Hub source-maintenance workflows such as `hub-maintenance-workflow` stay local to this repository. `harness:minimal` is only the internal component/template ID for the root harness files. Confirmed `install` overwrites an existing same-name skill directory; use `--dry-run` first when a target may already have local skills.
 
 ## One-Step Target Bootstrap
 
@@ -220,6 +221,8 @@ harness/
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy. |
 
 Generated reports, worktree-local harness state, interaction artifacts, and local agent skill mirrors stay local: `reports/`, `.harness-hub/reports/`, `.harness-hub/state/`, `skills/effective-interact/artifacts/`, `.codex/`, and `.claude/` are ignored. `site/` is Git-only Pages output and is intentionally excluded from the npm package.
+
+`standard` target installs exclude Harness Hub source-maintenance resources. Keep repository-specific maintenance rules in this source checkout; target repositories receive the managed prompt/context/harness/loop resources and target-distributed reusable skills only.
 
 ## Validation
 
