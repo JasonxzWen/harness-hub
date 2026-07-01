@@ -5,6 +5,7 @@ import path from 'node:path';
 const root = process.cwd();
 const requiredFiles = [
   'AGENTS.md',
+  'CLAUDE.md',
   'feature_list.json',
   '.harness-hub/.gitignore',
   '.harness-hub/state/decisions.md',
@@ -39,9 +40,9 @@ const requiredFiles = [
   '.harness-hub/state/current-task.md',
   'scripts/harness-validate.mjs',
 ];
-const forbiddenFiles = ['CLAUDE.md'];
 const sizeLimits = {
   'AGENTS.md': 32 * 1024,
+  'CLAUDE.md': 32 * 1024,
   '.harness-hub/state/decisions.md': 16 * 1024,
   '.harness-hub/state/progress.md': 16 * 1024,
   '.harness-hub/state/session-handoff.md': 16 * 1024,
@@ -51,7 +52,8 @@ const sizeLimits = {
   '.harness-hub/state/capability-events.jsonl': 64 * 1024,
 };
 const requiredMarkers = {
-  'AGENTS.md': ['Codex', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'LLM Wiki', '.harness-hub/context/wiki', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run', 'agentic loops', 'delegated-agent', 'Arbiters are read-only', 'finish closeout', 'insight'],
+  'AGENTS.md': ['Codex', 'Claude Code', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'LLM Wiki', '.harness-hub/context/wiki', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run', 'agentic loops', 'delegated-agent', 'Arbiters are read-only', 'finish closeout', 'insight'],
+  'CLAUDE.md': ['Codex', 'Claude Code', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'LLM Wiki', '.harness-hub/context/wiki', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run', 'agentic loops', 'delegated-agent', 'Arbiters are read-only', 'finish closeout', 'insight'],
   '.harness-hub/.gitignore': ['state/', 'reports/'],
   '.harness-hub/context/AGENTS.md': ['LLM Wiki', 'Raw sources', 'No Redundant Facts', 'human confirmation', 'Contradiction Register'],
   '.harness-hub/context/README.md': ['Agent Context Pack', 'Raw sources', 'Wiki pages', 'Obsidian', 'Update Flow'],
@@ -119,12 +121,6 @@ for (const file of requiredFiles) {
   }
 }
 
-for (const file of forbiddenFiles) {
-  if (fs.existsSync(path.join(root, file))) {
-    failures.push(`${file}: non-Codex platform instruction file is present`);
-  }
-}
-
 for (const [file, limit] of Object.entries(sizeLimits)) {
   const filePath = path.join(root, file);
   if (fs.existsSync(filePath)) {
@@ -132,6 +128,16 @@ for (const [file, limit] of Object.entries(sizeLimits)) {
     if (size > limit) {
       failures.push(`${file}: size ${size} exceeds limit ${limit}`);
     }
+  }
+}
+
+const rootAgentsPath = path.join(root, 'AGENTS.md');
+const rootClaudePath = path.join(root, 'CLAUDE.md');
+if (fs.existsSync(rootAgentsPath) && fs.existsSync(rootClaudePath)) {
+  const agents = fs.readFileSync(rootAgentsPath, 'utf8');
+  const claude = fs.readFileSync(rootClaudePath, 'utf8');
+  if (agents !== claude) {
+    failures.push('AGENTS.md and CLAUDE.md must stay synchronized');
   }
 }
 

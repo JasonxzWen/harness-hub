@@ -14,7 +14,7 @@
         "progress-and-handoff-files",
         "decision-log",
         "harness-validation",
-        "codex-dev-harness-bootstrap",
+        "agent-dev-harness-bootstrap",
         "goal-ready-task-state",
         "session-handoff-continuity",
         "worktree-task-isolation",
@@ -59,6 +59,9 @@
       "detects": [
         {
           "path": "AGENTS.md"
+        },
+        {
+          "path": "CLAUDE.md"
         },
         {
           "path": "feature_list.json"

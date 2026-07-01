@@ -6,7 +6,7 @@ Harness Hub is a personal repo harness toolkit for making agent work repeatable 
 
 Imported skills can keep their upstream style; Harness Hub mainly owns routing, source records, harness templates, and lifecycle safety.
 
-Agent execution rules live in [AGENTS.md](AGENTS.md). Human-facing workflow detail lives in [Development Workflow](docs/development-workflow.md), with delegated-agent acceptance and arbitration patterns in [Agentic Loop Catalog](docs/agentic-loop-catalog.md).
+Agent execution rules live in synchronized [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md). Human-facing workflow detail lives in [Development Workflow](docs/development-workflow.md), with delegated-agent acceptance and arbitration patterns in [Agentic Loop Catalog](docs/agentic-loop-catalog.md).
 
 ## First-Use Summary
 
@@ -59,11 +59,12 @@ flowchart TD
 
 | I want to... | Start here | What it gives you |
 |---|---|---|
-| Prepare another repo for Codex-driven work | `init-harness --target standard` | Standard skills, root harness files, local state templates, validation script, lock ownership. |
+| Prepare another repo for agent-driven work | `init-harness --target standard` | Standard skills, synchronized root harness files, local state templates, validation script, lock ownership. |
 | Install skills without root harness files | `install --target standard` | Full standard skill tree under `skills/<name>/`, no root file changes. |
 | Check a target repo before writing files | `analyze --agent-readiness --harness --json` | Read-only readiness, harness gaps, and recommendations. |
 | Run a routine status self-check | `self-check --json` | Read-only aggregate status, advisory/failure split, and conditional harness validation. |
-| Make installed skills visible to local Codex | `activate-codex --yes` | Sync project-local `skills/<name>` into `.codex/skills` without global installation. |
+| Make installed skills visible to local agents | `activate-agents --yes` | Sync project-local `skills/<name>` into `.codex/skills` and `.claude/skills` without global installation. |
+| Mirror this checkout's skills for local agents | `bun run sync:agent-skills` | Sync source `skills/<name>` into local `.codex/skills` and `.claude/skills` mirrors. |
 | Validate a bootstrapped repo | `validate-harness --json` | Required files, state, QA boundaries, trigger hygiene, and structural scores. |
 | Reuse stable project context | `.harness-hub/context/wiki/index.md` | LLM Wiki schema, source index, contradiction register, update log, and portable Obsidian profile. |
 | Evaluate Loop risk | `loop evaluate --input action.json --json` | Continue/interrupt decision, risk signals, evidence needs, and optional ledger recording with `--yes`. |
@@ -127,13 +128,13 @@ node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --yes
 ```powershell
 bun install
 bun run validate
-bun run bootstrap:codex-skills
+bun run sync:agent-skills
 
 npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --harness --json
 npx @jasonwen/harness-hub check D:\path\to\target --json
 npx @jasonwen/harness-hub self-check D:\path\to\target --json
-npx @jasonwen/harness-hub activate-codex D:\path\to\target --dry-run --json
-npx @jasonwen/harness-hub activate-codex D:\path\to\target --yes
+npx @jasonwen/harness-hub activate-agents D:\path\to\target --dry-run --json
+npx @jasonwen/harness-hub activate-agents D:\path\to\target --yes
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
 npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
@@ -155,9 +156,9 @@ npx @jasonwen/harness-hub source-post validate . --json
 npx @jasonwen/harness-hub source-post publish . --dry-run --json
 ```
 
-`check` is a read-only startup check. It reports the released CLI package status from npm registry in `cli`, the target repository's lock-managed component status in `target`, and explicit CodeGraph/Headroom configuration advice in `externalTools`; update availability, registry failures, missing locks, missing project-local Codex activation, and external tool suggestions are advisory and do not apply updates, install tools, or block the agent startup path.
+`check` is a read-only startup check. It reports the released CLI package status from npm registry in `cli`, the target repository's lock-managed component status in `target`, and explicit CodeGraph/Headroom configuration advice in `externalTools`; update availability, registry failures, missing locks, missing project-local agent activation, and external tool suggestions are advisory and do not apply updates, install tools, or block the agent startup path.
 
-`activate-codex` is an explicit local activation step for Codex projects. It copies the already installed `skills/<name>` tree into `.codex/skills/<name>` so Codex can index the skill metadata, including helper triggers such as `package-release-sniffer`. It writes only the target repository's local `.codex/skills` cache, uses a Harness Hub marker to avoid overwriting unmarked local Codex skills, and does not write global skill directories or `.harness-hub/lock.json`.
+`activate-agents` is an explicit local activation step for Codex and Claude Code projects. It copies the already installed `skills/<name>` tree into `.codex/skills/<name>` and `.claude/skills/<name>` so both hosts can index the skill metadata, including helper triggers such as `package-release-sniffer`. It writes only the target repository's local host caches, uses a Harness Hub marker to avoid overwriting unmarked local skills, and does not write global skill directories or `.harness-hub/lock.json`.
 
 `self-check` is the routine health-check aggregate. It wraps `check`, classifies hard failures separately from advisory items, and runs strict `validate-harness` only when the target has an installed `harness:minimal` lock record unless `--validate-harness` is explicitly provided. A local daily 21:30 runner can call:
 
@@ -206,7 +207,7 @@ harness/
 | Path | Purpose |
 |---|---|
 | `README.md` / `README.zh-CN.md` | Human-facing entry and visual navigation. |
-| `AGENTS.md` | Agent-facing repo rules and execution workflow. |
+| `AGENTS.md` / `CLAUDE.md` | Synchronized agent-facing repo rules and execution workflow. |
 | `skills/` | Platform-neutral skill source of truth. |
 | `harness/` | Standard target harness template and explicit-only smoke scaffolds. |
 | `capabilities/index.json` | Skill and harness component metadata. |
@@ -218,7 +219,7 @@ harness/
 | `src/harnessHub.ts` | CLI implementation. |
 | `config/artifact-policy.json` | Git/npm artifact inclusion policy. |
 
-Generated reports, worktree-local harness state, interaction artifacts, and Codex dogfood copies stay local: `reports/`, `.harness-hub/reports/`, `.harness-hub/state/`, `skills/effective-interact/artifacts/`, and `.codex/` are ignored. `site/` is Git-only Pages output and is intentionally excluded from the npm package.
+Generated reports, worktree-local harness state, interaction artifacts, and local agent skill mirrors stay local: `reports/`, `.harness-hub/reports/`, `.harness-hub/state/`, `skills/effective-interact/artifacts/`, `.codex/`, and `.claude/` are ignored. `site/` is Git-only Pages output and is intentionally excluded from the npm package.
 
 ## Validation
 

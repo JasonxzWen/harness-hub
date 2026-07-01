@@ -16,6 +16,7 @@ import {
 
 const REQUIRED_HARNESS_FILES = [
   'AGENTS.md',
+  'CLAUDE.md',
   'feature_list.json',
   '.harness-hub/.gitignore',
   '.harness-hub/state/current-task.md',
@@ -68,7 +69,7 @@ const FORBIDDEN_TARGET_ROOT_ARTIFACTS = [
   'site',
 ] as const;
 
-test('dev bootstrap dry run plans skills plus Codex harness without writing files', async () => {
+test('dev bootstrap dry run plans skills plus agent harness without writing files', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-plan-'));
 
   const plan = planDevBootstrap({ targetDir, agents: ['standard'] });
@@ -89,7 +90,7 @@ test('dev bootstrap dry run plans skills plus Codex harness without writing file
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
-test('confirmed dev bootstrap writes minimal Codex harness and managed ownership', async () => {
+test('confirmed dev bootstrap writes minimal agent harness and managed ownership', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-apply-'));
 
   const result = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
@@ -99,10 +100,11 @@ test('confirmed dev bootstrap writes minimal Codex harness and managed ownership
   for (const relativePath of REQUIRED_HARNESS_FILES) {
     expect(fs.existsSync(path.join(targetDir, relativePath))).toBe(true);
   }
-  expect(fs.existsSync(path.join(targetDir, 'CLAUDE.md'))).toBe(false);
   expectForbiddenTargetRootArtifactsAbsent(targetDir);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'openspec-explore', 'SKILL.md'))).toBe(true);
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Codex');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Claude Code');
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toBe(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8'));
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`');
   expectInstalledTargetFilesDoNotContain(targetDir, [
     'docs/agentic-loop-catalog.md',
@@ -359,7 +361,7 @@ test('dev bootstrap blocks existing harness files unless force is explicit', () 
   const forced = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true, force: true });
 
   expect(forced.exitCode).toBe(0);
-  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Codex');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Claude Code');
 });
 
 test('dev bootstrap rechecks existing harness files before writing', () => {
@@ -403,19 +405,23 @@ test('dev bootstrap rechecks dirty git worktrees before writing', () => {
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
 });
 
-test('dev bootstrap blocks non-Codex platform instruction files before writing', () => {
+test('dev bootstrap treats existing Claude instructions as managed harness conflict unless forced', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-platform-file-'));
   fs.writeFileSync(path.join(targetDir, 'CLAUDE.md'), 'platform-specific instructions\n');
 
-  const result = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true, force: true });
+  const blocked = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
 
-  expect(result.exitCode).toBe(3);
-  expect(result.blockers.some((blocker) => (
-    blocker.code === 'non-codex-platform-file'
+  expect(blocked.exitCode).toBe(3);
+  expect(blocked.blockers.some((blocker) => (
+    blocker.code === 'existing-file'
     && blocker.path === 'CLAUDE.md'
   ))).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);
-  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'lock.json'))).toBe(false);
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toBe('platform-specific instructions\n');
+
+  const forced = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true, force: true });
+
+  expect(forced.exitCode).toBe(0);
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toBe(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8'));
 });
 
 test('harness validation reports current-state files that exceed size limits', () => {

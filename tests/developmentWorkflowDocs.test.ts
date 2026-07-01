@@ -11,7 +11,7 @@ test('README exposes human-facing visual navigation', () => {
   expect(readme).toContain('## Visual Navigator');
   expect(readme).toContain('## Choose A Path');
   expect(readme).toContain('```mermaid');
-  expect(readme).toContain('Agent execution rules live in [AGENTS.md](AGENTS.md)');
+  expect(readme).toContain('Agent execution rules live in synchronized [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md)');
   expect(readme).toContain('harness-hub init-harness --target standard');
   expect(readme).toContain('.harness-hub/context/wiki');
   expect(readme).toContain('docs/development-workflow.md');

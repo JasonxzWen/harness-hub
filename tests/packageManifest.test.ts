@@ -38,11 +38,14 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.files).toContain('CHANGELOG.md');
   expect(packageJson.files).toContain('BOOTSTRAP-TARGET.md');
   expect(packageJson.files).toContain('README.zh-CN.md');
+  expect(packageJson.files).toContain('CLAUDE.md');
   expect(packageJson.files).toContain('config/');
   expect(packageJson.files).toContain('harness/');
-  expect(packageJson.files).toContain('scripts/check-codex-worktree.mjs');
-  expect(packageJson.files).toContain('scripts/sync-codex-skills.mjs');
-  expect(packageJson.files).toContain('scripts/setup-codex-worktree.mjs');
+  expect(packageJson.files).toContain('scripts/sync-agent-skills.mjs');
+  expect(packageJson.files).not.toContain('scripts/check-codex-worktree.mjs');
+  expect(packageJson.files).not.toContain('scripts/sync-codex-skills.mjs');
+  expect(packageJson.files).not.toContain('scripts/setup-codex-worktree.mjs');
+  expect(packageJson.files).not.toContain('scripts/install-codex-worktree-hook.mjs');
   expect(packageJson.files).toContain('scripts/run-validate-skills.mjs');
   expect(packageJson.files).toContain('openspec/config.yaml');
   expect(packageJson.files).toContain('openspec/specs/');
@@ -53,12 +56,15 @@ test('package manifest keeps release validation and source traceability explicit
   expect(artifactPolicy.categories.ignoredLocal).toContain('reports/');
   expect(artifactPolicy.categories.ignoredLocal).toContain('.harness-hub/state/');
   expect(artifactPolicy.categories.ignoredLocal).toContain('.codex/');
+  expect(artifactPolicy.categories.ignoredLocal).toContain('.claude/');
   expect(artifactPolicy.git.ignored).toContain('reports/');
   expect(artifactPolicy.git.ignored).toContain('.harness-hub/state/');
   expect(artifactPolicy.git.ignored).toContain('.codex/');
+  expect(artifactPolicy.git.ignored).toContain('.claude/');
   expect(artifactPolicy.npm.forbidden).toContain('site/');
   expect(artifactPolicy.npm.forbidden).toContain('reports/');
   expect(artifactPolicy.npm.forbidden).toContain('.codex/');
+  expect(artifactPolicy.npm.forbidden).toContain('.claude/');
 });
 
 test('npm package publishes the personal distributed skill source tree', () => {
@@ -79,6 +85,8 @@ test('npm package publishes the personal distributed skill source tree', () => {
   expect(artifactPolicy.npm.files).toContain('.claude-plugin/');
   expect(artifactPolicy.npm.files).not.toContain('.codex/');
   expect(artifactPolicy.npm.files).not.toContain('.codex/skills/');
+  expect(artifactPolicy.npm.files).not.toContain('.claude/');
+  expect(artifactPolicy.npm.files).not.toContain('.claude/skills/');
   expect(skillComponentPaths).toContain('skills/workflow-router');
   expect(skillComponentPaths).not.toContain('skills/everything-claude-code');
   expect(Object.entries(capabilityIndex.components)
