@@ -19,7 +19,7 @@ const requiredWorkflowComponents = [
   'skill:diagnosis-workflow',
   'skill:review-workflow',
   'skill:delivery-workflow',
-  'skill:hub-maintenance-workflow',
+  'skill:insight',
 ] as const;
 
 test('capability index has no alternate install sets', () => {
@@ -30,19 +30,25 @@ test('capability index has no alternate install sets', () => {
   expect((index as { profiles?: unknown }).profiles).toBeUndefined();
 });
 
-test('default install set includes every standard skill component', () => {
+test('default install set includes every target-distributed standard skill component', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-all-skills-'));
   const index = readCapabilityIndex();
   const skillComponentIds = Object.entries(index.components)
-    .filter(([, component]) => component.kind === 'skill')
+    .filter(([, component]) => component.kind === 'skill' && (component.distribution || 'target') === 'target')
     .map(([id]) => id)
     .sort();
+  const hubInternalSkillIds = Object.entries(index.components)
+    .filter(([, component]) => component.kind === 'skill' && component.distribution === 'hub-internal')
+    .map(([id]) => id);
   const plan = planInstall({ targetDir, agents: ['standard'] });
   const plannedIds = plan.items.map((item) => item.componentId).sort();
 
-  expect(plan.installSetName).toBe('all-skills');
+  expect(plan.installSetName).toBe('standard');
   expect(plannedIds).toEqual(skillComponentIds);
   expect(plannedIds).toEqual(expect.arrayContaining([...requiredWorkflowComponents]));
+  for (const componentId of hubInternalSkillIds) {
+    expect(plannedIds).not.toContain(componentId);
+  }
   expect(plan.items.every((item) => path.relative(targetDir, item.dest).startsWith(`skills${path.sep}`))).toBe(true);
 });
 
@@ -56,24 +62,30 @@ test('default install set does not write root harness files', () => {
   expect(fs.existsSync(path.join(targetDir, 'skills', 'workflow-router', 'SKILL.md'))).toBe(true);
 });
 
-test('docs describe the single full install set', () => {
+test('docs describe the single target migration install set', () => {
   const readme = fs.readFileSync('README.md', 'utf8');
   const capabilityMap = fs.readFileSync('docs/capability-map.md', 'utf8');
   const standardBoundary = fs.readFileSync('docs/standard-target-boundary.md', 'utf8');
 
   expect(readme).toContain('There are no named skill install variants');
   expect(readme).toContain('one user-facing target path: `standard`');
+  expect(readme).toContain('prompt/context/harness/loop engineering');
+  expect(readme).toContain('Harness Hub source-maintenance workflows such as `hub-maintenance-workflow` stay local');
   expect(readme).toContain('overwrites an existing same-name skill directory');
   expect(readme).toContain('Skill and harness component metadata');
-  expect(capabilityMap).toContain('one personal skill install set');
+  expect(capabilityMap).toContain('one personal target migration surface');
   expect(capabilityMap).toContain('one user-facing target path: `standard`');
   expect(capabilityMap).toContain('`harness:minimal` and `harness/minimal/` are internal component/template identifiers');
   expect(capabilityMap).toContain('No named skill variants');
+  expect(capabilityMap).toContain('Components marked `hub-internal` stay local to the Harness Hub source checkout');
+  expect(capabilityMap).toContain('`insight`');
   expect(capabilityMap).toContain('`install` never writes root harness files');
   expect(capabilityMap).toContain('harness-hub loop evaluate');
   expect(capabilityMap).toContain('harness-hub loop schedule');
   expect(capabilityMap).toContain('docs/standard-target-boundary.md');
   expect(standardBoundary).toContain('one user-facing target path: `standard`');
+  expect(standardBoundary).toContain('prompt engineering, context engineering, harness engineering, loop engineering');
+  expect(standardBoundary).toContain('`insight` remains part of `standard`');
   expect(standardBoundary).toContain('No pack promotion checklist');
   expect(fs.existsSync('docs/harness-packs.md')).toBe(false);
 });
@@ -132,7 +144,7 @@ test('CLI confirmed install overwrites same-name skills by default', async () =>
   expect(result.stderr).toBe('');
   const report = JSON.parse(result.stdout);
   const skillCount = Object.values(readCapabilityIndex().components)
-    .filter((component) => component.kind === 'skill')
+    .filter((component) => component.kind === 'skill' && (component.distribution || 'target') === 'target')
     .length;
   expect(report.installed.length).toBe(skillCount);
   expect(report.skipped.length).toBe(0);

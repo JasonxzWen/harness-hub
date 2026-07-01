@@ -256,20 +256,6 @@ test('installed workflow check has a passing gate path for every owner state', (
       args: ['--has-scope', '--has-spec', '--has-acceptance', '--has-plan'],
     },
     {
-      prompt: 'Continue converging Harness Hub skill quality and trigger boundaries; add executable smoke coverage.',
-      state: 'harness-hub-maintenance',
-      owner: 'hub-maintenance-workflow',
-      expectedOutputMode: 'html-artifact',
-      args: ['--has-scope', '--has-spec', '--has-acceptance', '--has-plan'],
-    },
-    {
-      prompt: '把 effective-interact 的报告模板改成 DESIGN.md 和组件优先，并复刻 html-effectiveness 的视觉风格。',
-      state: 'harness-hub-maintenance',
-      owner: 'hub-maintenance-workflow',
-      expectedOutputMode: 'html-artifact',
-      args: ['--has-scope', '--has-spec', '--has-acceptance', '--has-plan'],
-    },
-    {
       prompt: 'Finish the accepted work: run validation, clean artifacts, and write the handoff.',
       state: 'delivery',
       owner: 'delivery-workflow',
@@ -446,7 +432,7 @@ test('installed skill metadata selects high-overlap helper skills from user prom
   expect(caseSmoke.summary.uncoveredSkillCount).toBe(0);
   expect(caseSmoke.summary.boundaryCoveredSkillCount).toBe(caseSmoke.summary.coveredSkillCount);
   expect(caseSmoke.summary.boundaryUncoveredSkillCount).toBe(0);
-  expect(caseSmoke.summary.excludedTopLevelWorkflowSkillCount).toBe(7);
+  expect(caseSmoke.summary.excludedTopLevelWorkflowSkillCount).toBe(6);
   expect(caseSmoke.coveredSkills).toContain('documentation-lookup');
   expect(caseSmoke.coveredSkills).toContain('webapp-testing');
   expect(caseSmoke.uncoveredSkills).not.toContain('documentation-lookup');
@@ -457,7 +443,6 @@ test('installed skill metadata selects high-overlap helper skills from user prom
     'answer-workflow',
     'delivery-workflow',
     'diagnosis-workflow',
-    'hub-maintenance-workflow',
     'review-workflow',
     'sdd-workflow',
     'workflow-router',

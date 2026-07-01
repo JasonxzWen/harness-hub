@@ -77,6 +77,7 @@ export interface CapabilityComponent {
   dest?: string;
   version: string;
   source: string;
+  distribution?: 'target' | 'hub-internal' | 'optional';
   provides: string[];
   detects: PathDetectRule[];
   agents: AgentName[];
@@ -291,7 +292,7 @@ export interface SkippedInstallItem extends InstallItem {
 export interface InstallPlan {
   generatedAt: string;
   hubVersion: string;
-  installSetName: 'all-skills';
+  installSetName: 'standard';
   agents: AgentName[];
   targetDir: string;
   signals: RepoSignals;
@@ -1059,8 +1060,12 @@ export function listComponents(index = readCapabilityIndex()): Array<{ id: strin
 
 function listInstallableSkillComponents(index: CapabilityIndex): Array<{ id: string } & CapabilityComponent> {
   return listComponents(index)
-    .filter((component) => component.kind === 'skill')
+    .filter((component) => component.kind === 'skill' && isTargetDistributedComponent(component))
     .sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function isTargetDistributedComponent(component: CapabilityComponent): boolean {
+  return (component.distribution || 'target') === 'target';
 }
 
 export function validateCapabilityIndex(index: CapabilityIndex): string[] {
@@ -1081,6 +1086,10 @@ export function validateCapabilityIndex(index: CapabilityIndex): string[] {
 
     if (!component.source) {
       errors.push(`${id}: missing source`);
+    }
+
+    if (component.distribution && !['target', 'hub-internal', 'optional'].includes(component.distribution)) {
+      errors.push(`${id}: invalid distribution '${component.distribution}'`);
     }
 
     if (!Array.isArray(component.provides) || component.provides.length === 0) {
@@ -2203,7 +2212,7 @@ export function planInstall(options: PlanInstallOptions = {}): InstallPlan {
   return {
     generatedAt: new Date().toISOString(),
     hubVersion: index.version,
-    installSetName: 'all-skills',
+    installSetName: 'standard',
     agents,
     targetDir,
     signals: detectRepoSignals(targetDir),
@@ -8489,7 +8498,7 @@ Usage:
 Supported install targets: ${Object.keys(AGENT_SKILL_DIRS).join(', ')}
 Use check for read-only startup version checks: CLI package status and target managed-component status are reported separately.
 Use self-check for read-only aggregate status checks; strict harness validation runs only for initialized harness targets unless --validate-harness is provided.
-Install selects every standard skill component and overwrites same-name skill directories by default.
+Install selects every target-distributed standard skill component and overwrites same-name skill directories by default.
 Use init-harness for agent dev bootstrap: standard skills plus root harness files for Codex and Claude Code.
 Use activate-agents to sync installed project-local skills into ignored .codex/skills and .claude/skills without global installation.
 validate-harness includes standard harness checks, five-subsystem assessment, and a structural benchmark.

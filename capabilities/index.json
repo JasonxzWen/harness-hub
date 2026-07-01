@@ -410,6 +410,7 @@
       "path": "skills/hub-maintenance-workflow",
       "version": "0.1.1",
       "source": "local",
+      "distribution": "hub-internal",
       "provides": [
         "harness-hub-maintenance-workflow",
         "source-evaluation-workflow",
@@ -428,7 +429,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Maintain Harness Hub with source evidence, narrow changes, validation, and lock-backed lifecycle boundaries."
+      "recommendation": "Keep Harness Hub source maintenance local to this repository; do not migrate this workflow into target repositories."
     },
     "skill:product-capability": {
       "kind": "skill",

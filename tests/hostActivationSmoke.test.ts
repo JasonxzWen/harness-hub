@@ -54,6 +54,7 @@ test('standard install exposes the router script for target-repo host activation
   const workflowCheckScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'workflow-check.mjs');
   const activationCheckScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'skill-activation-check.mjs');
   const ownerContractScript = path.join(targetDir, 'skills', 'workflow-router', 'scripts', 'owner-contract-check.mjs');
+  const hubMaintenanceSkill = path.join(targetDir, 'skills', 'hub-maintenance-workflow', 'SKILL.md');
 
   expect(result.installed.length).toBeGreaterThan(0);
   expect(fs.existsSync(routerSkill)).toBe(true);
@@ -78,12 +79,12 @@ test('standard install exposes the router script for target-repo host activation
     'diagnosis-workflow',
     'review-workflow',
     'delivery-workflow',
-    'hub-maintenance-workflow',
   ]) {
     const ownerBody = fs.readFileSync(path.join(targetDir, 'skills', owner, 'SKILL.md'), 'utf8');
 
     expect(ownerBody).toContain('description: Load when workflow-router selects');
   }
+  expect(fs.existsSync(hubMaintenanceSkill)).toBe(false);
 
   const review = route(routerScript, 'Review these skill boundaries and do not change files yet.', targetDir);
   const change = route(routerScript, 'Implement the accepted settings validation change with tests.', targetDir);
