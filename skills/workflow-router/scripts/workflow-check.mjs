@@ -27,6 +27,12 @@ function parseArgs(argv) {
     hasHtmlHandoff: false,
     handoffWaiver: null,
     htmlHandoffWaiver: null,
+    hasCloseoutReview: false,
+    hasInsight: false,
+    hasPrReadiness: false,
+    hasAgenticLoopPlan: false,
+    hasAcceptanceArbiter: false,
+    hasFinalReviewArbiter: false,
     materialChanges: false,
     willMutate: false,
     expectedOutputMode: null,
@@ -67,6 +73,18 @@ function parseArgs(argv) {
       options.handoffWaiver = readValue(argv, ++index, arg);
     } else if (arg === '--html-handoff-waiver') {
       options.htmlHandoffWaiver = readValue(argv, ++index, arg);
+    } else if (arg === '--has-closeout-review') {
+      options.hasCloseoutReview = true;
+    } else if (arg === '--has-insight') {
+      options.hasInsight = true;
+    } else if (arg === '--has-pr-readiness') {
+      options.hasPrReadiness = true;
+    } else if (arg === '--has-agentic-loop-plan') {
+      options.hasAgenticLoopPlan = true;
+    } else if (arg === '--has-acceptance-arbiter') {
+      options.hasAcceptanceArbiter = true;
+    } else if (arg === '--has-final-review-arbiter') {
+      options.hasFinalReviewArbiter = true;
     } else if (arg === '--material-changes') {
       options.materialChanges = true;
     } else if (arg === '--will-mutate') {
@@ -128,6 +146,12 @@ export function checkWorkflow(options) {
     hasHtmlHandoff: Boolean(options.hasHtmlHandoff),
     handoffWaiver: options.handoffWaiver,
     htmlHandoffWaiver: options.htmlHandoffWaiver,
+    hasCloseoutReview: Boolean(options.hasCloseoutReview),
+    hasInsight: Boolean(options.hasInsight),
+    hasPrReadiness: Boolean(options.hasPrReadiness),
+    hasAgenticLoopPlan: Boolean(options.hasAgenticLoopPlan),
+    hasAcceptanceArbiter: Boolean(options.hasAcceptanceArbiter),
+    hasFinalReviewArbiter: Boolean(options.hasFinalReviewArbiter),
     materialChanges: Boolean(options.materialChanges),
     willMutate: Boolean(options.willMutate),
     expectedOutputMode: options.expectedOutputMode || route.expectedOutputMode,
@@ -166,6 +190,12 @@ Flags mirror advisory-check.mjs:
   --has-html-handoff
   --handoff-waiver <reason>
   --html-handoff-waiver <reason>
+  --has-closeout-review
+  --has-insight
+  --has-pr-readiness
+  --has-agentic-loop-plan
+  --has-acceptance-arbiter
+  --has-final-review-arbiter
   --material-changes
   --will-mutate
   --expected-output-mode <mode>

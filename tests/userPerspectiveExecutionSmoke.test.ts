@@ -273,7 +273,7 @@ test('installed workflow check has a passing gate path for every owner state', (
       prompt: 'Finish the accepted work: run validation, clean artifacts, and write the handoff.',
       state: 'delivery',
       owner: 'delivery-workflow',
-      args: ['--has-validation', '--has-html-handoff', '--material-changes'],
+      args: ['--has-validation', '--has-html-handoff', '--has-closeout-review', '--has-pr-readiness', '--has-insight', '--has-acceptance-arbiter', '--has-final-review-arbiter', '--material-changes'],
     },
   ];
 

@@ -17,6 +17,10 @@ Harness Hub MUST provide a personal workflow routing overlay where each non-triv
 | Task state | The top-level intent class for the user request. |
 | Workflow owner | The single skill responsible for driving a task state from entry to handoff. |
 | Helper skill | A narrow domain skill used underneath a workflow owner. It must not compete for top-level ownership. |
+| Loop control plane | The auditable continue/interrupt decision layer for capability actions. It records autonomy decisions but does not replace workflow stages or owners. |
+| Agentic loop | A stage-level producer/verifier/arbiter/main-agent decision pattern for context-isolated acceptance, review, docs/code consistency, PR closeout, or workflow learning. It can use delegated agents or deterministic checks, but it does not replace the workflow owner. |
+| Delegated agent | Host-neutral role for a host-native subagent, isolated agent session, browser run, CI check, deterministic command, or bounded worker. Generic skills and state records should use `delegated-agent` instead of host-specific tool names. |
+| Arbiter | Read-only loop role that evaluates task intent, acceptance criteria, current evidence, and risk. It must not edit files, resolve conflicts, push, merge, or make final user-facing decisions. |
 | Interaction layer | `effective-interact`, used to reduce human interpretation cost through HTML reports, comparisons, maps, and handoffs. |
 | Alignment gate | A required checkpoint where user-visible goal, constraints, target spec, and acceptance criteria are confirmed before implementation. |
 | Verification gate | A deterministic command, test, inspection, or acceptance check required before delivery. |
@@ -49,7 +53,12 @@ Every non-trivial change request MUST follow this order unless the selected stat
 | 5 | Clean unneeded files | Remove, demote, or mark obsolete files only after ownership and safety are clear. |
 | 6 | Implement | Make the smallest scoped changes that satisfy the accepted spec and plan. |
 | 7 | Test and accept | Run agreed tests, deterministic checks, E2E/manual acceptance, and regression gates. |
-| 8 | Deliver report | Produce a user-facing handoff, using `effective-interact` when the work is material or visual comparison/evidence lowers review cost. |
+| 8 | Finish closeout | Run a final independent review when material, drive PR work to merge-ready or explicitly authorized merge completion, and run or explicitly skip `insight` for tool-calling and workflow-learning feedback. Surface technical-debt, drift, conflict, and merge risks instead of handling them silently. |
+| 9 | Deliver report | Produce a user-facing handoff, using `effective-interact` when the work is material or visual comparison/evidence lowers review cost. |
+
+Loop decisions MAY help decide whether a concrete closeout action continues or interrupts, but Loop MUST NOT remove the closeout stage or bypass its review, PR, insight, and handoff evidence.
+
+Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. A loop MUST record producer, verifier, arbiter, evidence, and main-agent decision when material. Bounded loops SHOULD record `iteration`, `maxIterations`, and `stopCondition`; deterministic checks MUST reject loop records where the current iteration exceeds the maximum. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
 
 ## Requirements
 
@@ -128,6 +137,8 @@ Examples:
 
 Native goal/story loops are outside Harness Hub's distributed skill set. They MUST NOT bypass SDD alignment or start autonomous repeated execution without user approval.
 
+Loop Control Plane actions are helpers to a workflow owner. They MUST record risk and validation decisions in the local ledgers and MUST NOT become a replacement owner for requirement intake, implementation, review, closeout, or delivery.
+
 ### WR-7: Subagent Orchestration
 
 Subagents are parent-workflow controlled. Subagents MAY be used only when the active workflow owner can assign independent work and integrate results.
@@ -151,6 +162,8 @@ Forbidden uses:
 The main agent MUST own synthesis, integration, and final handoff.
 
 No automatic subagent dispatch is allowed from router logic, hooks, or helper skills.
+
+For finish closeout, a subagent or independent review pass SHOULD be used when the change is material and the review scope can stay independent. The review must focus on technical debt, first-principles implementation fit, project-rule drift, and refactor or warning recommendations. The main agent still owns the final decision and user-facing synthesis.
 
 ### WR-8: Hook Policy
 
@@ -237,6 +250,10 @@ After a requested PR is created or updated, delivery MUST verify the remote PR s
 - stop only for user decisions, credentials, permissions, reviewer action, protected-branch overrides, or external service recovery;
 - do not merge the PR unless the user explicitly requests that remote mutation.
 
+Finish closeout MUST also run or explicitly skip an `insight` audit. The audit should inspect the current session's tool-calling quality, repeated low-value lookups, misleading evidence, code/docs conflicts, AI infrastructure lessons, candidate harness rules, and whether the workflow should become a skill, source record, eval case, or change to an existing workflow. External self-evolution systems such as Hermes-style skill evaluation are source material for this audit, not default runtime dependencies.
+
+Material workflow or harness changes SHOULD also use a `docs-consistency` loop or an explicit skip reason during closeout. The loop compares user-facing docs, installable skill or template behavior, tests, and source implementation so code/docs drift is surfaced before handoff.
+
 ### WR-13: Non-Goals
 
 The workflow-router redesign MUST NOT:
@@ -256,10 +273,11 @@ The redesign is accepted when:
 3. Source gathering fixtures prove referenced repos/docs are checked or explicitly scoped out before spec lock-in.
 4. Executable plan fixtures include cleanup decisions before implementation.
 5. Review and question fixtures do not mutate files.
-6. Effective Interact handoff fixtures validate in browser mode.
-7. Standard-target install dry runs include the expected workflow set.
-8. Status/update/remove smoke tests preserve managed-file ownership and deleted-file cleanup.
-9. Source dossier entries justify each adopted, adapted, rejected, and reference-only idea.
+6. Finish closeout fixtures include final review, PR/merge readiness, and insight-learning evidence.
+7. Effective Interact handoff fixtures validate in browser mode.
+8. Standard-target install dry runs include the expected workflow set.
+9. Status/update/remove smoke tests preserve managed-file ownership and deleted-file cleanup.
+10. Source dossier entries justify each adopted, adapted, rejected, and reference-only idea.
 
 ## Open Decisions
 

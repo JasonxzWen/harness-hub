@@ -2557,6 +2557,7 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/decisions.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md', 'quality-document.md', 'evaluator-rubric.md'], 'State artifacts are routed from instructions'),
       assessmentTextCheck(agents + currentTask, ['P0/P1/P2', 'agent-run browser', 'Web browser acceptance'], 'Validation priority and browser acceptance rules are discoverable'),
       assessmentTextCheck(agents + currentTask + definitionOfDone, ['PR status', 'mergeability', 'CI/check-run'], 'PR closeout gate is documented'),
+      assessmentTextCheck(agents + currentTask + definitionOfDone + cleanState, ['finish closeout', 'insight', 'technical debt'], 'Finish closeout gate is documented'),
       assessmentFileCheck(files, ['.harness-hub/context/AGENTS.md', '.harness-hub/context/llm-wiki-schema.md'], 'LLM Wiki agent context rules exist'),
       assessmentTextCheck(agents + contextAgents + contextSchema, ['LLM Wiki', 'Raw sources', 'No Redundant Facts', 'human confirmation'], 'Context engineering write boundary is documented'),
     ],
@@ -2580,10 +2581,10 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands'], 'Verification entrypoint is referenced by the harness'),
       assessmentTextCheck(validationScript, ['process.exit', 'set -e', 'failures'], 'Verification entrypoint can fail the run'),
       assessmentTextCheck(progress + handoff + currentTask, ['Validation Evidence', 'Recent Validation', 'Command', 'Status', 'Passed', 'Failed', 'Evidence', 'Commit'], 'Validation evidence has a durable place to be recorded'),
-      assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'P0', 'P1', 'P2', 'Static', 'Runtime', 'User flow', 'Web browser acceptance', 'Runtime Signals', 'Standard startup path', 'PR Status', 'Mergeability', 'CI/check'], 'Static, runtime, startup, user-flow, priority, and PR closeout tiers are represented'),
+      assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'P0', 'P1', 'P2', 'Static', 'Runtime', 'User flow', 'Web browser acceptance', 'Runtime Signals', 'Standard startup path', 'PR Status', 'Mergeability', 'CI/check', 'Finish Closeout', 'Insight Recommendations'], 'Static, runtime, startup, user-flow, priority, closeout, and PR tiers are represented'),
       assessmentTextCheck(interruptGoodCases + interruptBadCases + interruptRegressionCases, ['expectedDecision', 'continue', 'interrupt', 'riskSignals'], 'Interrupt policy eval cases are present and machine-readable'),
       assessmentFileCheck(files, ['evaluator-rubric.md'], 'Evaluator rubric exists'),
-      assessmentTextCheck(evaluatorRubric, ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Handoff readiness', 'Verdict'], 'Evaluator rubric covers correctness, evidence, scope, reliability, browser acceptance, and handoff readiness'),
+      assessmentTextCheck(evaluatorRubric, ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Finish closeout', 'Insight recommendations', 'Handoff readiness', 'Verdict'], 'Evaluator rubric covers correctness, evidence, scope, reliability, browser acceptance, finish closeout, insight, and handoff readiness'),
       assessmentCheck(project.verificationCommands.length > 0, 'Project verification command is detected', project.verificationCommands),
     ],
     scope: [
@@ -2782,10 +2783,12 @@ function assessmentFeatureListCheck(text: string, message: string): HarnessAsses
       && isRecord(parsed.validation_priority_policy)
       && isRecord(parsed.web_acceptance_policy)
       && isRecord(parsed.pr_closeout_policy)
+      && isRecord(parsed.finish_closeout_policy)
+      && isRecord(parsed.agentic_loop_policy)
       && isRecord(parsed.loop_control_policy)
       && isRecord(parsed.context_engineering_policy)
       && isRecord(parsed.parallel_write_policy);
-    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'loop_control_policy object', 'context_engineering_policy object', 'parallel_write_policy object']);
+    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'finish_closeout_policy object', 'agentic_loop_policy object', 'loop_control_policy object', 'context_engineering_policy object', 'parallel_write_policy object']);
   } catch {
     return assessmentCheck(false, message, ['valid JSON']);
   }
@@ -3009,6 +3012,11 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'PR status',
     'mergeability',
     'CI/check-run',
+    'agentic loops',
+    'delegated-agent',
+    'Arbiters are read-only',
+    'finish closeout',
+    'insight',
   ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/.gitignore', ['state/', 'reports/']));
   checks.push(validateFileContainsWithCode(targetDir, '.harness-hub/context/AGENTS.md', [
@@ -3089,6 +3097,10 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'PR Status',
     'Mergeability',
     'CI/check runs',
+    'Agentic Loop Records',
+    'Main Agent Decision',
+    'Finish Closeout',
+    'Insight Recommendations',
     'Review Feedback To Rules',
   ]));
   checks.push(validateJsonlFile(targetDir, '.harness-hub/state/loop-runs.jsonl', 'loop-policy'));
@@ -3109,6 +3121,10 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'PR Status',
     'Mergeability',
     'CI/check runs',
+    'Agentic Loop Records',
+    'Main Agent Decision',
+    'Finish Closeout',
+    'Insight Recommendations',
     'Review Feedback To Rules',
   ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/current-task.md', [
@@ -3128,9 +3144,16 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Web browser acceptance',
     'agent-run browser',
     'Runtime signals',
+    'Agentic loops',
+    'Producer',
+    'Verifier',
+    'Arbiter',
+    'Main Agent Decision',
     'PR closeout',
     'Mergeability',
     'CI/check-run status',
+    'Finish closeout',
+    'Insight audit',
     'Checkpoint policy',
     'Spec updates',
     'Decision log',
@@ -3148,6 +3171,10 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'PR status',
     'mergeability',
     'CI/check-run',
+    'Agentic loop records',
+    'main-agent decision',
+    'Finish closeout',
+    'insight',
     'Review Feedback',
     'evaluator-rubric.md',
     'quality-document.md',
@@ -3163,9 +3190,13 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Standard startup path',
     'harness-hub check',
     'Runtime logs',
+    'Agentic loop evidence',
+    'producer/verifier/arbiter',
     'PR status',
     'mergeability',
     'CI/check-run',
+    'finish closeout',
+    'insight',
     'evaluator rubric',
     'quality snapshot',
   ]));
@@ -3175,6 +3206,9 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Scope discipline',
     'Runtime reliability',
     'Browser acceptance',
+    'Agentic loops',
+    'Finish closeout',
+    'Insight recommendations',
     'Handoff readiness',
     'Verdict',
   ]));
@@ -3756,7 +3790,7 @@ function parseSkillDescription(content: string): string | null {
 function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   const relativePath = 'feature_list.json';
   const filePath = path.join(targetDir, relativePath);
-  const evidence = ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'loop_control_policy object', 'context_engineering_policy object', 'parallel_write_policy object'];
+  const evidence = ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'finish_closeout_policy object', 'agentic_loop_policy object', 'loop_control_policy object', 'context_engineering_policy object', 'parallel_write_policy object'];
   if (!fs.existsSync(filePath)) {
     return {
       code: 'structured-content',
@@ -3795,6 +3829,12 @@ function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   }
   if (!isRecord(data) || !isRecord(data.pr_closeout_policy)) {
     missing.push('pr_closeout_policy object');
+  }
+  if (!isRecord(data) || !isRecord(data.finish_closeout_policy)) {
+    missing.push('finish_closeout_policy object');
+  }
+  if (!isRecord(data) || !isRecord(data.agentic_loop_policy)) {
+    missing.push('agentic_loop_policy object');
   }
   if (!isRecord(data) || !isRecord(data.loop_control_policy)) {
     missing.push('loop_control_policy object');

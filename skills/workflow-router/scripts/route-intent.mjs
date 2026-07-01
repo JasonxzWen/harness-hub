@@ -11,6 +11,7 @@ const LIFECYCLE_GATES = Object.freeze([
   'clean-unneeded-files',
   'implement',
   'test-and-accept',
+  'finish-closeout',
   'deliver-report',
 ]);
 
@@ -42,6 +43,7 @@ const STATE_CONFIG = Object.freeze({
       'write-executable-plan-and-align',
       'implement',
       'test-and-accept',
+      'finish-closeout',
       'deliver-report',
     ],
     nextGate: 'Reproduce or bound the symptom before fixing.',
@@ -61,7 +63,7 @@ const STATE_CONFIG = Object.freeze({
   delivery: {
     owner: 'delivery-workflow',
     mutationAllowed: true,
-    requiredGates: ['clean-unneeded-files', 'test-and-accept', 'deliver-report'],
+    requiredGates: ['clean-unneeded-files', 'test-and-accept', 'finish-closeout', 'deliver-report'],
     nextGate: 'Verify acceptance, PR status when relevant, and residual risks before declaring done.',
     helpers: ['verification-loop', 'effective-interact', 'handoff'],
     effectiveInteract: 'required',

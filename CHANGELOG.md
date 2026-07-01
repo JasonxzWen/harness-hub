@@ -4,6 +4,7 @@
 
 ## 0.4.0 - 2026-07-01
 
+- Add host-neutral agentic loop workflow-stage policy, target harness Agentic Loop Records, deterministic loop-evidence validation, finish closeout gates, and Codex/Claude Code adapter docs.
 - Connect dense private `insight` audits to `effective-interact` by adding optional visual-report input generation with evidence coverage, bottlenecks, recommendations, task clusters, trace audit, and evidence boundaries.
 - Expand installed `effective-interact` activation for the source-derived HTML effectiveness families, including Exploration & Planning, Code Review & Understanding, Design, Reports, and Custom Editors.
 - Rework `effective-interact` HTML generation around component-first `DESIGN.md` contracts, refreshed warm neutral report styling, stricter visible-content validation, real static code highlighting checks, and complete-status consistency checks.
