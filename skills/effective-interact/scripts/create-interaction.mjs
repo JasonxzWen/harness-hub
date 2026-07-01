@@ -59,41 +59,6 @@ const runtimeLibraries = [
 
 const supportedChartTypes = ["bar", "line", "sparkline", "bullet", "slope", "matrix"];
 
-const templateMeta = {
-  "implementation-handoff": {
-    label: "实现交付",
-    useCase: "已完成实现、验证门禁、文件证据、风险和下一步"
-  },
-  "conclusion-dashboard": {
-    label: "\u7ed3\u8bba\u4eea\u8868\u76d8",
-    useCase: "\u5df2\u5b8c\u6210\u4efb\u52a1\u7684\u7ed3\u8bba\u3001\u6587\u4ef6\u3001\u9a8c\u8bc1\u548c\u4e0b\u4e00\u6b65"
-  },
-  "review-findings": {
-    label: "审查发现",
-    useCase: "代码或文档审查、严重级别筛选、证据片段、负责人和行动导出"
-  },
-  "research-explainer": {
-    label: "研究解释",
-    useCase: "研究综合、架构 walkthrough、有来源支撑的解释和图表"
-  },
-  "decision-matrix": {
-    label: "决策矩阵",
-    useCase: "选项比较、建议、取舍、风险和待确认问题"
-  },
-  "implementation-plan": {
-    label: "实施计划",
-    useCase: "里程碑、依赖、验收门槛、风险和开放问题"
-  },
-  "visual-exploration": {
-    label: "视觉探索",
-    useCase: "视觉方向、设计系统、组件变体或插图方案审批"
-  },
-  "editor-workbench": {
-    label: "编辑工作台",
-    useCase: "本地筛选、调参、预览和可见文本导出"
-  }
-};
-
 const groupLabels = {
   claims: "判断",
   summary: "摘要",
@@ -321,15 +286,15 @@ function normalizeTrustLevel(value) {
   return ["trusted-generated", "mixed-trust", "untrusted"].includes(value) ? value : "mixed-trust";
 }
 
-function inferReportIntent(input, template, mode) {
+function inferReportIntent(input, mode) {
   const explicit = input.intent && typeof input.intent === "object" ? input.intent : {};
   const hasEvidence = (input.evidence || []).length > 0;
   const hasClaims = (input.claims || []).length > 0;
   const hasCharts = (input.sections || []).some((section) => section.type === "chart");
   const artifactKind = explicit.artifactKind
-    || (template === "decision-matrix" ? "decision" : "")
-    || (template === "research-explainer" ? "research" : "")
-    || (template === "review-findings" ? "review" : "")
+    || (hasCharts ? "research" : "")
+    || (hasClaims ? "review" : "")
+    || (hasEvidence ? "status" : "")
     || "handoff";
 
   return {
@@ -829,6 +794,13 @@ function highlightLine(line, language) {
     html = stashHighlightToken(tokens, html, /(^|\s)(#.*)$/g, (_match, prefix, comment) => `${prefix}<span class="hljs-comment">${comment}</span>`);
     stashClass(/(--?[A-Za-z][A-Za-z0-9-]*)/g, "hljs-attr");
     stashClass(/\b(bun|node|npm|pnpm|yarn|git|gh|openspec|powershell|pwsh|cd|dir|ls|rg|curl|docker)\b/g, "hljs-built_in");
+  } else if (["css"].includes(language)) {
+    stashClass(/(\/\*.*?\*\/)/g, "hljs-comment");
+    stashClass(/(&quot;[^&]*?&quot;|&#39;[^&]*?&#39;)/g, "hljs-string");
+    stashClass(/(#[0-9a-fA-F]{3,8})\b/g, "hljs-number");
+    stashClass(/\b(\d+(?:\.\d+)?(?:px|rem|em|%|vh|vw|s|ms)?)\b/g, "hljs-number");
+    html = stashHighlightToken(tokens, html, /(^|\s|;)(--?[A-Za-z_][\w-]*)(\s*:)/g, (_match, prefix, property, colon) => `${prefix}<span class="hljs-attr">${property}</span>${colon}`);
+    stashClass(/\b(display|grid|flex|block|inline|none|relative|absolute|sticky|fixed|repeat|minmax|var|calc|color-mix)\b/g, "hljs-built_in");
   }
   return restoreHighlightTokens(tokens, html);
 }
@@ -1229,6 +1201,20 @@ function renderGroupedNav(sections) {
   </nav>`;
 }
 
+function presentationOptions(input) {
+  const source = input && typeof input.presentation === "object" && !Array.isArray(input.presentation)
+    ? input.presentation
+    : {};
+  return {
+    showHeroStats: source.showHeroStats === true,
+    showSuccessCriteria: source.showSuccessCriteria === true,
+    showClaims: source.showClaims === true,
+    showEvidence: source.showEvidence === true,
+    showVerification: source.showVerification === true,
+    showNextActions: source.showNextActions === true
+  };
+}
+
 function trimLeadingConclusion(value) {
   return String(value || "").replace(/^\s*(?:结论|Conclusion)\s*[：:]\s*/i, "").trim();
 }
@@ -1248,30 +1234,147 @@ function renderHeroStats(input, sectionCount) {
   </div>`;
 }
 
-function renderHeroDecisionGrid(intent) {
+function renderHeroDecisionGrid(intent, presentation = {}) {
   const criteria = (intent.successCriteria || []).slice(0, 3);
   const criteriaHtml = criteria.length > 0
     ? `<ul class="hero-criteria-list">${criteria.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
     : "";
-  return `<div class="hero-decision-grid" data-report-intent data-primary-question="${escapeAttr(intent.primaryQuestion)}" data-time-budget="${escapeAttr(intent.timeBudget)}" data-artifact-kind="${escapeAttr(intent.artifactKind)}">
-    <article class="hero-decision-card">
+  const cards = [
+    `<article class="hero-decision-card">
       <div class="meta">读者问题</div>
       <strong>${escapeHtml(intent.primaryQuestion)}</strong>
-    </article>
-    <article class="hero-decision-card">
+    </article>`,
+    `<article class="hero-decision-card">
       <div class="meta">本文结论</div>
       <strong>${escapeHtml(intent.decision)}</strong>
-    </article>
-    <article class="hero-decision-card">
+    </article>`
+  ];
+  if (presentation.showSuccessCriteria === true && criteriaHtml) {
+    cards.push(`<article class="hero-decision-card">
       <div class="meta">验收口径</div>
       ${criteriaHtml}
-    </article>
+    </article>`);
+  }
+  return `<div class="hero-decision-grid" data-report-intent data-primary-question="${escapeAttr(intent.primaryQuestion)}" data-time-budget="${escapeAttr(intent.timeBudget)}" data-artifact-kind="${escapeAttr(intent.artifactKind)}">
+    ${cards.join("\n")}
   </div>`;
+}
+
+function visibleText(value) {
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) return value.map(visibleText).join(" ").trim();
+  if (typeof value === "object") return Object.values(value).map(visibleText).join(" ").trim();
+  return String(value).replace(/\s+/g, " ").trim();
+}
+
+function isBlank(value) {
+  return visibleText(value).length === 0;
+}
+
+function hasVisibleTableBody(section) {
+  const columns = normalizeTableColumns(section);
+  const rows = Array.isArray(section.rows) ? section.rows : [];
+  return rows.some((row) => columns.some((column, columnIndex) => !isBlank(tableCellValue(row, column, columnIndex))));
+}
+
+function sectionShapeErrors(section, index, input) {
+  const errors = [];
+  const prefix = `sections[${index}]`;
+  if (!section || typeof section !== "object" || Array.isArray(section)) return [`${prefix} must be an object.`];
+  if (isBlank(section.type)) errors.push(`${prefix}.type is required.`);
+  if (isBlank(section.title)) errors.push(`${prefix}.title is required.`);
+
+  if (section.type === "summary-cards") {
+    const cards = Array.isArray(section.cards) ? section.cards : [];
+    if (cards.length === 0) errors.push(`${prefix}.cards must contain at least one card.`);
+    cards.forEach((card, cardIndex) => {
+      if (isBlank(card?.label)) errors.push(`${prefix}.cards[${cardIndex}].label is required.`);
+      if (isBlank(card?.value)) errors.push(`${prefix}.cards[${cardIndex}].value is required.`);
+    });
+  } else if (section.type === "data-table") {
+    const columns = normalizeTableColumns(section);
+    const rows = Array.isArray(section.rows) ? section.rows : [];
+    if (columns.length === 0) errors.push(`${prefix}.columns must contain at least one column or inferable object row key.`);
+    if (rows.length === 0) errors.push(`${prefix}.rows must contain at least one row.`);
+    if (columns.length > 0 && rows.length > 0 && !hasVisibleTableBody(section)) errors.push(`${prefix}.rows must contain at least one visible body cell.`);
+  } else if (["markdown", "mermaid", "code", "diff"].includes(section.type)) {
+    if (isBlank(section.content)) errors.push(`${prefix}.content is required for ${section.type}.`);
+    if (section.type === "code") {
+      if (isBlank(section.language)) errors.push(`${prefix}.language is required for code.`);
+      if (isBlank(section.filePath) && isBlank(section.sourceHref)) errors.push(`${prefix}.filePath or sourceHref is required for source-linked code.`);
+    }
+    if (section.type === "diff" && !/[+-]/.test(String(section.content || ""))) errors.push(`${prefix}.content must include added or removed diff lines.`);
+  } else if (section.type === "timeline") {
+    const items = Array.isArray(section.items) ? section.items : [];
+    if (items.length === 0) errors.push(`${prefix}.items must contain at least one timeline item.`);
+    items.forEach((item, itemIndex) => {
+      if (isBlank(item?.label || item?.when)) errors.push(`${prefix}.items[${itemIndex}].label is required.`);
+      if (isBlank(item?.detail || item?.body)) errors.push(`${prefix}.items[${itemIndex}].detail is required.`);
+    });
+  } else if (section.type === "decision-matrix") {
+    const options = Array.isArray(section.options) ? section.options : [];
+    if (options.length === 0) errors.push(`${prefix}.options must contain at least one option.`);
+    options.forEach((option, optionIndex) => {
+      if (isBlank(option?.name)) errors.push(`${prefix}.options[${optionIndex}].name is required.`);
+      if (!Array.isArray(option?.points) || option.points.length === 0 || option.points.some(isBlank)) errors.push(`${prefix}.options[${optionIndex}].points must contain visible tradeoff text.`);
+    });
+  } else if (section.type === "actions") {
+    const items = Array.isArray(section.items) ? section.items : [];
+    if (items.length === 0 || items.some(isBlank)) errors.push(`${prefix}.items must contain visible actions.`);
+  } else if (section.type === "tabs") {
+    const tabs = Array.isArray(section.tabs) ? section.tabs : [];
+    if (tabs.length === 0) errors.push(`${prefix}.tabs must contain at least one tab.`);
+    tabs.forEach((tab, tabIndex) => {
+      if (isBlank(tab?.label)) errors.push(`${prefix}.tabs[${tabIndex}].label is required.`);
+      if (isBlank(tab?.content)) errors.push(`${prefix}.tabs[${tabIndex}].content is required.`);
+    });
+  } else if (section.type === "filterable-cards") {
+    const items = Array.isArray(section.items) ? section.items : [];
+    if (items.length === 0) errors.push(`${prefix}.items must contain at least one card.`);
+    items.forEach((item, itemIndex) => {
+      if (isBlank(item?.title)) errors.push(`${prefix}.items[${itemIndex}].title is required.`);
+      if (isBlank(item?.body)) errors.push(`${prefix}.items[${itemIndex}].body is required.`);
+    });
+  } else if (section.type === "chart") {
+    const chart = chartSpecFromSection(section);
+    if (isBlank(chart.title || section.title)) errors.push(`${prefix}.chart.title is required.`);
+    if (isBlank(chart.takeaway)) errors.push(`${prefix}.chart.takeaway is required.`);
+    if (isBlank(chart.altText)) errors.push(`${prefix}.chart.altText is required.`);
+    if (!Array.isArray(chartDataRows(chart)) || chartDataRows(chart).length === 0) errors.push(`${prefix}.chart.data or tableFallback.rows must contain visible rows.`);
+  } else if (section.type === "evidence" && (!Array.isArray(input.evidence) || input.evidence.length === 0)) {
+    errors.push(`${prefix} uses evidence component but input.evidence is empty.`);
+  }
+
+  return errors;
+}
+
+function statusConsistencyErrors(input) {
+  if (input.status !== "complete") return [];
+  const errors = [];
+  const unsettledStatuses = new Set(["pending", "draft", "review", "blocked", "failed", "fail", "not-run"]);
+  const unsettledSections = Array.isArray(input.sections)
+    ? input.sections
+      .map((section, index) => ({ index, status: section?.status }))
+      .filter((item) => unsettledStatuses.has(item.status))
+    : [];
+  const failedVerification = Array.isArray(input.verification)
+    ? input.verification
+      .map((item, index) => ({ index, status: item?.status }))
+      .filter((item) => ["fail", "not-run"].includes(item.status))
+    : [];
+
+  if (unsettledSections.length > 0) {
+    errors.push(`status complete conflicts with unsettled section status: ${unsettledSections.map((item) => `sections[${item.index}]=${item.status}`).join(", ")}.`);
+  }
+  if (failedVerification.length > 0) {
+    errors.push(`status complete conflicts with verification status: ${failedVerification.map((item) => `verification[${item.index}]=${item.status}`).join(", ")}.`);
+  }
+  return errors;
 }
 
 function validateInput(input) {
   const errors = [];
-  if (!input || typeof input !== "object") errors.push("Input must be an object.");
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Input must be an object.");
   if (!input.title) errors.push("Missing title.");
   if (!input.summary) errors.push("Missing summary.");
   if (!input.status) errors.push("Missing status.");
@@ -1280,6 +1383,12 @@ function validateInput(input) {
   if (input.evidence !== undefined && !Array.isArray(input.evidence)) errors.push("evidence must be an array when provided.");
   if (input.verification !== undefined && !Array.isArray(input.verification)) errors.push("verification must be an array when provided.");
   if (input.nextActions !== undefined && !Array.isArray(input.nextActions)) errors.push("nextActions must be an array when provided.");
+  if (input.presentation !== undefined && (!input.presentation || typeof input.presentation !== "object" || Array.isArray(input.presentation))) errors.push("presentation must be an object when provided.");
+  if (input.presentation && typeof input.presentation === "object" && !Array.isArray(input.presentation)) {
+    for (const key of ["showHeroStats", "showSuccessCriteria", "showClaims", "showEvidence", "showVerification", "showNextActions"]) {
+      if (input.presentation[key] !== undefined && typeof input.presentation[key] !== "boolean") errors.push(`presentation.${key} must be boolean when provided.`);
+    }
+  }
   if (input.handoff !== undefined && (!input.handoff || typeof input.handoff !== "object" || Array.isArray(input.handoff))) errors.push("handoff must be an object when provided.");
   if (input.handoff !== undefined) {
     const { sourcePath, regenerationCommand } = normalizeHandoffMetadata(input.handoff);
@@ -1291,26 +1400,30 @@ function validateInput(input) {
     }
   }
   if (input.renderMode && !renderModes.includes(input.renderMode)) errors.push("renderMode must be runtime-cdn, pre-rendered, fallback-only, or runtime alias.");
-  if (input.template && !templateMeta[input.template]) errors.push(`Unknown template: ${input.template}`);
+  if (Object.prototype.hasOwnProperty.call(input, "template")) errors.push("template is no longer supported; use intent.artifactKind and component sections.");
+  if (Array.isArray(input.sections)) {
+    input.sections.forEach((section, index) => errors.push(...sectionShapeErrors(section, index, input)));
+  }
+  errors.push(...statusConsistencyErrors(input));
   if (hasLikelyMojibakeInValue(input)) errors.push("Input contains likely mojibake. Write report JSON as UTF-8 and regenerate; continuous half-width question marks are not acceptable.");
   if (errors.length) throw new Error(errors.join(" "));
 }
 
-function supplementalSections(input, mode) {
+function supplementalSections(input, mode, presentation = presentationOptions(input)) {
   const sections = [];
   if (isRuntimeMode(mode) && input.showRuntimeDependencies === true) {
     sections.push({ id: "runtime-dependencies", title: "运行时依赖", group: "verification", status: "pending", priority: 880 });
   }
-  if ((input.claims || []).length > 0) {
+  if (presentation.showClaims === true && (input.claims || []).length > 0) {
     sections.push({ id: "claims", title: "关键判断", group: "claims", status: "info", priority: 890 });
   }
-  if ((input.evidence || []).length > 0) {
+  if (presentation.showEvidence === true && (input.evidence || []).length > 0) {
     sections.push({ id: "evidence", title: "证据", group: "evidence", status: "info", priority: 900 });
   }
-  if ((input.verification || []).length > 0) {
+  if (presentation.showVerification === true && (input.verification || []).length > 0) {
     sections.push({ id: "verification", title: "验证", group: "verification", status: "info", priority: 901 });
   }
-  if ((input.nextActions || []).length > 0) {
+  if (presentation.showNextActions === true && (input.nextActions || []).length > 0) {
     sections.push({ id: "next-actions", title: "下一步", group: "next", status: "info", priority: 902 });
   }
   return sections;
@@ -1319,9 +1432,7 @@ function supplementalSections(input, mode) {
 async function createInteraction(input, options = {}) {
   validateInput(input);
   const { mode, compatibility } = normalizeRenderMode(input.renderMode);
-  const template = input.template || "implementation-handoff";
-  const meta = templateMeta[template];
-  const intent = inferReportIntent(input, template, mode);
+  const intent = inferReportIntent(input, mode);
   const generatedAt = input.generatedAt || new Date().toISOString();
   const normalizedSections = input.sections.map(normalizeSection);
   const sections = [];
@@ -1341,29 +1452,30 @@ async function createInteraction(input, options = {}) {
     isRuntimeMode(mode) ? fs.readFileSync(richRuntimeJsPath, "utf8") : ""
   ].join("\n");
 
-  const extras = supplementalSections(input, mode);
+  const presentation = presentationOptions(input);
+  const extras = supplementalSections(input, mode, presentation);
   const nav = renderGroupedNav([...normalizedSections, ...extras]);
   const conclusion = trimLeadingConclusion(input.summary);
-  const heroStats = renderHeroStats(input, normalizedSections.length + extras.length);
-  const heroDecisionGrid = renderHeroDecisionGrid(intent);
+  const heroStats = presentation.showHeroStats === true ? renderHeroStats(input, normalizedSections.length + extras.length) : "";
+  const heroDecisionGrid = renderHeroDecisionGrid(intent, presentation);
   const compatibilityBadge = compatibility ? `<span class="status-pill status-warn" data-render-compatibility="${escapeAttr(compatibility)}">${escapeHtml(compatibility)}</span>` : "";
   const handoffAttributes = renderHandoffAttributes(input.handoff);
   const handoffMetaTags = renderHandoffMetaTags(input.handoff);
-  const claimsSection = (input.claims || []).length > 0
+  const claimsSection = presentation.showClaims === true && (input.claims || []).length > 0
     ? `<section class="panel supplemental-panel" id="claims" data-section-type="claims" data-section-group="claims" data-report-region="claims">${renderSupplementalHeading({ group: "claims", title: "关键判断", summary: "每条判断都保留证据入口和可信度。", status: "info" })}${renderClaims(input.claims || [])}</section>`
     : "";
-  const evidenceSection = (input.evidence || []).length > 0
+  const evidenceSection = presentation.showEvidence === true && (input.evidence || []).length > 0
     ? `<section class="panel supplemental-panel" id="evidence" data-section-type="evidence" data-section-group="evidence" data-report-region="evidence">${renderSupplementalHeading({ group: "evidence", title: "证据", summary: "文件、命令和验证来源集中在这里。", status: "info" })}${renderEvidence(input.evidence || [])}</section>`
     : "";
-  const verificationSection = (input.verification || []).length > 0
+  const verificationSection = presentation.showVerification === true && (input.verification || []).length > 0
     ? `<section class="panel supplemental-panel" id="verification" data-section-type="verification" data-section-group="verification" data-report-region="verification">${renderSupplementalHeading({ group: "verification", title: "验证", summary: "命令级验收和降级项。", status: "info" })}${renderVerification(input.verification || [])}</section>`
     : "";
-  const nextActionsSection = (input.nextActions || []).length > 0
+  const nextActionsSection = presentation.showNextActions === true && (input.nextActions || []).length > 0
     ? `<section class="panel supplemental-panel" id="next-actions" data-section-type="actions" data-section-group="next" data-report-region="actions"><div class="section-heading split-row"><div><h2>下一步</h2><p class="section-summary">只保留后续会真正改变行为的动作。</p></div><button data-copy-from="#next-action-list">复制行动项</button></div><ul id="next-action-list" class="action-list">${(input.nextActions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></section>`
     : "";
 
   return stripTrailingWhitespace(`<!doctype html>
-<html lang="zh-CN" data-html-work-report data-render-mode="${escapeAttr(mode)}" data-template="${escapeAttr(template)}"${handoffAttributes} data-runtime-state="${isRuntimeMode(mode) ? "pending" : "not-runtime"}">
+<html lang="zh-CN" data-html-work-report data-render-mode="${escapeAttr(mode)}" data-artifact-kind="${escapeAttr(intent.artifactKind)}" data-status="${escapeAttr(input.status)}"${handoffAttributes} data-runtime-state="${isRuntimeMode(mode) ? "pending" : "not-runtime"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1378,7 +1490,7 @@ ${handoffMetaTags}  <title>${escapeHtml(input.title)}</title>
     <header id="report-top" class="report-hero" data-report-region="hero" data-report-intent data-primary-question="${escapeAttr(intent.primaryQuestion)}" data-time-budget="${escapeAttr(intent.timeBudget)}" data-artifact-kind="${escapeAttr(intent.artifactKind)}">
       <div class="title-row">
         <div>
-          <div class="eyebrow">${escapeHtml(meta.label)} | ${escapeHtml(meta.useCase)}</div>
+          <div class="eyebrow">Component report | ${escapeHtml(intent.artifactKind)}</div>
           <h1 class="report-title">${escapeHtml(input.title)}</h1>
         </div>
         <div class="toolbar"><span class="status-pill ${statusClass(input.status)}">状态：${escapeHtml(statusLabel(input.status))}</span>${compatibilityBadge}</div>
@@ -1428,7 +1540,7 @@ async function main() {
     const normalized = normalizeRenderMode(input.renderMode);
 
     if (args.json) {
-      console.log(JSON.stringify({ ok: true, outputPath, renderMode: normalized.mode, template: input.template || "implementation-handoff" }, null, 2));
+      console.log(JSON.stringify({ ok: true, outputPath, renderMode: normalized.mode, artifactKind: inferReportIntent(input, normalized.mode).artifactKind }, null, 2));
     } else {
       console.log(outputPath);
     }

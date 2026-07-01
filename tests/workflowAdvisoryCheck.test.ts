@@ -197,6 +197,31 @@ test('advisory check passes delivery when validation, closeout evidence, and HTM
   expect(result.warnings).toEqual([]);
 });
 
+test('advisory check accepts explicit HTML handoff waiver for material delivery', () => {
+  const result = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--material-changes',
+    '--has-validation',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-insight',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
+    '--html-handoff-waiver',
+    'Tiny packaging-only release; chat summary is sufficient.',
+  ]);
+
+  expect(result.ok).toBe(true);
+  expect(result.expectedOutputMode).toBe('html-artifact');
+  expect(result.htmlRequired).toBe(true);
+  expect(result.handoffWaived).toBe(true);
+  expect(result.handoffWaiver).toContain('Tiny packaging-only release');
+  expect(result.warnings).toEqual([]);
+});
+
 test('advisory check can explicitly require html-artifact output mode', () => {
   const result = runAdvisory([
     '--state',

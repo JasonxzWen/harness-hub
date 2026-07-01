@@ -25,14 +25,14 @@ test('harness-quality-check documents goal A advisory report orchestration', () 
 test('harness-quality-check fixture renders valid advisory HTML report smoke', () => {
   const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as {
     title: string;
-    template: string;
+    intent: { artifactKind: string };
     renderMode: string;
     sections: Array<{ title: string; type: string }>;
   };
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-quality-check-'));
 
   expect(fixture.title).toBe('Harness quality check advisory report');
-  expect(fixture.template).toBe('review-findings');
+  expect(fixture.intent.artifactKind).toBe('review');
   expect(fixture.renderMode).toBe('pre-rendered');
   expect(fixture.sections.map((section) => section.title)).toEqual(expect.arrayContaining([
     'Scope and boundary',
@@ -54,11 +54,12 @@ test('harness-quality-check fixture renders valid advisory HTML report smoke', (
   ], { encoding: 'utf8' });
 
   expect(result.status, result.stderr).toBe(0);
-  const payload = JSON.parse(result.stdout) as { outputPath: string; renderMode: string; template: string };
+  const payload = JSON.parse(result.stdout) as { outputPath: string; renderMode: string; artifactKind: string };
   const html = fs.readFileSync(payload.outputPath, 'utf8');
 
   expect(payload.renderMode).toBe('pre-rendered');
-  expect(payload.template).toBe('review-findings');
+  expect(payload.artifactKind).toBe('review');
+  expect(html).toContain('data-artifact-kind="review"');
   expect(html).toContain('data-html-work-report');
   expect(html).toContain('Harness quality check advisory report');
   expect(html).toContain('Scope: Harness Hub source checkout and target repository');

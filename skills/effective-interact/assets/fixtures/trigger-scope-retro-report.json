@@ -2,7 +2,6 @@
   "title": "HTML 汇报漏触发复盘",
   "summary": "**结论：缺口在触发合同、owner/layer 边界和 HTML 追踪策略。** 本次把 effective-interact 收敛为按决策成本触发的复杂沟通层：方案拷打归 grill-me 或 review owner，输出可选纯文本、Markdown、visual Markdown 或 HTML，所有生成 HTML 都保持本地 ignored。",
   "status": "complete",
-  "template": "implementation-handoff",
   "renderMode": "runtime-cdn",
   "intent": {
     "audience": "Harness Hub maintainer",

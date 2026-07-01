@@ -90,13 +90,13 @@ test('source post generation writes JSON source, source ledger, effective-intera
   expect(post.viewpoints[0]?.sourceClaimIds).toEqual(['claim-trace-to-eval']);
 
   const adapter = JSON.parse(fs.readFileSync(result.effectiveInteractInputPath, 'utf8')) as {
-    template: string;
     renderMode: string;
+    intent: { artifactKind: string };
     sections: Array<{ title: string; type: string; rows?: unknown[]; cards?: unknown[]; items?: unknown[]; tabs?: unknown[] }>;
     evidence: Array<{ id?: string; sourceUrl?: string }>;
   };
-  expect(adapter.template).toBe('research-explainer');
   expect(adapter.renderMode).toBe('pre-rendered');
+  expect(adapter.intent.artifactKind).toBe('research');
   expect(adapter.sections.map((section) => section.title)).toEqual(expect.arrayContaining([
     '先读这三点',
     '阅读路径',

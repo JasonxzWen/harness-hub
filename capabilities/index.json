@@ -194,7 +194,7 @@
     "skill:workflow-router": {
       "kind": "skill",
       "path": "skills/workflow-router",
-        "version": "0.14.0",
+      "version": "0.14.1",
       "source": "local",
       "provides": [
         "workflow-intent-routing",
@@ -211,15 +211,16 @@
         "explicit-read-only-mutation-guard",
         "expected-output-mode-routing",
         "html-handoff-advisory-gate",
+        "html-handoff-waiver-gate",
         "visual-language-report-activation",
         "owner-workflow-structure-contract",
         "executable-owner-contract-smoke",
         "finish-closeout-gate-routing",
-          "finish-closeout-advisory-evidence",
-          "agentic-loop-evidence-check",
-          "docs-consistency-loop-check",
-          "bounded-agentic-loop-iteration-check",
-          "agentic-loop-advisory-evidence"
+        "finish-closeout-advisory-evidence",
+        "agentic-loop-evidence-check",
+        "docs-consistency-loop-check",
+        "bounded-agentic-loop-iteration-check",
+        "agentic-loop-advisory-evidence"
       ],
       "overlapsWith": [
         "skill:openspec-explore",
@@ -235,24 +236,24 @@
         {
           "path": "skills/workflow-router/scripts/route-intent.mjs"
         },
-          {
-            "path": "skills/workflow-router/scripts/workflow-check.mjs"
-          },
-          {
-            "path": "skills/workflow-router/scripts/advisory-check.mjs"
-          },
-          {
-            "path": "skills/workflow-router/scripts/skill-activation-check.mjs"
-          },
+        {
+          "path": "skills/workflow-router/scripts/workflow-check.mjs"
+        },
+        {
+          "path": "skills/workflow-router/scripts/advisory-check.mjs"
+        },
+        {
+          "path": "skills/workflow-router/scripts/skill-activation-check.mjs"
+        },
         {
           "path": "skills/workflow-router/scripts/owner-contract-check.mjs"
         },
-          {
-            "path": "skills/workflow-router/scripts/helper-contract-check.mjs"
-          },
-          {
-            "path": "skills/workflow-router/scripts/agentic-loop-check.mjs"
-          }
+        {
+          "path": "skills/workflow-router/scripts/helper-contract-check.mjs"
+        },
+        {
+          "path": "skills/workflow-router/scripts/agentic-loop-check.mjs"
+        }
       ],
       "agents": [
         "standard"
@@ -561,7 +562,10 @@
         "option-comparison-artifacts",
         "vocabulary-boundary-explainers",
         "explorable-explainers",
-        "disposable-export-editors"
+        "disposable-export-editors",
+        "component-first-html-report-design",
+        "html-report-design-contract",
+        "html-effectiveness-scenario-family-routing"
       ],
       "overlapsWith": [
         "skill:grill-me",
@@ -569,10 +573,13 @@
         "skill:frontend-slides",
         "skill:frontend-design"
       ],
-      "routing": "Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff, including broad repo capability/structure/function/implementation maps; organize from visual language first, then choose plain text/Markdown/visual Markdown/HTML by decision cost, defaulting material repo/skill changes to HTML handoff; do not load merely because answer is long; skip trivial chat/bundled apps.",
+      "routing": "Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, handoff, proactive HTML reports, or visibly polished structured text, including broad repo capability/structure/function/implementation maps and html-effectiveness families such as Exploration & Planning, Code Review & Understanding, Design, Reports, and Custom Editors; organize from visual language first and read DESIGN.md for component-first HTML artifacts, then choose plain text/Markdown/visual Markdown/HTML by decision cost, defaulting material repo/skill changes to HTML handoff; do not load merely because answer is long; skip trivial chat/bundled apps.",
       "detects": [
         {
           "path": "skills/effective-interact/SKILL.md"
+        },
+        {
+          "path": "skills/effective-interact/DESIGN.md"
         },
         {
           "path": "skills/effective-interact/references/html-aesthetic-preflight.md"
@@ -582,7 +589,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Structure Chinese-first complex pause reports when material alignment, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, evidence, risks, validation, or continuation notes need first-principles organization; start from useful visual language, keep any non-plain-brief output visibly structured instead of linear prose, avoid Markdown-in-HTML, and default material repo/skill change handoffs to validated self-contained HTML unless explicitly waived."
+      "recommendation": "Structure Chinese-first complex pause reports when material alignment, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, evidence, risks, validation, or continuation notes need first-principles organization; start from useful visual language and the component-first DESIGN.md contract, keep any non-plain-brief output visibly structured instead of linear prose, avoid Markdown-in-HTML, and default material repo/skill change handoffs to validated self-contained HTML unless explicitly waived."
     },
     "skill:handoff": {
       "kind": "skill",
@@ -1338,7 +1345,8 @@
         "codex-claude-code-trace-review",
         "local-agent-event-ledgers",
         "private-insight-reports",
-        "tool-call-decision-audits"
+        "tool-call-decision-audits",
+        "effective-interact-visual-report-inputs"
       ],
       "overlapsWith": [
         "skill:source-post",
@@ -1347,7 +1355,7 @@
         "skill:answer-workflow",
         "skill:harness-quality-check"
       ],
-      "routing": "Load when the user asks for a private repository interaction insight audit, Codex or Claude Code trace review, agent task profile, tool-call decision audit, or collaboration bottleneck analysis; use source-post for public external-source posts and agent-introspection-debugging for single-run failures.",
+      "routing": "Load when the user asks for a private repository interaction insight audit, Codex or Claude Code trace review, agent task profile, tool-call decision audit, collaboration bottleneck analysis, session-level insight, or concrete improvement recommendations from agent traces; use effective-interact as the visual presentation layer for dense reports, source-post for public external-source posts, and agent-introspection-debugging for single-run failures.",
       "detects": [
         {
           "path": "skills/insight/SKILL.md"
@@ -1363,7 +1371,7 @@
         "standard"
       ],
       "risk": "medium",
-      "recommendation": "Audit recent project-related Codex and Claude Code collaboration traces into ignored private reports with confirmed/candidate evidence separation, sharp bottleneck analysis, and no default project, memory, schedule, remote, or tracked-doc mutation."
+      "recommendation": "Audit recent project-related Codex and Claude Code collaboration traces into ignored private reports with confirmed/candidate evidence separation, sharp bottleneck analysis, optional effective-interact visual report inputs for dense audits, and no default project, memory, schedule, remote, or tracked-doc mutation."
     },
     "skill:doc-coauthoring": {
       "kind": "skill",

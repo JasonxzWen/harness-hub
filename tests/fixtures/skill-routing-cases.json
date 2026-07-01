@@ -210,6 +210,22 @@
       "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
     },
     {
+      "id": "effective-interact-positive-invisible-report-complaint",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "effective-interact 有他没他完全一样，我没有看到主动 HTML 汇报，也没有更好的结构化文本汇报。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads for proactive HTML handoffs and visibly polished structured text when complex reporting would otherwise feel indistinguishable from ordinary prose."
+    },
+    {
+      "id": "effective-interact-positive-not-effective-complaint",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "讲讲 insight 和 effective-interact 的作用，我怀疑这两个 skill 没有起效。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` loads for proactive HTML handoffs and visibly polished structured text when complex reporting would otherwise feel indistinguishable from ordinary prose."
+    },
+    {
       "id": "effective-interact-positive-completed-conclusion",
       "skill": "effective-interact",
       "kind": "positive",
@@ -240,6 +256,46 @@
       "prompt": "Create a self-contained HTML option gallery comparing these three implementation approaches before I choose one.",
       "expectedSkill": "effective-interact",
       "docsBoundary": "`effective-interact` loads when an agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text, Markdown, visual Markdown, or HTML by decision cost; do not load merely because answer is long; trivial chat, production UI, bundled apps, and decks route elsewhere."
+    },
+    {
+      "id": "effective-interact-positive-upstream-exploration-planning",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Use Exploration & Planning to compare three implementation approaches with snippets, risks, acceptance gates, and a recommended path.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` must route the source-derived html-effectiveness scenario families from natural prompts: Exploration & Planning, Code Review & Understanding, Design, Reports, Custom Editors, approach comparisons, module maps, design-system references, component variant matrices, status dashboards, incident reports, triage boards, feature-flag editors, and prompt tuning workbenches."
+    },
+    {
+      "id": "effective-interact-positive-upstream-code-review-understanding",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Create a Code Review & Understanding artifact: file tour, module map, call path, source anchors, snippets, and gotchas.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` must route the source-derived html-effectiveness scenario families from natural prompts: Exploration & Planning, Code Review & Understanding, Design, Reports, Custom Editors, approach comparisons, module maps, design-system references, component variant matrices, status dashboards, incident reports, triage boards, feature-flag editors, and prompt tuning workbenches."
+    },
+    {
+      "id": "effective-interact-positive-upstream-design-approval",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "给我做一个 Design 方向可视化审批板，比较组件变体、视觉方向和风险，不要直接实现生产 UI。",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` must route the source-derived html-effectiveness scenario families from natural prompts: Exploration & Planning, Code Review & Understanding, Design, Reports, Custom Editors, approach comparisons, module maps, design-system references, component variant matrices, status dashboards, incident reports, triage boards, feature-flag editors, and prompt tuning workbenches."
+    },
+    {
+      "id": "effective-interact-positive-upstream-reports-status-dashboard",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Create a weekly engineering status dashboard with progress, risks, owners, validation, and next actions.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` must route the source-derived html-effectiveness scenario families from natural prompts: Exploration & Planning, Code Review & Understanding, Design, Reports, Custom Editors, approach comparisons, module maps, design-system references, component variant matrices, status dashboards, incident reports, triage boards, feature-flag editors, and prompt tuning workbenches."
+    },
+    {
+      "id": "effective-interact-positive-upstream-custom-editor",
+      "skill": "effective-interact",
+      "kind": "positive",
+      "prompt": "Create a local feature flag editor with toggles, warnings, JSON preview, and diff export; do not write config files.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`effective-interact` must route the source-derived html-effectiveness scenario families from natural prompts: Exploration & Planning, Code Review & Understanding, Design, Reports, Custom Editors, approach comparisons, module maps, design-system references, component variant matrices, status dashboards, incident reports, triage boards, feature-flag editors, and prompt tuning workbenches."
     },
     {
       "id": "effective-interact-positive-grill-handoff",
@@ -568,6 +624,22 @@
       "prompt": "Run a private repository interaction insight audit from recent Codex and Claude Code work traces, including agent task profile, tool-call decision audit, and collaboration bottlenecks.",
       "expectedSkill": "insight",
       "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+    },
+    {
+      "id": "insight-positive-session-insight-recommendations",
+      "skill": "insight",
+      "kind": "positive",
+      "prompt": "其他仓库追踪 insight 后仍然没有给出分析会话后的洞察和改进建议。",
+      "expectedSkill": "insight",
+      "docsBoundary": "`insight` loads for session-level insights and concrete improvement recommendations from agent traces, not only private audit wording."
+    },
+    {
+      "id": "insight-positive-cross-session-audit-without-name",
+      "skill": "insight",
+      "kind": "positive",
+      "prompt": "给我分析最近几十个 harness-hub 会话，输出哪些地方应该调用但没调用、哪些触发后过程和结果不对，以及改进建议。",
+      "expectedSkill": "insight",
+      "docsBoundary": "`insight` loads for session-level insights and concrete improvement recommendations from agent traces, not only private audit wording."
     },
     {
       "id": "insight-negative-public-source-post",

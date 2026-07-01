@@ -22,11 +22,6 @@
       "type": "string",
       "description": "ISO-8601 timestamp. The generator fills this when omitted."
     },
-    "template": {
-      "type": "string",
-      "enum": ["implementation-handoff", "conclusion-dashboard", "review-findings", "research-explainer", "decision-matrix", "implementation-plan", "visual-exploration", "editor-workbench"],
-      "default": "implementation-handoff"
-    },
     "renderMode": {
       "type": "string",
       "enum": ["runtime-cdn", "pre-rendered", "fallback-only", "runtime"],
@@ -37,6 +32,43 @@
       "type": "boolean",
       "default": false,
       "description": "When true, expose the runtime dependency manifest as a visible report section. The manifest remains machine-readable but hidden by default."
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Human-visible presentation toggles. Root audit data stays machine-available but hidden unless the report explicitly opts in.",
+      "properties": {
+        "showHeroStats": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, show hero counters derived from verification, evidence, and nextActions."
+        },
+        "showSuccessCriteria": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, show intent.successCriteria as a visible hero card."
+        },
+        "showClaims": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, render root claims as a visible supplemental section."
+        },
+        "showEvidence": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, render root evidence as a visible supplemental section."
+        },
+        "showVerification": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, render root verification as a visible supplemental section."
+        },
+        "showNextActions": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, render root nextActions as a visible supplemental section."
+        }
+      }
     },
     "handoff": {
       "type": "object",

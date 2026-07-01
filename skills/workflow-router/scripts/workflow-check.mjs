@@ -25,6 +25,8 @@ function parseArgs(argv) {
     hasReproduction: false,
     hasValidation: false,
     hasHtmlHandoff: false,
+    handoffWaiver: null,
+    htmlHandoffWaiver: null,
     hasCloseoutReview: false,
     hasInsight: false,
     hasPrReadiness: false,
@@ -67,6 +69,10 @@ function parseArgs(argv) {
     } else if (arg === '--has-html-handoff') {
       options.hasHtmlHandoff = true;
       options.hasHandoff = true;
+    } else if (arg === '--handoff-waiver') {
+      options.handoffWaiver = readValue(argv, ++index, arg);
+    } else if (arg === '--html-handoff-waiver') {
+      options.htmlHandoffWaiver = readValue(argv, ++index, arg);
     } else if (arg === '--has-closeout-review') {
       options.hasCloseoutReview = true;
     } else if (arg === '--has-insight') {
@@ -138,6 +144,8 @@ export function checkWorkflow(options) {
     hasReproduction: Boolean(options.hasReproduction),
     hasValidation: Boolean(options.hasValidation),
     hasHtmlHandoff: Boolean(options.hasHtmlHandoff),
+    handoffWaiver: options.handoffWaiver,
+    htmlHandoffWaiver: options.htmlHandoffWaiver,
     hasCloseoutReview: Boolean(options.hasCloseoutReview),
     hasInsight: Boolean(options.hasInsight),
     hasPrReadiness: Boolean(options.hasPrReadiness),
@@ -180,6 +188,8 @@ Flags mirror advisory-check.mjs:
   --has-reproduction
   --has-validation
   --has-html-handoff
+  --handoff-waiver <reason>
+  --html-handoff-waiver <reason>
   --has-closeout-review
   --has-insight
   --has-pr-readiness

@@ -40,6 +40,8 @@ function parseArgs(argv) {
     hasReproduction: false,
     hasValidation: false,
     hasHtmlHandoff: false,
+    handoffWaiver: null,
+    htmlHandoffWaiver: null,
     hasCloseoutReview: false,
     hasInsight: false,
     hasPrReadiness: false,
@@ -78,6 +80,10 @@ function parseArgs(argv) {
     } else if (arg === '--has-html-handoff') {
       options.hasHtmlHandoff = true;
       options.hasHandoff = true;
+    } else if (arg === '--handoff-waiver') {
+      options.handoffWaiver = readValue(argv, ++index, arg);
+    } else if (arg === '--html-handoff-waiver') {
+      options.htmlHandoffWaiver = readValue(argv, ++index, arg);
     } else if (arg === '--has-closeout-review') {
       options.hasCloseoutReview = true;
     } else if (arg === '--has-insight') {
@@ -204,6 +210,17 @@ export function evaluateAdvisory(options) {
     });
   }
 
+  const hasGeneralHandoffOrWaiver = Boolean(
+    hydratedOptions.hasHandoff
+    || hydratedOptions.hasHtmlHandoff
+    || hydratedOptions.handoffWaiver
+    || hydratedOptions.htmlHandoffWaiver,
+  );
+  const hasHtmlHandoffOrWaiver = Boolean(
+    hydratedOptions.hasHtmlHandoff
+    || hydratedOptions.htmlHandoffWaiver,
+  );
+
   if (hydratedOptions.state === 'delivery' && hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges) {
     if (!hydratedOptions.hasCloseoutReview) {
       warnings.push({
@@ -237,12 +254,12 @@ export function evaluateAdvisory(options) {
     }
   }
 
-  if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges && htmlRequired && !hydratedOptions.hasHtmlHandoff) {
+  if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges && htmlRequired && !hasHtmlHandoffOrWaiver) {
     warnings.push({
       id: 'missing-effective-interact-html-handoff',
       message: 'Material work with expected html-artifact output should produce a validated effective-interact HTML handoff unless explicitly waived.',
     });
-  } else if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges && !hydratedOptions.hasHandoff) {
+  } else if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges && !htmlRequired && !hasGeneralHandoffOrWaiver) {
     warnings.push({
       id: 'missing-effective-interact-handoff',
       message: 'Material work should produce an effective-interact handoff unless explicitly waived.',
@@ -257,6 +274,8 @@ export function evaluateAdvisory(options) {
     phase: hydratedOptions.phase,
     expectedOutputMode,
     htmlRequired,
+    handoffWaived: Boolean(hydratedOptions.handoffWaiver || hydratedOptions.htmlHandoffWaiver),
+    handoffWaiver: hydratedOptions.htmlHandoffWaiver || hydratedOptions.handoffWaiver || null,
     detection,
     warnings,
   };
@@ -297,6 +316,8 @@ function hydrateFromCurrentTask(options) {
       hasPlan: Boolean(options.hasPlan || inferred.hasPlan),
       hasHtmlHandoff: Boolean(options.hasHtmlHandoff),
       hasHandoff: Boolean(options.hasHandoff || options.hasHtmlHandoff),
+      handoffWaiver: options.handoffWaiver,
+      htmlHandoffWaiver: options.htmlHandoffWaiver,
       hasCloseoutReview: Boolean(options.hasCloseoutReview || inferred.hasCloseoutReview),
       hasInsight: Boolean(options.hasInsight || inferred.hasInsight),
       hasPrReadiness: Boolean(options.hasPrReadiness || inferred.hasPrReadiness),
@@ -478,6 +499,8 @@ Flags:
   --has-reproduction
   --has-validation
   --has-html-handoff
+  --handoff-waiver <reason>
+  --html-handoff-waiver <reason>
   --has-closeout-review
   --has-insight
   --has-pr-readiness

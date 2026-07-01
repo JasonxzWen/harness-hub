@@ -36,6 +36,8 @@ Harness Hub MUST provide a personal workflow routing overlay where each non-triv
 | Delivery | `delivery-workflow` | The user asks for acceptance, handoff, cleanup, release notes, validation closeout, or environment reset. | Declare done without verification and residual-risk notes. |
 | Harness Hub maintenance | `hub-maintenance-workflow` | The user asks to maintain this hub, evaluate skill sources, adjust routing, or change install/update/remove policy. | Wholesale import another workflow or bypass lock-backed lifecycle rules. |
 
+Effective-interact report-template, DESIGN.md, component-first, and html-effectiveness visual refresh work is Harness Hub maintenance.
+
 Post-PR closeout belongs to delivery. The user asks for post-PR status, mergeability, CI/check-run triage, conflict resolution, or branch-protection blocker handling after accepted work has been pushed.
 
 ## Canonical Lifecycle

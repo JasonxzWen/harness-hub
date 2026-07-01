@@ -4578,7 +4578,6 @@ function adaptSourcePostToEffectiveInteract(input: SourcePostInput, slug: string
     summary: input.summary,
     status: 'complete',
     generatedAt,
-    template: 'research-explainer',
     renderMode: 'pre-rendered',
     intent: {
       audience: '中文读者与 Harness Hub maintainer',
