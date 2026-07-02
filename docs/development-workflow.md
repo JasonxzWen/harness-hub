@@ -12,9 +12,10 @@ Harness Hub has three stateful layers today:
 
 - workflow state: `workflow-router` classifies a request into one owner state and advisory phase gates check whether the current task has enough scope, spec, acceptance, validation, and closeout evidence;
 - loop evidence state: agentic loop records capture Producer, Verifier, Arbiter, iteration, maxIterations, stop condition, evidence, verdict, and Main Agent Decision;
+- loop orchestration state: `harness-hub loop run-start`, `agent-record`, `lease-check`, `collect-trace`, and `integrate` record per-run and per-agent state under ignored `.harness-hub/state/runs/<runId>/`;
 - Loop control state: `harness-hub loop evaluate` and `loop schedule` write continue/interrupt decisions to local JSONL ledgers only when explicitly confirmed.
 
-This is not yet a full multi-agent orchestrator. There is no default dispatcher, retry scheduler, cross-host agent lifecycle manager, merge queue, trace normalizer, or lock-backed work allocator for delegated agents. Building that layer requires an explicit security and rollout design because it would decide when to start agents, retry work, write files, and trust or reject agent outputs.
+This is not yet a full multi-agent orchestrator: it is not a daemon or automatic dispatcher. There is no retry scheduler, merge queue, or unattended hook that starts delegated agents. The local orchestration runtime records subagent state, path leases, host trace evidence, and main-agent integration decisions; the active workflow owner still decides when to spawn agents and how to integrate their output.
 
 ## Capability Map
 
@@ -61,9 +62,9 @@ Agentic loops are stage-level mechanics inside the workflow, not a replacement f
 Producer -> Verifier -> Arbiter -> Main Agent Decision
 ```
 
-The loop roles are host-neutral. `delegated-agent` may be a host-native subagent, isolated session, browser run, CI check, deterministic command, or bounded worker. Arbiters are read-only and must not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions. The main agent owns integration and the final handoff.
+The loop roles are host-neutral. `delegated-agent` may be a host-native subagent, isolated session, browser run, CI check, deterministic command, or bounded worker. Arbiters are read-only and must not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions. Write-capable delegated agents may use the current worktree only after a path lease names their owned paths. The main agent owns integration and the final handoff.
 
-Common loops include `plan-review`, `test-design`, `implementation-review`, `frontend-acceptance`, `diagnosis-regression`, `docs-consistency`, `pr-closeout`, and `insight-retro`. Record planned loops in `current-task.md` and actual loop evidence in `progress.md` and `session-handoff.md` under `Agentic Loop Records`. When a loop may repeat, record `iteration`, `maxIterations`, and a stop condition so the main agent cannot silently keep asking for more reviews.
+Common loops include `plan-review`, `test-design`, `implementation-review`, `frontend-acceptance`, `diagnosis-regression`, `docs-consistency`, `pr-closeout`, and `insight-retro`. Record planned loops in `current-task.md`. Subagents record private runtime state under `.harness-hub/state/runs/<runId>/agents/<agentId>/`; path leases live under `.harness-hub/state/runs/<runId>/leases/`; the main agent writes the integration record and then summarizes actual loop evidence in `progress.md` and `session-handoff.md` under `Agentic Loop Records`. When a loop may repeat, record `iteration`, `maxIterations`, and a stop condition so the main agent cannot silently keep asking for more reviews.
 
 Host-specific execution details belong in [Codex agentic loops](host-adapters/codex-agentic-loops.md) and [Claude Code agentic loops](host-adapters/claude-code-agentic-loops.md), not in generic skill bodies.
 
@@ -110,6 +111,7 @@ Use `grill-me` when the plan needs pressure testing. Ask one high-leverage quest
 | `.harness-hub/state/decisions.md` | Durable choices, rationale, alternatives, state-file impact, follow-up. | A scratchpad for every small implementation thought. |
 | `.harness-hub/state/progress.md` | Current phase, completed work, validation records, runtime signals, blockers, PR status. | A replacement for tests or evidence. |
 | `.harness-hub/state/session-handoff.md` | Restart path, changed files, validation, final review, insight recommendations, residual risk, next action. | A duplicate of the whole chat transcript. |
+| `.harness-hub/state/runs/<runId>/` | Ignored per-loop runtime state: run metadata, per-agent state/events/results, path leases, host trace summaries, and integration records. | Durable source documentation or tracked project memory. |
 | `quality-document.md` | Cross-session quality snapshot by product area and architecture layer. | A task-local checklist. |
 | `evaluator-rubric.md` | Acceptance verdict for material implementation or review work. | A substitute for running validation. |
 

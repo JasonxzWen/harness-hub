@@ -99,7 +99,9 @@ State the concrete outcome for the active agent task.
 
 ## Agentic loops
 
-Use host-neutral loop roles from `skills/workflow-router/references/agentic-loops.md`: Producer, Verifier, Arbiter, and Main Agent Decision. `delegated-agent` may map to a host-native subagent, another isolated session, a browser run, a CI check, or a deterministic command. Arbiters are read-only and must not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions.
+Use host-neutral loop roles from `skills/workflow-router/references/agentic-loops.md`: Producer, Verifier, Arbiter, and Main Agent Decision. `delegated-agent` may map to a host-native subagent, another isolated session, a browser run, a CI check, or a deterministic command. Subagents keep private runtime state under ignored `.harness-hub/state/runs/<runId>/`; the main agent writes root progress and handoff summaries. Arbiters are read-only and must not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions.
+
+When a delegated agent writes files in the current worktree, record a path lease first with `harness-hub loop lease-check . --input <lease.json> --yes --json`. The lease must name non-overlapping `ownedPaths`; any changed path outside those owned paths is dirty-scope evidence and must be resolved by the main agent before integration.
 
 | Stage | Loop | Iteration | Max iterations | Producer | Verifier | Arbiter | Evidence | Stop condition |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

@@ -126,6 +126,13 @@
       "browser-acceptance",
       "ci-check"
     ],
+    "runtime_state": {
+      "root": ".harness-hub/state/runs/<runId>/",
+      "agent_private_state": ".harness-hub/state/runs/<runId>/agents/<agentId>/",
+      "path_leases": ".harness-hub/state/runs/<runId>/leases/<leaseId>.json",
+      "integration_record": ".harness-hub/state/runs/<runId>/integration.json",
+      "write_policy": "Subagents write private runtime state and leased product paths only; the main agent summarizes accepted evidence into progress and handoff state."
+    },
     "required_evidence": [
       "original task or target spec",
       "acceptance criteria",
@@ -150,6 +157,7 @@
       ]
     },
     "arbiter_boundary": "Arbiters are read-only. They do not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions.",
+    "lease_boundary": "Write-capable delegated agents may share the current worktree only after a path lease records non-overlapping owned paths; dirty-scope changes outside owned paths block integration.",
     "dispatch_boundary": "Hooks and deterministic checks may request or validate loop evidence, but must not auto-dispatch delegated agents.",
     "main_agent_responsibility": "The main agent owns synthesis, user-visible decisions, integration, and final handoff."
   },
@@ -171,7 +179,8 @@
     "runtime_ledgers": [
       ".harness-hub/state/loop-runs.jsonl",
       ".harness-hub/state/interrupt-decisions.jsonl",
-      ".harness-hub/state/capability-events.jsonl"
+      ".harness-hub/state/capability-events.jsonl",
+      ".harness-hub/state/runs/<runId>/"
     ]
   },
   "context_engineering_policy": {

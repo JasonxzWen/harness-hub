@@ -13,11 +13,13 @@ Allowed subagent work:
 - independent review passes;
 - independent verification;
 - disjoint write scopes only, when the executable plan names the owned files or modules.
+- current-worktree writes only after a path lease records non-overlapping owned paths and the main agent remains the integration owner.
 
 Forbidden subagent work:
 
 - critical-path blockers stay local when the main agent needs the answer before its next step;
 - overlapping writes;
+- direct writes to root progress, decisions, or handoff state by subagents;
 - final user-facing conclusions;
 - final product, safety, or release decisions;
 - hidden cleanup or rollback.
@@ -33,6 +35,7 @@ Allowed loop carriers:
 - delegated-agent reviews or acceptance runs;
 - deterministic tests, validators, browser runs, CI checks, or local scripts;
 - read-only arbiters that judge evidence against the original task and acceptance criteria.
+- local orchestration records under `.harness-hub/state/runs/<runId>/` for subagent state, leases, traces, and main-agent integration.
 
 Forbidden loop behavior:
 
@@ -86,6 +89,7 @@ When orchestration matters, the active owner writes an orchestration line in the
 ORCHESTRATION: none | local-only | parallel-read-only | parallel-disjoint-write | advisory-hook-check
 OWNER: <main workflow owner>
 SUBAGENTS: <roles and scopes, or none>
+LEASES: <owned paths per writing subagent, or none>
 HOOKS: <advisory checks, or none>
 INTEGRATION: main agent synthesizes and reports
 ```

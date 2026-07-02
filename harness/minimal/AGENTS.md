@@ -33,7 +33,8 @@ Do not start implementation until the harness is fully landed and the active tas
 - Do not run parallel writes against the same file, module, or feature state.
 - Use read-only parallel work only for research, review, log analysis, or validation.
 - Use agentic loops for material planning, implementation, acceptance, PR closeout, and workflow-learning work when they reduce risk: Producer -> Verifier -> Arbiter -> Main Agent Decision.
-- Keep loop roles host-neutral in repo state: `delegated-agent` may be a host-native subagent, isolated session, browser run, CI check, deterministic command, or bounded worker. Arbiters are read-only and must not edit files, resolve conflicts, push, publish, merge, or make final user-facing decisions.
+- Keep loop roles host-neutral in repo state: `delegated-agent` may be a host-native subagent, isolated session, browser run, CI check, deterministic command, or bounded worker. Subagents maintain private ignored runtime state under `.harness-hub/state/runs/<runId>/`; only the main agent summarizes accepted loop evidence into `progress.md` and `session-handoff.md`.
+- Write-capable delegated agents may use the current worktree only after `harness-hub loop lease-check ... --yes` records non-overlapping owned paths. Arbiters are read-only and must not edit files, resolve conflicts, push, publish, merge, or make final user-facing decisions.
 - Do not let hooks auto-dispatch delegated agents. Hooks and deterministic checks may only remind, validate evidence, or interrupt for human review.
 - Use P0/P1/P2 validation priorities for implementation tasks: P0 must pass before handoff, P1 is run or risk-assessed for affected boundaries, and P2 is hardening that may be deferred with a reason.
 - Treat lightweight brainstorming as part of SDD: inspect repo evidence, compare 2-3 viable directions, recommend one, record rejected alternatives, and ask only blocking open questions before implementation.
