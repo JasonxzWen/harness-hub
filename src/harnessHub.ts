@@ -695,6 +695,16 @@ export interface HarnessHubTargetCheck {
   evidence: string[];
 }
 
+interface LegacyAggregationSignal {
+  path: string;
+  generatedAt: string | null;
+  sourcePath: string | null;
+  sourceCommit: string | null;
+  missingStandardFiles: string[];
+  hostLocalOnlyFiles: string[];
+  staleHostCacheFiles: string[];
+}
+
 export type ExternalToolSuggestionState = 'configured' | 'installed' | 'recommended';
 export type ExternalToolSuggestionId = 'codegraph' | 'headroom';
 
@@ -924,6 +934,8 @@ const MINIMAL_HARNESS_COMPONENT_ID = 'harness:minimal';
 const LOOP_POLICY_VERSION = 'interrupt-policy:v1';
 const LOOP_INTERRUPT_DECISION_LEDGER = '.harness-hub/state/interrupt-decisions.jsonl';
 const LOOP_RUN_LEDGER = '.harness-hub/state/loop-runs.jsonl';
+const LEGACY_CODEX_AGGREGATION = '.codex/harness-hub-aggregation.json';
+const LEGACY_AGGREGATION_SIZE_LIMIT = 256 * 1024;
 const LOOP_ALLOWED_SIDE_EFFECTS = new Set([
   'read-only',
   'local-files',
@@ -6359,6 +6371,166 @@ function recommendedCliUpdateCommand(
   return `npm install -g ${packageName}@${latestVersion}`;
 }
 
+function readLegacyAggregationSignal(targetDir: string, index: CapabilityIndex): LegacyAggregationSignal | null {
+  const legacyPath = path.join(targetDir, LEGACY_CODEX_AGGREGATION);
+  if (!fs.existsSync(legacyPath)) {
+    return null;
+  }
+
+  const distributionGaps = detectLegacyStandardDistributionGaps(targetDir, index);
+  const size = fs.statSync(legacyPath).size;
+  if (size > LEGACY_AGGREGATION_SIZE_LIMIT) {
+    return {
+      path: LEGACY_CODEX_AGGREGATION,
+      generatedAt: null,
+      sourcePath: null,
+      sourceCommit: null,
+      ...distributionGaps,
+    };
+  }
+
+  try {
+    const raw = fs.readFileSync(legacyPath, 'utf8');
+    const parsed = JSON.parse(raw) as unknown;
+    const source = isRecord(parsed) && isRecord(parsed.source) ? parsed.source : {};
+    return {
+      path: LEGACY_CODEX_AGGREGATION,
+      generatedAt: isRecord(parsed) && typeof parsed.generatedAt === 'string' ? sanitizeLegacyMetadataValue(parsed.generatedAt) : null,
+      sourcePath: isRecord(source) && typeof source.path === 'string' ? sanitizeLegacyMetadataValue(source.path) : null,
+      sourceCommit: isRecord(source) && typeof source.commit === 'string' ? sanitizeLegacyMetadataValue(source.commit) : null,
+      ...distributionGaps,
+    };
+  } catch {
+    return {
+      path: LEGACY_CODEX_AGGREGATION,
+      generatedAt: null,
+      sourcePath: null,
+      sourceCommit: null,
+      ...distributionGaps,
+    };
+  }
+}
+
+function sanitizeLegacyMetadataValue(value: string): string {
+  return value
+    .replace(/[\u0000-\u001F\u007F]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160);
+}
+
+function detectLegacyStandardDistributionGaps(targetDir: string, index: CapabilityIndex): Pick<LegacyAggregationSignal, 'missingStandardFiles' | 'hostLocalOnlyFiles' | 'staleHostCacheFiles'> {
+  const missingStandardFiles: string[] = [];
+  const hostLocalOnlyFiles: string[] = [];
+  const staleHostCacheFiles: string[] = [];
+
+  for (const probe of buildLegacyStandardDistributionProbes(index)) {
+    const standardPath = assertSafeRelativePath(targetDir, probe);
+    const standardExists = fs.existsSync(standardPath);
+    if (!standardExists) {
+      missingStandardFiles.push(probe);
+    }
+
+    const hostPaths = hostActivationProbePaths(targetDir, probe);
+    for (const hostPath of hostPaths) {
+      const hostFileExists = fs.existsSync(hostPath.absoluteFile);
+      if (!standardExists && hostFileExists) {
+        hostLocalOnlyFiles.push(`${probe} via ${hostPath.relativeFile}`);
+      }
+      if (!hostFileExists && fs.existsSync(hostPath.absoluteSkillDir)) {
+        staleHostCacheFiles.push(hostPath.relativeFile);
+      }
+    }
+  }
+
+  return {
+    missingStandardFiles,
+    hostLocalOnlyFiles,
+    staleHostCacheFiles,
+  };
+}
+
+function buildLegacyStandardDistributionProbes(index: CapabilityIndex): string[] {
+  const probes = new Set<string>();
+  for (const component of listInstallableSkillComponents(index)) {
+    const source = componentSourcePath(HUB_ROOT, component);
+    const dest = resolveComponentDest(component, 'standard');
+    if (!fs.existsSync(source)) {
+      continue;
+    }
+    for (const sourceFile of listFilesRecursive(source)) {
+      const sourceRelative = toPortablePath(path.relative(source, sourceFile));
+      probes.add(toPortablePath(path.join(dest, sourceRelative)));
+    }
+  }
+
+  const harnessComponent = index.components[MINIMAL_HARNESS_COMPONENT_ID];
+  if (harnessComponent?.kind === 'harness-template') {
+    for (const file of listHarnessTemplateFiles(HUB_ROOT, harnessComponent)) {
+      probes.add(file.relativePath);
+    }
+  }
+
+  return [...probes].sort();
+}
+
+function hostActivationProbePaths(
+  targetDir: string,
+  probe: string,
+): Array<{ absoluteFile: string; absoluteSkillDir: string; relativeFile: string }> {
+  const parts = probe.split('/');
+  if (parts[0] !== 'skills' || parts.length < 3) {
+    return [];
+  }
+  const skillName = parts[1];
+  const skillRelative = parts.slice(2).join('/');
+  return AGENT_HOST_SKILL_DIRS.map((host) => {
+    const relativeSkillDir = toPortablePath(path.join(host.relativePath, skillName));
+    const relativeFile = toPortablePath(path.join(relativeSkillDir, skillRelative));
+    return {
+      absoluteFile: assertSafeRelativePath(targetDir, relativeFile),
+      absoluteSkillDir: assertSafeRelativePath(targetDir, relativeSkillDir),
+      relativeFile,
+    };
+  });
+}
+
+function legacyAggregationMessage(signal: LegacyAggregationSignal): string {
+  const details = [
+    signal.generatedAt ? `generated at ${signal.generatedAt}` : null,
+    signal.sourceCommit ? `source commit ${signal.sourceCommit}` : null,
+    signal.sourcePath ? `source ${signal.sourcePath}` : null,
+  ].filter(Boolean).join(', ');
+  const detailText = details ? ` (${details})` : '';
+  const missingSummary = summarizeLegacyDistributionGaps(signal);
+  return `No Harness Hub lock found, but legacy Codex aggregation was detected at ${signal.path}${detailText}. This target likely has stale host-local distribution instead of the current managed standard surface. ${missingSummary} Review the dry-run, then migrate with init-harness --yes --force and run activate-agents; old .codex/.claude skill caches can be removed if activation is blocked.`;
+}
+
+function summarizeLegacyDistributionGaps(signal: LegacyAggregationSignal): string {
+  const missingAreas = [
+    signal.missingStandardFiles.some((file) => file.startsWith('skills/')) ? 'managed skills' : null,
+    signal.missingStandardFiles.some((file) => file.startsWith('.harness-hub/state/')) ? 'harness state' : null,
+    signal.missingStandardFiles.some((file) => file.startsWith('.harness-hub/context/')) ? 'context pack' : null,
+    signal.missingStandardFiles.some((file) => file.startsWith('.harness-hub/loop/')) ? 'Loop policy assets' : null,
+    signal.missingStandardFiles.some((file) => !file.startsWith('skills/') && !file.startsWith('.harness-hub/')) ? 'root harness files' : null,
+  ].filter((area): area is string => Boolean(area));
+  const examples = signal.missingStandardFiles.slice(0, 4).join(', ');
+  const hostOnly = signal.hostLocalOnlyFiles.length > 0
+    ? ` Host-local-only skill cache examples: ${signal.hostLocalOnlyFiles.slice(0, 3).join(', ')}.`
+    : '';
+  const staleHost = signal.staleHostCacheFiles.length > 0
+    ? ` Stale host cache examples: ${signal.staleHostCacheFiles.slice(0, 3).join(', ')}.`
+    : '';
+  return [
+    missingAreas.length > 0
+      ? `Missing current standard distribution areas: ${missingAreas.join(', ')}.`
+      : 'Current standard distribution probes did not find obvious missing files, but the target is still not lock-managed.',
+    examples ? `Missing examples: ${examples}.` : '',
+    hostOnly,
+    staleHost,
+  ].filter(Boolean).join(' ');
+}
+
 function buildTargetCheck({
   targetDir,
   index,
@@ -6369,6 +6541,7 @@ function buildTargetCheck({
   const resolvedTarget = path.resolve(targetDir);
   const status = getStatus({ targetDir: resolvedTarget, index });
   if (!status.lock) {
+    const legacyAggregation = readLegacyAggregationSignal(resolvedTarget, index);
     return {
       state: 'not-managed',
       targetDir: resolvedTarget,
@@ -6381,9 +6554,23 @@ function buildTargetCheck({
       missing: [],
       skipped: [],
       unknown: [],
-      recommendedCommand: `harness-hub init-harness "${resolvedTarget}" --dry-run --json`,
-      message: 'No Harness Hub lock found for this target.',
-      evidence: ['.harness-hub/lock.json'],
+      recommendedCommand: `harness-hub init-harness "${resolvedTarget}" --target standard --dry-run --json`,
+      message: legacyAggregation
+        ? legacyAggregationMessage(legacyAggregation)
+        : 'No Harness Hub lock found for this target.',
+      evidence: legacyAggregation
+        ? [
+          '.harness-hub/lock.json',
+          legacyAggregation.path,
+          ...[
+            legacyAggregation.generatedAt ? `generatedAt:${legacyAggregation.generatedAt}` : null,
+            legacyAggregation.sourceCommit ? `sourceCommit:${legacyAggregation.sourceCommit}` : null,
+          ].filter((item): item is string => Boolean(item)),
+          ...legacyAggregation.missingStandardFiles.slice(0, 32).map((file) => `missingStandard:${file}`),
+          ...legacyAggregation.hostLocalOnlyFiles.slice(0, 8).map((file) => `hostLocalOnly:${file}`),
+          ...legacyAggregation.staleHostCacheFiles.slice(0, 8).map((file) => `staleHostCache:${file}`),
+        ]
+        : ['.harness-hub/lock.json'],
     };
   }
 

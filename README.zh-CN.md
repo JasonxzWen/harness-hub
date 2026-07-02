@@ -149,6 +149,18 @@ npx @jasonwen/harness-hub update D:\path\to\target --dry-run --json
 npx @jasonwen/harness-hub remove D:\path\to\target --dry-run --json
 ```
 
+旧 `.codex` 聚合目标需要迁到受托管的 `standard`，不要再跑一次旧聚合同步。先运行 `check` 或 `self-check`；如果目标仓库有 `.codex/harness-hub-aggregation.json` 但没有 `.harness-hub/lock.json`，advisory 表示这个仓库可能只有过期的 host-local distribution，缺少当前 managed skills、根级 harness 文件、`.harness-hub` state、context pack、Loop ledgers，或后续加入的标准能力。先看 dry-run，再显式覆盖旧 harness 面：
+
+```powershell
+npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --dry-run --json
+npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --yes --force --json
+npx @jasonwen/harness-hub@latest activate-agents D:\path\to\target --yes --json
+npx @jasonwen/harness-hub@latest validate-harness D:\path\to\target --json
+npx @jasonwen/harness-hub@latest check D:\path\to\target --json
+```
+
+如果 `activate-agents` 被旧的未标记 `.codex/skills` 或 `.claude/skills` 缓存阻塞，并且这些缓存不需要保留，可以删除缓存后重跑 `activate-agents`。当前 `standard` 目标不要再使用退役的 `update-harness-hub` 聚合脚本。
+
 Source-post publishing：
 
 ```powershell

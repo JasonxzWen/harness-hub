@@ -148,6 +148,18 @@ npx @jasonwen/harness-hub update D:\path\to\target --dry-run --json
 npx @jasonwen/harness-hub remove D:\path\to\target --dry-run --json
 ```
 
+Legacy `.codex` aggregation targets need the managed standard migration, not another aggregation sync. First run `check` or `self-check`; if the target has `.codex/harness-hub-aggregation.json` but no `.harness-hub/lock.json`, the advisory means the repo may have stale host-local distribution without current managed skills, root harness files, `.harness-hub` state, context pack, Loop ledgers, or later standard capability additions. Review the dry-run, then replace the old harness surface explicitly:
+
+```powershell
+npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --dry-run --json
+npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --yes --force --json
+npx @jasonwen/harness-hub@latest activate-agents D:\path\to\target --yes --json
+npx @jasonwen/harness-hub@latest validate-harness D:\path\to\target --json
+npx @jasonwen/harness-hub@latest check D:\path\to\target --json
+```
+
+If `activate-agents` is blocked by old unmarked `.codex/skills` or `.claude/skills` caches and those caches are not needed, remove the caches and rerun `activate-agents`. Do not rerun retired `update-harness-hub` aggregation scripts for current standard targets.
+
 Source-post publishing:
 
 ```powershell
