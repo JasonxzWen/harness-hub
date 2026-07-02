@@ -1654,6 +1654,145 @@ test('check is non-blocking when registry is unavailable and target is not manag
   expect(result.target.recommendedCommand).toContain('init-harness');
 });
 
+test('check detects legacy Codex aggregation and recommends standard harness migration', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-legacy-aggregation-'));
+  const aggregationDir = path.join(targetDir, '.codex');
+  fs.mkdirSync(aggregationDir, { recursive: true });
+  fs.mkdirSync(path.join(targetDir, '.codex', 'skills', 'insight'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.codex', 'skills', 'insight', 'SKILL.md'), 'legacy insight');
+  fs.mkdirSync(path.join(targetDir, '.codex', 'skills', 'workflow-router'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.codex', 'skills', 'workflow-router', 'SKILL.md'), 'legacy workflow router');
+  fs.writeFileSync(path.join(aggregationDir, 'harness-hub-aggregation.json'), JSON.stringify({
+    schemaVersion: 1,
+    generatedAt: '2026-06-26T03:32:48.496Z',
+    source: {
+      path: 'D:/harness-hub',
+      commit: '8ac264bed8a06fc6bf954a88ad92330e13e63e03',
+    },
+  }));
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.target.state).toBe('not-managed');
+  expect(result.target.message).toContain('legacy Codex aggregation');
+  expect(result.target.message).toContain('managed skills');
+  expect(result.target.message).toContain('harness state');
+  expect(result.target.message).toContain('context pack');
+  expect(result.target.message).toContain('Loop policy assets');
+  expect(result.target.message).toContain('Host-local-only skill cache examples');
+  expect(result.target.message).toContain('Stale host cache examples');
+  expect(result.target.message).toContain('init-harness --yes --force');
+  expect(result.target.recommendedCommand).toContain('--target standard --dry-run --json');
+  expect(result.target.evidence).toContain('.codex/harness-hub-aggregation.json');
+  expect(result.target.evidence).toContain('sourceCommit:8ac264bed8a06fc6bf954a88ad92330e13e63e03');
+  expect(result.target.evidence.some((item) => item.startsWith('missingStandard:'))).toBe(true);
+  expect(result.target.evidence).toContain('hostLocalOnly:skills/insight/SKILL.md via .codex/skills/insight/SKILL.md');
+  expect(result.target.evidence).toContain('staleHostCache:.codex/skills/workflow-router/references/agentic-loops.md');
+});
+
+test('check detects legacy targets that have old sentinels but miss other standard files', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-legacy-partial-'));
+  fs.mkdirSync(path.join(targetDir, '.codex'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.codex', 'harness-hub-aggregation.json'), JSON.stringify({
+    schemaVersion: 1,
+    generatedAt: '2026-06-26T03:32:48.496Z',
+    source: {
+      path: 'D:/harness-hub',
+      commit: '8ac264bed8a06fc6bf954a88ad92330e13e63e03',
+    },
+  }));
+  for (const relativePath of [
+    'skills/workflow-router/SKILL.md',
+    'skills/workflow-router/references/agentic-loops.md',
+    'skills/workflow-router/scripts/agentic-loop-check.mjs',
+    'skills/insight/SKILL.md',
+    'skills/effective-interact/SKILL.md',
+    'AGENTS.md',
+    'CLAUDE.md',
+    'evaluator-rubric.md',
+    'quality-document.md',
+    '.harness-hub/state/current-task.md',
+    '.harness-hub/state/loop-runs.jsonl',
+    '.harness-hub/context/wiki/index.md',
+    '.harness-hub/loop/policies/interrupt-policy.md',
+  ]) {
+    const filePath = path.join(targetDir, ...relativePath.split('/'));
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, 'legacy sentinel');
+  }
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.target.message).toContain('Missing current standard distribution areas');
+  expect(result.target.message).not.toContain('did not find obvious missing files');
+  expect(result.target.evidence.some((item) => item === 'missingStandard:feature_list.json')).toBe(true);
+});
+
+test('check bounds and sanitizes legacy aggregation metadata', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-legacy-sanitize-'));
+  fs.mkdirSync(path.join(targetDir, '.codex'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.codex', 'harness-hub-aggregation.json'), JSON.stringify({
+    schemaVersion: 1,
+    generatedAt: '2026-06-26T03:32:48.496Z\n\u001b[31m',
+    source: {
+      path: 'D:/harness-hub\nsecond-line',
+      commit: '8ac264bed8a06fc6bf954a88ad92330e13e63e03\r\ntrailing',
+    },
+  }));
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.target.message).not.toContain('\nsecond-line');
+  expect(result.target.message).not.toContain('\u001b');
+  expect(result.target.evidence).toContain('sourceCommit:8ac264bed8a06fc6bf954a88ad92330e13e63e03 trailing');
+
+  const oversizedTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-legacy-oversized-'));
+  fs.mkdirSync(path.join(oversizedTarget, '.codex'), { recursive: true });
+  fs.writeFileSync(path.join(oversizedTarget, '.codex', 'harness-hub-aggregation.json'), 'x'.repeat(300 * 1024));
+  const oversized = await checkHarnessHub({
+    targetDir: oversizedTarget,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(oversized.target.state).toBe('not-managed');
+  expect(oversized.target.message).toContain('legacy Codex aggregation');
+  expect(oversized.target.evidence.some((item) => item.startsWith('sourceCommit:'))).toBe(false);
+});
+
 test('check command emits split json and exits zero', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () => new Response(JSON.stringify({ version: '99.0.0' }), {
@@ -1721,6 +1860,42 @@ test('self-check skips strict harness validation for uninitialized targets by de
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test('self-check surfaces legacy aggregation migration guidance as an advisory', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-self-check-legacy-aggregation-'));
+  fs.mkdirSync(path.join(targetDir, '.codex'), { recursive: true });
+  fs.mkdirSync(path.join(targetDir, '.codex', 'skills', 'insight'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.codex', 'skills', 'insight', 'SKILL.md'), 'legacy insight');
+  fs.mkdirSync(path.join(targetDir, '.codex', 'skills', 'workflow-router'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.codex', 'skills', 'workflow-router', 'SKILL.md'), 'legacy workflow router');
+  fs.writeFileSync(path.join(targetDir, '.codex', 'harness-hub-aggregation.json'), JSON.stringify({
+    schemaVersion: 1,
+    generatedAt: '2026-06-26T03:32:48.496Z',
+    source: {
+      path: 'D:/harness-hub',
+      commit: '8ac264bed8a06fc6bf954a88ad92330e13e63e03',
+    },
+  }));
+
+  const result = await selfCheckHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+  const notManaged = result.advisories.find((finding) => finding.id === 'target.not-managed');
+
+  expect(result.exitCode).toBe(0);
+  expect(notManaged?.message).toContain('legacy Codex aggregation');
+  expect(notManaged?.message).toContain('managed skills');
+  expect(notManaged?.message).toContain('context pack');
+  expect(notManaged?.evidence).toContain('hostLocalOnly:skills/insight/SKILL.md via .codex/skills/insight/SKILL.md');
+  expect(notManaged?.recommendedCommand).toContain('--target standard --dry-run --json');
 });
 
 test('self-check runs harness validation automatically for initialized harness targets', async () => {
