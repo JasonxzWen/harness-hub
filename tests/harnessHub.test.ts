@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { expect, test } from 'bun:test';
 
 import {
@@ -1419,6 +1420,320 @@ test('loop schedule chooses the next continue action and records scheduler state
     nextActionId: 'local-test-fix',
     interruptedActionIds: ['publish-draft'],
   });
+});
+
+test('loop orchestration records run, agent state, leases, and integration under ignored state', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-orchestration-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  const runInput = path.join(targetDir, 'run.json');
+  const agentInput = path.join(targetDir, 'agent.json');
+  const leaseInput = path.join(targetDir, 'lease.json');
+  const integrationInput = path.join(targetDir, 'integration.json');
+  fs.writeFileSync(runInput, `${JSON.stringify({
+    schemaVersion: 1,
+    runId: 'run-orchestration-smoke',
+    loop: 'implementation-review',
+    stage: 'implementation',
+    task: 'Prove loop orchestration state isolation.',
+    acceptanceCriteria: ['run state is local and ignored', 'main agent integration is explicit'],
+  }, null, 2)}\n`);
+
+  const run = await captureCli(['loop', 'run-start', targetDir, '--input', runInput, '--yes', '--json']);
+  expect(run.code).toBe(0);
+  const runReport = JSON.parse(run.stdout);
+  expect(runReport.recorded).toBe(true);
+  expect(runReport.runId).toBe('run-orchestration-smoke');
+  expect(runReport.runDir.replaceAll('\\', '/').endsWith('.harness-hub/state/runs/run-orchestration-smoke')).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'runs', 'run-orchestration-smoke', 'run.json'))).toBe(true);
+
+  fs.writeFileSync(agentInput, `${JSON.stringify({
+    schemaVersion: 1,
+    runId: 'run-orchestration-smoke',
+    agentId: 'agent-worker-1',
+    host: 'codex',
+    role: 'worker',
+    status: 'completed',
+    readOnly: false,
+    ownedPaths: ['tests/fixtures/orchestration/a.txt'],
+    result: { summary: 'fixture write completed' },
+  }, null, 2)}\n`);
+  const agent = await captureCli(['loop', 'agent-record', targetDir, '--input', agentInput, '--yes', '--json']);
+  expect(agent.code).toBe(0);
+  expect(JSON.parse(agent.stdout)).toMatchObject({
+    action: 'agent-record',
+    recorded: true,
+    agentId: 'agent-worker-1',
+    status: 'completed',
+  });
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'runs', 'run-orchestration-smoke', 'agents', 'agent-worker-1', 'state.json'))).toBe(true);
+
+  fs.writeFileSync(leaseInput, `${JSON.stringify({
+    schemaVersion: 1,
+    runId: 'run-orchestration-smoke',
+    leaseId: 'lease-worker-1',
+    agentId: 'agent-worker-1',
+    ownedPaths: ['tests/fixtures/orchestration/a.txt'],
+  }, null, 2)}\n`);
+  const lease = await captureCli(['loop', 'lease-check', targetDir, '--input', leaseInput, '--yes', '--json']);
+  expect(lease.code).toBe(0);
+  expect(JSON.parse(lease.stdout)).toMatchObject({
+    action: 'lease-check',
+    recorded: true,
+    status: 'pass',
+    leaseId: 'lease-worker-1',
+  });
+
+  fs.writeFileSync(integrationInput, `${JSON.stringify({
+    schemaVersion: 1,
+    runId: 'run-orchestration-smoke',
+    summary: 'Main agent accepted the worker output.',
+    verdict: 'pass',
+    mainAgentDecision: 'integrate',
+    agentIds: ['agent-worker-1'],
+  }, null, 2)}\n`);
+  const integration = await captureCli(['loop', 'integrate', targetDir, '--input', integrationInput, '--yes', '--json']);
+  expect(integration.code).toBe(0);
+  const integrationReport = JSON.parse(integration.stdout);
+  expect(integrationReport).toMatchObject({
+    action: 'integrate',
+    recorded: true,
+    status: 'pass',
+    runId: 'run-orchestration-smoke',
+  });
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'runs', 'run-orchestration-smoke', 'integration.json'))).toBe(true);
+  const runLedger = fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'loop-runs.jsonl'), 'utf8');
+  expect(runLedger).toContain('"event":"loop_orchestration_integrated"');
+});
+
+test('loop orchestration lease rejects overlapping and dirty-scope writes', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-lease-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  const runInput = path.join(targetDir, 'run.json');
+  fs.writeFileSync(runInput, `${JSON.stringify({
+    runId: 'run-lease-smoke',
+    loop: 'implementation-review',
+    task: 'Check write lease safety.',
+    acceptanceCriteria: ['overlapping leases are blocked'],
+  }, null, 2)}\n`);
+  expect((await captureCli(['loop', 'run-start', targetDir, '--input', runInput, '--yes', '--json'])).code).toBe(0);
+
+  const leaseA = path.join(targetDir, 'lease-a.json');
+  fs.writeFileSync(leaseA, `${JSON.stringify({
+    runId: 'run-lease-smoke',
+    leaseId: 'lease-a',
+    agentId: 'agent-a',
+    ownedPaths: ['src/a.ts'],
+  }, null, 2)}\n`);
+  expect((await captureCli(['loop', 'lease-check', targetDir, '--input', leaseA, '--yes', '--json'])).code).toBe(0);
+
+  const overlap = path.join(targetDir, 'lease-overlap.json');
+  fs.writeFileSync(overlap, `${JSON.stringify({
+    runId: 'run-lease-smoke',
+    leaseId: 'lease-overlap',
+    agentId: 'agent-b',
+    ownedPaths: ['src'],
+  }, null, 2)}\n`);
+  const overlapResult = await captureCli(['loop', 'lease-check', targetDir, '--input', overlap, '--json']);
+  expect(overlapResult.code).toBe(3);
+  expect(JSON.parse(overlapResult.stdout).findings).toContainEqual(expect.objectContaining({
+    id: 'overlapping-lease',
+  }));
+
+  const dirtyScope = path.join(targetDir, 'lease-dirty.json');
+  fs.writeFileSync(dirtyScope, `${JSON.stringify({
+    runId: 'run-lease-smoke',
+    leaseId: 'lease-dirty',
+    agentId: 'agent-a',
+    ownedPaths: ['src/a.ts'],
+    changedPaths: ['src/b.ts'],
+  }, null, 2)}\n`);
+  const dirtyResult = await captureCli(['loop', 'lease-check', targetDir, '--input', dirtyScope, '--json']);
+  expect(dirtyResult.code).toBe(3);
+  expect(JSON.parse(dirtyResult.stdout).findings).toContainEqual(expect.objectContaining({
+    id: 'dirty-scope',
+  }));
+});
+
+test('loop orchestration lease checks git staged and untracked dirty scope', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-git-lease-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  execFileSync('git', ['init'], { cwd: targetDir, stdio: 'ignore' });
+  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: targetDir, stdio: 'ignore' });
+  execFileSync('git', ['config', 'user.name', 'Harness Test'], { cwd: targetDir, stdio: 'ignore' });
+  execFileSync('git', ['add', '.'], { cwd: targetDir, stdio: 'ignore' });
+  execFileSync('git', ['commit', '-m', 'initial'], { cwd: targetDir, stdio: 'ignore' });
+  const runInput = path.join(targetDir, 'run.json');
+  fs.writeFileSync(runInput, `${JSON.stringify({
+    runId: 'run-git-lease-smoke',
+    loop: 'implementation-review',
+    task: 'Check git dirty scope.',
+    acceptanceCriteria: ['git status dirty scope is enforced'],
+  }, null, 2)}\n`);
+  expect((await captureCli(['loop', 'run-start', targetDir, '--input', runInput, '--yes', '--json'])).code).toBe(0);
+  fs.mkdirSync(path.join(targetDir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, 'src', 'b.ts'), 'export const b = 1;\n');
+
+  const leaseInput = path.join(targetDir, 'lease-git.json');
+  fs.writeFileSync(leaseInput, `${JSON.stringify({
+    runId: 'run-git-lease-smoke',
+    leaseId: 'lease-git',
+    agentId: 'agent-git',
+    ownedPaths: ['src/a.ts'],
+    checkGitDiff: true,
+  }, null, 2)}\n`);
+  const untracked = await captureCli(['loop', 'lease-check', targetDir, '--input', leaseInput, '--json']);
+  expect(untracked.code).toBe(3);
+  expect(JSON.parse(untracked.stdout).findings).toContainEqual(expect.objectContaining({
+    id: 'dirty-scope',
+    path: 'src/b.ts',
+  }));
+
+  execFileSync('git', ['add', 'src/b.ts'], { cwd: targetDir, stdio: 'ignore' });
+  const staged = await captureCli(['loop', 'lease-check', targetDir, '--input', leaseInput, '--json']);
+  expect(staged.code).toBe(3);
+  expect(JSON.parse(staged.stdout).findings).toContainEqual(expect.objectContaining({
+    id: 'dirty-scope',
+    path: 'src/b.ts',
+  }));
+});
+
+test('loop trace collection extracts Codex and Claude Code subagent evidence', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-trace-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  const runInput = path.join(targetDir, 'run.json');
+  fs.writeFileSync(runInput, `${JSON.stringify({
+    runId: 'run-trace-smoke',
+    loop: 'implementation-review',
+    task: 'Collect host traces.',
+    acceptanceCriteria: ['host trace is linked to agent state'],
+  }, null, 2)}\n`);
+  expect((await captureCli(['loop', 'run-start', targetDir, '--input', runInput, '--yes', '--json'])).code).toBe(0);
+
+  const codexRoot = path.join(targetDir, 'codex-root');
+  const codexSessionDir = path.join(codexRoot, 'sessions', '2026', '07', '02');
+  fs.mkdirSync(codexSessionDir, { recursive: true });
+  const codexTracePath = path.join(codexSessionDir, 'rollout-2026-07-02T15-59-16-agent-codex-1.jsonl');
+  fs.writeFileSync(codexTracePath, [
+    JSON.stringify({
+      type: 'session_meta',
+      payload: {
+        id: 'agent-codex-1',
+        parent_thread_id: 'parent-thread',
+        thread_source: 'subagent',
+        agent_role: 'explorer',
+        agent_nickname: 'Tracer',
+        source: { subagent: { thread_spawn: { agent_role: 'explorer', agent_nickname: 'Tracer' } } },
+      },
+    }),
+    JSON.stringify({
+      type: 'event_msg',
+      payload: {
+        type: 'task_complete',
+        duration_ms: 1234,
+        last_agent_message: 'codex done',
+      },
+    }),
+  ].join('\n'));
+  const codexInput = path.join(targetDir, 'codex-trace.json');
+  fs.writeFileSync(codexInput, `${JSON.stringify({
+    runId: 'run-trace-smoke',
+    agentId: 'agent-codex-1',
+    host: 'codex',
+    codexRoot,
+  }, null, 2)}\n`);
+  const codexResult = await captureCli(['loop', 'collect-trace', targetDir, '--input', codexInput, '--yes', '--json']);
+  expect(codexResult.code).toBe(0);
+  expect(JSON.parse(codexResult.stdout)).toMatchObject({
+    action: 'collect-trace',
+    status: 'completed',
+    trace: {
+      source: 'codex-session-jsonl',
+      parentThreadId: 'parent-thread',
+      role: 'explorer',
+      finalMessage: 'codex done',
+    },
+  });
+
+  const claudeTracePath = path.join(targetDir, 'claude-trace.jsonl');
+  fs.writeFileSync(claudeTracePath, [
+    JSON.stringify({ type: 'system', subtype: 'task_started', subagent_type: 'reviewer', isSidechain: true, session_id: 'claude-session-1' }),
+    JSON.stringify({ type: 'assistant', message: { content: [{ type: 'text', text: 'claude done' }] } }),
+    JSON.stringify({ type: 'result', duration_ms: 4321, toolStats: { Read: 2 } }),
+  ].join('\n'));
+  const claudeInput = path.join(targetDir, 'claude-trace.json');
+  fs.writeFileSync(claudeInput, `${JSON.stringify({
+    runId: 'run-trace-smoke',
+    agentId: 'agent-claude-1',
+    host: 'claude-code',
+    tracePath: claudeTracePath,
+  }, null, 2)}\n`);
+  const claudeResult = await captureCli(['loop', 'collect-trace', targetDir, '--input', claudeInput, '--yes', '--json']);
+  expect(claudeResult.code).toBe(0);
+  expect(JSON.parse(claudeResult.stdout)).toMatchObject({
+    action: 'collect-trace',
+    status: 'completed',
+    trace: {
+      source: 'claude-stream-json',
+      sessionId: 'claude-session-1',
+      role: 'reviewer',
+      finalMessage: 'claude done',
+    },
+  });
+});
+
+test('loop trace collection rejects mismatched or non-subagent traces', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-trace-negative-'));
+  applyHarnessInit(planHarnessInit({ targetDir }));
+  const runInput = path.join(targetDir, 'run.json');
+  fs.writeFileSync(runInput, `${JSON.stringify({
+    runId: 'run-trace-negative',
+    loop: 'implementation-review',
+    task: 'Reject incorrect host traces.',
+    acceptanceCriteria: ['trace belongs to the target subagent'],
+  }, null, 2)}\n`);
+  expect((await captureCli(['loop', 'run-start', targetDir, '--input', runInput, '--yes', '--json'])).code).toBe(0);
+
+  const codexRoot = path.join(targetDir, 'codex-root');
+  const codexSessionDir = path.join(codexRoot, 'sessions', '2026', '07', '02');
+  fs.mkdirSync(codexSessionDir, { recursive: true });
+  fs.writeFileSync(path.join(codexSessionDir, 'rollout-agent-codex-expected.jsonl'), [
+    JSON.stringify({
+      type: 'session_meta',
+      payload: {
+        id: 'agent-codex-other',
+        thread_source: 'subagent',
+        source: { subagent: { thread_spawn: { agent_role: 'explorer' } } },
+      },
+    }),
+    JSON.stringify({ type: 'event_msg', payload: { type: 'task_complete', last_agent_message: 'wrong agent' } }),
+  ].join('\n'));
+  const codexInput = path.join(targetDir, 'codex-negative.json');
+  fs.writeFileSync(codexInput, `${JSON.stringify({
+    runId: 'run-trace-negative',
+    agentId: 'agent-codex-expected',
+    host: 'codex',
+    codexRoot,
+  }, null, 2)}\n`);
+  const codexResult = await captureCli(['loop', 'collect-trace', targetDir, '--input', codexInput, '--json']);
+  expect(codexResult.code).toBe(3);
+  expect(codexResult.stderr).toContain('No Codex trace found');
+
+  const claudeTracePath = path.join(targetDir, 'claude-main-session.jsonl');
+  fs.writeFileSync(claudeTracePath, [
+    JSON.stringify({ type: 'system', session_id: 'claude-main' }),
+    JSON.stringify({ type: 'assistant', message: { content: [{ type: 'text', text: 'main session done' }] } }),
+    JSON.stringify({ type: 'result', duration_ms: 1 }),
+  ].join('\n'));
+  const claudeInput = path.join(targetDir, 'claude-negative.json');
+  fs.writeFileSync(claudeInput, `${JSON.stringify({
+    runId: 'run-trace-negative',
+    agentId: 'agent-claude-expected',
+    host: 'claude-code',
+    tracePath: claudeTracePath,
+  }, null, 2)}\n`);
+  const claudeResult = await captureCli(['loop', 'collect-trace', targetDir, '--input', claudeInput, '--json']);
+  expect(claudeResult.code).toBe(3);
+  expect(claudeResult.stderr).toContain('No Claude Code trace found');
 });
 
 test('activate-agents CLI requires confirmation and supports json output', async () => {

@@ -122,11 +122,11 @@ The target architecture is a thin, executable `workflow-router` that classifies 
 
 `effective-interact` is high-priority communication infrastructure. Default-consider it for every non-trivial session, especially after material repo or skill changes. Its job is to reduce human interpretation cost through answer-first structure, visual comparison, evidence, validation, and handoff artifacts; it does not replace production UI, slide, or bundled app skills.
 
-Subagents are an optimization owned by the active workflow, not a default behavior of every skill. Use them only for independent read-only research, review, docs work, verification, or clearly disjoint write scopes; the main agent keeps final decisions, integration, and user-facing conclusions.
+Subagents are an optimization owned by the active workflow, not a default behavior of every skill. Use them only for independent read-only research, review, docs work, verification, or clearly disjoint write scopes; the main agent keeps final decisions, integration, and user-facing conclusions. Subagents keep private runtime state under ignored `.harness-hub/state/runs/<runId>/`; the main agent is the only writer of root progress and handoff summaries.
 
 Hooks should start as advisory or deterministic local checks only. Do not introduce blocking hooks, remote actions, credential changes, posting, pushing, publishing, or agent dispatch without explicit user approval and security review.
 
-Agentic loops are workflow-stage mechanics, not a replacement for workflow owners. Use `skills/workflow-router/references/agentic-loops.md` for Producer -> Verifier -> Arbiter -> Main Agent Decision patterns; `docs/agentic-loop-catalog.md` is the source-repo explainer. Keep generic rules host-neutral with `delegated-agent`; Codex and Claude Code details belong in host adapter docs. Arbiters are read-only and do not edit files, resolve conflicts, push, publish, merge, or make final user-facing decisions.
+Agentic loops are workflow-stage mechanics, not a replacement for workflow owners. Use `skills/workflow-router/references/agentic-loops.md` for Producer -> Verifier -> Arbiter -> Main Agent Decision patterns; `docs/agentic-loop-catalog.md` is the source-repo explainer. Keep generic rules host-neutral with `delegated-agent`; Codex and Claude Code details belong in host adapter docs. Write-capable delegated agents may share the current worktree only after a path lease names non-overlapping owned paths. Arbiters are read-only and do not edit files, resolve conflicts, push, publish, merge, or make final user-facing decisions.
 
 ## Agent Development Workflow
 

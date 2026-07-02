@@ -13,6 +13,8 @@ Producer -> Verifier -> Arbiter -> Main Agent Decision
 
 Use `delegated-agent` as the host-neutral term. It may map to a host-native subagent, isolated session, browser run, CI check, deterministic command, or bounded worker depending on the host. Host-specific invocation details belong outside generic skill bodies.
 
+When delegated agents run, keep their private runtime state under ignored `.harness-hub/state/runs/<runId>/agents/<agentId>/`. Write-capable delegated agents may share the current worktree only after a path lease records non-overlapping owned paths. The main agent writes the final integration record and summarizes accepted evidence in root progress and handoff state.
+
 ## Standard Loop Types
 
 - `plan-review`
@@ -35,6 +37,7 @@ Record loop evidence with:
 - producer output or current diff/artifact;
 - verifier evidence or explicit skip reason;
 - arbiter verdict or explicit skip reason;
+- delegated-agent runtime state, path lease, and host trace evidence when a subagent runs;
 - stop condition when the loop may repeat or iteration controls are recorded;
 - iteration and maxIterations when the loop may repeat;
 - main-agent decision and follow-up.
@@ -42,6 +45,7 @@ Record loop evidence with:
 ## Boundaries
 
 - Arbiters must not edit files, resolve conflicts, push, publish, merge, post, mutate third-party resources, or make final user-facing decisions.
+- Subagents must not write root progress or handoff state directly; the main agent integrates and summarizes accepted evidence.
 - Hooks and deterministic checks may request or validate loop evidence, but must not auto-dispatch delegated agents.
 - A failing deterministic check outranks a delegated-agent pass.
 - A failing or blocked arbiter verdict must not be marked as deliver/complete.

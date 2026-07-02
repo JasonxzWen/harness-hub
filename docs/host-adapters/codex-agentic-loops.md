@@ -12,7 +12,7 @@ This adapter maps the host-neutral agentic loop catalog to Codex.
 ## Recommended Patterns
 
 - Use read-only subagents for independent source review, frontend acceptance evidence, PR risk review, and final closeout arbitration.
-- Use `worker` only when a plan names a disjoint write scope and the subagent is told it is not alone in the codebase.
+- Use `worker` only when a plan names a disjoint write scope, a path lease has been checked, and the subagent is told it is not alone in the codebase.
 - Keep critical-path blockers local when the next action cannot proceed without the result.
 - Close completed subagents after their result is integrated.
 
@@ -25,4 +25,6 @@ This adapter maps the host-neutral agentic loop catalog to Codex.
 
 ## Evidence
 
-Record Codex loop evidence in `.harness-hub/state/progress.md` and `.harness-hub/state/session-handoff.md` under `Agentic Loop Records`: subagent id or explicit skip reason, verifier evidence, arbiter verdict, main-agent decision, and follow-up.
+Record Codex loop runtime evidence under `.harness-hub/state/runs/<runId>/`: subagent id, role, read-only flag, owned paths, trace path, verifier evidence, arbiter verdict, and result. The main agent then summarizes accepted evidence in `.harness-hub/state/progress.md` and `.harness-hub/state/session-handoff.md` under `Agentic Loop Records`.
+
+Codex trace collection can use `.codex/session_index.jsonl` and `.codex/sessions/**/*.jsonl`. A valid subagent trace should show `thread_source:"subagent"` or a matching subagent source, the agent id, parent thread id, role or nickname when available, and a `task_complete` event or equivalent final message.

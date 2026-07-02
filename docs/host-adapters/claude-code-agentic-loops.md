@@ -14,6 +14,7 @@ This adapter maps the host-neutral agentic loop catalog to Claude Code.
 - Define reusable custom subagents for plan review, frontend acceptance, code review lenses, PR closeout, and workflow-learning arbitration.
 - Keep host-specific subagent definitions outside the distributed generic skill body; project-local host packaging can live in the host's own configuration.
 - Pass the original task, target spec, acceptance criteria, current diff or artifact summary, and verifier evidence to arbiters.
+- Use write-capable subagents only when the active plan names owned paths and the local path lease check passes.
 - Prefer deterministic commands for assertions that do not need model judgement.
 
 ## Prohibited Patterns
@@ -24,7 +25,7 @@ This adapter maps the host-neutral agentic loop catalog to Claude Code.
 
 ## Evidence
 
-Record Claude Code loop evidence in the same host-neutral state sections: loop type, verifier, arbiter, verdict, main-agent decision, and follow-up. Host-specific subagent names can be included as evidence, but generic policy must remain portable.
+Record Claude Code loop runtime evidence under `.harness-hub/state/runs/<runId>/`: subagent id, role, read-only flag, owned paths, trace path, verifier evidence, arbiter verdict, and result. The main agent then summarizes accepted evidence in the same host-neutral state sections: loop type, verifier, arbiter, verdict, main-agent decision, and follow-up. Host-specific subagent names can be included as evidence, but generic policy must remain portable.
 
 ## Runtime Smoke
 

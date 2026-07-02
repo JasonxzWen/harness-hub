@@ -7,6 +7,7 @@ Loop runtime state is target-local and append-only by default:
 - `.harness-hub/state/loop-runs.jsonl`
 - `.harness-hub/state/interrupt-decisions.jsonl`
 - `.harness-hub/state/capability-events.jsonl`
+- `.harness-hub/state/runs/<runId>/`
 
 Harness Hub may initialize missing ledgers, but updates must preserve existing ledger content.
 
@@ -68,3 +69,18 @@ Each JSONL line in `loop-runs.jsonl` should capture:
   "nextAction": "next concrete action"
 }
 ```
+
+## Orchestration Run State
+
+Delegated-agent runtime state is ignored worktree-local state under `.harness-hub/state/runs/<runId>/`:
+
+```text
+.harness-hub/state/runs/<runId>/run.json
+.harness-hub/state/runs/<runId>/agents/<agentId>/state.json
+.harness-hub/state/runs/<runId>/agents/<agentId>/events.jsonl
+.harness-hub/state/runs/<runId>/agents/<agentId>/result.json
+.harness-hub/state/runs/<runId>/leases/<leaseId>.json
+.harness-hub/state/runs/<runId>/integration.json
+```
+
+Subagents write only their own agent directory and scoped product files covered by a path lease. The main agent writes `integration.json` and summarizes accepted evidence into root progress and handoff state.

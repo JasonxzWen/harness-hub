@@ -15,6 +15,8 @@ Producer -> Verifier -> Arbiter -> Main Agent Decision
 
 `delegated-agent` is the host-neutral term. In Codex it may map to a subagent role such as `explorer` or `worker`; in Claude Code it may map to a custom subagent. It can also be replaced by a deterministic command when no model judgement is needed. Generic skills and harness templates must use `delegated-agent`, `verifier`, and `arbiter`; host-specific invocation details belong in adapter docs.
 
+Subagent runtime state is local and ignored. A loop run may record `run.json`, per-agent `state.json` / `events.jsonl` / `result.json`, path leases, trace summaries, and `integration.json` under `.harness-hub/state/runs/<runId>/`. Subagents do not write root `progress.md` or `session-handoff.md` directly; the main agent summarizes accepted evidence there after integration.
+
 ## Loop Contract
 
 Every loop record should capture:
@@ -23,6 +25,7 @@ Every loop record should capture:
 - producer, verifier, arbiter, and main-agent decision owner;
 - input contract: original task, target spec, acceptance criteria, current diff or artifact, commands, and risk boundaries;
 - evidence: command output, screenshots, traces, source links, review findings, or explicit skip reason;
+- orchestration evidence when delegated agents run: host, agent id, read-only flag, owned paths, lease status, trace source, trace path, and integration record;
 - verdict: pass, fail, warn, blocked, or skipped;
 - iteration controls: optional `iteration` and `maxIterations` positive integers when the loop may repeat; if either field is recorded, both fields and a stop condition are required;
 - stop condition: `continue`, `revise`, `interrupt`, `deliver`, `handoff`, or `complete`; required for bounded or repeating loops.
@@ -46,6 +49,7 @@ The arbiter must use evidence, not majority vote. If reviewers disagree, the arb
 
 - Hooks may remind or validate loop evidence, but must not dispatch agents.
 - Delegated agents may write only with explicit disjoint ownership; default loop verification and arbitration are read-only.
+- Write-capable delegated agents may share the current worktree, but they need a path lease and must keep changed paths inside their owned paths.
 - Arbiters do not edit files, close review threads, resolve conflicts, push, publish, merge, or mutate third-party resources.
 - Human interrupt is required for product tradeoffs, data ownership, safety, credentials, permissions, protected-branch overrides, external service failures, and remote mutations.
 - Loop evidence is advisory until the active workflow owner and deterministic validation agree that the stage can proceed.
