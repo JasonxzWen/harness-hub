@@ -58,17 +58,18 @@ Keep every distributed skill in the standard layout under `skills/<skill-name>/S
    - Stop and ask the user only when the blocker requires a user decision, credential, permission, reviewer action, protected-branch override, or external service recovery.
    - Do not merge the PR unless the user explicitly asks for that remote mutation.
 10. Finish closeout is a development stage.
-   - After validation and before final handoff, run a final independent review when material. Use a subagent when the scope is independent and read-only; focus on technical debt, first-principles implementation fit, project-rule drift, and refactor or warning recommendations.
+   - After validation and before final handoff for any mutation, run the required closeout loop. Materiality scales the evidence level, not whether review exists: small source/test edits still need `implementation-review` or `test-review`; workflow, harness, security, or release paths require stronger independent evidence.
+   - Use a subagent or isolated delegated-agent when the scope is independent and read-only; when that is unavailable, record the explicit fallback reason and deterministic substitute. Focus on technical debt, first-principles implementation fit, project-rule drift, and refactor or warning recommendations.
    - For PR work, expose conflict, merge, behavior, compatibility, and release-risk decisions to the user instead of handling them silently.
    - Run or explicitly skip `insight` to review tool-calling quality, repeated low-value lookup loops, misleading evidence, docs/code conflicts, AI infrastructure lessons, and whether the work should become a skill, source record, eval case, or existing workflow change.
 
-## Response Structure
+## Communication Style
 
-- Default to answer-first Chinese.
-- For material answers, use:
-  - `直接执行`: the result, concrete action, or current requested output.
-  - `深度交互（如有）`: respectful challenge, hidden cost, premise correction, or a better lower-cost alternative when the underlying logic calls for it.
-- Keep tiny status updates concise when the two-part structure would add noise.
+- Respond in Chinese by default.
+- Start with the useful answer, result, or current status when possible.
+- Let the structure fit the task; use headings, bullets, or short prose only when they reduce reading cost.
+- Surface premise corrections, hidden costs, risks, and lower-cost alternatives inline when they matter.
+- Keep tiny status updates concise.
 
 ## Personal Distribution Policy
 
@@ -122,11 +123,11 @@ The target architecture is a thin, executable `workflow-router` that classifies 
 
 `effective-interact` is high-priority communication infrastructure. Default-consider it for every non-trivial session, especially after material repo or skill changes. Its job is to reduce human interpretation cost through answer-first structure, visual comparison, evidence, validation, and handoff artifacts; it does not replace production UI, slide, or bundled app skills.
 
-Subagents are an optimization owned by the active workflow, not a default behavior of every skill. Use them only for independent read-only research, review, docs work, verification, or clearly disjoint write scopes; the main agent keeps final decisions, integration, and user-facing conclusions. Subagents keep private runtime state under ignored `.harness-hub/state/runs/<runId>/`; the main agent is the only writer of root progress and handoff summaries.
+Subagents are an executor mode owned by the active workflow, not a separate workflow owner. Required loops may call them for independent read-only research, review, docs work, verification, or clearly disjoint write scopes; the main agent keeps final decisions, integration, and user-facing conclusions. Subagents keep private runtime state under ignored `.harness-hub/state/runs/<runId>/`; the main agent is the only writer of root progress and handoff summaries.
 
 Hooks should start as advisory or deterministic local checks only. Do not introduce blocking hooks, remote actions, credential changes, posting, pushing, publishing, or agent dispatch without explicit user approval and security review.
 
-Agentic loops are workflow-stage mechanics, not a replacement for workflow owners. Use `skills/workflow-router/references/agentic-loops.md` for Producer -> Verifier -> Arbiter -> Main Agent Decision patterns; `docs/agentic-loop-catalog.md` is the source-repo explainer. Keep generic rules host-neutral with `delegated-agent`; Codex and Claude Code details belong in host adapter docs. Write-capable delegated agents may share the current worktree only after a path lease names non-overlapping owned paths. Arbiters are read-only and do not edit files, resolve conflicts, push, publish, merge, or make final user-facing decisions.
+Agentic loops are workflow-stage mechanics, not a replacement for workflow owners. Use `skills/workflow-router/references/agentic-loops.md` for Producer -> Verifier -> Arbiter -> Main Agent Decision patterns; `docs/agentic-loop-catalog.md` is the source-repo explainer. For mutation work, first derive required loops from changed paths with `harness-hub loop required`, then verify recorded run/integration evidence with `harness-hub loop verify` before handoff when the runtime is available. Keep generic rules host-neutral with `delegated-agent`; Codex and Claude Code details belong in host adapter docs. Write-capable delegated agents may share the current worktree only after a path lease names non-overlapping owned paths. Arbiters are read-only and do not edit files, resolve conflicts, push, publish, merge, or make final user-facing decisions.
 
 ## Agent Development Workflow
 

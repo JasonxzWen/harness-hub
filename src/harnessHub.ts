@@ -777,9 +777,11 @@ interface LatestPackageVersionResult {
 }
 
 type SourcePostCliAction = 'generate' | 'build' | 'validate' | 'publish';
-type LoopCliAction = 'evaluate' | 'schedule' | 'run-start' | 'agent-record' | 'lease-check' | 'collect-trace' | 'integrate';
+type LoopCliAction = 'evaluate' | 'schedule' | 'required' | 'run-start' | 'agent-record' | 'lease-check' | 'collect-trace' | 'integrate' | 'verify';
 export type LoopDecision = 'continue' | 'interrupt';
 export type LoopDecisionConfidence = 'high' | 'medium';
+export type LoopReviewLevel = 'L0' | 'L1' | 'L2';
+export type LoopExecutorMode = 'subagent' | 'isolated-session' | 'deterministic-check' | 'main-agent-self-review';
 
 export interface LoopActionIntent {
   schemaVersion?: number;
@@ -834,7 +836,46 @@ export interface LoopScheduleResult {
   reason: string;
 }
 
-type LoopOrchestrationAction = Exclude<LoopCliAction, 'evaluate' | 'schedule'>;
+export interface LoopRequiredItem {
+  loop: string;
+  level: LoopReviewLevel;
+  reason: string;
+  paths: string[];
+  requiredEvidence: string[];
+  executorModes: LoopExecutorMode[];
+}
+
+export interface LoopRequiredResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  targetDir: string;
+  changedPaths: string[];
+  requiredLoops: LoopRequiredItem[];
+  exitCode: 0 | 3;
+  reason: string;
+}
+
+export interface LoopVerificationFinding {
+  id: string;
+  message: string;
+  loop?: string;
+  path?: string;
+}
+
+export interface LoopVerificationResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  targetDir: string;
+  runId: string;
+  runDir: string;
+  status: 'pass' | 'blocked';
+  requiredLoops: LoopRequiredItem[];
+  findings: LoopVerificationFinding[];
+  exitCode: 0 | 3;
+  reason: string;
+}
+
+type LoopOrchestrationAction = 'run-start' | 'agent-record' | 'lease-check' | 'collect-trace' | 'integrate';
 type LoopOrchestrationStatus = 'planned' | 'running' | 'completed' | 'failed' | 'blocked' | 'pass' | 'warn' | 'skipped';
 
 export interface LoopOrchestrationFinding {
@@ -3513,6 +3554,94 @@ export function scheduleLoopActions(
   return options.record ? recordLoopSchedule(result) : result;
 }
 
+export function determineRequiredLoops(
+  targetDir: string,
+  options: { generatedAt?: string; changedPaths?: string[] } = {},
+): LoopRequiredResult {
+  const resolvedTarget = path.resolve(targetDir);
+  const generatedAt = options.generatedAt || new Date().toISOString();
+  const changedPaths = uniqueStrings((options.changedPaths || collectLoopChangedPaths(resolvedTarget))
+    .map((item) => normalizePortablePath(item))
+    .filter((item) => item && !isUntrackedHarnessRuntimePath(item)))
+    .sort();
+  const requiredLoops = classifyRequiredLoops(changedPaths);
+
+  return {
+    schemaVersion: 1,
+    generatedAt,
+    targetDir: resolvedTarget,
+    changedPaths,
+    requiredLoops,
+    exitCode: requiredLoops.length > 0 ? 3 : 0,
+    reason: requiredLoops.length > 0
+      ? `${requiredLoops.length} required loop${requiredLoops.length === 1 ? '' : 's'} must be evidenced before handoff.`
+      : 'No mutation paths require loop evidence.',
+  };
+}
+
+export function verifyLoopEvidence(
+  targetDir: string,
+  input: unknown,
+  options: { generatedAt?: string } = {},
+): LoopVerificationResult {
+  const resolvedTarget = path.resolve(targetDir);
+  const generatedAt = options.generatedAt || new Date().toISOString();
+  const verification = normalizeLoopVerificationInput(resolvedTarget, input);
+  const requiredLoops = verification.requiredLoops.length > 0
+    ? verification.requiredLoops
+    : determineRequiredLoops(resolvedTarget, { generatedAt }).requiredLoops;
+  const runDir = loopRunDir(resolvedTarget, verification.runId);
+  const findings: LoopVerificationFinding[] = [];
+  const runRecord = readOptionalJson(path.join(runDir, 'run.json'));
+  const integration = readOptionalJson(path.join(runDir, 'integration.json'));
+  const agentStates = readLoopAgentStates(runDir);
+
+  if (!runRecord) {
+    findings.push({
+      id: 'missing-run-state',
+      message: `Loop run state is missing for '${verification.runId}'.`,
+      path: normalizePortablePath(path.relative(resolvedTarget, path.join(runDir, 'run.json'))),
+    });
+  }
+
+  if (!integration) {
+    findings.push({
+      id: 'missing-integration',
+      message: `Loop integration record is missing for '${verification.runId}'.`,
+      path: normalizePortablePath(path.relative(resolvedTarget, path.join(runDir, 'integration.json'))),
+    });
+  } else if (isRecord(integration)) {
+    const verdict = typeof integration.verdict === 'string' ? normalizeToken(integration.verdict) : '';
+    if (verdict === 'fail' || verdict === 'blocked') {
+      findings.push({
+        id: 'blocked-integration',
+        message: `Loop integration verdict is '${verdict}'.`,
+        path: normalizePortablePath(path.relative(resolvedTarget, path.join(runDir, 'integration.json'))),
+      });
+    }
+  }
+
+  for (const required of requiredLoops) {
+    const loopFindings = verifyRequiredLoopEvidence(required, runRecord, integration, agentStates);
+    findings.push(...loopFindings);
+  }
+
+  return {
+    schemaVersion: 1,
+    generatedAt,
+    targetDir: resolvedTarget,
+    runId: verification.runId,
+    runDir,
+    status: findings.length === 0 ? 'pass' : 'blocked',
+    requiredLoops,
+    findings,
+    exitCode: findings.length === 0 ? 0 : 3,
+    reason: findings.length === 0
+      ? `Loop run ${verification.runId} satisfies required loop evidence.`
+      : `Loop run ${verification.runId} is missing required loop evidence.`,
+  };
+}
+
 export function startLoopOrchestrationRun(
   targetDir: string,
   input: unknown,
@@ -3540,7 +3669,7 @@ export function startLoopOrchestrationRun(
     return result;
   }
 
-  ensureHarnessStateDir(resolvedTarget);
+  ensureLoopRuntimeStateDir(resolvedTarget);
   fs.mkdirSync(runDir, { recursive: true });
   writeJsonFile(path.join(runDir, 'run.json'), {
     schemaVersion: 1,
@@ -3636,20 +3765,35 @@ export function checkLoopPathLease(
   if (!options.record) {
     return result;
   }
-  if (!pass) {
-    return result;
-  }
 
   ensureLoopRunExists(runDir);
-  const leasePath = path.join(runDir, 'leases', `${lease.leaseId}.json`);
-  writeJsonFile(leasePath, {
-    schemaVersion: 1,
-    ...lease,
-    status: 'active',
-    grantedAt: generatedAt,
-    baselineHashes: buildBaselineHashes(resolvedTarget, lease.ownedPaths),
+  return withLoopRunMutationLock(runDir, 'lease-check', () => {
+    const lockedFindings = evaluateLoopLease(resolvedTarget, runDir, lease);
+    const lockedPass = lockedFindings.length === 0;
+    const lockedStatus: LoopOrchestrationStatus = lockedPass ? 'pass' : 'blocked';
+    const lockedResult = {
+      ...result,
+      status: lockedStatus,
+      exitCode: lockedPass ? 0 as const : 3 as const,
+      reason: lockedPass
+        ? `Lease ${lease.leaseId} has no path conflicts.`
+        : `Lease ${lease.leaseId} is blocked by ${lockedFindings.length} finding${lockedFindings.length === 1 ? '' : 's'}.`,
+      findings: lockedFindings,
+    };
+    if (!lockedPass) {
+      return lockedResult;
+    }
+
+    const leasePath = path.join(runDir, 'leases', `${lease.leaseId}.json`);
+    writeJsonFile(leasePath, {
+      schemaVersion: 1,
+      ...lease,
+      status: 'active',
+      grantedAt: generatedAt,
+      baselineHashes: buildBaselineHashes(resolvedTarget, lease.ownedPaths),
+    });
+    return { ...lockedResult, recorded: true };
   });
-  return { ...result, recorded: true };
 }
 
 export function collectLoopAgentTrace(
@@ -3892,6 +4036,13 @@ function normalizeLoopIntegrationInput(input: unknown): {
   verdict: string;
   mainAgentDecision: string;
   agentIds: string[];
+  loops: string[];
+  executorMode: LoopExecutorMode | null;
+  fallbackReason: string | null;
+  validationStatus: string | null;
+  validationEvidence: string[];
+  arbiterVerdict: string | null;
+  arbiterEvidence: string[];
 } {
   if (!isRecord(input)) {
     throw new CliError('Loop integration input must be a JSON object.', 2);
@@ -3904,7 +4055,319 @@ function normalizeLoopIntegrationInput(input: unknown): {
       ? normalizeToken(input.mainAgentDecision)
       : 'integrate',
     agentIds: normalizeStringArray(input.agentIds).map((agentId) => normalizeRuntimeId(agentId, '', 'agentId')),
+    loops: normalizeStringArray(input.loops).map((loop) => normalizeToken(loop)).filter(Boolean),
+    executorMode: normalizeLoopExecutorMode(input.executorMode),
+    fallbackReason: typeof input.fallbackReason === 'string' && input.fallbackReason.trim() ? input.fallbackReason.trim() : null,
+    validationStatus: typeof input.validationStatus === 'string' && input.validationStatus.trim()
+      ? normalizeToken(input.validationStatus)
+      : null,
+    validationEvidence: normalizeStringArray(input.validationEvidence),
+    arbiterVerdict: typeof input.arbiterVerdict === 'string' && input.arbiterVerdict.trim()
+      ? normalizeToken(input.arbiterVerdict)
+      : null,
+    arbiterEvidence: normalizeStringArray(input.arbiterEvidence),
   };
+}
+
+function normalizeLoopVerificationInput(targetDir: string, input: unknown): {
+  runId: string;
+  requiredLoops: LoopRequiredItem[];
+} {
+  if (!isRecord(input)) {
+    throw new CliError('Loop verification input must be a JSON object.', 2);
+  }
+  return {
+    runId: normalizeRuntimeId(input.runId, '', 'runId'),
+    requiredLoops: normalizeRequiredLoopItems(targetDir, input.requiredLoops),
+  };
+}
+
+function normalizeRequiredLoopItems(targetDir: string, value: unknown): LoopRequiredItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .filter(isRecord)
+    .map((item): LoopRequiredItem => {
+      const loop = typeof item.loop === 'string' && item.loop.trim() ? normalizeToken(item.loop) : 'implementation-review';
+      const level = normalizeLoopReviewLevel(item.level);
+      return {
+        loop,
+        level,
+        reason: typeof item.reason === 'string' && item.reason.trim() ? item.reason.trim() : 'required by verification input',
+        paths: normalizeLoopPathList(targetDir, item.paths),
+        requiredEvidence: normalizeStringArray(item.requiredEvidence),
+        executorModes: normalizeLoopExecutorModes(item.executorModes, level),
+      };
+    });
+}
+
+function normalizeLoopReviewLevel(value: unknown): LoopReviewLevel {
+  return value === 'L0' || value === 'L1' || value === 'L2' ? value : 'L1';
+}
+
+function normalizeLoopExecutorMode(value: unknown): LoopExecutorMode | null {
+  const candidate = typeof value === 'string' ? normalizeToken(value) : '';
+  if (
+    candidate === 'subagent'
+    || candidate === 'isolated-session'
+    || candidate === 'deterministic-check'
+    || candidate === 'main-agent-self-review'
+  ) {
+    return candidate;
+  }
+  return null;
+}
+
+function normalizeLoopExecutorModes(value: unknown, level: LoopReviewLevel): LoopExecutorMode[] {
+  const modes = normalizeStringArray(value)
+    .map((item) => normalizeLoopExecutorMode(item))
+    .filter((item): item is LoopExecutorMode => Boolean(item));
+  return modes.length > 0 ? modes : defaultExecutorModesForLevel(level);
+}
+
+function collectLoopChangedPaths(targetDir: string): string[] {
+  return detectDirtyWorktree(targetDir).map((entry) => entry.path);
+}
+
+function classifyRequiredLoops(changedPaths: string[]): LoopRequiredItem[] {
+  const groups = new Map<string, { level: LoopReviewLevel; paths: string[]; reasons: string[] }>();
+  const add = (loop: string, level: LoopReviewLevel, pathValue: string, reason: string) => {
+    const current = groups.get(loop);
+    if (!current) {
+      groups.set(loop, { level, paths: [pathValue], reasons: [reason] });
+      return;
+    }
+    current.level = higherLoopLevel(current.level, level);
+    current.paths = uniqueStrings([...current.paths, pathValue]).sort();
+    current.reasons = uniqueStrings([...current.reasons, reason]).sort();
+  };
+
+  for (const changedPath of changedPaths) {
+    let matched = false;
+    if (isSecuritySensitiveLoopPath(changedPath)) {
+      add('security-review', 'L2', changedPath, 'security-sensitive path changed');
+      matched = true;
+    }
+    if (isWorkflowLoopPath(changedPath)) {
+      add('workflow-review', workflowLoopLevel(changedPath), changedPath, 'workflow, harness, or agent rule path changed');
+      matched = true;
+    }
+    if (changedPath.startsWith('src/')) {
+      add('implementation-review', 'L1', changedPath, 'source path changed');
+      matched = true;
+    }
+    if (changedPath.startsWith('tests/')) {
+      add('test-review', 'L1', changedPath, 'test path changed');
+      matched = true;
+    }
+    if (isDocumentationLoopPath(changedPath)) {
+      add('docs-consistency', changedPaths.some((pathValue) => pathValue.startsWith('src/') || isWorkflowLoopPath(pathValue)) ? 'L1' : 'L0', changedPath, 'documentation path changed');
+      matched = true;
+    }
+    if (!matched) {
+      add('implementation-review', 'L1', changedPath, 'general mutation path changed');
+    }
+  }
+
+  return [...groups.entries()]
+    .map(([loop, group]): LoopRequiredItem => ({
+      loop,
+      level: group.level,
+      reason: group.reasons.join('; '),
+      paths: group.paths.sort(),
+      requiredEvidence: requiredEvidenceForLoopLevel(group.level),
+      executorModes: defaultExecutorModesForLevel(group.level),
+    }))
+    .sort((left, right) => left.loop.localeCompare(right.loop));
+}
+
+function isDocumentationLoopPath(changedPath: string): boolean {
+  return changedPath === 'README.md'
+    || changedPath === 'README.zh-CN.md'
+    || changedPath.startsWith('docs/')
+    || changedPath.endsWith('.md');
+}
+
+function isWorkflowLoopPath(changedPath: string): boolean {
+  return changedPath === 'AGENTS.md'
+    || changedPath === 'CLAUDE.md'
+    || changedPath.startsWith('harness/')
+    || changedPath.startsWith('skills/')
+    || changedPath.startsWith('.github/')
+    || changedPath.startsWith('capabilities/')
+    || changedPath.includes('workflow')
+    || changedPath.includes('agentic-loop');
+}
+
+function isSecuritySensitiveLoopPath(changedPath: string): boolean {
+  const normalized = changedPath.toLowerCase();
+  return normalized.startsWith('.github/workflows/')
+    || /auth|credential|secret|token|permission|approval|security|sandbox|filesystem|publish|remote/.test(normalized);
+}
+
+function workflowLoopLevel(changedPath: string): LoopReviewLevel {
+  return changedPath.startsWith('harness/')
+    || changedPath.startsWith('skills/')
+    || changedPath === 'AGENTS.md'
+    || changedPath === 'CLAUDE.md'
+    ? 'L2'
+    : 'L1';
+}
+
+function higherLoopLevel(left: LoopReviewLevel, right: LoopReviewLevel): LoopReviewLevel {
+  const rank: Record<LoopReviewLevel, number> = { L0: 0, L1: 1, L2: 2 };
+  return rank[right] > rank[left] ? right : left;
+}
+
+function requiredEvidenceForLoopLevel(level: LoopReviewLevel): string[] {
+  if (level === 'L0') {
+    return ['self-review evidence', 'validation result', 'main-agent decision'];
+  }
+  if (level === 'L1') {
+    return ['independent review or fallback reason', 'validation result', 'main-agent decision', 'integration record'];
+  }
+  return ['parallel or multi-lens review', 'arbiter decision', 'validation result', 'main-agent decision', 'integration record'];
+}
+
+function defaultExecutorModesForLevel(level: LoopReviewLevel): LoopExecutorMode[] {
+  if (level === 'L0') {
+    return ['main-agent-self-review', 'deterministic-check'];
+  }
+  if (level === 'L1') {
+    return ['subagent', 'isolated-session', 'deterministic-check'];
+  }
+  return ['subagent', 'isolated-session'];
+}
+
+function readLoopAgentStates(runDir: string): Array<Record<string, unknown>> {
+  const agentsDir = path.join(runDir, 'agents');
+  if (!fs.existsSync(agentsDir)) {
+    return [];
+  }
+  return fs.readdirSync(agentsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => readOptionalJson(path.join(agentsDir, entry.name, 'state.json')))
+    .filter(isRecord);
+}
+
+function verifyRequiredLoopEvidence(
+  required: LoopRequiredItem,
+  runRecord: unknown,
+  integration: unknown,
+  agentStates: Array<Record<string, unknown>>,
+): LoopVerificationFinding[] {
+  const findings: LoopVerificationFinding[] = [];
+  const integratedLoops = isRecord(integration) ? normalizeStringArray(integration.loops).map((loop) => normalizeToken(loop)) : [];
+  const runLoop = isRecord(runRecord) && typeof runRecord.loop === 'string' ? normalizeToken(runRecord.loop) : '';
+  const integrationExecutorMode = isRecord(integration) ? normalizeLoopExecutorMode(integration.executorMode) : null;
+  const fallbackReason = isRecord(integration) && typeof integration.fallbackReason === 'string' ? integration.fallbackReason.trim() : '';
+  const validationStatus = isRecord(integration) && typeof integration.validationStatus === 'string' ? normalizeToken(integration.validationStatus) : '';
+  const validationEvidence = isRecord(integration) ? normalizeStringArray(integration.validationEvidence) : [];
+  const arbiterVerdict = isRecord(integration) && typeof integration.arbiterVerdict === 'string' ? normalizeToken(integration.arbiterVerdict) : '';
+  const arbiterEvidence = isRecord(integration) ? normalizeStringArray(integration.arbiterEvidence) : [];
+  const loopIntegrated = integratedLoops.includes(required.loop)
+    || (integratedLoops.length === 0 && runLoop === required.loop);
+  const matchingAgents = agentStates.filter((state) => loopAgentMatchesRequiredLoop(state, required.loop));
+  const hasIndependentAgent = matchingAgents.some((state) => state.readOnly === true && loopStatusIsComplete(state.status));
+  const hasDeterministicFallback = Boolean(fallbackReason) && integrationExecutorMode === 'deterministic-check';
+  const hasValidationEvidence = loopValidationStatusPasses(validationStatus) || validationEvidence.length > 0;
+  const validationBlocked = validationStatus === 'fail' || validationStatus === 'failed' || validationStatus === 'blocked';
+  const hasArbiterAgent = agentStates.some((state) => loopAgentIsArbiter(state) && state.readOnly === true && loopStatusIsComplete(state.status));
+  const hasArbiterEvidence = hasArbiterAgent || (loopArbiterVerdictPasses(arbiterVerdict) && arbiterEvidence.length > 0);
+
+  if (!loopIntegrated) {
+    findings.push({
+      id: 'missing-loop-integration',
+      message: `Integration record does not name required loop '${required.loop}'.`,
+      loop: required.loop,
+      path: 'integration.json',
+    });
+  }
+
+  if (validationBlocked) {
+    findings.push({
+      id: 'blocked-validation-evidence',
+      message: `Required loop '${required.loop}' has blocking validation status '${validationStatus}'.`,
+      loop: required.loop,
+      path: 'integration.json',
+    });
+  } else if (!hasValidationEvidence) {
+    findings.push({
+      id: 'missing-validation-evidence',
+      message: `Required loop '${required.loop}' needs validation evidence in the integration record.`,
+      loop: required.loop,
+      path: 'integration.json',
+    });
+  }
+
+  if (required.level === 'L0') {
+    return findings;
+  }
+
+  if (!hasIndependentAgent && !hasDeterministicFallback) {
+    findings.push({
+      id: 'missing-review-evidence',
+      message: `Required loop '${required.loop}' needs independent review evidence or an explicit deterministic fallback reason.`,
+      loop: required.loop,
+      path: 'agents/*/state.json',
+    });
+  }
+
+  if (required.level === 'L2') {
+    if (!hasIndependentAgent || (integrationExecutorMode !== 'subagent' && integrationExecutorMode !== 'isolated-session')) {
+      findings.push({
+        id: 'missing-isolated-executor',
+        message: `Required L2 loop '${required.loop}' needs subagent or isolated-session review evidence.`,
+        loop: required.loop,
+        path: 'agents/*/state.json',
+      });
+    }
+    if (!hasArbiterEvidence) {
+      findings.push({
+        id: 'missing-arbiter-evidence',
+        message: `Required L2 loop '${required.loop}' needs read-only arbiter evidence.`,
+        loop: required.loop,
+        path: 'integration.json',
+      });
+    }
+  }
+
+  return findings;
+}
+
+function loopAgentMatchesRequiredLoop(state: Record<string, unknown>, loop: string): boolean {
+  const role = typeof state.role === 'string' ? normalizeToken(state.role) : '';
+  return role === loop || role === 'reviewer' || role === 'delegated-agent';
+}
+
+function loopStatusIsComplete(value: unknown): boolean {
+  const status = typeof value === 'string' ? normalizeToken(value) : '';
+  return status === 'completed' || status === 'pass' || status === 'warn';
+}
+
+function loopAgentIsArbiter(state: Record<string, unknown>): boolean {
+  const role = typeof state.role === 'string' ? normalizeToken(state.role) : '';
+  return role === 'arbiter' || role.endsWith('-arbiter');
+}
+
+function loopValidationStatusPasses(status: string): boolean {
+  return status === 'pass' || status === 'passed' || status === 'completed' || status === 'warn';
+}
+
+function loopArbiterVerdictPasses(verdict: string): boolean {
+  return verdict === 'pass' || verdict === 'passed' || verdict === 'accept' || verdict === 'accepted' || verdict === 'warn';
+}
+
+function readOptionalJson(filePath: string): unknown {
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
 }
 
 function normalizeRuntimeId(value: unknown, fallback: string, field: string): string {
@@ -3953,9 +4416,92 @@ function ensureHarnessStateDir(targetDir: string): void {
   }
 }
 
+function ensureLoopRuntimeStateDir(targetDir: string): void {
+  const resolvedTarget = path.resolve(targetDir);
+  const harnessDir = path.join(resolvedTarget, '.harness-hub');
+  const stateDir = path.join(harnessDir, 'state');
+  fs.mkdirSync(stateDir, { recursive: true });
+  ensureHarnessRuntimeIgnore(resolvedTarget, harnessDir);
+}
+
+function ensureHarnessRuntimeIgnore(targetDir: string, harnessDir: string): void {
+  fs.mkdirSync(harnessDir, { recursive: true });
+  const gitignorePath = path.join(harnessDir, '.gitignore');
+  if (fs.existsSync(gitignorePath)) {
+    ensureIgnoreFileLines(gitignorePath, ['state/', 'reports/']);
+    return;
+  }
+
+  if (ensureGitInfoExcludeLines(targetDir, ['.harness-hub/state/', '.harness-hub/reports/'])) {
+    return;
+  }
+
+  ensureIgnoreFileLines(gitignorePath, ['state/', 'reports/']);
+}
+
+function ensureIgnoreFileLines(ignorePath: string, requiredLines: string[]): void {
+  fs.mkdirSync(path.dirname(ignorePath), { recursive: true });
+  if (!fs.existsSync(ignorePath)) {
+    fs.writeFileSync(ignorePath, `${requiredLines.join('\n')}\n`, 'utf8');
+    return;
+  }
+
+  const existing = fs.readFileSync(ignorePath, 'utf8');
+  const existingLines = existing.split(/\r?\n/).map((line) => line.trim());
+  const missingLines = requiredLines.filter((line) => !existingLines.includes(line));
+  if (missingLines.length === 0) {
+    return;
+  }
+
+  const separator = existing.endsWith('\n') || existing.length === 0 ? '' : '\n';
+  fs.appendFileSync(ignorePath, `${separator}${missingLines.join('\n')}\n`, 'utf8');
+}
+
+function ensureGitInfoExcludeLines(targetDir: string, requiredLines: string[]): boolean {
+  try {
+    execFileSync('git', ['rev-parse', '--is-inside-work-tree'], {
+      cwd: targetDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const output = execFileSync('git', ['rev-parse', '--git-path', 'info/exclude'], {
+      cwd: targetDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (!output) {
+      return false;
+    }
+    const excludePath = path.isAbsolute(output) || path.win32.isAbsolute(output)
+      ? output
+      : path.resolve(targetDir, output);
+    ensureIgnoreFileLines(excludePath, requiredLines);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function ensureLoopRunExists(runDir: string): void {
   if (!fs.existsSync(path.join(runDir, 'run.json'))) {
     throw new CliError(`Loop run is missing at ${runDir}. Run loop run-start --yes first.`, 3);
+  }
+}
+
+function withLoopRunMutationLock<T>(runDir: string, name: string, callback: () => T): T {
+  const locksDir = path.join(runDir, '.locks');
+  fs.mkdirSync(locksDir, { recursive: true });
+  const lockDir = path.join(locksDir, name);
+  try {
+    fs.mkdirSync(lockDir);
+  } catch {
+    throw new CliError(`Loop run is busy for '${name}'. Retry after the current writer finishes.`, 3);
+  }
+
+  try {
+    return callback();
+  } finally {
+    fs.rmSync(lockDir, { recursive: true, force: true });
   }
 }
 
@@ -8451,7 +8997,7 @@ function parseArgs(argv: string[]): CliOptions {
   if (options.command === 'loop') {
     const action = argv[1];
     if (!action || action.startsWith('-')) {
-      throw new CliError('Use "harness-hub loop <evaluate|schedule>".', 2);
+      throw new CliError('Use "harness-hub loop <evaluate|schedule|required|run-start|agent-record|lease-check|collect-trace|integrate|verify>".', 2);
     }
     options.loopAction = parseLoopAction(action);
     firstOptionIndex = 2;
@@ -8526,15 +9072,17 @@ function parseLoopAction(value: string): LoopCliAction {
   if (
     value === 'evaluate'
     || value === 'schedule'
+    || value === 'required'
     || value === 'run-start'
     || value === 'agent-record'
     || value === 'lease-check'
     || value === 'collect-trace'
     || value === 'integrate'
+    || value === 'verify'
   ) {
     return value;
   }
-  throw new CliError(`Unknown loop action '${value}'. Available: evaluate, schedule, run-start, agent-record, lease-check, collect-trace, integrate`, 2);
+  throw new CliError(`Unknown loop action '${value}'. Available: evaluate, schedule, required, run-start, agent-record, lease-check, collect-trace, integrate, verify`, 2);
 }
 
 export async function runCli(argv: string[]): Promise<number> {
@@ -8689,6 +9237,11 @@ async function runCliInner(argv: string[]): Promise<number> {
   }
 
   if (options.command === 'loop') {
+    if (options.loopAction === 'required') {
+      const result = determineRequiredLoops(options.targetDir || process.cwd());
+      emitReport(renderLifecycleReport('Harness Hub Loop Required Report', result, options), options);
+      return result.exitCode;
+    }
     if (!options.input) {
       throw new CliError('Use --input <file> with "harness-hub loop <action>".', 2);
     }
@@ -8742,6 +9295,11 @@ async function runCliInner(argv: string[]): Promise<number> {
         record: options.yes,
       });
       emitReport(renderLifecycleReport('Harness Hub Loop Integration Report', result, options), options);
+      return result.exitCode;
+    }
+    if (options.loopAction === 'verify') {
+      const result = verifyLoopEvidence(options.targetDir || process.cwd(), readJsonFile<unknown>(inputPath));
+      emitReport(renderLifecycleReport('Harness Hub Loop Verification Report', result, options), options);
       return result.exitCode;
     }
   }
@@ -8844,7 +9402,9 @@ type LifecycleReportData =
   | HarnessValidationResult
   | LoopDecisionResult
   | LoopScheduleResult
+  | LoopRequiredResult
   | LoopOrchestrationResult
+  | LoopVerificationResult
   | SourcePostResult
   | SourcePostBuildResult
   | SourcePostValidationResult
@@ -8953,6 +9513,50 @@ function rowsForLifecycleData(
       })),
       ...data.target.updates.map((row) => ({ ...row, state: 'update-available' })),
       ...data.target.blockers.map((row) => ({ ...row, state: row.state })),
+    ];
+  }
+
+  if ('requiredLoops' in data && 'changedPaths' in data) {
+    return [
+      {
+        id: 'required-loops',
+        state: data.requiredLoops.length > 0 ? 'blocked' : 'pass',
+        dest: data.reason,
+        version: `${data.changedPaths.length} changed paths`,
+        latestVersion: `${data.requiredLoops.length} loops`,
+      },
+      ...data.requiredLoops.map((loop) => ({
+        id: loop.loop,
+        state: loop.level,
+        dest: loop.reason,
+        version: loop.paths.join(', '),
+        latestVersion: loop.requiredEvidence.join(', '),
+      })),
+    ];
+  }
+
+  if ('requiredLoops' in data && 'findings' in data && 'runId' in data) {
+    return [
+      {
+        id: data.runId,
+        state: data.status,
+        dest: data.reason,
+        version: `${data.requiredLoops.length} required loops`,
+        latestVersion: `${data.findings.length} findings`,
+      },
+      ...data.requiredLoops.map((loop) => ({
+        id: loop.loop,
+        state: loop.level,
+        dest: loop.reason,
+        version: loop.paths.join(', '),
+        latestVersion: loop.requiredEvidence.join(', '),
+      })),
+      ...data.findings.map((finding) => ({
+        id: finding.id,
+        state: 'blocked',
+        dest: finding.loop || finding.path || data.runDir,
+        version: finding.message,
+      })),
     ];
   }
 
@@ -9296,6 +9900,14 @@ function summaryForLifecycleData(
     return `${data.decisions.length} loop actions evaluated, next action ${data.nextActionId || 'none'}, ${data.interruptedActionIds.length} interrupted. ${data.recorded ? 'Recorded.' : 'Not recorded.'} ${data.reason}`;
   }
 
+  if ('requiredLoops' in data && 'changedPaths' in data) {
+    return `${data.requiredLoops.length} required loops for ${data.changedPaths.length} changed paths. ${data.reason}`;
+  }
+
+  if ('requiredLoops' in data && 'findings' in data && 'runId' in data) {
+    return `Loop evidence ${data.status} for ${data.runId}: ${data.findings.length} findings across ${data.requiredLoops.length} required loops. ${data.reason}`;
+  }
+
   if ('loopOrchestrationAction' in data) {
     return `${data.loopOrchestrationAction} ${data.runId}: ${data.status}. ${data.recorded ? 'Recorded.' : 'Not recorded.'} ${data.reason}`;
   }
@@ -9451,11 +10063,13 @@ Usage:
   harness-hub source-post publish [target] --dry-run [--allow-dirty] [--json|--html] [--output file]
   harness-hub loop evaluate [target] --input action.json [--yes] [--json|--html] [--output file]
   harness-hub loop schedule [target] --input actions.jsonl [--yes] [--json|--html] [--output file]
+  harness-hub loop required [target] [--json|--html] [--output file]
   harness-hub loop run-start [target] --input run.json [--yes] [--json|--html] [--output file]
   harness-hub loop agent-record [target] --input agent.json [--yes] [--json|--html] [--output file]
   harness-hub loop lease-check [target] --input lease.json [--yes] [--json|--html] [--output file]
   harness-hub loop collect-trace [target] --input trace.json [--yes] [--json|--html] [--output file]
   harness-hub loop integrate [target] --input integration.json [--yes] [--json|--html] [--output file]
+  harness-hub loop verify [target] --input verify.json [--json|--html] [--output file]
   harness-hub status [target] [--json|--html] [--output file]
   harness-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
   harness-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
@@ -9471,6 +10085,7 @@ Use activate-agents to sync installed project-local skills into ignored .codex/s
 validate-harness includes standard harness checks, five-subsystem assessment, and a structural benchmark.
 Use source-post for structured source-post generation and GitHub Pages preflight.
 Use loop evaluate/schedule to decide continue vs interrupt and optionally append local Loop ledgers with --yes.
+Use loop required/verify to derive dirty-path review gates and block handoff when loop evidence is missing.
 Use loop run-start/agent-record/lease-check/collect-trace/integrate for local subagent orchestration state under ignored .harness-hub/state/runs.
 `);
 }

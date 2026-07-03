@@ -17,7 +17,7 @@ Harness Hub does a small set of bounded jobs:
 - `install` installs the target-distributed standard skill set only; it does not create root harness files.
 - `standard` migrates prompt, context, harness, and loop engineering resources plus reusable skills, while Harness Hub source-maintenance resources stay local to this repository.
 - the standard harness includes an LLM Wiki context pack under `.harness-hub/context/`.
-- `loop evaluate` and `loop schedule` decide continue vs interrupt and can append local Loop ledgers after `--yes`; `loop run-start`, `agent-record`, `lease-check`, `collect-trace`, and `integrate` record local subagent orchestration state under ignored `.harness-hub/state/runs/`.
+- `loop evaluate` and `loop schedule` decide continue vs interrupt and can append local Loop ledgers after `--yes`; `loop required` and `loop verify` derive dirty-path review gates and block handoff when loop evidence is missing; `loop run-start`, `agent-record`, `lease-check`, `collect-trace`, and `integrate` record local subagent orchestration state under ignored `.harness-hub/state/runs/`.
 - `source-post` creates, builds, validates, and preflights source-backed public posts.
 - the development workflow keeps Loop as a control plane and adds finish closeout before final handoff: final review, PR/merge readiness, and insight learning.
 - agentic loops separate Producer, Verifier, Arbiter, and Main Agent Decision for subagent/delegated-agent acceptance, parallel review, PR closeout, and workflow learning.
@@ -52,7 +52,8 @@ flowchart TD
   Validate --> V1["validate-harness / bun run validate"]
   Maintain --> M1["hub-maintenance-workflow"]
   Context --> C1[".harness-hub/context/wiki"]
-  Loop --> L1["loop evaluate -> loop schedule"]
+  Loop --> L1["loop required -> loop verify"]
+  Loop --> L2["loop evaluate -> loop schedule"]
   SourcePost --> P1["source-post generate -> source-post build -> source-post validate"]
 ```
 
@@ -69,6 +70,7 @@ flowchart TD
 | Validate a bootstrapped repo | `validate-harness --json` | Required files, state, QA boundaries, trigger hygiene, and structural scores. |
 | Reuse stable project context | `.harness-hub/context/wiki/index.md` | LLM Wiki schema, source index, contradiction register, update log, and portable Obsidian profile. |
 | Evaluate Loop risk | `loop evaluate --input action.json --json` | Continue/interrupt decision, risk signals, evidence needs, and optional ledger recording with `--yes`. |
+| Check required closeout loops | `loop required --json` then `loop verify --input verify.json --json` | Dirty-path review gates, evidence-level requirements, and handoff blocking when run/integration evidence is missing. |
 | Maintain this hub | `workflow-router` then `hub-maintenance-workflow` | Source records, routing, capability metadata, docs, templates, and lifecycle safety. |
 | Create a public source-backed post | `source-post generate` | Source ledger, Effective Interact adaptation, Pages output, and publish preflight. |
 
@@ -141,8 +143,10 @@ npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
 npx @jasonwen/harness-hub loop evaluate D:\path\to\target --input action.json --json
 npx @jasonwen/harness-hub loop schedule D:\path\to\target --input actions.jsonl --yes --json
+npx @jasonwen/harness-hub loop required D:\path\to\target --json
 npx @jasonwen/harness-hub loop run-start D:\path\to\target --input run.json --yes --json
 npx @jasonwen/harness-hub loop lease-check D:\path\to\target --input lease.json --yes --json
+npx @jasonwen/harness-hub loop verify D:\path\to\target --input verify.json --json
 npx @jasonwen/harness-hub install D:\path\to\target --target standard --dry-run
 npx @jasonwen/harness-hub install D:\path\to\target --target standard --yes
 npx @jasonwen/harness-hub status D:\path\to\target --json
@@ -195,7 +199,7 @@ Harness Hub does not create the schedule, webhook, commit, push, tool install, o
 | Web and artifacts | `frontend-design`, `design-taste-frontend`, `webapp-testing`, `e2e-testing`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`. |
 | Platform extension | `claude-api`, `mcp-builder`, `skill-creator`, source records, capability metadata. |
 | External tool advice | `check.externalTools` and `analyze --agent-readiness` signals for explicit CodeGraph and Headroom setup. |
-| Harness lifecycle | `check`, `self-check`, `analyze`, `init-harness`, `validate-harness`, `loop evaluate`, `loop schedule`, loop orchestration state commands, `install`, `status`, `update`, `remove`, `harness-quality-check`. |
+| Harness lifecycle | `check`, `self-check`, `analyze`, `init-harness`, `validate-harness`, `loop evaluate`, `loop schedule`, `loop required`, `loop verify`, loop orchestration state commands, `install`, `status`, `update`, `remove`, `harness-quality-check`. |
 | Source-post publishing | `source-post generate`, `source-post build`, `source-post validate`, `source-post publish`. |
 
 ## Source Layout

@@ -93,7 +93,17 @@ test('agent skill sync output stays ignored local state', () => {
 
 test('agent rules stay synchronized for Codex and Claude Code', () => {
   expect(fs.existsSync('CLAUDE.md')).toBe(true);
-  expect(fs.readFileSync('CLAUDE.md', 'utf8')).toBe(fs.readFileSync('AGENTS.md', 'utf8'));
+  const claude = fs.readFileSync('CLAUDE.md', 'utf8');
+  const agents = fs.readFileSync('AGENTS.md', 'utf8');
+  const oldSectionTitle = ['## Response', 'Structure'].join(' ');
+  const oldPrimaryLabel = ['直', '接', '执', '行'].join('');
+  const oldChallengeLabel = ['深', '度', '交', '互'].join('');
+
+  expect(claude).toBe(agents);
+  expect(agents).toContain('## Communication Style');
+  expect(agents).not.toContain(oldSectionTitle);
+  expect(agents).not.toContain(oldPrimaryLabel);
+  expect(agents).not.toContain(oldChallengeLabel);
 });
 
 test('agent skill sync command is packaged and old worktree bootstrap commands are removed', () => {

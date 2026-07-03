@@ -16,7 +16,7 @@ Use this owner when the task starts from a failure or regression.
 5. Write the regression test or deterministic check when possible.
 6. Fix only the confirmed cause.
 7. Test and accept against the symptom and regression scope.
-8. Finish closeout when the diagnosis produced material changes: run a final independent review or skip with reason, inspect PR/merge readiness when relevant, and run or explicitly skip `insight` for tool-calling and workflow-learning signals.
+8. Finish closeout when the diagnosis changed files: run the required closeout loop, inspect PR/merge readiness when relevant, and run or explicitly skip `insight` for tool-calling and workflow-learning signals.
 9. Deliver report with `effective-interact` when evidence, timeline, closeout findings, or validation is non-trivial.
 
 ## Helpers
@@ -30,6 +30,6 @@ Use this owner when the task starts from a failure or regression.
 
 For parallel probes, follow `workflow-router/references/orchestration-policy.md`: use subagents only for independent evidence or verification, keep critical-path reproduction local, and never rely on hooks to dispatch agents.
 
-Use the `diagnosis-regression` agentic loop from `workflow-router/references/agentic-loops.md` when useful: producer proposes the fix, verifier reruns reproduction/regression evidence, arbiter checks whether the confirmed root cause was actually fixed, and the main agent decides whether to continue diagnosis or accept the fix.
+Use the `diagnosis-regression` agentic loop from `workflow-router/references/agentic-loops.md` when useful, and as part of closeout for diagnosis fixes that changed files: producer proposes the fix, verifier reruns reproduction/regression evidence, arbiter checks whether the confirmed root cause was actually fixed, and the main agent decides whether to continue diagnosis or accept the fix.
 
 Do not apply broad refactors while diagnosing unless the accepted fix requires them.
