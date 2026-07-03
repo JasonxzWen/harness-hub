@@ -23,7 +23,7 @@ Use this owner after work has been accepted or implemented and needs closure.
 
 ## Agentic Loops
 
-Use agentic loops from `workflow-router/references/agentic-loops.md` during delivery. For every mutation, derive the required loop from changed paths when available; small changes can use lower evidence but do not skip review:
+Use agentic loops from `workflow-router/references/agentic-loops.md` during delivery. For every mutation, derive the required loop from dirty paths or a base/head diff when available; small changes can use lower evidence but do not skip review:
 
 - `frontend-acceptance`: a fresh-context verifier gathers browser/user-flow evidence, then a read-only arbiter judges the original task, acceptance criteria, current evidence, and residual risk.
 - `implementation-review`: parallel read-only review lenses inspect correctness, maintainability, tests, security, performance, and harness compliance when relevant.

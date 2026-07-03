@@ -4,7 +4,7 @@ Use this policy when a workflow owner considers subagents or hooks.
 
 ## Subagents
 
-The parent workflow owner controls orchestration. Subagents are an executor mode inside an accepted workflow, not a separate workflow owner. Required loops may ask for subagent evidence; the main agent still owns integration and final decisions.
+The parent workflow owner controls orchestration. Subagents are an executor mode inside an accepted workflow, not a separate workflow owner. Required loops may ask for subagent evidence; material or multi-scope reviews should split independent read-only lenses unless a fallback is recorded. The main agent still owns integration and final decisions.
 
 Allowed subagent work:
 
@@ -30,9 +30,9 @@ The main agent owns synthesis, integration, validation, and final user-facing co
 
 Agentic loops are workflow-stage mechanics that separate Producer, Verifier, Arbiter, and Main Agent Decision. Use `workflow-router/references/agentic-loops.md` as the installable canonical loop catalog.
 
-For any mutation, derive required loops from the changed paths when the CLI runtime is available:
+For any mutation, derive required loops from dirty paths or a base/head diff when the CLI runtime is available:
 
-- run `harness-hub loop required <target> --json` after validation or before handoff;
+- run `harness-hub loop required <target> --json`, or `harness-hub loop required <target> --base <ref> --head <ref> --json` after a checkpoint commit, after validation or before handoff;
 - record loop runtime evidence under `.harness-hub/state/runs/<runId>/`;
 - run `harness-hub loop verify <target> --input <file> --json` before final handoff, or record why the runtime could not be used.
 
@@ -40,7 +40,7 @@ Small changes do not skip loop review. They can use a lower evidence level and a
 
 Allowed loop carriers:
 
-- delegated-agent reviews or acceptance runs;
+- delegated-agent reviews or acceptance runs, split into independent lenses for L2 or multi-scope review when available;
 - deterministic tests, validators, browser runs, CI checks, or local scripts;
 - read-only arbiters that judge evidence against the original task and acceptance criteria.
 - local orchestration records under `.harness-hub/state/runs/<runId>/` for subagent state, leases, traces, and main-agent integration.

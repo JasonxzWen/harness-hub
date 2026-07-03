@@ -27,9 +27,9 @@ Use this owner for review-only work.
 - `web-design-guidelines` for UI/UX audits only when that helper is relevant and available.
 - `verification-loop` only for final command gates, not finding analysis.
 
-For parallel review lenses, follow `workflow-router/references/orchestration-policy.md`: subagents can run independent read-only passes, but the main agent owns severity, synthesis, and final conclusions.
+For material or multi-scope review, follow `workflow-router/references/orchestration-policy.md`: split independent read-only lenses into subagents when the platform supports it; otherwise record the fallback reason and run the lenses locally. The main agent owns severity, synthesis, and final conclusions.
 
-Use agentic loops from `workflow-router/references/agentic-loops.md` for material reviews: delegated-agent lenses may act as verifiers, a read-only arbiter deduplicates and ranks evidence, and the main agent owns the final findings-first report.
+Use agentic loops from `workflow-router/references/agentic-loops.md` for material reviews: delegated-agent lenses act as verifiers, a read-only arbiter deduplicates and ranks evidence, and the main agent owns the final findings-first report.
 
 ## Output
 

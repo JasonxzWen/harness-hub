@@ -175,6 +175,29 @@ test('advisory check warns when material delivery lacks an effective-interact ha
   ]);
 });
 
+test('advisory check requires closeout evidence for delivery even when work is not marked material', () => {
+  const result = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--has-validation',
+    '--handoff-waiver',
+    'Chat handoff is sufficient for this tiny change.',
+  ]);
+
+  expect(result.ok).toBe(false);
+  expect(result.expectedOutputMode).toBeNull();
+  expect(result.htmlRequired).toBe(false);
+  expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
+    'missing-closeout-review',
+    'missing-pr-readiness',
+    'missing-insight-audit',
+    'missing-acceptance-arbiter',
+    'missing-final-review-arbiter',
+  ]);
+});
+
 test('advisory check passes delivery when validation, closeout evidence, and HTML handoff are present', () => {
   const result = runAdvisory([
     '--state',
@@ -387,5 +410,34 @@ test('advisory check does not treat an unfilled current-task template as aligned
     'missing-spec',
     'missing-acceptance',
     'missing-plan',
+  ]);
+});
+
+test('advisory check does not treat closeout template labels as evidence', () => {
+  const targetDir = makeTempDir('harness-hub-advisory-closeout-template-');
+  const templatePath = writeCurrentTask(
+    targetDir,
+    fs.readFileSync('harness/minimal/state-templates/current-task.md', 'utf8'),
+  );
+
+  const result = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--has-validation',
+    '--handoff-waiver',
+    'Chat handoff is sufficient for this tiny change.',
+    '--current-task',
+    templatePath,
+  ]);
+
+  expect(result.ok).toBe(false);
+  expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
+    'missing-closeout-review',
+    'missing-pr-readiness',
+    'missing-insight-audit',
+    'missing-acceptance-arbiter',
+    'missing-final-review-arbiter',
   ]);
 });

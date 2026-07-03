@@ -53,12 +53,12 @@ Every non-trivial change request MUST follow this order unless the selected stat
 | 5 | Clean unneeded files | Remove, demote, or mark obsolete files only after ownership and safety are clear. |
 | 6 | Implement | Make the smallest scoped changes that satisfy the accepted spec and plan. |
 | 7 | Test and accept | Run agreed tests, deterministic checks, E2E/manual acceptance, and regression gates. |
-| 8 | Finish closeout | Run the required closeout loop for every mutation, with evidence level based on changed paths; drive PR work to merge-ready or explicitly authorized merge completion, and run or explicitly skip `insight` for tool-calling and workflow-learning feedback. Surface technical-debt, drift, conflict, and merge risks instead of handling them silently. |
+| 8 | Finish closeout | Run the required closeout loop for every mutation, with evidence level based on dirty paths or base/head diffs; drive PR work to merge-ready or explicitly authorized merge completion, and run or explicitly skip `insight` for tool-calling and workflow-learning feedback. Surface technical-debt, drift, conflict, and merge risks instead of handling them silently. |
 | 9 | Deliver report | Produce a user-facing handoff, using `effective-interact` when the work is material or visual comparison/evidence lowers review cost. |
 
 Loop decisions MAY help decide whether a concrete closeout action continues or interrupts, but Loop MUST NOT remove the closeout stage or bypass its review, PR, insight, and handoff evidence.
 
-Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. For mutation work, a required closeout loop MUST be derived from changed paths and MUST record producer, verifier or fallback, arbiter or downgrade reason, evidence, and main-agent decision before handoff. Bounded loops SHOULD record `iteration`, `maxIterations`, and `stopCondition`; deterministic checks MUST reject loop records where the current iteration exceeds the maximum. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
+Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. For mutation work, a required closeout loop MUST be derived from dirty paths or a base/head diff and MUST record producer, verifier or fallback, arbiter or downgrade reason, evidence, and main-agent decision before handoff. Bounded loops SHOULD record `iteration`, `maxIterations`, and `stopCondition`; deterministic checks MUST reject loop records where the current iteration exceeds the maximum. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
 
 ## Requirements
 
