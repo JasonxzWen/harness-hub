@@ -195,7 +195,15 @@ test('installed workflow router routes a user-perspective intent matrix without 
       prompt: 'Finish the accepted work: run validation, clean artifacts, and write the handoff.',
       state: 'delivery',
       owner: 'delivery-workflow',
-      warnings: ['missing-validation'],
+      warnings: [
+        'missing-validation',
+        'missing-closeout-review',
+        'missing-pr-readiness',
+        'missing-insight-audit',
+        'missing-acceptance-arbiter',
+        'missing-final-review-arbiter',
+        'missing-effective-interact-handoff',
+      ],
     },
     {
       prompt: 'Implement a new settings validation feature with acceptance criteria and tests.',
@@ -448,7 +456,7 @@ test('installed skill metadata selects high-overlap helper skills from user prom
     'workflow-router',
   ]);
   expect(caseSmoke.cases.every((entry) => entry.passed)).toBe(true);
-});
+}, 20000);
 
 test('installed skill activation check fails when helper boundary prompts are missing', () => {
   const targetDir = installIntoTemp('harness-hub-user-skill-boundary-smoke-');

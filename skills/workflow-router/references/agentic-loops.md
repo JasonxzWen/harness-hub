@@ -19,9 +19,9 @@ For mutation work, loop review is mandatory. The size of the change only changes
 
 - `L0`: docs-only or mechanical changes may use main-agent self-review plus deterministic validation.
 - `L1`: source, tests, behavior, or mixed docs/code changes need independent review evidence, or an explicit fallback reason plus deterministic substitute.
-- `L2`: workflow, harness, security, release, credential, permission, or remote-action paths need subagent or isolated-session evidence and read-only arbiter judgment unless the user explicitly approves a downgrade.
+- `L2`: workflow, harness, security, release, credential, permission, or remote-action paths need at least two accepted subagent or isolated-session review lenses plus read-only arbiter judgment unless the user explicitly approves a downgrade recorded as `downgradeApproval` with deterministic fallback evidence.
 
-When the Harness Hub CLI runtime is available, derive required loops from the worktree with `harness-hub loop required`, record run, agent, trace, lease, and integration evidence under `.harness-hub/state/runs/<runId>/`, and block handoff until `harness-hub loop verify --input <file>` passes or records the unresolved finding.
+When the Harness Hub CLI runtime is available, derive required loops from the worktree or checkpoint range with `harness-hub loop required` or `harness-hub loop required --base <ref> --head <ref>`, record run, agent, trace, lease, and integration evidence under `.harness-hub/state/runs/<runId>/`, and block handoff until `harness-hub loop verify --input <file>` passes or records the unresolved finding.
 
 ## Standard Loop Types
 

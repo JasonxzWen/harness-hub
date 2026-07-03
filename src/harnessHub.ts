@@ -850,6 +850,9 @@ export interface LoopRequiredResult {
   generatedAt: string;
   targetDir: string;
   changedPaths: string[];
+  changeSource: string;
+  baseRef?: string;
+  headRef?: string;
   requiredLoops: LoopRequiredItem[];
   exitCode: 0 | 3;
   reason: string;
@@ -934,6 +937,8 @@ interface CliOptions {
   slug: string | null;
   allowDirty: boolean;
   validateHarness: boolean;
+  baseRef: string | null;
+  headRef: string | null;
 }
 
 interface PlanInstallOptions {
@@ -1015,6 +1020,7 @@ const MINIMAL_HARNESS_COMPONENT_ID = 'harness:minimal';
 const LOOP_POLICY_VERSION = 'interrupt-policy:v1';
 const LOOP_INTERRUPT_DECISION_LEDGER = '.harness-hub/state/interrupt-decisions.jsonl';
 const LOOP_RUN_LEDGER = '.harness-hub/state/loop-runs.jsonl';
+const LOOP_AGENT_STATE_SHA256_FIELD = '__harnessHubStateSha256';
 const LEGACY_CODEX_AGGREGATION = '.codex/harness-hub-aggregation.json';
 const LEGACY_AGGREGATION_SIZE_LIMIT = 256 * 1024;
 const LOOP_ALLOWED_SIDE_EFFECTS = new Set([
@@ -3556,11 +3562,12 @@ export function scheduleLoopActions(
 
 export function determineRequiredLoops(
   targetDir: string,
-  options: { generatedAt?: string; changedPaths?: string[] } = {},
+  options: { generatedAt?: string; changedPaths?: string[]; baseRef?: string | null; headRef?: string | null } = {},
 ): LoopRequiredResult {
   const resolvedTarget = path.resolve(targetDir);
   const generatedAt = options.generatedAt || new Date().toISOString();
-  const changedPaths = uniqueStrings((options.changedPaths || collectLoopChangedPaths(resolvedTarget))
+  const changeInput = resolveLoopChangeInput(resolvedTarget, options);
+  const changedPaths = uniqueStrings(changeInput.changedPaths
     .map((item) => normalizePortablePath(item))
     .filter((item) => item && !isUntrackedHarnessRuntimePath(item)))
     .sort();
@@ -3571,6 +3578,9 @@ export function determineRequiredLoops(
     generatedAt,
     targetDir: resolvedTarget,
     changedPaths,
+    changeSource: changeInput.source,
+    ...(changeInput.baseRef ? { baseRef: changeInput.baseRef } : {}),
+    ...(changeInput.headRef ? { headRef: changeInput.headRef } : {}),
     requiredLoops,
     exitCode: requiredLoops.length > 0 ? 3 : 0,
     reason: requiredLoops.length > 0
@@ -3582,19 +3592,25 @@ export function determineRequiredLoops(
 export function verifyLoopEvidence(
   targetDir: string,
   input: unknown,
-  options: { generatedAt?: string } = {},
+  options: { generatedAt?: string; baseRef?: string | null; headRef?: string | null } = {},
 ): LoopVerificationResult {
   const resolvedTarget = path.resolve(targetDir);
   const generatedAt = options.generatedAt || new Date().toISOString();
   const verification = normalizeLoopVerificationInput(resolvedTarget, input);
-  const requiredLoops = verification.requiredLoops.length > 0
-    ? verification.requiredLoops
-    : determineRequiredLoops(resolvedTarget, { generatedAt }).requiredLoops;
+  const requiredReport = determineRequiredLoops(resolvedTarget, {
+    generatedAt,
+    baseRef: options.baseRef,
+    headRef: options.headRef,
+  });
+  const requiredLoops = requiredReport.requiredLoops;
   const runDir = loopRunDir(resolvedTarget, verification.runId);
   const findings: LoopVerificationFinding[] = [];
   const runRecord = readOptionalJson(path.join(runDir, 'run.json'));
   const integration = readOptionalJson(path.join(runDir, 'integration.json'));
   const agentStates = readLoopAgentStates(runDir);
+
+  findings.push(...compareExpectedRequiredLoops(verification.expectedRequiredLoops, requiredLoops));
+  findings.push(...verifyAcceptedAgentEvidenceBindings(integration, agentStates));
 
   if (!runRecord) {
     findings.push({
@@ -3670,7 +3686,15 @@ export function startLoopOrchestrationRun(
   }
 
   ensureLoopRuntimeStateDir(resolvedTarget);
-  fs.mkdirSync(runDir, { recursive: true });
+  fs.mkdirSync(path.dirname(runDir), { recursive: true });
+  try {
+    fs.mkdirSync(runDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+      throw error;
+    }
+    throw new CliError(`Loop run '${record.runId}' already exists. Use a new runId instead of reusing prior evidence.`, 3);
+  }
   writeJsonFile(path.join(runDir, 'run.json'), {
     schemaVersion: 1,
     ...record,
@@ -3717,21 +3741,23 @@ export function recordLoopAgentState(
   }
 
   ensureLoopRunExists(runDir);
-  fs.mkdirSync(agentDir, { recursive: true });
-  writeJsonFile(path.join(agentDir, 'state.json'), {
-    schemaVersion: 1,
-    ...agent,
-    updatedAt: generatedAt,
+  return withLoopRunMutationLock(runDir, `agent-${agent.agentId}`, () => {
+    fs.mkdirSync(agentDir, { recursive: true });
+    writeJsonFile(path.join(agentDir, 'state.json'), {
+      schemaVersion: 1,
+      ...agent,
+      updatedAt: generatedAt,
+    });
+    appendJsonl(path.join(agentDir, 'events.jsonl'), {
+      schemaVersion: 1,
+      event: `agent_${agent.status}`,
+      generatedAt,
+      agentId: agent.agentId,
+      host: agent.host,
+      role: agent.role,
+    });
+    return { ...result, recorded: true };
   });
-  appendJsonl(path.join(agentDir, 'events.jsonl'), {
-    schemaVersion: 1,
-    event: `agent_${agent.status}`,
-    generatedAt,
-    agentId: agent.agentId,
-    host: agent.host,
-    role: agent.role,
-  });
-  return { ...result, recorded: true };
 }
 
 export function checkLoopPathLease(
@@ -3827,29 +3853,31 @@ export function collectLoopAgentTrace(
   }
 
   ensureLoopRunExists(runDir);
-  const agentDir = path.join(runDir, 'agents', request.agentId);
-  fs.mkdirSync(agentDir, { recursive: true });
-  writeJsonFile(path.join(agentDir, 'state.json'), {
-    schemaVersion: 1,
-    runId: request.runId,
-    agentId: request.agentId,
-    host: request.host,
-    role: trace.role || 'delegated-agent',
-    status: trace.status,
-    readOnly: request.readOnly ?? true,
-    ownedPaths: [],
-    trace,
-    updatedAt: generatedAt,
+  return withLoopRunMutationLock(runDir, `agent-${request.agentId}`, () => {
+    const agentDir = path.join(runDir, 'agents', request.agentId);
+    fs.mkdirSync(agentDir, { recursive: true });
+    writeJsonFile(path.join(agentDir, 'state.json'), {
+      schemaVersion: 1,
+      runId: request.runId,
+      agentId: request.agentId,
+      host: request.host,
+      role: trace.role || 'delegated-agent',
+      status: trace.status,
+      readOnly: request.readOnly ?? true,
+      ownedPaths: [],
+      trace,
+      updatedAt: generatedAt,
+    });
+    appendJsonl(path.join(agentDir, 'events.jsonl'), {
+      schemaVersion: 1,
+      event: 'trace_collected',
+      generatedAt,
+      agentId: request.agentId,
+      host: request.host,
+      trace,
+    });
+    return { ...result, recorded: true };
   });
-  appendJsonl(path.join(agentDir, 'events.jsonl'), {
-    schemaVersion: 1,
-    event: 'trace_collected',
-    generatedAt,
-    agentId: request.agentId,
-    host: request.host,
-    trace,
-  });
-  return { ...result, recorded: true };
 }
 
 export function integrateLoopOrchestrationRun(
@@ -3861,13 +3889,8 @@ export function integrateLoopOrchestrationRun(
   const generatedAt = options.generatedAt || new Date().toISOString();
   const integration = normalizeLoopIntegrationInput(input);
   const runDir = loopRunDir(resolvedTarget, integration.runId);
-  const findings = integration.agentIds
-    .filter((agentId) => !fs.existsSync(path.join(runDir, 'agents', agentId, 'state.json')))
-    .map((agentId): LoopOrchestrationFinding => ({
-      id: 'missing-agent-state',
-      message: `Agent state is missing for '${agentId}'.`,
-      path: `agents/${agentId}/state.json`,
-    }));
+  const evidenceSnapshot = collectLoopAgentEvidenceSnapshot(runDir, integration.agentIds);
+  const findings = evidenceSnapshot.findings;
   const pass = findings.length === 0 && integration.verdict !== 'fail' && integration.verdict !== 'blocked';
   const result = makeLoopOrchestrationResult({
     generatedAt,
@@ -3892,23 +3915,39 @@ export function integrateLoopOrchestrationRun(
   }
 
   ensureLoopRunExists(runDir);
-  writeJsonFile(path.join(runDir, 'integration.json'), {
-    schemaVersion: 1,
-    ...integration,
-    integratedAt: generatedAt,
+  return withLoopRunMutationLock(runDir, 'integration', () => {
+    const lockedEvidenceSnapshot = collectLoopAgentEvidenceSnapshot(runDir, integration.agentIds);
+    const lockedPass = lockedEvidenceSnapshot.findings.length === 0
+      && integration.verdict !== 'fail'
+      && integration.verdict !== 'blocked';
+    if (!lockedPass) {
+      return {
+        ...result,
+        status: 'blocked',
+        exitCode: 3,
+        reason: `Loop run ${integration.runId} cannot be integrated automatically.`,
+        findings: lockedEvidenceSnapshot.findings,
+      };
+    }
+    writeJsonFile(path.join(runDir, 'integration.json'), {
+      schemaVersion: 1,
+      ...integration,
+      acceptedAgentEvidence: lockedEvidenceSnapshot.evidence,
+      integratedAt: generatedAt,
+    });
+    appendJsonl(path.join(resolvedTarget, LOOP_RUN_LEDGER), {
+      schemaVersion: 1,
+      event: 'loop_orchestration_integrated',
+      generatedAt,
+      runId: integration.runId,
+      status: 'completed',
+      verdict: integration.verdict,
+      mainAgentDecision: integration.mainAgentDecision,
+      summary: integration.summary,
+      agentIds: integration.agentIds,
+    });
+    return { ...result, recorded: true };
   });
-  appendJsonl(path.join(resolvedTarget, LOOP_RUN_LEDGER), {
-    schemaVersion: 1,
-    event: 'loop_orchestration_integrated',
-    generatedAt,
-    runId: integration.runId,
-    status: 'completed',
-    verdict: integration.verdict,
-    mainAgentDecision: integration.mainAgentDecision,
-    summary: integration.summary,
-    agentIds: integration.agentIds,
-  });
-  return { ...result, recorded: true };
 }
 
 function makeLoopOrchestrationResult(
@@ -4039,6 +4078,7 @@ function normalizeLoopIntegrationInput(input: unknown): {
   loops: string[];
   executorMode: LoopExecutorMode | null;
   fallbackReason: string | null;
+  downgradeApproval: string | null;
   validationStatus: string | null;
   validationEvidence: string[];
   arbiterVerdict: string | null;
@@ -4058,6 +4098,7 @@ function normalizeLoopIntegrationInput(input: unknown): {
     loops: normalizeStringArray(input.loops).map((loop) => normalizeToken(loop)).filter(Boolean),
     executorMode: normalizeLoopExecutorMode(input.executorMode),
     fallbackReason: typeof input.fallbackReason === 'string' && input.fallbackReason.trim() ? input.fallbackReason.trim() : null,
+    downgradeApproval: typeof input.downgradeApproval === 'string' && input.downgradeApproval.trim() ? input.downgradeApproval.trim() : null,
     validationStatus: typeof input.validationStatus === 'string' && input.validationStatus.trim()
       ? normalizeToken(input.validationStatus)
       : null,
@@ -4071,14 +4112,16 @@ function normalizeLoopIntegrationInput(input: unknown): {
 
 function normalizeLoopVerificationInput(targetDir: string, input: unknown): {
   runId: string;
-  requiredLoops: LoopRequiredItem[];
+  changedPaths: string[];
+  expectedRequiredLoops: LoopRequiredItem[];
 } {
   if (!isRecord(input)) {
     throw new CliError('Loop verification input must be a JSON object.', 2);
   }
   return {
     runId: normalizeRuntimeId(input.runId, '', 'runId'),
-    requiredLoops: normalizeRequiredLoopItems(targetDir, input.requiredLoops),
+    changedPaths: normalizeLoopPathList(targetDir, input.changedPaths),
+    expectedRequiredLoops: normalizeRequiredLoopItems(targetDir, input.requiredLoops),
   };
 }
 
@@ -4100,6 +4143,62 @@ function normalizeRequiredLoopItems(targetDir: string, value: unknown): LoopRequ
         executorModes: normalizeLoopExecutorModes(item.executorModes, level),
       };
     });
+}
+
+function compareExpectedRequiredLoops(
+  expected: LoopRequiredItem[],
+  actual: LoopRequiredItem[],
+): LoopVerificationFinding[] {
+  if (expected.length === 0) {
+    return [];
+  }
+  const findings: LoopVerificationFinding[] = [];
+  const actualByLoop = new Map(actual.map((item) => [item.loop, item]));
+  const expectedByLoop = new Map(expected.map((item) => [item.loop, item]));
+
+  for (const actualItem of actual) {
+    const expectedItem = expectedByLoop.get(actualItem.loop);
+    if (!expectedItem) {
+      findings.push({
+        id: 'missing-required-loop-input',
+        message: `Verification input omits required loop '${actualItem.loop}' derived from the current change source.`,
+        loop: actualItem.loop,
+        path: 'requiredLoops',
+      });
+      continue;
+    }
+    if (loopLevelRank(expectedItem.level) < loopLevelRank(actualItem.level)) {
+      findings.push({
+        id: 'downgraded-required-loop-input',
+        message: `Verification input downgrades required loop '${actualItem.loop}' from ${actualItem.level} to ${expectedItem.level}.`,
+        loop: actualItem.loop,
+        path: 'requiredLoops',
+      });
+    }
+    const expectedPaths = expectedItem.paths.map(loopPathCompareKey).sort();
+    const actualPaths = actualItem.paths.map(loopPathCompareKey).sort();
+    if (JSON.stringify(expectedPaths) !== JSON.stringify(actualPaths)) {
+      findings.push({
+        id: 'stale-required-loop-paths',
+        message: `Verification input paths for '${actualItem.loop}' do not match the current change source.`,
+        loop: actualItem.loop,
+        path: 'requiredLoops',
+      });
+    }
+  }
+
+  for (const expectedItem of expected) {
+    if (!actualByLoop.has(expectedItem.loop)) {
+      findings.push({
+        id: 'stale-required-loop-input',
+        message: `Verification input names '${expectedItem.loop}', but the current change source does not require it.`,
+        loop: expectedItem.loop,
+        path: 'requiredLoops',
+      });
+    }
+  }
+
+  return findings;
 }
 
 function normalizeLoopReviewLevel(value: unknown): LoopReviewLevel {
@@ -4126,8 +4225,58 @@ function normalizeLoopExecutorModes(value: unknown, level: LoopReviewLevel): Loo
   return modes.length > 0 ? modes : defaultExecutorModesForLevel(level);
 }
 
-function collectLoopChangedPaths(targetDir: string): string[] {
+function resolveLoopChangeInput(
+  targetDir: string,
+  options: { changedPaths?: string[]; baseRef?: string | null; headRef?: string | null },
+): { changedPaths: string[]; source: string; baseRef?: string; headRef?: string } {
+  const baseRef = typeof options.baseRef === 'string' && options.baseRef.trim() ? options.baseRef.trim() : null;
+  const headRef = typeof options.headRef === 'string' && options.headRef.trim() ? options.headRef.trim() : null;
+  if (baseRef || headRef) {
+    if (!baseRef || !headRef) {
+      throw new CliError('Use both --base <ref> and --head <ref> when deriving loop requirements from a commit range.', 2);
+    }
+    return {
+      changedPaths: collectLoopChangedPaths(targetDir, { baseRef, headRef }),
+      source: 'git-diff',
+      baseRef,
+      headRef,
+    };
+  }
+  if (options.changedPaths) {
+    return { changedPaths: options.changedPaths, source: 'input-changed-paths' };
+  }
+  return { changedPaths: collectLoopChangedPaths(targetDir), source: 'dirty-worktree' };
+}
+
+function collectLoopChangedPaths(targetDir: string, options: { baseRef?: string; headRef?: string } = {}): string[] {
+  if (options.baseRef && options.headRef) {
+    return collectGitDiffChangedPaths(targetDir, options.baseRef, options.headRef);
+  }
   return detectDirtyWorktree(targetDir).map((entry) => entry.path);
+}
+
+function collectGitDiffChangedPaths(targetDir: string, baseRef: string, headRef: string): string[] {
+  try {
+    execFileSync('git', ['rev-parse', '--is-inside-work-tree'], {
+      cwd: targetDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const output = execFileSync('git', ['diff', '--name-only', '--diff-filter=ACDMRTUXB', baseRef, headRef, '--'], {
+      cwd: targetDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return output
+      .split(/\r?\n/)
+      .map((line) => normalizePortablePath(line.trim()))
+      .filter(Boolean)
+      .filter((item) => !isUntrackedHarnessRuntimePath(item))
+      .sort();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new CliError(`Unable to derive changed paths from git diff ${baseRef}..${headRef}: ${message}`, 3);
+  }
 }
 
 function classifyRequiredLoops(changedPaths: string[]): LoopRequiredItem[] {
@@ -4192,12 +4341,23 @@ function isDocumentationLoopPath(changedPath: string): boolean {
 function isWorkflowLoopPath(changedPath: string): boolean {
   return changedPath === 'AGENTS.md'
     || changedPath === 'CLAUDE.md'
+    || isRootHarnessGovernancePath(changedPath)
     || changedPath.startsWith('harness/')
     || changedPath.startsWith('skills/')
     || changedPath.startsWith('.github/')
+    || changedPath.startsWith('.harness-hub/loop/')
     || changedPath.startsWith('capabilities/')
     || changedPath.includes('workflow')
     || changedPath.includes('agentic-loop');
+}
+
+function isRootHarnessGovernancePath(changedPath: string): boolean {
+  return changedPath === 'feature_list.json'
+    || changedPath === 'clean-state-checklist.md'
+    || changedPath === 'definition-of-done.md'
+    || changedPath === 'evaluator-rubric.md'
+    || changedPath === 'quality-document.md'
+    || changedPath === 'scripts/harness-validate.mjs';
 }
 
 function isSecuritySensitiveLoopPath(changedPath: string): boolean {
@@ -4211,13 +4371,19 @@ function workflowLoopLevel(changedPath: string): LoopReviewLevel {
     || changedPath.startsWith('skills/')
     || changedPath === 'AGENTS.md'
     || changedPath === 'CLAUDE.md'
+    || isRootHarnessGovernancePath(changedPath)
+    || changedPath.startsWith('.harness-hub/loop/')
     ? 'L2'
     : 'L1';
 }
 
 function higherLoopLevel(left: LoopReviewLevel, right: LoopReviewLevel): LoopReviewLevel {
+  return loopLevelRank(right) > loopLevelRank(left) ? right : left;
+}
+
+function loopLevelRank(level: LoopReviewLevel): number {
   const rank: Record<LoopReviewLevel, number> = { L0: 0, L1: 1, L2: 2 };
-  return rank[right] > rank[left] ? right : left;
+  return rank[level];
 }
 
 function requiredEvidenceForLoopLevel(level: LoopReviewLevel): string[] {
@@ -4245,10 +4411,108 @@ function readLoopAgentStates(runDir: string): Array<Record<string, unknown>> {
   if (!fs.existsSync(agentsDir)) {
     return [];
   }
-  return fs.readdirSync(agentsDir, { withFileTypes: true })
+  const states: Array<Record<string, unknown> | null> = fs.readdirSync(agentsDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .map((entry) => readOptionalJson(path.join(agentsDir, entry.name, 'state.json')))
-    .filter(isRecord);
+    .map((entry): Record<string, unknown> | null => readLoopAgentStateSnapshot(path.join(agentsDir, entry.name, 'state.json')));
+  return states.filter((state): state is Record<string, unknown> => state !== null);
+}
+
+function readLoopAgentStateSnapshot(statePath: string): Record<string, unknown> | null {
+  if (!fs.existsSync(statePath)) {
+    return null;
+  }
+  try {
+    const bytes = fs.readFileSync(statePath);
+    const state = JSON.parse(bytes.toString('utf8'));
+    return isRecord(state)
+      ? { ...state, [LOOP_AGENT_STATE_SHA256_FIELD]: hashBytesSha256(bytes) }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function collectLoopAgentEvidenceSnapshot(
+  runDir: string,
+  agentIds: string[],
+): { evidence: Array<{ agentId: string; sha256: string }>; findings: LoopOrchestrationFinding[] } {
+  const evidence: Array<{ agentId: string; sha256: string }> = [];
+  const findings: LoopOrchestrationFinding[] = [];
+  for (const agentId of agentIds) {
+    const statePath = path.join(runDir, 'agents', agentId, 'state.json');
+    if (!fs.existsSync(statePath)) {
+      findings.push({
+        id: 'missing-agent-state',
+        message: `Agent state is missing for '${agentId}'.`,
+        path: `agents/${agentId}/state.json`,
+      });
+      continue;
+    }
+    evidence.push({ agentId, sha256: hashFileSha256(statePath) });
+  }
+  return { evidence, findings };
+}
+
+function verifyAcceptedAgentEvidenceBindings(
+  integration: unknown,
+  agentStates: Array<Record<string, unknown>>,
+): LoopVerificationFinding[] {
+  if (!isRecord(integration)) {
+    return [];
+  }
+  const findings: LoopVerificationFinding[] = [];
+  const integrationAgentIds = normalizeStringArray(integration.agentIds)
+    .map((agentId) => normalizeRuntimeId(agentId, '', 'agentId'));
+  if (integrationAgentIds.length === 0) {
+    return findings;
+  }
+  const acceptedEvidence = normalizeLoopAcceptedAgentEvidence(integration.acceptedAgentEvidence);
+  const agentStatesById = new Map(agentStates
+    .map((state): [string, Record<string, unknown>] | null => {
+      const agentId = typeof state.agentId === 'string' ? state.agentId : '';
+      return agentId ? [agentId, state] : null;
+    })
+    .filter((entry): entry is [string, Record<string, unknown>] => Boolean(entry)));
+
+  for (const agentId of integrationAgentIds) {
+    const expectedHash = acceptedEvidence.get(agentId);
+    const currentState = agentStatesById.get(agentId);
+    const currentHash = currentState && typeof currentState[LOOP_AGENT_STATE_SHA256_FIELD] === 'string'
+      ? currentState[LOOP_AGENT_STATE_SHA256_FIELD]
+      : '';
+    if (!expectedHash) {
+      findings.push({
+        id: 'missing-agent-evidence-binding',
+        message: `Integration accepted agent '${agentId}' without a sealed evidence hash.`,
+        path: 'integration.json',
+      });
+    } else if (!currentState || currentHash !== expectedHash) {
+      findings.push({
+        id: 'agent-evidence-changed',
+        message: `Agent evidence for '${agentId}' changed after integration or is missing.`,
+        path: `agents/${agentId}/state.json`,
+      });
+    }
+  }
+  return findings;
+}
+
+function normalizeLoopAcceptedAgentEvidence(value: unknown): Map<string, string> {
+  const result = new Map<string, string>();
+  if (!Array.isArray(value)) {
+    return result;
+  }
+  for (const item of value) {
+    if (!isRecord(item)) {
+      continue;
+    }
+    const agentId = typeof item.agentId === 'string' ? item.agentId.trim() : '';
+    const sha256 = typeof item.sha256 === 'string' ? item.sha256.trim() : '';
+    if (agentId && /^[a-f0-9]{64}$/i.test(sha256)) {
+      result.set(normalizeRuntimeId(agentId, '', 'agentId'), sha256.toLowerCase());
+    }
+  }
+  return result;
 }
 
 function verifyRequiredLoopEvidence(
@@ -4261,20 +4525,40 @@ function verifyRequiredLoopEvidence(
   const integratedLoops = isRecord(integration) ? normalizeStringArray(integration.loops).map((loop) => normalizeToken(loop)) : [];
   const runLoop = isRecord(runRecord) && typeof runRecord.loop === 'string' ? normalizeToken(runRecord.loop) : '';
   const integrationExecutorMode = isRecord(integration) ? normalizeLoopExecutorMode(integration.executorMode) : null;
+  const integrationAgentIds = isRecord(integration)
+    ? normalizeStringArray(integration.agentIds).map((agentId) => normalizeRuntimeId(agentId, '', 'agentId'))
+    : [];
+  const acceptedAgentEvidence = isRecord(integration)
+    ? normalizeLoopAcceptedAgentEvidence(integration.acceptedAgentEvidence)
+    : new Map<string, string>();
   const fallbackReason = isRecord(integration) && typeof integration.fallbackReason === 'string' ? integration.fallbackReason.trim() : '';
+  const downgradeApproval = isRecord(integration) && typeof integration.downgradeApproval === 'string' ? integration.downgradeApproval.trim() : '';
   const validationStatus = isRecord(integration) && typeof integration.validationStatus === 'string' ? normalizeToken(integration.validationStatus) : '';
   const validationEvidence = isRecord(integration) ? normalizeStringArray(integration.validationEvidence) : [];
-  const arbiterVerdict = isRecord(integration) && typeof integration.arbiterVerdict === 'string' ? normalizeToken(integration.arbiterVerdict) : '';
-  const arbiterEvidence = isRecord(integration) ? normalizeStringArray(integration.arbiterEvidence) : [];
   const loopIntegrated = integratedLoops.includes(required.loop)
     || (integratedLoops.length === 0 && runLoop === required.loop);
-  const matchingAgents = agentStates.filter((state) => loopAgentMatchesRequiredLoop(state, required.loop));
-  const hasIndependentAgent = matchingAgents.some((state) => state.readOnly === true && loopStatusIsComplete(state.status));
+  const acceptedAgents = agentStates.filter((state) => {
+    const agentId = typeof state.agentId === 'string' ? state.agentId : '';
+    const currentHash = typeof state[LOOP_AGENT_STATE_SHA256_FIELD] === 'string'
+      ? state[LOOP_AGENT_STATE_SHA256_FIELD]
+      : '';
+    return agentId
+      && integrationAgentIds.includes(agentId)
+      && Boolean(currentHash)
+      && acceptedAgentEvidence.get(agentId) === currentHash;
+  });
+  const matchingAgents = acceptedAgents.filter((state) => loopAgentMatchesRequiredLoop(state, required.loop));
+  const independentAgents = matchingAgents.filter(loopAgentHasAcceptedReviewEvidence);
+  const hasIndependentAgent = independentAgents.length > 0;
   const hasDeterministicFallback = Boolean(fallbackReason) && integrationExecutorMode === 'deterministic-check';
-  const hasValidationEvidence = loopValidationStatusPasses(validationStatus) || validationEvidence.length > 0;
-  const validationBlocked = validationStatus === 'fail' || validationStatus === 'failed' || validationStatus === 'blocked';
-  const hasArbiterAgent = agentStates.some((state) => loopAgentIsArbiter(state) && state.readOnly === true && loopStatusIsComplete(state.status));
-  const hasArbiterEvidence = hasArbiterAgent || (loopArbiterVerdictPasses(arbiterVerdict) && arbiterEvidence.length > 0);
+  const hasUserApprovedL2Downgrade = hasDeterministicFallback && Boolean(downgradeApproval);
+  const hasValidationEvidence = loopValidationStatusPasses(validationStatus) && validationEvidence.length > 0;
+  const validationBlocked = validationStatus === 'fail'
+    || validationStatus === 'failed'
+    || validationStatus === 'blocked'
+    || validationStatus === 'error'
+    || validationStatus === 'skipped';
+  const hasArbiterAgent = acceptedAgents.some(loopAgentHasAcceptedArbiterEvidence);
 
   if (!loopIntegrated) {
     findings.push({
@@ -4314,7 +4598,7 @@ function verifyRequiredLoopEvidence(
     });
   }
 
-  if (required.level === 'L2') {
+  if (required.level === 'L2' && !hasUserApprovedL2Downgrade) {
     if (!hasIndependentAgent || (integrationExecutorMode !== 'subagent' && integrationExecutorMode !== 'isolated-session')) {
       findings.push({
         id: 'missing-isolated-executor',
@@ -4323,12 +4607,20 @@ function verifyRequiredLoopEvidence(
         path: 'agents/*/state.json',
       });
     }
-    if (!hasArbiterEvidence) {
+    if (!hasArbiterAgent) {
       findings.push({
         id: 'missing-arbiter-evidence',
-        message: `Required L2 loop '${required.loop}' needs read-only arbiter evidence.`,
+        message: `Required L2 loop '${required.loop}' needs an accepted read-only arbiter agent with result or trace evidence.`,
         loop: required.loop,
         path: 'integration.json',
+      });
+    }
+    if (independentAgents.length < 2) {
+      findings.push({
+        id: 'missing-multi-lens-review',
+        message: `Required L2 loop '${required.loop}' needs at least two accepted read-only review agents with result or trace evidence.`,
+        loop: required.loop,
+        path: 'agents/*/state.json',
       });
     }
   }
@@ -4338,7 +4630,7 @@ function verifyRequiredLoopEvidence(
 
 function loopAgentMatchesRequiredLoop(state: Record<string, unknown>, loop: string): boolean {
   const role = typeof state.role === 'string' ? normalizeToken(state.role) : '';
-  return role === loop || role === 'reviewer' || role === 'delegated-agent';
+  return !loopAgentIsArbiter(state) && (role === loop || role === 'reviewer' || role === 'delegated-agent');
 }
 
 function loopStatusIsComplete(value: unknown): boolean {
@@ -4346,17 +4638,52 @@ function loopStatusIsComplete(value: unknown): boolean {
   return status === 'completed' || status === 'pass' || status === 'warn';
 }
 
+function loopAgentHasAcceptedReviewEvidence(state: Record<string, unknown>): boolean {
+  return state.readOnly === true
+    && loopStatusIsComplete(state.status)
+    && loopAgentHasEvidencePayload(state);
+}
+
 function loopAgentIsArbiter(state: Record<string, unknown>): boolean {
   const role = typeof state.role === 'string' ? normalizeToken(state.role) : '';
   return role === 'arbiter' || role.endsWith('-arbiter');
 }
 
-function loopValidationStatusPasses(status: string): boolean {
-  return status === 'pass' || status === 'passed' || status === 'completed' || status === 'warn';
+function loopAgentHasAcceptedArbiterEvidence(state: Record<string, unknown>): boolean {
+  return loopAgentIsArbiter(state)
+    && state.readOnly === true
+    && loopStatusIsComplete(state.status)
+    && loopAgentHasEvidencePayload(state);
 }
 
-function loopArbiterVerdictPasses(verdict: string): boolean {
-  return verdict === 'pass' || verdict === 'passed' || verdict === 'accept' || verdict === 'accepted' || verdict === 'warn';
+function loopAgentHasEvidencePayload(state: Record<string, unknown>): boolean {
+  if (Object.prototype.hasOwnProperty.call(state, 'trace') && isMeaningfulLoopEvidence(state.trace)) {
+    return true;
+  }
+  if (Object.prototype.hasOwnProperty.call(state, 'result') && isMeaningfulLoopEvidence(state.result)) {
+    return true;
+  }
+  return false;
+}
+
+function isMeaningfulLoopEvidence(value: unknown): boolean {
+  if (value === null || value === undefined) {
+    return false;
+  }
+  if (typeof value === 'string') {
+    return value.trim().length > 0;
+  }
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+  if (isRecord(value)) {
+    return Object.keys(value).length > 0;
+  }
+  return true;
+}
+
+function loopValidationStatusPasses(status: string): boolean {
+  return status === 'pass' || status === 'passed' || status === 'completed' || status === 'warn';
 }
 
 function readOptionalJson(filePath: string): unknown {
@@ -4492,16 +4819,70 @@ function withLoopRunMutationLock<T>(runDir: string, name: string, callback: () =
   const locksDir = path.join(runDir, '.locks');
   fs.mkdirSync(locksDir, { recursive: true });
   const lockDir = path.join(locksDir, name);
-  try {
-    fs.mkdirSync(lockDir);
-  } catch {
-    throw new CliError(`Loop run is busy for '${name}'. Retry after the current writer finishes.`, 3);
+  const ownerToken = `${process.pid}-${Date.now()}-${crypto.randomBytes(6).toString('hex')}`;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      fs.mkdirSync(lockDir);
+      writeJsonFile(path.join(lockDir, 'owner.json'), {
+        pid: process.pid,
+        token: ownerToken,
+        acquiredAt: new Date().toISOString(),
+      });
+      try {
+        return callback();
+      } finally {
+        releaseLoopRunMutationLock(lockDir, ownerToken);
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+        throw error;
+      }
+      if (!tryReapStaleLoopLock(lockDir, name)) {
+        throw new CliError(`Loop run is busy for '${name}'. Retry after the current writer finishes.`, 3);
+      }
+    }
   }
+  throw new CliError(`Loop run is busy for '${name}'. Retry after the current writer finishes.`, 3);
+}
 
+function tryReapStaleLoopLock(lockDir: string, name: string): boolean {
+  if (!isStaleLoopLock(lockDir)) {
+    return false;
+  }
+  const staleDir = path.join(
+    path.dirname(lockDir),
+    `${path.basename(lockDir)}.stale-${process.pid}-${Date.now()}-${crypto.randomBytes(6).toString('hex')}`,
+  );
   try {
-    return callback();
-  } finally {
-    fs.rmSync(lockDir, { recursive: true, force: true });
+    fs.renameSync(lockDir, staleDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return true;
+    }
+    return false;
+  }
+  try {
+    fs.rmSync(staleDir, { recursive: true, force: true });
+  } catch {
+    throw new CliError(`Loop run stale lock '${name}' could not be removed after takeover.`, 3);
+  }
+  return true;
+}
+
+function releaseLoopRunMutationLock(lockDir: string, ownerToken: string): void {
+  const owner = readOptionalJson(path.join(lockDir, 'owner.json'));
+  if (!isRecord(owner) || owner.token !== ownerToken) {
+    return;
+  }
+  fs.rmSync(lockDir, { recursive: true, force: true });
+}
+
+function isStaleLoopLock(lockDir: string): boolean {
+  try {
+    const stat = fs.statSync(lockDir);
+    return Date.now() - stat.mtimeMs > 2 * 60 * 60 * 1000;
+  } catch {
+    return false;
   }
 }
 
@@ -4516,7 +4897,8 @@ function evaluateLoopLease(
   lease: ReturnType<typeof normalizeLoopLeaseInput>,
 ): LoopOrchestrationFinding[] {
   const findings: LoopOrchestrationFinding[] = [];
-  const existingLeases = readExistingLoopLeases(runDir, lease.leaseId);
+  const { leases: existingLeases, findings: leaseStateFindings } = readExistingLoopLeases(targetDir, runDir, lease.leaseId);
+  findings.push(...leaseStateFindings);
   for (const existing of existingLeases) {
     for (const ownedPath of lease.ownedPaths) {
       for (const existingPath of existing.ownedPaths) {
@@ -4556,26 +4938,68 @@ function evaluateLoopLease(
   return findings;
 }
 
-function readExistingLoopLeases(runDir: string, currentLeaseId: string): Array<{ leaseId: string; ownedPaths: string[] }> {
+function readExistingLoopLeases(
+  targetDir: string,
+  runDir: string,
+  currentLeaseId: string,
+): { leases: Array<{ leaseId: string; agentId: string; ownedPaths: string[] }>; findings: LoopOrchestrationFinding[] } {
   const leaseDir = path.join(runDir, 'leases');
   if (!fs.existsSync(leaseDir)) {
-    return [];
+    return { leases: [], findings: [] };
   }
-  return fs.readdirSync(leaseDir)
-    .filter((entry) => entry.endsWith('.json'))
-    .map((entry) => {
-      try {
-        return readJsonFile<Record<string, unknown>>(path.join(leaseDir, entry));
-      } catch {
-        return null;
-      }
-    })
-    .filter((entry): entry is Record<string, unknown> => Boolean(entry))
-    .filter((entry) => entry.leaseId !== currentLeaseId && entry.status !== 'released')
-    .map((entry) => ({
-      leaseId: typeof entry.leaseId === 'string' ? entry.leaseId : 'unknown',
-      ownedPaths: normalizeStringArray(entry.ownedPaths).map(normalizePortablePath),
-    }));
+  const leases: Array<{ leaseId: string; agentId: string; ownedPaths: string[] }> = [];
+  const findings: LoopOrchestrationFinding[] = [];
+  for (const entry of fs.readdirSync(leaseDir).filter((item) => item.endsWith('.json'))) {
+    const leasePath = path.join(leaseDir, entry);
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = readJsonFile<Record<string, unknown>>(leasePath);
+    } catch (error) {
+      findings.push({
+        id: 'invalid-lease-state',
+        message: `Existing lease state '${entry}' is unreadable; refusing to grant new leases until it is repaired or removed.`,
+        path: normalizePortablePath(path.relative(runDir, leasePath)),
+      });
+      continue;
+    }
+    const status = typeof parsed.status === 'string' ? normalizeToken(parsed.status) : 'active';
+    if (status === 'released') {
+      continue;
+    }
+    let leaseId = 'unknown';
+    let agentId = 'unknown';
+    let ownedPaths: string[] = [];
+    try {
+      leaseId = normalizeRuntimeId(parsed.leaseId, '', 'leaseId');
+      agentId = normalizeRuntimeId(parsed.agentId, '', 'agentId');
+      ownedPaths = normalizeLoopPathList(targetDir, parsed.ownedPaths);
+    } catch {
+      findings.push({
+        id: 'invalid-lease-state',
+        message: `Existing lease state '${entry}' is invalid; refusing to grant new leases until it is repaired or removed.`,
+        path: normalizePortablePath(path.relative(runDir, leasePath)),
+      });
+      continue;
+    }
+    if (leaseId === currentLeaseId) {
+      findings.push({
+        id: 'duplicate-active-lease',
+        message: `Active lease '${leaseId}' already exists; refusing to overwrite it with a new lease request.`,
+        path: normalizePortablePath(path.relative(runDir, leasePath)),
+      });
+      continue;
+    }
+    if (ownedPaths.length === 0) {
+      findings.push({
+        id: 'invalid-lease-state',
+        message: `Existing lease '${leaseId}' does not name owned paths; refusing to grant new leases.`,
+        path: normalizePortablePath(path.relative(runDir, leasePath)),
+      });
+      continue;
+    }
+    leases.push({ leaseId, agentId, ownedPaths });
+  }
+  return { leases, findings };
 }
 
 function pathsOverlap(left: string, right: string): boolean {
@@ -4583,7 +5007,13 @@ function pathsOverlap(left: string, right: string): boolean {
 }
 
 function pathWithinScope(candidate: string, scope: string): boolean {
-  return candidate === scope || candidate.startsWith(`${scope}/`);
+  const candidateKey = loopPathCompareKey(candidate);
+  const scopeKey = loopPathCompareKey(scope);
+  return candidateKey === scopeKey || candidateKey.startsWith(`${scopeKey}/`);
+}
+
+function loopPathCompareKey(value: string): string {
+  return normalizePortablePath(value).replace(/\/+$/g, '').toLowerCase();
 }
 
 function collectGitChangedPaths(targetDir: string): string[] {
@@ -4951,6 +5381,14 @@ function uniqueStrings(values: string[]): string[] {
 }
 
 function hashText(value: string): string {
+  return crypto.createHash('sha256').update(value).digest('hex');
+}
+
+function hashFileSha256(filePath: string): string {
+  return hashBytesSha256(fs.readFileSync(filePath));
+}
+
+function hashBytesSha256(value: Buffer): string {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
@@ -6772,7 +7210,12 @@ function hasLikelyMojibake(value: string): boolean {
 
 function writeJsonFile(filePath: string, data: unknown): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+  const tempPath = path.join(
+    path.dirname(filePath),
+    `.${path.basename(filePath)}.${process.pid}.${Date.now()}.tmp`,
+  );
+  fs.writeFileSync(tempPath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+  fs.renameSync(tempPath, filePath);
 }
 
 function readJsonFile<T>(filePath: string): T {
@@ -8981,6 +9424,8 @@ function parseArgs(argv: string[]): CliOptions {
     slug: null,
     allowDirty: false,
     validateHarness: false,
+    baseRef: null,
+    headRef: null,
   };
   const positional: string[] = [];
   let firstOptionIndex = 1;
@@ -9035,6 +9480,10 @@ function parseArgs(argv: string[]): CliOptions {
       options.allowDirty = true;
     } else if (arg === '--validate-harness') {
       options.validateHarness = true;
+    } else if (arg === '--base') {
+      options.baseRef = readOptionValue(argv, ++index, arg);
+    } else if (arg === '--head') {
+      options.headRef = readOptionValue(argv, ++index, arg);
     } else if (arg.startsWith('-')) {
       throw new CliError(`Unsupported option '${arg}'`, 2);
     } else {
@@ -9238,7 +9687,10 @@ async function runCliInner(argv: string[]): Promise<number> {
 
   if (options.command === 'loop') {
     if (options.loopAction === 'required') {
-      const result = determineRequiredLoops(options.targetDir || process.cwd());
+      const result = determineRequiredLoops(options.targetDir || process.cwd(), {
+        baseRef: options.baseRef,
+        headRef: options.headRef,
+      });
       emitReport(renderLifecycleReport('Harness Hub Loop Required Report', result, options), options);
       return result.exitCode;
     }
@@ -9298,7 +9750,10 @@ async function runCliInner(argv: string[]): Promise<number> {
       return result.exitCode;
     }
     if (options.loopAction === 'verify') {
-      const result = verifyLoopEvidence(options.targetDir || process.cwd(), readJsonFile<unknown>(inputPath));
+      const result = verifyLoopEvidence(options.targetDir || process.cwd(), readJsonFile<unknown>(inputPath), {
+        baseRef: options.baseRef,
+        headRef: options.headRef,
+      });
       emitReport(renderLifecycleReport('Harness Hub Loop Verification Report', result, options), options);
       return result.exitCode;
     }
@@ -10063,13 +10518,13 @@ Usage:
   harness-hub source-post publish [target] --dry-run [--allow-dirty] [--json|--html] [--output file]
   harness-hub loop evaluate [target] --input action.json [--yes] [--json|--html] [--output file]
   harness-hub loop schedule [target] --input actions.jsonl [--yes] [--json|--html] [--output file]
-  harness-hub loop required [target] [--json|--html] [--output file]
+  harness-hub loop required [target] [--base ref --head ref] [--json|--html] [--output file]
   harness-hub loop run-start [target] --input run.json [--yes] [--json|--html] [--output file]
   harness-hub loop agent-record [target] --input agent.json [--yes] [--json|--html] [--output file]
   harness-hub loop lease-check [target] --input lease.json [--yes] [--json|--html] [--output file]
   harness-hub loop collect-trace [target] --input trace.json [--yes] [--json|--html] [--output file]
   harness-hub loop integrate [target] --input integration.json [--yes] [--json|--html] [--output file]
-  harness-hub loop verify [target] --input verify.json [--json|--html] [--output file]
+  harness-hub loop verify [target] --input verify.json [--base ref --head ref] [--json|--html] [--output file]
   harness-hub status [target] [--json|--html] [--output file]
   harness-hub update [target] [--dry-run|--yes] [--component id] [--force] [--json|--html]
   harness-hub migrate-lock [target] [--dry-run|--yes] [--json|--html]
@@ -10085,7 +10540,7 @@ Use activate-agents to sync installed project-local skills into ignored .codex/s
 validate-harness includes standard harness checks, five-subsystem assessment, and a structural benchmark.
 Use source-post for structured source-post generation and GitHub Pages preflight.
 Use loop evaluate/schedule to decide continue vs interrupt and optionally append local Loop ledgers with --yes.
-Use loop required/verify to derive dirty-path review gates and block handoff when loop evidence is missing.
+Use loop required/verify to derive dirty-path or base/head review gates and block handoff when loop evidence is missing.
 Use loop run-start/agent-record/lease-check/collect-trace/integrate for local subagent orchestration state under ignored .harness-hub/state/runs.
 `);
 }

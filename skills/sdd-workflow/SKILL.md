@@ -74,4 +74,4 @@ Record planned loops in `current-task.md` and actual loop evidence in `progress.
 
 Use subagents only for independent source gathering, docs lookup, review, verification, or disjoint write scopes. In generic loop evidence, write `delegated-agent`, not host-specific tool names. Follow `workflow-router/references/orchestration-policy.md`: the main agent owns final synthesis and hooks stay advisory.
 
-During finish closeout, derive required loops from changed paths when available. Prefer subagent or independent review evidence when the level calls for isolation; otherwise record the fallback reason and deterministic substitute. Do not hide review findings, PR conflicts, merge risks, or insight recommendations.
+During finish closeout, derive required loops from dirty paths or a base/head diff when available. Prefer subagent or independent review evidence when the level calls for isolation; otherwise record the fallback reason and deterministic substitute. Do not hide review findings, PR conflicts, merge risks, or insight recommendations.

@@ -221,35 +221,35 @@ export function evaluateAdvisory(options) {
     || hydratedOptions.htmlHandoffWaiver,
   );
 
-  if (hydratedOptions.state === 'delivery' && hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges) {
+  if (hydratedOptions.state === 'delivery' && hydratedOptions.phase === 'pre-delivery') {
     if (!hydratedOptions.hasCloseoutReview) {
       warnings.push({
         id: 'missing-closeout-review',
-        message: 'Material delivery should record final independent review evidence or an explicit skip reason before handoff.',
+        message: 'Delivery should record final independent review evidence or an explicit skip reason before handoff.',
       });
     }
     if (!hydratedOptions.hasPrReadiness) {
       warnings.push({
         id: 'missing-pr-readiness',
-        message: 'Material delivery should record PR readiness, mergeability, conflict status, or an explicit no-PR/skip reason before handoff.',
+        message: 'Delivery should record PR readiness, mergeability, conflict status, or an explicit no-PR/skip reason before handoff.',
       });
     }
     if (!hydratedOptions.hasInsight) {
       warnings.push({
         id: 'missing-insight-audit',
-        message: 'Material delivery should run insight or record an explicit skip reason before handoff.',
+        message: 'Delivery should run insight or record an explicit skip reason before handoff.',
       });
     }
     if (!hydratedOptions.hasAcceptanceArbiter) {
       warnings.push({
         id: 'missing-acceptance-arbiter',
-        message: 'Material delivery should record agentic loop acceptance arbiter evidence or an explicit skip reason before handoff.',
+        message: 'Delivery should record agentic loop acceptance arbiter evidence or an explicit skip reason before handoff.',
       });
     }
     if (!hydratedOptions.hasFinalReviewArbiter) {
       warnings.push({
         id: 'missing-final-review-arbiter',
-        message: 'Material delivery should record final review arbiter evidence or an explicit skip reason before handoff.',
+        message: 'Delivery should record final review arbiter evidence or an explicit skip reason before handoff.',
       });
     }
   }
@@ -259,10 +259,10 @@ export function evaluateAdvisory(options) {
       id: 'missing-effective-interact-html-handoff',
       message: 'Material work with expected html-artifact output should produce a validated effective-interact HTML handoff unless explicitly waived.',
     });
-  } else if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.materialChanges && !htmlRequired && !hasGeneralHandoffOrWaiver) {
+  } else if (hydratedOptions.phase === 'pre-delivery' && hydratedOptions.state === 'delivery' && !htmlRequired && !hasGeneralHandoffOrWaiver) {
     warnings.push({
       id: 'missing-effective-interact-handoff',
-      message: 'Material work should produce an effective-interact handoff unless explicitly waived.',
+      message: 'Delivery should produce a handoff unless explicitly waived.',
     });
   }
 
@@ -421,7 +421,7 @@ function isMeaningfulLine(line) {
   if (/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(trimmed)) {
     return false;
   }
-  if (/^\|\s*(priority|question|command|phase|url|pr|signal|date)\s*\|/i.test(trimmed)) {
+  if (/^\|\s*(priority|question|command|phase|url|pr|signal|date|stage)\s*\|/i.test(trimmed)) {
     return false;
   }
   if (/^[*-]?\s*(final independent review|technical debt \/ drift review|technical debt \/ drift|insight audit|insight recommendations|pr\/merge readiness|pr \/ merge readiness|conflict decisions|blockers):\s*$/i.test(trimmed)) {
@@ -471,6 +471,42 @@ function isMeaningfulLine(line) {
     'add the command',
     'add commands',
     'fill current task first',
+    'use host-neutral loop roles from',
+    'producer -> verifier -> arbiter',
+    'judges the original task, acceptance criteria',
+    'arbiters are read-only',
+    'derive required loops from dirty paths',
+    'derive required loops from the worktree',
+    'when a delegated agent writes files',
+    'add stage.',
+    'plan-review / test-design / implementation-review',
+    'delegated-agent / deterministic-check',
+    'delegated-agent arbiter / local read-only arbiter',
+    'add evidence path or summary',
+    'continue / revise / interrupt / deliver',
+    'when a loop may repeat',
+    'required: yes/no',
+    'pr expected: yes/no',
+    'remote status command:',
+    'mergeability:',
+    'ci/check-run status:',
+    'conflict status:',
+    'branch-protection blockers:',
+    'in-scope fix policy:',
+    'stop policy:',
+    'merge policy:',
+    'final independent review required: yes/no',
+    'review method: subagent / independent local pass / explicit skip',
+    'review focus: technical debt',
+    'review findings:',
+    'insight audit required: yes/no',
+    'insight focus:',
+    'evidence: screenshot, trace, video, log, or explicit skip reason',
+    'process improvement candidate: none /',
+    'pr or merge readiness:',
+    'conflict decisions surfaced to user:',
+    'closeout blockers:',
+    'agent-run browser path:',
     'n/a',
     'yes/no',
     'not run yet',
