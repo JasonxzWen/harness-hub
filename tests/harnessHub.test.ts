@@ -1422,6 +1422,222 @@ test('loop schedule chooses the next continue action and records scheduler state
   });
 });
 
+test('loop required classifies dirty worktree paths into mandatory review loops', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-required-'));
+  fs.mkdirSync(path.join(targetDir, 'src'), { recursive: true });
+  fs.mkdirSync(path.join(targetDir, 'tests'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, 'src', 'feature.ts'), 'export const feature = 1;\n');
+  fs.writeFileSync(path.join(targetDir, 'tests', 'feature.test.ts'), 'expect(1).toBe(1);\n');
+  fs.writeFileSync(path.join(targetDir, 'README.md'), '# Fixture\n');
+  initGitFixture(targetDir);
+
+  fs.writeFileSync(path.join(targetDir, 'src', 'feature.ts'), 'export const feature = 2;\n');
+  fs.writeFileSync(path.join(targetDir, 'tests', 'feature.test.ts'), 'expect(2).toBe(2);\n');
+  fs.writeFileSync(path.join(targetDir, 'README.md'), '# Fixture\n\nChanged.\n');
+
+  const result = await captureCli(['loop', 'required', targetDir, '--json']);
+
+  expect(result.code).toBe(3);
+  const report = JSON.parse(result.stdout);
+  expect(report.changedPaths).toEqual(['README.md', 'src/feature.ts', 'tests/feature.test.ts']);
+  expect(report.requiredLoops).toContainEqual(expect.objectContaining({
+    loop: 'implementation-review',
+    level: 'L1',
+    paths: ['src/feature.ts'],
+  }));
+  expect(report.requiredLoops).toContainEqual(expect.objectContaining({
+    loop: 'test-review',
+    level: 'L1',
+    paths: ['tests/feature.test.ts'],
+  }));
+  expect(report.requiredLoops).toContainEqual(expect.objectContaining({
+    loop: 'docs-consistency',
+    level: 'L1',
+    paths: ['README.md'],
+  }));
+});
+
+test('loop required treats uncategorized mutation paths as implementation review', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-required-general-'));
+  fs.mkdirSync(path.join(targetDir, 'bin'), { recursive: true });
+  fs.mkdirSync(path.join(targetDir, 'scripts'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, 'package.json'), '{"name":"fixture"}\n');
+  fs.writeFileSync(path.join(targetDir, 'bin', 'fixture.mjs'), 'console.log("old");\n');
+  fs.writeFileSync(path.join(targetDir, 'scripts', 'tool.mjs'), 'console.log("old");\n');
+  initGitFixture(targetDir);
+
+  fs.writeFileSync(path.join(targetDir, 'package.json'), '{"name":"fixture","type":"module"}\n');
+  fs.writeFileSync(path.join(targetDir, 'bin', 'fixture.mjs'), 'console.log("new");\n');
+  fs.writeFileSync(path.join(targetDir, 'scripts', 'tool.mjs'), 'console.log("new");\n');
+
+  const result = await captureCli(['loop', 'required', targetDir, '--json']);
+
+  expect(result.code).toBe(3);
+  const report = JSON.parse(result.stdout);
+  expect(report.changedPaths).toEqual(['bin/fixture.mjs', 'package.json', 'scripts/tool.mjs']);
+  expect(report.requiredLoops).toContainEqual(expect.objectContaining({
+    loop: 'implementation-review',
+    level: 'L1',
+    paths: ['bin/fixture.mjs', 'package.json', 'scripts/tool.mjs'],
+  }));
+});
+
+test('loop run-start creates ignored runtime state without full harness init', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-runtime-'));
+  fs.writeFileSync(path.join(targetDir, 'README.md'), '# Fixture\n');
+  initGitFixture(targetDir);
+  const runInput = path.join(targetDir, 'run.json');
+  fs.writeFileSync(runInput, `${JSON.stringify({
+    runId: 'run-auto-state',
+    loop: 'implementation-review',
+    task: 'Start loop state without a full harness.',
+    acceptanceCriteria: ['runtime state is ignored'],
+  }, null, 2)}\n`);
+
+  const result = await captureCli(['loop', 'run-start', targetDir, '--input', runInput, '--yes', '--json']);
+
+  expect(result.code).toBe(0);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'runs', 'run-auto-state', 'run.json'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, '.harness-hub', '.gitignore'))).toBe(false);
+  execFileSync('git', ['check-ignore', '-q', '.harness-hub/state/runs/run-auto-state/run.json'], {
+    cwd: targetDir,
+    stdio: 'ignore',
+  });
+  const status = execFileSync('git', ['status', '--porcelain=v1', '--untracked-files=all'], {
+    cwd: targetDir,
+    encoding: 'utf8',
+  });
+  expect(status).not.toContain('.harness-hub');
+});
+
+test('loop verify blocks missing review evidence and passes after integration record', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-verify-'));
+  const runInput = path.join(targetDir, 'run.json');
+  const verifyInput = path.join(targetDir, 'verify.json');
+  const agentInput = path.join(targetDir, 'agent.json');
+  const integrationInput = path.join(targetDir, 'integration.json');
+  fs.writeFileSync(runInput, `${JSON.stringify({
+    runId: 'run-verify-smoke',
+    loop: 'implementation-review',
+    task: 'Verify required loop evidence.',
+    acceptanceCriteria: ['missing review evidence is blocked', 'integration evidence passes'],
+  }, null, 2)}\n`);
+  fs.writeFileSync(verifyInput, `${JSON.stringify({
+    runId: 'run-verify-smoke',
+    requiredLoops: [{
+      loop: 'implementation-review',
+      level: 'L1',
+      reason: 'source path changed',
+      paths: ['src/feature.ts'],
+    }],
+  }, null, 2)}\n`);
+
+  expect((await captureCli(['loop', 'run-start', targetDir, '--input', runInput, '--yes', '--json'])).code).toBe(0);
+  const missing = await captureCli(['loop', 'verify', targetDir, '--input', verifyInput, '--json']);
+  expect(missing.code).toBe(3);
+  expect(JSON.parse(missing.stdout).findings).toContainEqual(expect.objectContaining({
+    id: 'missing-integration',
+  }));
+  expect(JSON.parse(missing.stdout).findings).toContainEqual(expect.objectContaining({
+    id: 'missing-review-evidence',
+  }));
+  expect(JSON.parse(missing.stdout).findings).toContainEqual(expect.objectContaining({
+    id: 'missing-validation-evidence',
+  }));
+
+  fs.writeFileSync(agentInput, `${JSON.stringify({
+    runId: 'run-verify-smoke',
+    agentId: 'reviewer-1',
+    host: 'codex',
+    role: 'implementation-review',
+    status: 'completed',
+    readOnly: true,
+    result: { summary: 'review passed' },
+  }, null, 2)}\n`);
+  expect((await captureCli(['loop', 'agent-record', targetDir, '--input', agentInput, '--yes', '--json'])).code).toBe(0);
+
+  fs.writeFileSync(integrationInput, `${JSON.stringify({
+    runId: 'run-verify-smoke',
+    summary: 'Main agent accepted independent review evidence.',
+    verdict: 'pass',
+    mainAgentDecision: 'integrate',
+    agentIds: ['reviewer-1'],
+    loops: ['implementation-review'],
+    executorMode: 'subagent',
+    validationStatus: 'pass',
+    validationEvidence: ['bun test tests/harnessHub.test.ts'],
+  }, null, 2)}\n`);
+  expect((await captureCli(['loop', 'integrate', targetDir, '--input', integrationInput, '--yes', '--json'])).code).toBe(0);
+
+  const verified = await captureCli(['loop', 'verify', targetDir, '--input', verifyInput, '--json']);
+  expect(verified.code).toBe(0);
+  expect(JSON.parse(verified.stdout)).toMatchObject({
+    status: 'pass',
+    findings: [],
+  });
+});
+
+test('loop verify rejects weak L1 and L2 evidence that previously looked complete', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-verify-negative-'));
+  const runInput = path.join(targetDir, 'run.json');
+  const verifyInput = path.join(targetDir, 'verify.json');
+  const integrationInput = path.join(targetDir, 'integration.json');
+  fs.writeFileSync(runInput, `${JSON.stringify({
+    runId: 'run-verify-negative',
+    loop: 'workflow-review',
+    task: 'Reject weak loop evidence.',
+    acceptanceCriteria: ['weak L1 and L2 evidence is blocked'],
+  }, null, 2)}\n`);
+  fs.writeFileSync(verifyInput, `${JSON.stringify({
+    runId: 'run-verify-negative',
+    requiredLoops: [
+      {
+        loop: 'implementation-review',
+        level: 'L1',
+        reason: 'source path changed',
+        paths: ['src/feature.ts'],
+      },
+      {
+        loop: 'workflow-review',
+        level: 'L2',
+        reason: 'workflow path changed',
+        paths: ['AGENTS.md'],
+      },
+    ],
+  }, null, 2)}\n`);
+  fs.writeFileSync(integrationInput, `${JSON.stringify({
+    runId: 'run-verify-negative',
+    summary: 'Weak evidence should not pass.',
+    verdict: 'pass',
+    mainAgentDecision: 'integrate',
+    loops: ['implementation-review', 'workflow-review'],
+    executorMode: 'main-agent-self-review',
+    fallbackReason: 'Self review is not enough for L1 or L2.',
+    validationStatus: 'pass',
+    validationEvidence: ['deterministic smoke'],
+  }, null, 2)}\n`);
+
+  expect((await captureCli(['loop', 'run-start', targetDir, '--input', runInput, '--yes', '--json'])).code).toBe(0);
+  expect((await captureCli(['loop', 'integrate', targetDir, '--input', integrationInput, '--yes', '--json'])).code).toBe(0);
+
+  const result = await captureCli(['loop', 'verify', targetDir, '--input', verifyInput, '--json']);
+
+  expect(result.code).toBe(3);
+  const findings = JSON.parse(result.stdout).findings;
+  expect(findings).toContainEqual(expect.objectContaining({
+    id: 'missing-review-evidence',
+    loop: 'implementation-review',
+  }));
+  expect(findings).toContainEqual(expect.objectContaining({
+    id: 'missing-isolated-executor',
+    loop: 'workflow-review',
+  }));
+  expect(findings).toContainEqual(expect.objectContaining({
+    id: 'missing-arbiter-evidence',
+    loop: 'workflow-review',
+  }));
+});
+
 test('loop orchestration records run, agent state, leases, and integration under ignored state', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-loop-orchestration-'));
   applyHarnessInit(planHarnessInit({ targetDir }));
@@ -2259,6 +2475,14 @@ test('self-check returns a hard failure when strict harness validation is reques
     globalThis.fetch = originalFetch;
   }
 });
+
+function initGitFixture(targetDir: string): void {
+  execFileSync('git', ['init'], { cwd: targetDir, stdio: 'ignore' });
+  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: targetDir, stdio: 'ignore' });
+  execFileSync('git', ['config', 'user.name', 'Harness Test'], { cwd: targetDir, stdio: 'ignore' });
+  execFileSync('git', ['add', '.'], { cwd: targetDir, stdio: 'ignore' });
+  execFileSync('git', ['commit', '-m', 'initial'], { cwd: targetDir, stdio: 'ignore' });
+}
 
 async function captureCli(argv: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
   const stdout: string[] = [];

@@ -12,10 +12,10 @@ Harness Hub has three stateful layers today:
 
 - workflow state: `workflow-router` classifies a request into one owner state and advisory phase gates check whether the current task has enough scope, spec, acceptance, validation, and closeout evidence;
 - loop evidence state: agentic loop records capture Producer, Verifier, Arbiter, iteration, maxIterations, stop condition, evidence, verdict, and Main Agent Decision;
-- loop orchestration state: `harness-hub loop run-start`, `agent-record`, `lease-check`, `collect-trace`, and `integrate` record per-run and per-agent state under ignored `.harness-hub/state/runs/<runId>/`;
+- loop orchestration state: `harness-hub loop required`, `run-start`, `agent-record`, `lease-check`, `collect-trace`, `integrate`, and `verify` derive required review loops from dirty paths, record per-run and per-agent state under ignored `.harness-hub/state/runs/<runId>/`, and block handoff when evidence is missing;
 - Loop control state: `harness-hub loop evaluate` and `loop schedule` write continue/interrupt decisions to local JSONL ledgers only when explicitly confirmed.
 
-This is not yet a full multi-agent orchestrator: it is not a daemon or automatic dispatcher. There is no retry scheduler, merge queue, or unattended hook that starts delegated agents. The local orchestration runtime records subagent state, path leases, host trace evidence, and main-agent integration decisions; the active workflow owner still decides when to spawn agents and how to integrate their output.
+This is not a daemon or automatic dispatcher. There is no retry scheduler, merge queue, or unattended hook that starts delegated agents. The local orchestration runtime now provides deterministic gates for required loops and evidence verification; the active workflow owner still decides when to spawn agents and how to integrate their output.
 
 ## Capability Map
 
@@ -51,12 +51,12 @@ flowchart LR
 | 4. Detail alignment | Ask only blocking open questions. Every user-visible or irreversible detail must be clear before implementation. | `current-task.md`: Open questions and alignment status; `decisions.md`: resolved decisions. | `grill-me`, `effective-interact` |
 | 5. TDD execution | Implement one public behavior at a time: RED, GREEN, REFACTOR. Keep changes narrow. | `progress.md`: plan checkpoints, validation records, blockers, checkpoint commit state. | `tdd-workflow`, `karpathy-guidelines` |
 | 6. Verification and acceptance | Run P0, run or risk-assess P1, run or defer P2 with a reason. Browser-visible changes need agent-run browser acceptance. | `progress.md`: validation records, runtime signals, web acceptance, PR status. | `verification-loop`, `webapp-testing`, `e2e-testing` |
-| 7. Finish closeout | Run a final independent review pass when the change is material, drive PR work to merge-ready or explicitly authorized merge completion, and run `insight` to audit tool-calling and workflow-learning evidence. Expose conflict, merge, and technical-debt decisions instead of handling them silently. | `progress.md`: final review findings, PR/merge readiness, insight recommendations, workflow/skill candidates; `decisions.md`: durable rule or workflow changes. | `delivery-workflow`, `compound-code-review`, `insight`, `skill-creator` |
+| 7. Finish closeout | Run the required closeout loop for every mutation, with evidence level based on changed paths. Small source/test changes still need implementation or test review evidence; workflow, harness, security, release, credential, permission, or remote-action paths need stronger isolated review. Drive PR work to merge-ready or explicitly authorized merge completion, and run `insight` to audit tool-calling and workflow-learning evidence. Expose conflict, merge, and technical-debt decisions instead of handling them silently. | `progress.md`: required loop result, final review findings, PR/merge readiness, insight recommendations, workflow/skill candidates; `decisions.md`: durable rule or workflow changes. | `delivery-workflow`, `compound-code-review`, `insight`, `skill-creator` |
 | 8. Delivery and handoff | Report changes, evidence, residual risk, skipped checks, final review outcome, insight recommendations, next action, and PR state when applicable. | `session-handoff.md`: status, changed files, validation, final review, insight recommendations, residual risk, next action. | `delivery-workflow`, `effective-interact` |
 
 ## Agentic Loops
 
-Agentic loops are stage-level mechanics inside the workflow, not a replacement for the workflow owner. Use them when context isolation, fresh acceptance evidence, or parallel review reduces risk:
+Agentic loops are stage-level mechanics inside the workflow, not a replacement for the workflow owner. For mutation work they are mandatory closeout gates; context isolation, fresh acceptance evidence, and parallel review determine the level and executor mode:
 
 ```text
 Producer -> Verifier -> Arbiter -> Main Agent Decision
@@ -64,7 +64,7 @@ Producer -> Verifier -> Arbiter -> Main Agent Decision
 
 The loop roles are host-neutral. `delegated-agent` may be a host-native subagent, isolated session, browser run, CI check, deterministic command, or bounded worker. Arbiters are read-only and must not edit code, resolve conflicts, push, publish, merge, or make final user-facing decisions. Write-capable delegated agents may use the current worktree only after a path lease names their owned paths. The main agent owns integration and the final handoff.
 
-Common loops include `plan-review`, `test-design`, `implementation-review`, `frontend-acceptance`, `diagnosis-regression`, `docs-consistency`, `pr-closeout`, and `insight-retro`. Record planned loops in `current-task.md`. Subagents record private runtime state under `.harness-hub/state/runs/<runId>/agents/<agentId>/`; path leases live under `.harness-hub/state/runs/<runId>/leases/`; the main agent writes the integration record and then summarizes actual loop evidence in `progress.md` and `session-handoff.md` under `Agentic Loop Records`. When a loop may repeat, record `iteration`, `maxIterations`, and a stop condition so the main agent cannot silently keep asking for more reviews.
+Common loops include `plan-review`, `test-design`, `implementation-review`, `frontend-acceptance`, `diagnosis-regression`, `docs-consistency`, `pr-closeout`, and `insight-retro`. Record planned loops in `current-task.md`; before handoff, run `harness-hub loop required` when the CLI runtime is available and either satisfy or explicitly record each required loop. Subagents record private runtime state under `.harness-hub/state/runs/<runId>/agents/<agentId>/`; path leases live under `.harness-hub/state/runs/<runId>/leases/`; the main agent writes the integration record and then summarizes actual loop evidence in `progress.md` and `session-handoff.md` under `Agentic Loop Records`. When a loop may repeat, record `iteration`, `maxIterations`, and a stop condition so the main agent cannot silently keep asking for more reviews.
 
 Host-specific execution details belong in [Codex agentic loops](host-adapters/codex-agentic-loops.md) and [Claude Code agentic loops](host-adapters/claude-code-agentic-loops.md), not in generic skill bodies.
 
@@ -72,9 +72,9 @@ Host-specific execution details belong in [Codex agentic loops](host-adapters/co
 
 The finish closeout stage is a development stage, not a hidden automation. It happens after tests and acceptance evidence, before the final handoff.
 
-Closeout has three required checks for material development work:
+Closeout has three required checks for development work that mutates files:
 
-1. Final review: use a subagent or independent review pass when available and scope-safe. Focus on technical debt, first-principles implementation fit, whether the increment drifted from project rules, and whether a refactor or warning should be surfaced before delivery. The main agent owns synthesis and must not delegate final decisions.
+1. Final review: use `harness-hub loop required` to determine required loops from changed paths when available. Use a subagent or independent review pass when available and scope-safe; small changes may use the lower evidence level, but must still record review or fallback evidence. Focus on technical debt, first-principles implementation fit, whether the increment drifted from project rules, and whether a refactor or warning should be surfaced before delivery. The main agent owns synthesis and must not delegate final decisions.
 2. PR and merge readiness: create or update the PR only when requested by the task, inspect mergeability, CI/check-runs, conflicts, and branch protection, and resolve in-scope blockers. Conflict decisions and risk must be visible to the user. Merge only when the user explicitly authorizes that remote mutation.
 3. Insight audit: invoke `insight` or record why it is skipped. The audit should review whether tool calling stayed high-leverage, whether the agent repeated low-value lookup loops, whether docs and code disagree, which lessons should become harness rules or wiki entries, and whether this workflow should become a skill, source record, eval case, or change to an existing owner workflow.
 

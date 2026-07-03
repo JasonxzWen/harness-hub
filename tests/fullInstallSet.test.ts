@@ -82,6 +82,8 @@ test('docs describe the single target migration install set', () => {
   expect(capabilityMap).toContain('`install` never writes root harness files');
   expect(capabilityMap).toContain('harness-hub loop evaluate');
   expect(capabilityMap).toContain('harness-hub loop schedule');
+  expect(capabilityMap).toContain('harness-hub loop required');
+  expect(capabilityMap).toContain('harness-hub loop verify');
   expect(capabilityMap).toContain('docs/standard-target-boundary.md');
   expect(standardBoundary).toContain('one user-facing target path: `standard`');
   expect(standardBoundary).toContain('prompt engineering, context engineering, harness engineering, loop engineering');

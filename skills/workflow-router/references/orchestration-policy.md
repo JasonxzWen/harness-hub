@@ -4,7 +4,7 @@ Use this policy when a workflow owner considers subagents or hooks.
 
 ## Subagents
 
-The parent workflow owner controls orchestration. Subagents are an optimization inside an accepted workflow, not a separate workflow owner.
+The parent workflow owner controls orchestration. Subagents are an executor mode inside an accepted workflow, not a separate workflow owner. Required loops may ask for subagent evidence; the main agent still owns integration and final decisions.
 
 Allowed subagent work:
 
@@ -30,6 +30,14 @@ The main agent owns synthesis, integration, validation, and final user-facing co
 
 Agentic loops are workflow-stage mechanics that separate Producer, Verifier, Arbiter, and Main Agent Decision. Use `workflow-router/references/agentic-loops.md` as the installable canonical loop catalog.
 
+For any mutation, derive required loops from the changed paths when the CLI runtime is available:
+
+- run `harness-hub loop required <target> --json` after validation or before handoff;
+- record loop runtime evidence under `.harness-hub/state/runs/<runId>/`;
+- run `harness-hub loop verify <target> --input <file> --json` before final handoff, or record why the runtime could not be used.
+
+Small changes do not skip loop review. They can use a lower evidence level and a deterministic fallback, but the fallback reason must be explicit.
+
 Allowed loop carriers:
 
 - delegated-agent reviews or acceptance runs;
@@ -43,6 +51,7 @@ Forbidden loop behavior:
 - arbiters pushing, publishing, merging, posting, or mutating third-party resources;
 - majority vote without evidence and severity;
 - treating a delegated-agent verdict as stronger than failing deterministic validation.
+- treating "small change" as a reason to omit implementation, test, or docs-consistency review evidence.
 
 Generic skills should say `delegated-agent`, `verifier`, and `arbiter`. Host-specific details for Codex or Claude Code belong in adapter docs, not generic skill bodies.
 

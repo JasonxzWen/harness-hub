@@ -53,12 +53,12 @@ Every non-trivial change request MUST follow this order unless the selected stat
 | 5 | Clean unneeded files | Remove, demote, or mark obsolete files only after ownership and safety are clear. |
 | 6 | Implement | Make the smallest scoped changes that satisfy the accepted spec and plan. |
 | 7 | Test and accept | Run agreed tests, deterministic checks, E2E/manual acceptance, and regression gates. |
-| 8 | Finish closeout | Run a final independent review when material, drive PR work to merge-ready or explicitly authorized merge completion, and run or explicitly skip `insight` for tool-calling and workflow-learning feedback. Surface technical-debt, drift, conflict, and merge risks instead of handling them silently. |
+| 8 | Finish closeout | Run the required closeout loop for every mutation, with evidence level based on changed paths; drive PR work to merge-ready or explicitly authorized merge completion, and run or explicitly skip `insight` for tool-calling and workflow-learning feedback. Surface technical-debt, drift, conflict, and merge risks instead of handling them silently. |
 | 9 | Deliver report | Produce a user-facing handoff, using `effective-interact` when the work is material or visual comparison/evidence lowers review cost. |
 
 Loop decisions MAY help decide whether a concrete closeout action continues or interrupts, but Loop MUST NOT remove the closeout stage or bypass its review, PR, insight, and handoff evidence.
 
-Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. A loop MUST record producer, verifier, arbiter, evidence, and main-agent decision when material. Bounded loops SHOULD record `iteration`, `maxIterations`, and `stopCondition`; deterministic checks MUST reject loop records where the current iteration exceeds the maximum. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
+Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. For mutation work, a required closeout loop MUST be derived from changed paths and MUST record producer, verifier or fallback, arbiter or downgrade reason, evidence, and main-agent decision before handoff. Bounded loops SHOULD record `iteration`, `maxIterations`, and `stopCondition`; deterministic checks MUST reject loop records where the current iteration exceeds the maximum. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
 
 ## Requirements
 
@@ -163,7 +163,7 @@ The main agent MUST own synthesis, integration, and final handoff.
 
 No automatic subagent dispatch is allowed from router logic, hooks, or helper skills.
 
-For finish closeout, a subagent or independent review pass SHOULD be used when the change is material and the review scope can stay independent. The review must focus on technical debt, first-principles implementation fit, project-rule drift, and refactor or warning recommendations. The main agent still owns the final decision and user-facing synthesis.
+For finish closeout, run the required closeout loop for every mutation. A subagent or independent review pass SHOULD be used when the required evidence level calls for isolation and the review scope can stay independent; smaller changes may use a deterministic fallback, but must record the reason. The review must focus on technical debt, first-principles implementation fit, project-rule drift, and refactor or warning recommendations. The main agent still owns the final decision and user-facing synthesis.
 
 ### WR-8: Hook Policy
 
@@ -252,7 +252,7 @@ After a requested PR is created or updated, delivery MUST verify the remote PR s
 
 Finish closeout MUST also run or explicitly skip an `insight` audit. The audit should inspect the current session's tool-calling quality, repeated low-value lookups, misleading evidence, code/docs conflicts, AI infrastructure lessons, candidate harness rules, and whether the workflow should become a skill, source record, eval case, or change to an existing workflow. External self-evolution systems such as Hermes-style skill evaluation are source material for this audit, not default runtime dependencies.
 
-Material workflow or harness changes SHOULD also use a `docs-consistency` loop or an explicit skip reason during closeout. The loop compares user-facing docs, installable skill or template behavior, tests, and source implementation so code/docs drift is surfaced before handoff.
+Workflow or harness changes that also touch docs, templates, tests, or implementation SHOULD use a `docs-consistency` loop or an explicit downgrade reason during closeout. The loop compares user-facing docs, installable skill or template behavior, tests, and source implementation so code/docs drift is surfaced before handoff.
 
 ### WR-13: Non-Goals
 
