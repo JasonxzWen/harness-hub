@@ -96,6 +96,15 @@ bun run sync:agent-skills
 
 Use `bun run sync:agent-skills:dry-run` before broad skill maintenance when you need a preview. The generated `.codex/skills/` and `.claude/skills/` trees are local caches, not installable source, not capability metadata, and not checkpoint material.
 
+When a skill rename, removal, or activation appears stale, diagnose the actual visibility layer before declaring it fixed:
+
+- canonical source: verify `skills/<skill-name>/SKILL.md` in the actual project root or worktree that the host is using;
+- project-local host mirrors: verify `.codex/skills/<skill-name>/SKILL.md` and `.claude/skills/<skill-name>/SKILL.md`; in this source checkout use `bun run sync:agent-skills`, and in target repositories use `harness-hub activate-agents <target> --yes`;
+- user-level/global host skills: direct slash-palette invocation may require an explicit install under the host's user skill root, such as `$CODEX_HOME/skills/<skill-name>/SKILL.md`; project-local mirrors do not prove global slash invocation is available;
+- host index cache: if filesystem checks are correct but the UI still shows stale metadata, treat it as an in-process host index cache and ask for a host reload or restart rather than repeating repo sync commands.
+
+Always check the path shown by the app or thread context before syncing. A `git pull` in one checkout and `sync:agent-skills` in another checkout do not update the project-local mirrors for the workspace currently shown in Codex.
+
 ## Modern Agent Operating Model
 
 Default to a main-agent orchestration stance for every non-trivial session. The main agent owns the task contract, risk boundary, synthesis, integration, final validation, and final user-facing conclusion. Delegated agents and subagents are context-saving executors, not decision owners.

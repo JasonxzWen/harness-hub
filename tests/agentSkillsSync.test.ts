@@ -35,6 +35,8 @@ test('agent skill sync mirrors standard skills to Codex and Claude while preserv
   expect(result.stdout).toContain('Synced 1 skills into .claude/skills/');
   expect(result.stdout).toContain('Removed 1 stale skill directories from codex.');
   expect(result.stdout).toContain('Removed 1 stale skill directories from claude.');
+  expect(result.stdout).toContain('project-local host mirrors only');
+  expect(result.stdout).toContain('does not install user-level/global skills');
   for (const hostRoot of hostRoots) {
     expect(fs.existsSync(path.join(root, hostRoot, 'skills', 'alpha', 'SKILL.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, hostRoot, 'skills', 'alpha', '.harness-hub-managed'))).toBe(true);
@@ -71,6 +73,7 @@ test('agent skill sync can target one host for troubleshooting', () => {
   expect(result.status).toBe(0);
   expect(result.stdout).not.toContain('.codex/skills/');
   expect(result.stdout).toContain('Synced 1 skills into .claude/skills/');
+  expect(result.stdout).toContain('project-local host mirrors only');
   expect(fs.existsSync(path.join(root, '.codex'))).toBe(false);
   expect(fs.existsSync(path.join(root, '.claude', 'skills', 'alpha', 'SKILL.md'))).toBe(true);
 });
@@ -131,11 +134,14 @@ test('agent skill sync command is packaged and old worktree bootstrap commands a
   expect(lifecycleDesign).toContain('scripts/sync-agent-skills.mjs');
   expect(lifecycleDesign).toContain('.codex/skills/');
   expect(lifecycleDesign).toContain('.claude/skills/');
+  expect(lifecycleDesign).toContain('Skill visibility has three separate layers');
+  expect(lifecycleDesign).toContain('$CODEX_HOME/skills/<name>/SKILL.md');
   expect(lifecycleDesign).not.toContain('setup-codex-worktree');
   expect(lifecycleDesign).not.toContain('check-codex-worktree');
   expect(lifecycleDesign).not.toContain('install-codex-worktree-hook');
   expect(capabilityMap).toContain('scripts/sync-agent-skills.mjs');
   expect(capabilityMap).toContain('`.codex/` and `.claude/` stay local');
+  expect(capabilityMap).toContain('Direct user-level slash invocation is a separate host-owned surface');
   expect(capabilityMap).not.toContain('setup-codex-worktree');
   expect(capabilityMap).not.toContain('check-codex-worktree');
   expect(capabilityMap).not.toContain('install-codex-worktree-hook');
