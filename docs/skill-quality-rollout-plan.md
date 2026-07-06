@@ -24,14 +24,15 @@ Current direction note: Harness Hub now optimizes for personal workflow distribu
 
 ## Current Baseline
 
-Observed after the Phase 2/3 seed on 2026-05-12:
+Observed after the `quick-learn` replacement on 2026-07-06:
 
-- 66 skills validate successfully with the existing validator.
+- 47 skills validate successfully with the existing validator.
 - All scanned skill names match their directory names.
 - All scanned skills have descriptions.
-- 10 descriptions are over the 50-word target.
-- 2 scanned descriptions start with `Load when`: `effective-interact` and `feynman-learning-coach`.
-- Some local/adapted skills already use progressive spokes, including `compound-code-review`, `feynman-learning-coach`, `effective-interact`, and `prototype`.
+- 0 descriptions are over the 50-word target.
+- 47 scanned descriptions start with `Load when`.
+- 0 imported or adapted skills are missing source metadata.
+- Some local/adapted skills already use progressive spokes, including `compound-code-review`, `quick-learn`, `effective-interact`, and `prototype`.
 - `scripts/skill-quality-inventory.ts` emits a report-only JSON inventory for description length, `Load when` triggers, name/directory matching, body size, spokes, and imported/adapted metadata warnings.
 - `tests/fixtures/skill-routing-cases.json` seeds positive, negative, and forbidden-load cases for the high-overlap skills listed in Phase 3, plus the first local description-refactor demo.
 
@@ -92,7 +93,7 @@ Verification:
 
 Current status:
 
-- `tests/fixtures/skill-routing-cases.json` covers the initial high-overlap set and `feynman-learning-coach`.
+- `tests/fixtures/skill-routing-cases.json` covers the initial high-overlap set and `quick-learn`.
 - `tests/skillRoutingCases.test.ts` validates schema, required case coverage, docs boundaries, and capability overlap relationships.
 
 ## Phase 4: Routing Description Cleanup

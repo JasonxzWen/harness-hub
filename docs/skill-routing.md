@@ -68,7 +68,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Use agentic loops as stage mechanics inside the selected owner workflow when separation of context improves quality: plan review, test design, implementation review, frontend acceptance, diagnosis regression, PR closeout, and insight retro. Record Producer, Verifier, read-only Arbiter, evidence, verdict, and Main Agent Decision; do not route them as standalone owners. For non-trivial work, the main agent should aggressively but controllably consider delegated-agent or subagent splits for independent research, review, verification, stale-read checks, and leased disjoint write scopes.
 - Use OpenSpec skills only when the user explicitly wants the formal OpenSpec lifecycle.
 - Native goal/story loops are handled by current Codex and Claude Code capabilities; Harness Hub no longer distributes Ralph PRD or loop skills.
-- Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
+- Use `quick-learn` only when the user explicitly wants a source-backed learning project, custom syllabus, study plan, mastery coaching, quizzes, or staged learning review.
 - `sdd-workflow` is the default change lane and `tdd-workflow` is an embedded implementation discipline, not a competing owner.
 - Lightweight brainstorming belongs inside `sdd-workflow`: use repo/source inspection, 2-3 direction comparison, `grill-me` for pressure questions, `prototype` for disposable proof, and `product-capability` for implementation constraints. Do not add or trigger a standalone brainstorming skill unless a future routing gap is explicitly accepted.
 - Use `karpathy-guidelines` as an engineering behavior baseline under `sdd-workflow`, `tdd-workflow`, or `review-workflow`; use `coding-standards` for cross-project code quality conventions and `grill-me` when the user wants an interview-style pressure test.
@@ -97,7 +97,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis.
 - `delivery-workflow` loads for accepted closeout and post-PR status triage, including final review, insight audit, mergeability, CI/check-run, conflict, branch-protection, and environment cleanup checks; it does not merge or publish unless explicitly requested.
 - Agentic loops do not load as a skill owner. They are host-neutral stage patterns documented in `workflow-router/references/agentic-loops.md`; Codex and Claude Code invocation details belong in host adapter docs.
-- `feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions.
+- `quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions.
 - `coding-standards` loads for cross-project code quality conventions after an owner workflow has selected scope.
 - `karpathy-guidelines` loads after a workflow owner has selected implementation, review, or refactor scope and the agent needs behavior guardrails for assumptions, simplicity, surgical diffs, or verifiable success; it is not a top-level workflow, requirements workflow, TDD workflow, or review workflow.
 - `documentation-lookup` loads when current library, framework, SDK, API, CLI, or cloud-service documentation is needed.

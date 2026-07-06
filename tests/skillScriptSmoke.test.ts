@@ -70,10 +70,10 @@ const smokes: ScriptSmoke[] = [
     expected: 'Run command with one or more servers',
   },
   {
-    name: 'feynman learning logger',
+    name: 'quick-learn project logger',
     command: 'python',
-    args: ['-B', 'skills/feynman-learning-coach/scripts/log_learning_event.py', '--help'],
-    expected: 'Log a Feynman learning event',
+    args: ['-B', 'skills/quick-learn/scripts/log_quick_learn_event.py', '--help'],
+    expected: 'Log a quick-learn learning event',
   },
   {
     name: 'mcp builder connection support module',

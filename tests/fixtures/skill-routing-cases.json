@@ -442,28 +442,108 @@
       "docsBoundary": "`verification-loop` loads for completion gates after work is done, not for root-cause diagnosis or review analysis."
     },
     {
-      "id": "feynman-learning-positive-topic-mastery",
-      "skill": "feynman-learning-coach",
+      "id": "quick-learn-positive-topic-mastery",
+      "skill": "quick-learn",
       "kind": "positive",
-      "prompt": "Teach me event sourcing step by step and make me explain it back until I really understand it.",
-      "expectedSkill": "feynman-learning-coach",
-      "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
+      "prompt": "Teach me event sourcing from official sources, build a custom syllabus, quiz me, and make me explain it back until I really understand it.",
+      "expectedSkill": "quick-learn",
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
     },
     {
-      "id": "feynman-learning-negative-research-article",
-      "skill": "feynman-learning-coach",
+      "id": "quick-learn-positive-chinese-book-study",
+      "skill": "quick-learn",
+      "kind": "positive",
+      "prompt": "我要学习一本书《秒懂投资》，帮我找资料、规划教学计划、逐章讲解并出考题。",
+      "expectedSkill": "quick-learn",
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-positive-chinese-interview-drill",
+      "skill": "quick-learn",
+      "kind": "positive",
+      "prompt": "帮我准备系统设计面试，出题并让我回答。",
+      "expectedSkill": "quick-learn",
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-positive-chinese-exam-review",
+      "skill": "quick-learn",
+      "kind": "positive",
+      "prompt": "帮我准备考试复习计划，并出测验题检查掌握程度。",
+      "expectedSkill": "quick-learn",
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-negative-research-article",
+      "skill": "quick-learn",
       "kind": "negative",
       "prompt": "Research recent vector database trends and turn the findings into a polished article.",
       "expectedSkill": null,
-      "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
     },
     {
-      "id": "feynman-learning-forbidden-implementation",
-      "skill": "feynman-learning-coach",
+      "id": "quick-learn-negative-chinese-tutorial-article",
+      "skill": "quick-learn",
+      "kind": "negative",
+      "prompt": "帮我写一篇 React 教程文章，面向初学者。",
+      "expectedSkill": null,
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-negative-chinese-resource-list",
+      "skill": "quick-learn",
+      "kind": "negative",
+      "prompt": "帮我整理一份 Next.js 教程资料清单。",
+      "expectedSkill": null,
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-negative-chinese-learning-plan-article",
+      "skill": "quick-learn",
+      "kind": "negative",
+      "prompt": "帮我写一篇学习计划文章，面向公众号发布。",
+      "expectedSkill": null,
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-negative-chinese-project-progress",
+      "skill": "quick-learn",
+      "kind": "negative",
+      "prompt": "帮我掌握这个项目的当前进展并总结风险。",
+      "expectedSkill": null,
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-negative-chinese-exam-report",
+      "skill": "quick-learn",
+      "kind": "negative",
+      "prompt": "帮我总结这次考试结果报告，提炼给家长看的重点。",
+      "expectedSkill": null,
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-negative-chinese-mastery-article",
+      "skill": "quick-learn",
+      "kind": "negative",
+      "prompt": "帮我写一篇掌握 React Hooks 的教程文章。",
+      "expectedSkill": null,
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-negative-chinese-meeting-review",
+      "skill": "quick-learn",
+      "kind": "negative",
+      "prompt": "帮我复习昨天的项目会议纪要并提炼待办。",
+      "expectedSkill": null,
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
+    },
+    {
+      "id": "quick-learn-forbidden-implementation",
+      "skill": "quick-learn",
       "kind": "forbidden-load",
       "prompt": "Implement the queue worker fix with tests and run validation.",
       "expectedSkill": "tdd-workflow",
-      "docsBoundary": "`feynman-learning-coach` loads only for explicit learning, tutoring, study, mastery, exam/interview prep, syllabus building, or coached topic sessions."
+      "docsBoundary": "`quick-learn` loads only for explicit source-backed learning projects, tutoring, study, mastery, exam/interview prep, syllabus building, quizzes, or coached topic sessions."
     },
     {
       "id": "coding-standards-positive-quality-conventions",

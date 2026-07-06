@@ -295,7 +295,7 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'review',
     'structured findings',
   ]);
-  const learningSignal = includesAny(text, [
+  const englishLearningSignal = includesAny(text, [
     'coached',
     'exam',
     'explain it back',
@@ -307,6 +307,78 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'teach me',
     'tutoring',
   ]);
+  const chineseExplicitLearningSignal = includesAny(text, [
+    '\u6211\u8981\u5b66\u4e60',
+    '\u60f3\u5b66\u4e60',
+    '\u5e2e\u6211\u5b66\u4e60',
+    '\u7cfb\u7edf\u5b66\u4e60',
+    '\u5b66\u4e60\u4e00\u672c',
+    '\u5b66\u4e60\u4e00\u95e8',
+    '\u6559\u6211',
+    '\u5907\u8003',
+    '\u51c6\u5907\u8003\u8bd5',
+    '\u8003\u8bd5\u51c6\u5907',
+    '\u8003\u524d\u590d\u4e60',
+    '\u9762\u8bd5',
+    '\u5237\u9898',
+    '\u8003\u9898',
+    '\u51fa\u6d4b\u9a8c',
+    '\u51fa\u9898',
+    '\u8ba9\u6211\u56de\u7b54',
+    '\u9010\u7ae0\u5b66\u4e60',
+  ]);
+  const chineseLearningPlanSignal = includesAny(text, [
+    '\u5b66\u4e60\u8def\u5f84',
+    '\u5b66\u4e60\u8ba1\u5212',
+    '\u6559\u5b66\u8ba1\u5212',
+    '\u9010\u7ae0\u8bb2\u89e3\u5e76\u51fa\u8003\u9898',
+  ]);
+  const chineseWeakLearningSignal = includesAny(text, [
+    '\u8bfe\u7a0b',
+    '\u6559\u7a0b',
+    '\u8bb2\u89e3',
+    '\u590d\u4e60',
+    '\u9010\u7ae0',
+    '\u8d44\u6599',
+  ]);
+  const chineseLearningContextSignal = includesAny(text, [
+    '\u5b66\u4e60',
+    '\u638c\u63e1',
+    '\u6559\u6211',
+    '\u5907\u8003',
+    '\u8003\u8bd5',
+    '\u9762\u8bd5',
+    '\u6d4b\u9a8c',
+    '\u8003\u9898',
+    '\u51fa\u9898',
+    '\u6559\u5b66\u8ba1\u5212',
+    '\u5b66\u4e60\u8ba1\u5212',
+    '\u56de\u7b54',
+  ]);
+  const chineseOutputOnlySignal = includesAny(text, [
+    '\u6587\u7ae0',
+    '\u535a\u5ba2',
+    '\u516c\u4f17\u53f7',
+    '\u62a5\u544a',
+    '\u9875\u9762',
+    '\u4ea7\u54c1 ui',
+    'landing page',
+    '\u8d44\u6599\u6e05\u5355',
+    '\u6e05\u5355',
+    '\u5199\u4e00\u7bc7',
+    '\u6539\u5199',
+    '\u603b\u7ed3',
+    '\u6574\u7406\u4e00\u4efd',
+    '\u8bbe\u8ba1\u4e00\u4e2a',
+  ]);
+  const chineseLearningSignal = chineseExplicitLearningSignal || (
+    !chineseOutputOnlySignal
+    && (
+      chineseLearningPlanSignal
+      || (chineseWeakLearningSignal && chineseLearningContextSignal)
+    )
+  );
+  const learningSignal = englishLearningSignal || chineseLearningSignal;
   const productUiSignal = includesAny(text, [
     'branded product landing',
     'html/css layouts',
@@ -758,8 +830,8 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     return 'diagnose';
   }
 
-  if (learningSignal && !implementationSignal && canLoad(metadata, 'feynman-learning-coach', ['learn', 'feynman'])) {
-    return 'feynman-learning-coach';
+  if (learningSignal && !implementationSignal && canLoad(metadata, 'quick-learn', ['learn', 'study', 'syllabus'])) {
+    return 'quick-learn';
   }
 
   if (webArtifactsSignal && canLoad(metadata, 'web-artifacts-builder', ['standalone react', 'browser artifacts'])) {

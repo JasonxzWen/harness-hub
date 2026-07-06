@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "generatedAt": "2026-05-11",
+  "generatedAt": "2026-07-06",
   "components": {
     "harness:minimal": {
       "kind": "harness-template",
@@ -654,32 +654,34 @@
       "risk": "low",
       "recommendation": "Use for deep pre-PR or CE-style code review. Use security-review for focused security checklists, web-design-guidelines for UI/UX audits, and verification-loop for final command gates."
     },
-    "skill:feynman-learning-coach": {
+    "skill:quick-learn": {
       "kind": "skill",
-      "path": "skills/feynman-learning-coach",
+      "path": "skills/quick-learn",
       "version": "0.1.0",
-      "source": "learn-faster-kit-inspired-local",
+      "source": "local-original",
       "provides": [
-        "feynman-learning-coaching",
-        "progressive-teaching",
-        "teach-back-checks",
-        "learning-session-logging"
+        "source-backed-learning-projects",
+        "custom-learning-syllabus",
+        "stage-reviewed-learning-flow",
+        "teach-back-assessment",
+        "quick-learn-project-logging"
       ],
       "overlapsWith": [
         "skill:answer-workflow",
-        "skill:documentation-lookup"
+        "skill:documentation-lookup",
+        "skill:effective-interact"
       ],
-      "routing": "Load when the user explicitly wants to learn, study, master, review, prepare for an exam/interview, build a syllabus, or be coached through a topic; do not route ordinary implementation or factual lookup.",
+      "routing": "Load when the user explicitly wants a source-backed learning project, custom study plan, syllabus, book or technical topic coaching, teach-back, quizzes, or staged review; do not route ordinary implementation, one-off factual lookup, or article writing.",
       "detects": [
         {
-          "path": "skills/feynman-learning-coach/SKILL.md"
+          "path": "skills/quick-learn/SKILL.md"
         }
       ],
       "agents": [
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Use for explicit learning sessions with scoped teaching, Feynman teach-back checks, and durable logs."
+      "recommendation": "Use for explicit source-backed learning projects with confirmed custom syllabus, stage-level review, active assessment, and durable .quick-learn logs."
     },
     "skill:coding-standards": {
       "kind": "skill",
