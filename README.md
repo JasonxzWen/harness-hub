@@ -6,7 +6,7 @@ Harness Hub is a personal repo harness toolkit for making agent work repeatable 
 
 Imported skills can keep their upstream style; Harness Hub mainly owns routing, source records, harness templates, and lifecycle safety.
 
-Agent execution rules live in synchronized [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md). Human-facing workflow detail lives in [Development Workflow](docs/development-workflow.md), with delegated-agent acceptance and arbitration patterns in [Agentic Loop Catalog](docs/agentic-loop-catalog.md).
+Agent execution rules live in canonical [AGENTS.md](AGENTS.md); [CLAUDE.md](CLAUDE.md) imports it for Claude Code. Human-facing workflow detail lives in [Development Workflow](docs/development-workflow.md), with delegated-agent acceptance and arbitration patterns in [Agentic Loop Catalog](docs/agentic-loop-catalog.md).
 
 ## First-Use Summary
 
@@ -61,7 +61,7 @@ flowchart TD
 
 | I want to... | Start here | What it gives you |
 |---|---|---|
-| Prepare another repo for agent-driven work | `init-harness --target standard` | Standard skills, synchronized root harness files, local state templates, validation script, lock ownership. |
+| Prepare another repo for agent-driven work | `init-harness --target standard` | Standard skills, canonical `AGENTS.md` plus importing `CLAUDE.md`, local state templates, validation script, lock ownership. |
 | Install skills without root harness files | `install --target standard` | Full standard skill tree under `skills/<name>/`, no root file changes. |
 | Check a target repo before writing files | `analyze --agent-readiness --harness --json` | Read-only readiness, harness gaps, and recommendations. |
 | Run a routine status self-check | `self-check --json` | Read-only aggregate status, advisory/failure split, and conditional harness validation. |
@@ -102,6 +102,8 @@ Use the published CLI first:
 npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --dry-run --json
 npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --yes
 ```
+
+`npx ...@latest` executes registry-supplied code. Agents should run it only when the current task or user explicitly authorizes that package execution, or use a pinned approved version.
 
 If you must run from source, clone this repo outside the target worktree and use it only as a runner:
 
@@ -166,6 +168,8 @@ npx @jasonwen/harness-hub@latest validate-harness D:\path\to\target --json
 npx @jasonwen/harness-hub@latest check D:\path\to\target --json
 ```
 
+For unattended agents, treat the `@latest` examples above as external package execution requiring task authorization or a pinned approved version.
+
 If `activate-agents` is blocked by old unmarked `.codex/skills` or `.claude/skills` caches and those caches are not needed, remove the caches and rerun `activate-agents`. Do not rerun retired `update-harness-hub` aggregation scripts for current standard targets.
 
 Source-post publishing:
@@ -228,7 +232,7 @@ harness/
 | Path | Purpose |
 |---|---|
 | `README.md` / `README.zh-CN.md` | Human-facing entry and visual navigation. |
-| `AGENTS.md` / `CLAUDE.md` | Synchronized agent-facing repo rules and execution workflow. |
+| `AGENTS.md` / `CLAUDE.md` | Canonical agent-facing repo rules and Claude Code import entrypoint. |
 | `skills/` | Platform-neutral skill source of truth. |
 | `harness/` | Standard target harness template and explicit-only smoke scaffolds. |
 | `capabilities/index.json` | Skill and harness component metadata. |

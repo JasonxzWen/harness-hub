@@ -52,8 +52,8 @@ const sizeLimits = {
   '.harness-hub/state/capability-events.jsonl': 64 * 1024,
 };
 const requiredMarkers = {
-  'AGENTS.md': ['Codex', 'Claude Code', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'LLM Wiki', '.harness-hub/context/wiki', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run', 'agentic loops', 'delegated-agent', 'Arbiters are read-only', 'finish closeout', 'insight'],
-  'CLAUDE.md': ['Codex', 'Claude Code', 'Initialization Gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'LLM Wiki', '.harness-hub/context/wiki', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run', 'agentic loops', 'delegated-agent', 'Arbiters are read-only', 'finish closeout', 'insight'],
+  'AGENTS.md': ['Codex', 'Claude Code', 'Initialization Gate', 'freshness gate', 'Loop Control Plane', 'Interrupt Policy', 'harness-validate.mjs', 'harness-hub check', 'LLM Wiki', '.harness-hub/context/wiki', 'current-task.md', 'checkpoint commit', 'quality snapshot', 'worktree', 'decisions.md', 'session-handoff', 'P0/P1/P2', 'agent-run browser', 'PR status', 'PR handoff', 'mergeability', 'CI/check-run', 'agentic loops', 'delegated-agent', 'Subagent interruption questions go first to the main agent', 'stale-read gate', 'Arbiters are read-only', 'finish closeout', 'insight'],
+  'CLAUDE.md': ['@AGENTS.md', 'Claude Code', 'imports', 'shared'],
   '.harness-hub/.gitignore': ['state/', 'reports/'],
   '.harness-hub/context/AGENTS.md': ['LLM Wiki', 'Raw sources', 'No Redundant Facts', 'human confirmation', 'Contradiction Register'],
   '.harness-hub/context/README.md': ['Agent Context Pack', 'Raw sources', 'Wiki pages', 'Obsidian', 'Update Flow'],
@@ -61,11 +61,11 @@ const requiredMarkers = {
   '.harness-hub/context/wiki/index.md': ['LLM Wiki Index', 'Raw sources', 'Stable Knowledge Map'],
   '.harness-hub/context/wiki/contradictions.md': ['Contradiction Register', 'Resolution status', 'Next action'],
   '.harness-hub/context/wiki/update-log.md': ['Update Log', 'Human confirmation', 'Sources consulted'],
-  '.harness-hub/loop/policies/interrupt-policy.md': ['Interrupt Policy', 'standalone', 'composable', 'loop-participant', 'Continue By Default', 'Interrupt', 'Audit Requirement'],
-  '.harness-hub/loop/policies/action-audit-schema.md': ['Runtime Ledgers', 'loop-runs.jsonl', 'interrupt-decisions.jsonl', 'capability-events.jsonl', 'continue|interrupt'],
+  '.harness-hub/loop/policies/interrupt-policy.md': ['Interrupt Policy', 'standalone', 'composable', 'loop-participant', 'Continue By Default', 'Main-Agent Auto-Arbiter', 'Interrupt', 'Audit Requirement'],
+  '.harness-hub/loop/policies/action-audit-schema.md': ['Runtime Ledgers', 'loop-runs.jsonl', 'interrupt-decisions.jsonl', 'capability-events.jsonl', 'continue|interrupt', 'mainAgentDecision', 'autonomyEnvelope'],
   '.harness-hub/state/decisions.md': ['Active Decisions', 'Resolved Decisions', 'Decision', 'Rationale', 'Status', 'Follow-up'],
-  '.harness-hub/state/progress.md': ['Recent Validation', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Agentic Loop Records', 'Main Agent Decision', 'Finish Closeout', 'Insight Recommendations', 'Review Feedback To Rules'],
-  '.harness-hub/state/session-handoff.md': ['Validation Evidence', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Agentic Loop Records', 'Main Agent Decision', 'Finish Closeout', 'Insight Recommendations', 'Review Feedback To Rules'],
+  '.harness-hub/state/progress.md': ['Recent Validation', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Stale-read gate', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Agentic Loop Records', 'Main Agent Decision', 'Finish Closeout', 'Insight Recommendations', 'Review Feedback To Rules'],
+  '.harness-hub/state/session-handoff.md': ['Validation Evidence', 'Validation Records', 'Command', 'Status', 'Exit code', 'Passed', 'Failed', 'Evidence', 'Commit', 'Runtime Signals', 'Stale-read gate', 'Web browser acceptance', 'PR Status', 'Mergeability', 'CI/check runs', 'Agentic Loop Records', 'Main Agent Decision', 'Finish Closeout', 'Stale-read result', 'Insight Recommendations', 'Review Feedback To Rules'],
   '.harness-hub/state/current-task.md': [
     'Goal',
     'Assumptions',
@@ -73,6 +73,8 @@ const requiredMarkers = {
     'Allowed paths',
     'Forbidden paths',
     'Acceptance criteria',
+    'Autonomy envelope',
+    'Subagent auto-arbiter',
     'Standard startup path',
     'harness-hub check',
     'Validation commands',
@@ -98,6 +100,7 @@ const requiredMarkers = {
     'Decision log',
     'Parallel writes',
     'Handoff requirements',
+    'stale-read gate',
   ],
   'clean-state-checklist.md': ['Standard startup path', 'harness-hub check', 'Runtime signals', 'P0', 'P1', 'P2', 'Web browser acceptance', 'Agentic loop records', 'main-agent decision', 'PR status', 'PR URL', 'mergeability', 'CI/check-run', 'Finish closeout', 'insight', 'Review Feedback', 'evaluator-rubric.md', 'quality-document.md'],
   'definition-of-done.md': ['Static checks', 'runtime checks', 'end-to-end', 'P0', 'P1', 'P2', 'agent-run browser', 'Standard startup path', 'harness-hub check', 'Runtime logs', 'Agentic loop evidence', 'producer/verifier/arbiter', 'PR status', 'mergeability', 'CI/check-run', 'finish closeout', 'insight', 'evaluator rubric', 'quality snapshot'],
@@ -134,10 +137,10 @@ for (const [file, limit] of Object.entries(sizeLimits)) {
 const rootAgentsPath = path.join(root, 'AGENTS.md');
 const rootClaudePath = path.join(root, 'CLAUDE.md');
 if (fs.existsSync(rootAgentsPath) && fs.existsSync(rootClaudePath)) {
-  const agents = fs.readFileSync(rootAgentsPath, 'utf8');
   const claude = fs.readFileSync(rootClaudePath, 'utf8');
-  if (agents !== claude) {
-    failures.push('AGENTS.md and CLAUDE.md must stay synchronized');
+  const claudeImportIssues = validateClaudeThinImport(claude);
+  if (claudeImportIssues.length > 0) {
+    failures.push(`CLAUDE.md must be a thin @AGENTS.md import: ${claudeImportIssues.join('; ')}`);
   }
 }
 
@@ -219,6 +222,29 @@ if (fs.existsSync(featureStatePath)) {
     if (!isRecord(featureState) || !isRecord(featureState.finish_closeout_policy)) {
       missing.push('finish_closeout_policy object');
     }
+    if (!isRecord(featureState) || !isRecord(featureState.main_agent_auto_arbitration_policy)) {
+      missing.push('main_agent_auto_arbitration_policy object');
+    }
+    if (!isRecord(featureState) || !isRecord(featureState.freshness_gate_policy)) {
+      missing.push('freshness_gate_policy object');
+    }
+    if (!isRecord(featureState) || !isRecord(featureState.stale_read_gate_policy)) {
+      missing.push('stale_read_gate_policy object');
+    }
+    requireFeaturePolicyStringArrays(missing, featureState, 'main_agent_auto_arbitration_policy', [
+      'auto_continue_when',
+      'interrupt_when',
+      'record_in',
+    ]);
+    requireFeaturePolicyStringArrays(missing, featureState, 'freshness_gate_policy', [
+      'required_checks',
+      'allowed_actions',
+      'interrupt_when',
+    ]);
+    requireFeaturePolicyStringArrays(missing, featureState, 'stale_read_gate_policy', [
+      'required_checks',
+      'record_in',
+    ]);
     if (!isRecord(featureState) || !isRecord(featureState.agentic_loop_policy)) {
       missing.push('agentic_loop_policy object');
     }
@@ -287,6 +313,46 @@ console.log('Harness validation passed.');
 
 function isRecord(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function requireFeaturePolicyStringArrays(missing, featureState, policyName, fieldNames) {
+  if (!isRecord(featureState) || !isRecord(featureState[policyName])) {
+    return;
+  }
+  const policy = featureState[policyName];
+  for (const fieldName of fieldNames) {
+    const value = policy[fieldName];
+    if (!Array.isArray(value)
+      || value.length === 0
+      || value.some((item) => typeof item !== 'string' || item.trim().length === 0)) {
+      missing.push(`${policyName}.${fieldName} array`);
+    }
+  }
+}
+
+function validateClaudeThinImport(content) {
+  const issues = [];
+  const normalized = content.replace(/^\uFEFF/, '');
+  const lines = normalized.split(/\r?\n/);
+  const firstNonEmptyLine = lines.find((line) => line.trim().length > 0);
+  if (firstNonEmptyLine?.trim() !== '@AGENTS.md') {
+    issues.push('first non-empty line must be @AGENTS.md');
+  }
+  const sharedPolicyMarkers = [
+    '# Harness Hub Instructions',
+    '# Agent Harness',
+    '## Core Rules',
+    '## Operating Rules',
+    '## Modern Agent Operating Model',
+    '## Durable Task State',
+    '## Freshness And Stale-Read Gates',
+    '## Subagent Auto-Arbiter',
+  ];
+  const duplicatedMarkers = sharedPolicyMarkers.filter((marker) => normalized.includes(marker));
+  if (duplicatedMarkers.length > 0) {
+    issues.push(`duplicated shared policy markers ${duplicatedMarkers.join(', ')}`);
+  }
+  return issues;
 }
 
 function parseJsonlIssues(relativePath) {

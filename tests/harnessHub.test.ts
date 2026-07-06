@@ -322,6 +322,16 @@ test('confirmed harness init writes lock-managed files and validates', async () 
   expect(fs.existsSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'scripts', 'harness-validate.mjs'))).toBe(true);
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('PR handoff');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('freshness gate');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Subagent interruption questions go first to the main agent');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('stale-read gate');
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toContain('@AGENTS.md');
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toContain('Claude Code');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('main_agent_auto_arbitration_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('freshness_gate_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('stale_read_gate_policy');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Stale-read gate');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Stale-read result');
   expect(fs.readFileSync(path.join(targetDir, 'clean-state-checklist.md'), 'utf8')).toContain('PR URL');
 
   const lock = readLock(targetDir);

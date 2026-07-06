@@ -31,6 +31,7 @@
 | --- | --- | --- | --- |
 | Harness Hub startup check | not run | No `harness-hub check . --json` evidence recorded yet. | Fill current task first. |
 | Standard startup path | not run | No project startup evidence recorded yet. | Fill current task first. |
+| Stale-read gate | not run | No previously consulted file freshness check recorded yet. | Recheck status and reread or diff task-critical files before handoff. |
 
 ## Web browser acceptance
 
@@ -57,6 +58,7 @@
 | Final independent review | not run | No review evidence recorded yet. | Decide subagent, independent pass, or skip reason. |
 | Technical debt / drift review | not run | No closeout findings recorded yet. | Record refactor recommendations or warnings. |
 | PR / merge readiness | not applicable | No PR yet. | Record mergeability, conflicts, and user-visible decisions when a PR exists. |
+| Stale-read result | not run | No stale-read gate result recorded yet. | Record rechecked status and refreshed task-critical file evidence before final handoff. |
 
 ## Insight Recommendations
 

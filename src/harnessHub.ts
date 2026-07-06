@@ -2048,13 +2048,6 @@ function listHarnessTemplateFiles(
         sourceRelative,
         relativePath,
       }];
-      if (sourceRelative === 'AGENTS.md') {
-        files.push({
-          sourceFile,
-          sourceRelative,
-          relativePath: 'CLAUDE.md',
-        });
-      }
       return files;
     })
     .filter((file) => !file.sourceRelative.startsWith('.'))
@@ -2885,20 +2878,86 @@ function assessmentTextCheck(text: string, needles: string[], message: string): 
 }
 
 function assessmentFeatureListCheck(text: string, message: string): HarnessAssessmentCheck {
+  const evidence = [
+    'features array',
+    'feature_state_policy object',
+    'validation_priority_policy object',
+    'web_acceptance_policy object',
+    'pr_closeout_policy object',
+    'finish_closeout_policy object',
+    'main_agent_auto_arbitration_policy object',
+    'main_agent_auto_arbitration_policy.auto_continue_when array',
+    'main_agent_auto_arbitration_policy.interrupt_when array',
+    'main_agent_auto_arbitration_policy.record_in array',
+    'freshness_gate_policy object',
+    'freshness_gate_policy.required_checks array',
+    'freshness_gate_policy.allowed_actions array',
+    'freshness_gate_policy.interrupt_when array',
+    'stale_read_gate_policy object',
+    'stale_read_gate_policy.required_checks array',
+    'stale_read_gate_policy.record_in array',
+    'agentic_loop_policy object',
+    'loop_control_policy object',
+    'context_engineering_policy object',
+    'parallel_write_policy object',
+  ];
   try {
     const parsed = JSON.parse(text) as unknown;
-    const pass = isRecord(parsed)
-      && Array.isArray(parsed.features)
-      && isRecord(parsed.feature_state_policy)
-      && isRecord(parsed.validation_priority_policy)
-      && isRecord(parsed.web_acceptance_policy)
-      && isRecord(parsed.pr_closeout_policy)
-      && isRecord(parsed.finish_closeout_policy)
-      && isRecord(parsed.agentic_loop_policy)
-      && isRecord(parsed.loop_control_policy)
-      && isRecord(parsed.context_engineering_policy)
-      && isRecord(parsed.parallel_write_policy);
-    return assessmentCheck(pass, message, ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'finish_closeout_policy object', 'agentic_loop_policy object', 'loop_control_policy object', 'context_engineering_policy object', 'parallel_write_policy object']);
+    const missing: string[] = [];
+    if (!isRecord(parsed) || !Array.isArray(parsed.features)) {
+      missing.push('features array');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.feature_state_policy)) {
+      missing.push('feature_state_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.validation_priority_policy)) {
+      missing.push('validation_priority_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.web_acceptance_policy)) {
+      missing.push('web_acceptance_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.pr_closeout_policy)) {
+      missing.push('pr_closeout_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.finish_closeout_policy)) {
+      missing.push('finish_closeout_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.main_agent_auto_arbitration_policy)) {
+      missing.push('main_agent_auto_arbitration_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.freshness_gate_policy)) {
+      missing.push('freshness_gate_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.stale_read_gate_policy)) {
+      missing.push('stale_read_gate_policy object');
+    }
+    requireFeaturePolicyStringArrays(missing, parsed, 'main_agent_auto_arbitration_policy', [
+      'auto_continue_when',
+      'interrupt_when',
+      'record_in',
+    ]);
+    requireFeaturePolicyStringArrays(missing, parsed, 'freshness_gate_policy', [
+      'required_checks',
+      'allowed_actions',
+      'interrupt_when',
+    ]);
+    requireFeaturePolicyStringArrays(missing, parsed, 'stale_read_gate_policy', [
+      'required_checks',
+      'record_in',
+    ]);
+    if (!isRecord(parsed) || !isRecord(parsed.agentic_loop_policy)) {
+      missing.push('agentic_loop_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.loop_control_policy)) {
+      missing.push('loop_control_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.context_engineering_policy)) {
+      missing.push('context_engineering_policy object');
+    }
+    if (!isRecord(parsed) || !isRecord(parsed.parallel_write_policy)) {
+      missing.push('parallel_write_policy object');
+    }
+    return assessmentCheck(missing.length === 0, message, missing.length === 0 ? evidence : missing);
   } catch {
     return assessmentCheck(false, message, ['valid JSON']);
   }
@@ -3106,6 +3165,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Codex',
     'Claude Code',
     'Initialization Gate',
+    'freshness gate',
     'Loop Control Plane',
     'Interrupt Policy',
     'harness-validate.mjs',
@@ -3125,12 +3185,20 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'CI/check-run',
     'agentic loops',
     'delegated-agent',
+    'Subagent interruption questions go first to the main agent',
+    'stale-read gate',
     'Arbiters are read-only',
     'finish closeout',
     'insight',
   ];
+  const claudeImportMarkers = [
+    '@AGENTS.md',
+    'Claude Code',
+    'imports',
+    'shared',
+  ];
   checks.push(validateFileContains(targetDir, 'AGENTS.md', rootInstructionMarkers));
-  checks.push(validateFileContains(targetDir, 'CLAUDE.md', rootInstructionMarkers));
+  checks.push(validateFileContains(targetDir, 'CLAUDE.md', claudeImportMarkers));
   checks.push(validateRootInstructionSync(targetDir));
   checks.push(validateFileContains(targetDir, '.harness-hub/.gitignore', ['state/', 'reports/']));
   checks.push(validateFileContainsWithCode(targetDir, '.harness-hub/context/AGENTS.md', [
@@ -3177,6 +3245,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'composable',
     'loop-participant',
     'Continue By Default',
+    'Main-Agent Auto-Arbiter',
     'Interrupt',
     'Audit Requirement',
   ]));
@@ -3186,6 +3255,8 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'interrupt-decisions.jsonl',
     'capability-events.jsonl',
     'continue|interrupt',
+    'mainAgentDecision',
+    'autonomyEnvelope',
   ]));
   checks.push(...validateInterruptPolicyEvals(targetDir));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/decisions.md', [
@@ -3207,6 +3278,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Evidence',
     'Commit',
     'Runtime Signals',
+    'Stale-read gate',
     'Web browser acceptance',
     'PR Status',
     'Mergeability',
@@ -3231,6 +3303,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Evidence',
     'Commit',
     'Runtime Signals',
+    'Stale-read gate',
     'Web browser acceptance',
     'PR Status',
     'Mergeability',
@@ -3238,6 +3311,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Agentic Loop Records',
     'Main Agent Decision',
     'Finish Closeout',
+    'Stale-read result',
     'Insight Recommendations',
     'Review Feedback To Rules',
   ]));
@@ -3248,6 +3322,8 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Allowed paths',
     'Forbidden paths',
     'Acceptance criteria',
+    'Autonomy envelope',
+    'Subagent auto-arbiter',
     'Standard startup path',
     'harness-hub check',
     'Validation commands',
@@ -3273,6 +3349,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Decision log',
     'Parallel writes',
     'Handoff requirements',
+    'stale-read gate',
   ]));
   checks.push(validateFileContains(targetDir, 'clean-state-checklist.md', [
     'Standard startup path',
@@ -5503,7 +5580,29 @@ function parseSkillDescription(content: string): string | null {
 function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   const relativePath = 'feature_list.json';
   const filePath = path.join(targetDir, relativePath);
-  const evidence = ['features array', 'feature_state_policy object', 'validation_priority_policy object', 'web_acceptance_policy object', 'pr_closeout_policy object', 'finish_closeout_policy object', 'agentic_loop_policy object', 'loop_control_policy object', 'context_engineering_policy object', 'parallel_write_policy object'];
+  const evidence = [
+    'features array',
+    'feature_state_policy object',
+    'validation_priority_policy object',
+    'web_acceptance_policy object',
+    'pr_closeout_policy object',
+    'finish_closeout_policy object',
+    'main_agent_auto_arbitration_policy object',
+    'main_agent_auto_arbitration_policy.auto_continue_when array',
+    'main_agent_auto_arbitration_policy.interrupt_when array',
+    'main_agent_auto_arbitration_policy.record_in array',
+    'freshness_gate_policy object',
+    'freshness_gate_policy.required_checks array',
+    'freshness_gate_policy.allowed_actions array',
+    'freshness_gate_policy.interrupt_when array',
+    'stale_read_gate_policy object',
+    'stale_read_gate_policy.required_checks array',
+    'stale_read_gate_policy.record_in array',
+    'agentic_loop_policy object',
+    'loop_control_policy object',
+    'context_engineering_policy object',
+    'parallel_write_policy object',
+  ];
   if (!fs.existsSync(filePath)) {
     return {
       code: 'structured-content',
@@ -5546,6 +5645,29 @@ function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
   if (!isRecord(data) || !isRecord(data.finish_closeout_policy)) {
     missing.push('finish_closeout_policy object');
   }
+  if (!isRecord(data) || !isRecord(data.main_agent_auto_arbitration_policy)) {
+    missing.push('main_agent_auto_arbitration_policy object');
+  }
+  if (!isRecord(data) || !isRecord(data.freshness_gate_policy)) {
+    missing.push('freshness_gate_policy object');
+  }
+  if (!isRecord(data) || !isRecord(data.stale_read_gate_policy)) {
+    missing.push('stale_read_gate_policy object');
+  }
+  requireFeaturePolicyStringArrays(missing, data, 'main_agent_auto_arbitration_policy', [
+    'auto_continue_when',
+    'interrupt_when',
+    'record_in',
+  ]);
+  requireFeaturePolicyStringArrays(missing, data, 'freshness_gate_policy', [
+    'required_checks',
+    'allowed_actions',
+    'interrupt_when',
+  ]);
+  requireFeaturePolicyStringArrays(missing, data, 'stale_read_gate_policy', [
+    'required_checks',
+    'record_in',
+  ]);
   if (!isRecord(data) || !isRecord(data.agentic_loop_policy)) {
     missing.push('agentic_loop_policy object');
   }
@@ -5577,6 +5699,26 @@ function validateFeatureListJson(targetDir: string): HarnessValidationCheck {
       : `Feature state JSON is missing required structure: ${missing.join(', ')}.`,
     evidence,
   };
+}
+
+function requireFeaturePolicyStringArrays(
+  missing: string[],
+  data: unknown,
+  policyName: string,
+  fieldNames: string[],
+): void {
+  if (!isRecord(data) || !isRecord(data[policyName])) {
+    return;
+  }
+  const policy = data[policyName];
+  for (const fieldName of fieldNames) {
+    const value = policy[fieldName];
+    if (!Array.isArray(value)
+      || value.length === 0
+      || value.some((item) => typeof item !== 'string' || item.trim().length === 0)) {
+      missing.push(`${policyName}.${fieldName} array`);
+    }
+  }
 }
 
 function isValidFeatureRecord(value: unknown): boolean {
@@ -5620,15 +5762,43 @@ function validateRootInstructionSync(targetDir: string): HarnessValidationCheck 
     };
   }
 
-  const synced = fs.readFileSync(agentsPath, 'utf8') === fs.readFileSync(claudePath, 'utf8');
+  const claude = fs.readFileSync(claudePath, 'utf8');
+  const issues = validateClaudeThinImport(claude);
+  const valid = issues.length === 0;
   return {
     code: 'required-content',
-    state: synced ? 'pass' : 'fail',
+    state: valid ? 'pass' : 'fail',
     path: 'AGENTS.md / CLAUDE.md',
-    reason: synced
-      ? 'Root AGENTS.md and CLAUDE.md are synchronized.'
-      : 'Root AGENTS.md and CLAUDE.md must stay synchronized.',
+    reason: valid
+      ? 'Root CLAUDE.md thin-imports AGENTS.md for Claude Code.'
+      : `Root CLAUDE.md must be a thin @AGENTS.md import: ${issues.join('; ')}.`,
   };
+}
+
+function validateClaudeThinImport(content: string): string[] {
+  const issues: string[] = [];
+  const normalized = content.replace(/^\uFEFF/, '');
+  const lines = normalized.split(/\r?\n/);
+  const firstNonEmptyLine = lines.find((line) => line.trim().length > 0);
+  if (firstNonEmptyLine?.trim() !== '@AGENTS.md') {
+    issues.push('first non-empty line must be @AGENTS.md');
+  }
+
+  const sharedPolicyMarkers = [
+    '# Harness Hub Instructions',
+    '# Agent Harness',
+    '## Core Rules',
+    '## Operating Rules',
+    '## Modern Agent Operating Model',
+    '## Durable Task State',
+    '## Freshness And Stale-Read Gates',
+    '## Subagent Auto-Arbiter',
+  ];
+  const duplicatedMarkers = sharedPolicyMarkers.filter((marker) => normalized.includes(marker));
+  if (duplicatedMarkers.length > 0) {
+    issues.push(`duplicated shared policy markers ${duplicatedMarkers.join(', ')}`);
+  }
+  return issues;
 }
 
 function validateFileContainsWithCode(
