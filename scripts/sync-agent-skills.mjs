@@ -209,6 +209,9 @@ function printSummary(result) {
       console.log(`${result.dryRun ? 'Would remove' : 'Removed'} ${host.staleManaged.length} stale skill directories from ${host.id}.`);
     }
   }
+  console.log(
+    'Note: this command writes project-local host mirrors only; it does not install user-level/global skills for direct slash invocation.',
+  );
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

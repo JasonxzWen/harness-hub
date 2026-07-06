@@ -185,6 +185,13 @@ npx @jasonwen/harness-hub source-post publish . --dry-run --json
 
 `activate-agents` is an explicit local activation step for Codex and Claude Code projects. It copies the already installed `skills/<name>` tree into `.codex/skills/<name>` and `.claude/skills/<name>` so both hosts can index the skill metadata, including helper triggers such as `package-release-sniffer`. It writes only the target repository's local host caches, uses a Harness Hub marker to avoid overwriting unmarked local skills, and does not write global skill directories or `.harness-hub/lock.json`.
 
+If a skill rename or new skill is still not visible, check the layer that is actually stale:
+
+- source of truth: `skills/<name>/SKILL.md` in the project root that Codex is currently using;
+- project-local mirrors: `.codex/skills/<name>/SKILL.md` and `.claude/skills/<name>/SKILL.md`, refreshed by `activate-agents` for target repos or `bun run sync:agent-skills` in this source checkout;
+- global direct slash invocation: the host's user skill root, for example `$CODEX_HOME/skills/<name>/SKILL.md`, which is not written by `activate-agents` or `sync:agent-skills`;
+- UI index cache: if the files are correct but the palette still shows old metadata, reload or restart the host.
+
 `self-check` is the routine health-check aggregate. It wraps `check`, classifies hard failures separately from advisory items, and runs strict `validate-harness` only when the target has an installed `harness:minimal` lock record unless `--validate-harness` is explicitly provided. A local daily 21:30 runner can call:
 
 ```powershell
