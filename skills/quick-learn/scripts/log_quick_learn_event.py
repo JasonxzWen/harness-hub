@@ -19,6 +19,7 @@ EVENTS = {
     "source-review",
     "diagnosis",
     "syllabus",
+    "syllabus-confirmation",
     "syllabus-review",
     "lesson",
     "question",
@@ -27,10 +28,12 @@ EVENTS = {
     "assessment",
     "stage-review",
     "review",
+    "phase-change",
     "summary",
 }
 
 REVIEW_EVENTS = {"source-review", "syllabus-review", "stage-review", "review"}
+STATUSES = {"draft", "pending_user_confirmation", "confirmed", "in_progress", "paused", "complete"}
 
 
 def slugify(value: str) -> str:
@@ -80,7 +83,10 @@ def update_project(path: Path, event: dict[str, Any]) -> dict[str, Any]:
             "updated_at": now,
             "level": None,
             "target": None,
+            "status": None,
+            "current_phase": None,
             "current_module": None,
+            "next_action": None,
             "event_counts": {},
             "concepts": {},
             "last_summary": None,
@@ -92,8 +98,20 @@ def update_project(path: Path, event: dict[str, Any]) -> dict[str, Any]:
         state["level"] = event["level"]
     if event.get("target"):
         state["target"] = event["target"]
+    if event.get("status"):
+        state["status"] = event["status"]
+    elif event["event"] == "syllabus-confirmation":
+        state["status"] = "confirmed"
+    elif event["event"] == "lesson" and state.get("status") in {None, "pending_user_confirmation", "confirmed"}:
+        state["status"] = "in_progress"
+    if event.get("phase"):
+        state["current_phase"] = event["phase"]
+    elif event["event"] == "lesson" and not state.get("current_phase"):
+        state["current_phase"] = "module-session"
     if event.get("module"):
         state["current_module"] = event["module"]
+    if event.get("next_action"):
+        state["next_action"] = event["next_action"]
 
     counts = state.setdefault("event_counts", {})
     counts[event["event"]] = counts.get(event["event"], 0) + 1
@@ -159,6 +177,9 @@ def update_progress(path: Path, event: dict[str, Any]) -> dict[str, Any]:
         "timestamp": event["timestamp"],
         "event": event["event"],
         "summary": event["summary"],
+        "status": event.get("status"),
+        "phase": event.get("phase"),
+        "next_action": event.get("next_action"),
     }
     write_json(path, progress)
     return progress
@@ -166,19 +187,62 @@ def update_progress(path: Path, event: dict[str, Any]) -> dict[str, Any]:
 
 def update_sources(path: Path, event: dict[str, Any]) -> dict[str, Any]:
     sources = read_json(path, {"sources": []})
-    if event.get("source_title") or event.get("source_url"):
+    if event.get("source_id") or event.get("source_title") or event.get("source_url") or event.get("local_path"):
         sources.setdefault("sources", []).append(
             {
                 "timestamp": event["timestamp"],
+                "id": event.get("source_id"),
                 "title": event.get("source_title"),
                 "url": event.get("source_url"),
+                "local_path": event.get("local_path"),
+                "tier": event.get("tier"),
                 "quality": event.get("quality"),
+                "freshness": event.get("freshness"),
+                "used_for": event.get("used_for", []),
+                "gaps": event.get("gaps"),
                 "summary": event["summary"],
                 "metadata": event.get("metadata", {}),
             }
         )
     write_json(path, sources)
     return sources
+
+
+def update_syllabus_state(path: Path, event: dict[str, Any]) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+
+    syllabus = read_json(path, {})
+    status = event.get("status")
+    if event["event"] == "syllabus-confirmation" and not status:
+        status = "confirmed"
+    elif event["event"] == "lesson" and not status:
+        current_status = syllabus.get("status")
+        if current_status in {None, "pending_user_confirmation", "confirmed"}:
+            status = "in_progress"
+
+    if not status and not event.get("phase") and not event.get("next_action") and not event.get("module"):
+        return syllabus
+
+    if status:
+        syllabus["status"] = status
+        if status == "confirmed":
+            syllabus["confirmed_at"] = event["timestamp"]
+            if syllabus.get("requires_confirmation_before_teaching") is True:
+                syllabus["requires_confirmation_before_teaching"] = False
+        if status == "in_progress":
+            syllabus.setdefault("teaching_started_at", event["timestamp"])
+            if syllabus.get("requires_confirmation_before_teaching") is True:
+                syllabus["requires_confirmation_before_teaching"] = False
+    if event.get("phase"):
+        syllabus["current_phase"] = event["phase"]
+    if event.get("next_action"):
+        syllabus["next_action"] = event["next_action"]
+    if event.get("module"):
+        syllabus["current_module"] = event["module"]
+    syllabus["updated_at"] = event["timestamp"]
+    write_json(path, syllabus)
+    return syllabus
 
 
 def update_notes(path: Path, event: dict[str, Any]) -> None:
@@ -191,12 +255,20 @@ def update_notes(path: Path, event: dict[str, Any]) -> None:
         f"- Summary: {event['summary']}",
     ]
     for key, label in [
+        ("status", "Status"),
+        ("phase", "Phase"),
         ("module", "Module"),
         ("concept", "Concept"),
         ("mastery", "Mastery"),
+        ("next_action", "Next action"),
+        ("source_id", "Source ID"),
         ("source_title", "Source"),
         ("source_url", "Source URL"),
+        ("local_path", "Local path"),
+        ("tier", "Tier"),
         ("quality", "Quality"),
+        ("freshness", "Freshness"),
+        ("gaps", "Gaps"),
         ("review_status", "Review status"),
     ]:
         if event.get(key) is not None:
@@ -204,6 +276,8 @@ def update_notes(path: Path, event: dict[str, Any]) -> None:
             if key == "mastery":
                 value = f"{value}/5"
             lines.append(f"- {label}: {value}")
+    if event.get("used_for"):
+        lines.append(f"- Used for: {', '.join(event['used_for'])}")
     lines.append("")
 
     with path.open("a", encoding="utf-8", newline="\n") as handle:
@@ -217,12 +291,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--summary", required=True, help="Short event summary.")
     parser.add_argument("--level", help="Current learner level.")
     parser.add_argument("--target", help="Target learning outcome.")
+    parser.add_argument("--status", choices=sorted(STATUSES), help="Learning project or syllabus status.")
+    parser.add_argument("--phase", help="Current learning lifecycle phase.")
+    parser.add_argument("--next-action", help="Concrete next action for resuming the learning project.")
     parser.add_argument("--module", help="Current module or section.")
     parser.add_argument("--concept", help="Concept involved in this event.")
     parser.add_argument("--mastery", type=int, choices=range(1, 6), help="Mastery or teach-back score from 1 to 5.")
+    parser.add_argument("--source-id", help="Stable source ID such as S1 or M3-S2.")
     parser.add_argument("--source-title", help="Source title.")
     parser.add_argument("--source-url", help="Source URL or local path.")
+    parser.add_argument("--local-path", help="Downloaded local path for a source.")
+    parser.add_argument("--tier", help="Source tier: Primary, Secondary, Tertiary, or Local synthesis.")
     parser.add_argument("--quality", choices=["A", "B", "C", "D"], help="Source quality grade.")
+    parser.add_argument("--freshness", choices=["stable", "evolving", "volatile"], help="Source freshness category.")
+    parser.add_argument("--used-for", action="append", default=[], help="How this source is used. Repeatable.")
+    parser.add_argument("--gaps", help="Known source gaps or limits.")
     parser.add_argument("--review-status", choices=["pass", "warn", "fail"], help="Stage review verdict.")
     parser.add_argument("--log-root", default=".quick-learn/projects", help="Directory for quick-learn project logs.")
     parser.add_argument("--metadata", action="append", default=[], help="Extra key=value metadata. Repeatable.")
@@ -243,12 +326,21 @@ def main() -> int:
         "summary": args.summary,
         "level": args.level,
         "target": args.target,
+        "status": args.status,
+        "phase": args.phase,
+        "next_action": args.next_action,
         "module": args.module,
         "concept": args.concept,
         "mastery": args.mastery,
+        "source_id": args.source_id,
         "source_title": args.source_title,
         "source_url": args.source_url,
+        "local_path": args.local_path,
+        "tier": args.tier,
         "quality": args.quality,
+        "freshness": args.freshness,
+        "used_for": args.used_for,
+        "gaps": args.gaps,
         "review_status": args.review_status,
         "metadata": parse_metadata(args.metadata),
     }
@@ -259,11 +351,13 @@ def main() -> int:
     sources_path = topic_dir / "sources.json"
     reviews_path = topic_dir / "reviews.jsonl"
     notes_path = topic_dir / "notes.md"
+    syllabus_path = topic_dir / "syllabus.json"
 
     append_jsonl(events_path, event)
     project = update_project(project_path, event)
     update_progress(progress_path, event)
     update_sources(sources_path, event)
+    update_syllabus_state(syllabus_path, event)
     if event["event"] in REVIEW_EVENTS or event.get("review_status"):
         append_jsonl(reviews_path, event)
     elif not reviews_path.exists():

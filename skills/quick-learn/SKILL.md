@@ -20,7 +20,9 @@ Use this skill when the user explicitly wants to learn a book, paper, codebase, 
 - Source first: gather and index useful materials before designing the syllabus unless the user explicitly asks for a quick unaided explanation.
 - Download when learning needs it and the material is reachable through normal access. Do not bypass paywalls, login walls, robots/anti-scraping controls, or technical access restrictions. Keep downloaded material local for learning and do not reproduce large copyrighted text in responses.
 - Confirm the syllabus before teaching. The module boundaries should fit the user's current level and target outcome, not blindly mirror a book or tutorial table of contents.
+- Promote concrete module sources before teaching from them. Directory or hub pages can be discovery sources, but specific lesson claims should anchor to article, docs, PDF, repo, or course-page source records.
 - Run stage-level review at source pack, syllabus, long module synthesis, and final handoff. Use an independent delegated-agent review when available; otherwise run the deterministic checklist in `references/review-and-orchestration.md` and state the fallback.
+- Keep durable state current. After the user confirms a syllabus or teaching starts, clear stale `pending_user_confirmation` state and record the current phase plus next action.
 - Keep the first teaching unit small. Prefer active recall, teach-back, transfer questions, and zero-hint checks over long passive lectures.
 - Do not build an HTML course artifact in v1 unless the user explicitly asks for that output.
 
