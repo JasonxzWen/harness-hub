@@ -104,7 +104,8 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
   expect(fs.existsSync(path.join(targetDir, 'skills', 'openspec-explore', 'SKILL.md'))).toBe(true);
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Codex');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Claude Code');
-  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toBe(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8'));
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toContain('@AGENTS.md');
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toContain('Claude Code');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`');
   expectInstalledTargetFilesDoNotContain(targetDir, [
     'docs/agentic-loop-catalog.md',
@@ -119,6 +120,8 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Spec updates');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Decision log');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Parallel writes');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Autonomy envelope');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Subagent auto-arbiter');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Agentic loops');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('skills/workflow-router/references/agentic-loops.md');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('docs-consistency');
@@ -140,6 +143,7 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('PR Status');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Agentic Loop Records');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Stop condition');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Stale-read gate');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Finish Closeout');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Insight Recommendations');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Failed');
@@ -147,10 +151,15 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('PR Status');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Agentic Loop Records');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Stop condition');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Stale-read gate');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Finish Closeout');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Stale-read result');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Insight Recommendations');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Initialization Gate');
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toContain('@AGENTS.md');
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toContain('Claude Code');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Loop Control Plane');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('freshness gate');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('LLM Wiki');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Interrupt Policy');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('checkpoint commit');
@@ -161,12 +170,17 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('project rule, validation case, documentation, automation check, or follow-up task');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).not.toContain('whether this workflow should become a skill, source record, eval case');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('delegated-agent');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Subagent interruption questions go first to the main agent');
+  expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('stale-read gate');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Arbiters are read-only');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('feature_state_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('validation_priority_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('web_acceptance_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('pr_closeout_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('finish_closeout_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('main_agent_auto_arbitration_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('freshness_gate_policy');
+  expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('stale_read_gate_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('agentic_loop_policy');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('docs-consistency');
   expect(fs.readFileSync(path.join(targetDir, 'feature_list.json'), 'utf8')).toContain('maxIterations');
@@ -279,6 +293,7 @@ test('dev bootstrap preserves existing worktree-local state', () => {
     '| Signal | Status | Evidence | Follow-up |',
     '| --- | --- | --- | --- |',
     '| Standard startup path | pass | existing startup | none |',
+    '| Stale-read gate | skipped | Existing state predates this policy. | none |',
     '',
     '## Web browser acceptance',
     '',
@@ -429,7 +444,82 @@ test('dev bootstrap treats existing Claude instructions as managed harness confl
   const forced = applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true, force: true });
 
   expect(forced.exitCode).toBe(0);
-  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toBe(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8'));
+  expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toContain('@AGENTS.md');
+});
+
+test('harness validation requires Claude instructions to stay a thin AGENTS import', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-claude-import-'));
+  applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
+  fs.writeFileSync(
+    path.join(targetDir, 'CLAUDE.md'),
+    fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8'),
+  );
+
+  const validation = validateHarness(targetDir);
+
+  expect(validation.exitCode).toBe(3);
+  expect(validation.checks.some((check) => (
+    check.state === 'fail'
+    && check.code === 'required-content'
+    && check.path === 'AGENTS.md / CLAUDE.md'
+    && check.reason.includes('thin @AGENTS.md import')
+    && check.reason.includes('first non-empty line must be @AGENTS.md')
+  ))).toBe(true);
+
+  let failed = false;
+  try {
+    execFileSync(process.execPath, ['scripts/harness-validate.mjs'], {
+      cwd: targetDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch (error) {
+    failed = true;
+    expect((error as { status?: number }).status).toBe(3);
+    expect(String((error as { stderr?: Buffer | string }).stderr)).toContain('thin @AGENTS.md import');
+  }
+  expect(failed).toBe(true);
+});
+
+test('harness validation rejects duplicated shared policy in Claude thin import', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-claude-duplicate-policy-'));
+  applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
+  fs.writeFileSync(path.join(targetDir, 'CLAUDE.md'), [
+    '@AGENTS.md',
+    '',
+    '## Claude Code',
+    '',
+    'Local note.',
+    '',
+    '## Core Rules',
+    '',
+    'Duplicated shared policy must stay in AGENTS.md only.',
+    '',
+  ].join('\n'));
+
+  const validation = validateHarness(targetDir);
+
+  expect(validation.exitCode).toBe(3);
+  expect(validation.checks.some((check) => (
+    check.state === 'fail'
+    && check.code === 'required-content'
+    && check.path === 'AGENTS.md / CLAUDE.md'
+    && check.reason.includes('duplicated shared policy markers ## Core Rules')
+  ))).toBe(true);
+
+  let failed = false;
+  try {
+    execFileSync(process.execPath, ['scripts/harness-validate.mjs'], {
+      cwd: targetDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch (error) {
+    failed = true;
+    expect((error as { status?: number }).status).toBe(3);
+    expect(String((error as { stderr?: Buffer | string }).stderr)).toContain('duplicated shared policy markers ## Core Rules');
+  }
+  expect(failed).toBe(true);
 });
 
 test('harness validation reports current-state files that exceed size limits', () => {
@@ -476,6 +566,65 @@ test('harness validation rejects malformed feature state JSON', () => {
   expect(failed).toBe(true);
 });
 
+test('harness validation rejects empty agent orchestration policy objects', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-feature-policy-shape-'));
+  applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
+  fs.writeFileSync(path.join(targetDir, 'feature_list.json'), `${JSON.stringify({
+    schema_version: 1,
+    features: [],
+    feature_state_policy: {},
+    validation_priority_policy: {},
+    web_acceptance_policy: {},
+    pr_closeout_policy: {},
+    finish_closeout_policy: {},
+    main_agent_auto_arbitration_policy: {},
+    freshness_gate_policy: {},
+    stale_read_gate_policy: {},
+    agentic_loop_policy: {},
+    loop_control_policy: {},
+    context_engineering_policy: {},
+    parallel_write_policy: {},
+  }, null, 2)}\n`);
+
+  const validation = validateHarness(targetDir);
+
+  expect(validation.exitCode).toBe(3);
+  expect(validation.checks.some((check) => (
+    check.state === 'fail'
+    && check.code === 'structured-content'
+    && check.path === 'feature_list.json'
+    && check.reason.includes('main_agent_auto_arbitration_policy.auto_continue_when array')
+    && check.reason.includes('main_agent_auto_arbitration_policy.interrupt_when array')
+    && check.reason.includes('main_agent_auto_arbitration_policy.record_in array')
+    && check.reason.includes('freshness_gate_policy.required_checks array')
+    && check.reason.includes('freshness_gate_policy.allowed_actions array')
+    && check.reason.includes('freshness_gate_policy.interrupt_when array')
+    && check.reason.includes('stale_read_gate_policy.required_checks array')
+    && check.reason.includes('stale_read_gate_policy.record_in array')
+  ))).toBe(true);
+  const featureAssessment = validation.assessment.subsystems.state.checks.find((check) => (
+    check.message === 'Feature tracker is valid and has required structure'
+  ));
+  expect(featureAssessment?.pass).toBe(false);
+  expect(featureAssessment?.evidence).toContain('main_agent_auto_arbitration_policy.auto_continue_when array');
+  expect(featureAssessment?.evidence).toContain('freshness_gate_policy.required_checks array');
+  expect(featureAssessment?.evidence).toContain('stale_read_gate_policy.record_in array');
+
+  let failed = false;
+  try {
+    execFileSync(process.execPath, ['scripts/harness-validate.mjs'], {
+      cwd: targetDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch (error) {
+    failed = true;
+    expect((error as { status?: number }).status).toBe(3);
+    expect(String((error as { stderr?: Buffer | string }).stderr)).toContain('main_agent_auto_arbitration_policy.auto_continue_when array');
+  }
+  expect(failed).toBe(true);
+});
+
 test('harness validation requires durable validation records and feature evidence policy', () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-harness-records-'));
   applyDevBootstrap(planDevBootstrap({ targetDir, agents: ['standard'] }), { yes: true });
@@ -515,6 +664,9 @@ test('harness validation requires durable validation records and feature evidenc
     && check.reason.includes('web_acceptance_policy object')
     && check.reason.includes('pr_closeout_policy object')
     && check.reason.includes('finish_closeout_policy object')
+    && check.reason.includes('main_agent_auto_arbitration_policy object')
+    && check.reason.includes('freshness_gate_policy object')
+    && check.reason.includes('stale_read_gate_policy object')
     && check.reason.includes('agentic_loop_policy object')
     && check.reason.includes('loop_control_policy object')
     && check.reason.includes('valid feature records features[0]')

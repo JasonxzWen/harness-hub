@@ -65,7 +65,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Treat CodeGraph and Headroom as external tool configuration suggestions surfaced by `harness-hub check` and readiness analysis, not as skill owners or managed install components. Any MCP config, proxy, hook, provider routing, or memory setup remains explicit and reviewed.
 - Use `skill-creator` for standard skill content; `hub-maintenance-workflow` still owns source records, capability metadata, and Harness Hub lifecycle decisions.
 - Use `delivery-workflow` after accepted validation to run finish closeout: required closeout loop based on dirty paths or a base/head diff, insight audit or skip reason, PR/merge-readiness checks, and residual-risk handoff. After a requested PR is created or updated, inspect remote PR state, mergeability, CI/check runs, conflicts, and branch-protection blockers; do not treat local validation alone as PR-ready evidence.
-- Use agentic loops as stage mechanics inside the selected owner workflow when separation of context improves quality: plan review, test design, implementation review, frontend acceptance, diagnosis regression, PR closeout, and insight retro. Record Producer, Verifier, read-only Arbiter, evidence, verdict, and Main Agent Decision; do not route them as standalone owners.
+- Use agentic loops as stage mechanics inside the selected owner workflow when separation of context improves quality: plan review, test design, implementation review, frontend acceptance, diagnosis regression, PR closeout, and insight retro. Record Producer, Verifier, read-only Arbiter, evidence, verdict, and Main Agent Decision; do not route them as standalone owners. For non-trivial work, the main agent should aggressively but controllably consider delegated-agent or subagent splits for independent research, review, verification, stale-read checks, and leased disjoint write scopes.
 - Use OpenSpec skills only when the user explicitly wants the formal OpenSpec lifecycle.
 - Native goal/story loops are handled by current Codex and Claude Code capabilities; Harness Hub no longer distributes Ralph PRD or loop skills.
 - Use `feynman-learning-coach` only when the user explicitly wants to learn, study, master, review, or be coached through a topic.
@@ -143,11 +143,13 @@ Use [Development Workflow](development-workflow.md) for the practical intake che
 
 ## Subagents And Hooks
 
-Subagents are parent-workflow controlled executor modes. Use native subagents only for independent source gathering, docs lookup, review, verification, finish closeout review, agentic loop verifier/arbiter passes, or disjoint write scopes named in the executable plan. Required loops may call for subagent evidence; when unavailable, record a fallback reason and deterministic substitute. The main workflow owner keeps synthesis, integration, validation, and final user-facing conclusions.
+Subagents are parent-workflow controlled executor modes. Use native subagents aggressively but controllably for independent source gathering, docs lookup, current web research, review, verification, stale-read checks, finish closeout review, agentic loop verifier/arbiter passes, or disjoint write scopes named in the executable plan. Skip delegation when the task is tiny, the immediate next step requires main-agent judgment, tools are unavailable, or risk is too high. Required loops may call for subagent evidence; when unavailable, record a fallback reason and deterministic substitute. The main workflow owner keeps synthesis, integration, validation, and final user-facing conclusions.
 
 Generic routing uses `delegated-agent`, `verifier`, and `arbiter` rather than host-specific tool names. Arbiters are read-only: they do not edit files, resolve conflicts, push, publish, merge, post, or make the final user-facing decision.
 
-Advisory hooks only until a security review, deterministic tests, and explicit rollout approval exist. No automatic subagent dispatch is allowed. No remote writes from hooks are allowed. Hooks must not bypass SDD alignment or mutate credentials, third-party resources, publishing state, or git remotes.
+Subagent interruption questions go first to the main agent. The main agent may auto-arbitrate when the action is inside the task's autonomy envelope, write scopes are leased, the side effect is local and reversible, validation is known, and the decision is recorded. Escalate to the user for behavior, acceptance, scope, cost, data ownership, credentials, permissions, remote writes, publishing, PR/merge state, destructive non-managed content, or governance changes.
+
+Advisory hooks only until a security review, deterministic tests, and explicit rollout approval exist. No automatic subagent dispatch from hooks is allowed. No remote writes from hooks are allowed. Hooks must not bypass SDD alignment or mutate credentials, third-party resources, publishing state, or git remotes.
 
 ## Third-Party Candidates
 

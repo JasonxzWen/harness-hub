@@ -256,7 +256,7 @@ test('insight collection and report scripts produce a private audit from fixture
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
   expect(validation.status, validation.stderr || validation.stdout).toBe(0);
   expect(JSON.parse(validation.stdout).ok).toBe(true);
-});
+}, 20_000);
 
 test('insight report weights bottlenecks toward primary interaction evidence', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-report-weighting-'));

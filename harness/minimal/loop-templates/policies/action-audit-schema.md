@@ -20,17 +20,29 @@ Each JSONL line in `interrupt-decisions.jsonl` should follow this shape:
   "schemaVersion": 1,
   "runId": "loop-run-id",
   "capabilityId": "capability-id",
+  "askedByAgentId": "delegated-agent-id-or-null",
   "action": "short action name",
   "targetPaths": ["relative/path"],
   "sideEffects": ["local-files"],
   "riskSignals": ["scope-clear", "validation-known"],
+  "autonomyEnvelope": {
+    "allowedPaths": ["relative/path"],
+    "forbiddenPaths": ["relative/path"],
+    "leaseId": "lease-id-or-null",
+    "localReversible": true,
+    "validationKnown": true,
+    "maxIterations": 2
+  },
   "validation": {
     "planned": ["command or check"],
     "result": "passed|failed|skipped|pending"
   },
   "decision": "continue|interrupt",
+  "mainAgentDecision": "auto-continue|auto-reject|pull-back-to-main|escalate-to-user",
+  "escalationReason": "why user input is required, or null when auto-arbitrated",
   "reason": "why this decision is safe or why it needs review",
   "evidence": ["file, command, or source anchor"],
+  "delegatedNextAction": "what the subagent should do next, or null",
   "nextSafeAction": "what happens next"
 }
 ```

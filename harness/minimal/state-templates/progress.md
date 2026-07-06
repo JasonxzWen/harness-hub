@@ -38,6 +38,7 @@
 | --- | --- | --- | --- |
 | Harness Hub startup check | not run | No `harness-hub check . --json` evidence recorded yet. | Fill current task first. |
 | Standard startup path | not run | No project startup evidence recorded yet. | Fill current task first. |
+| Stale-read gate | not run | No previously consulted file freshness check recorded yet. | Recheck status and reread or diff task-critical files before handoff. |
 
 ## Web browser acceptance
 

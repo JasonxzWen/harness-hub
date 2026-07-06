@@ -48,7 +48,11 @@
           "agentic-loop-records",
           "docs-consistency-loop-policy",
           "bounded-agentic-loop-iterations",
-          "delegated-agent-arbitration"
+          "delegated-agent-arbitration",
+          "aggressive-bounded-subagent-delegation",
+          "main-agent-auto-arbitration",
+          "freshness-gate-policy",
+          "stale-read-gate-policy"
       ],
       "overlapsWith": [
         "skill:workflow-router",

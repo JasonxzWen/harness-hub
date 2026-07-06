@@ -4,7 +4,7 @@ Use this policy when a workflow owner considers subagents or hooks.
 
 ## Subagents
 
-The parent workflow owner controls orchestration. Subagents are an executor mode inside an accepted workflow, not a separate workflow owner. Required loops may ask for subagent evidence; material or multi-scope reviews should split independent read-only lenses unless a fallback is recorded. The main agent still owns integration and final decisions.
+The parent workflow owner controls orchestration. Subagents are an executor mode inside an accepted workflow, not a separate workflow owner. For non-trivial work, the main agent should actively look for subagent splits that save context or improve independent evidence, unless the task is tiny, immediately blocked on main-agent judgment, tool support is unavailable, or the risk boundary is unclear. Required loops may ask for subagent evidence; material or multi-scope reviews should split independent read-only lenses unless a fallback is recorded. The main agent still owns integration and final decisions.
 
 Allowed subagent work:
 
@@ -25,6 +25,37 @@ Forbidden subagent work:
 - hidden cleanup or rollback.
 
 The main agent owns synthesis, integration, validation, and final user-facing conclusions.
+
+## Autonomy Envelope
+
+Before assigning write-capable subagents or allowing repeated autonomous loop actions, the active plan should name an autonomy envelope:
+
+- goal and acceptance criteria;
+- allowed paths and forbidden paths;
+- local side effects that are allowed without user interruption;
+- remote, destructive, credential, cost, publishing, PR, merge, or governance side effects that require user escalation;
+- validation signals that must be available before continuing;
+- `maxIterations` and stop condition for bounded retry loops;
+- path leases for every write-capable delegated agent.
+
+If the envelope is missing or a proposed action falls outside it, the main agent either handles the decision locally from repository evidence or escalates to the user when the decision changes scope, behavior, safety, cost, release state, data ownership, credentials, or permissions.
+
+## Subagent Interrupt Triage
+
+Subagent interruption questions go first to the main agent. The main agent may auto-arbitrate and continue when the action is inside the autonomy envelope, write scopes are leased, the side effect is local and reversible, validation is known, and the decision can be recorded.
+
+Default triage:
+
+- more read-only source, log, docs, or web research: continue when in scope and useful;
+- local code or docs edit: continue only inside allowed paths and an owned lease, or pull the edit back to the main agent;
+- failing validation: allow a bounded retry when it targets the same acceptance criteria and remains below `maxIterations`;
+- scope expansion, opportunistic cleanup, or unrelated findings: reject as current work and record as follow-up;
+- conflicting evidence: prefer deterministic checks and fresh source reads over delegated-agent judgment;
+- remote writes, publishing, PR/merge state, credentials, permissions, destructive non-managed content, user-visible behavior changes, acceptance changes, or governance changes: interrupt for user decision.
+
+Deterministic checks outrank subagent judgment.
+
+Record accepted auto-arbitration evidence in `.harness-hub/state/interrupt-decisions.jsonl`, `.harness-hub/state/runs/<runId>/integration.json`, `progress.md`, or `session-handoff.md` as appropriate. Subagents must not make final user-facing decisions.
 
 ## Agentic Loops
 
