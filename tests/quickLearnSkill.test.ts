@@ -6,6 +6,9 @@ import { expect, test } from 'bun:test';
 
 const skillDir = 'skills/quick-learn';
 const skill = fs.readFileSync(`${skillDir}/SKILL.md`, 'utf8');
+const sourceStrategy = fs.readFileSync(`${skillDir}/references/source-strategy.md`, 'utf8');
+const lifecycle = fs.readFileSync(`${skillDir}/references/learning-project-lifecycle.md`, 'utf8');
+const review = fs.readFileSync(`${skillDir}/references/review-and-orchestration.md`, 'utf8');
 
 function frontmatterValue(name: string): string {
   const match = skill.match(new RegExp(`^${name}:\\s*(.+)$`, 'm'));
@@ -28,6 +31,8 @@ test('quick-learn defines source pack, staged review, teaching, and logging', ()
   expect(skill).toContain('Source first');
   expect(skill).toContain('Confirm the syllabus before teaching');
   expect(skill).toContain('Run stage-level review');
+  expect(skill).toContain('Promote concrete module sources before teaching');
+  expect(skill).toContain('clear stale `pending_user_confirmation` state');
   expect(skill).toContain('references/source-strategy.md');
   expect(skill).toContain('references/learning-project-lifecycle.md');
   expect(skill).toContain('references/teaching-and-assessment.md');
@@ -38,6 +43,15 @@ test('quick-learn defines source pack, staged review, teaching, and logging', ()
   expect(fs.existsSync(`${skillDir}/references/teaching-and-assessment.md`)).toBe(true);
   expect(fs.existsSync(`${skillDir}/references/review-and-orchestration.md`)).toBe(true);
   expect(fs.existsSync(`${skillDir}/scripts/log_quick_learn_event.py`)).toBe(true);
+});
+
+test('quick-learn captures trace follow-up guardrails', () => {
+  expect(review).toContain('Do not treat lack of a separate user subagent request as a fallback reason by itself');
+  expect(review).toContain('host policy, missing tool, user prohibition, cost/latency tradeoff');
+  expect(sourceStrategy).toContain('module teaching needs concrete anchors');
+  expect(sourceStrategy).toContain('For evolving vendor learning hubs, do not stop at the top-level hub page');
+  expect(lifecycle).toContain('clear or supersede `pending_user_confirmation`');
+  expect(lifecycle).toContain('When teaching begins, update project state to `in_progress`');
 });
 
 test('quick-learn logger writes project state, sources, reviews, and notes', () => {
@@ -59,12 +73,26 @@ test('quick-learn logger writes project state, sources, reviews, and notes', () 
       'Reviewed source pack and found enough primary material.',
       '--mastery',
       '4',
+      '--source-id',
+      'S1',
       '--source-title',
       'Official documentation',
       '--source-url',
       'https://example.com/docs',
+      '--local-path',
+      'materials/docs.html',
+      '--tier',
+      'Primary',
       '--quality',
       'A',
+      '--freshness',
+      'evolving',
+      '--used-for',
+      'facts',
+      '--used-for',
+      'assessment',
+      '--gaps',
+      'API examples only.',
       '--review-status',
       'pass',
       '--log-root',
@@ -88,7 +116,93 @@ test('quick-learn logger writes project state, sources, reviews, and notes', () 
   expect(project.concepts['Append-only log'].mastery).toBe(4);
 
   const sources = JSON.parse(fs.readFileSync(path.join(tempDir, 'event-sourcing', 'sources.json'), 'utf8'));
+  expect(sources.sources[0].id).toBe('S1');
+  expect(sources.sources[0].local_path).toBe('materials/docs.html');
+  expect(sources.sources[0].tier).toBe('Primary');
   expect(sources.sources[0].quality).toBe('A');
+  expect(sources.sources[0].freshness).toBe('evolving');
+  expect(sources.sources[0].used_for).toEqual(['facts', 'assessment']);
+  expect(sources.sources[0].gaps).toBe('API examples only.');
+});
+
+test('quick-learn logger advances syllabus and project status after confirmation and lesson start', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quick-learn-status-'));
+  const topicDir = path.join(tempDir, 'event-sourcing');
+  fs.mkdirSync(topicDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(topicDir, 'syllabus.json'),
+    JSON.stringify(
+      {
+        status: 'pending_user_confirmation',
+        requires_confirmation_before_teaching: true,
+        modules: [{ id: 'm1', title: 'Foundations' }],
+      },
+      null,
+      2,
+    ),
+  );
+
+  const script = path.resolve(`${skillDir}/scripts/log_quick_learn_event.py`);
+  const confirm = spawnSync(
+    'python',
+    [
+      script,
+      '--topic',
+      'Event Sourcing',
+      '--event',
+      'syllabus-confirmation',
+      '--summary',
+      'User confirmed the custom syllabus.',
+      '--phase',
+      'syllabus-confirmed',
+      '--next-action',
+      'Start Foundations.',
+      '--log-root',
+      tempDir,
+    ],
+    { encoding: 'utf8' },
+  );
+
+  expect(confirm.status).toBe(0);
+  let syllabus = JSON.parse(fs.readFileSync(path.join(topicDir, 'syllabus.json'), 'utf8'));
+  let project = JSON.parse(fs.readFileSync(path.join(topicDir, 'project.json'), 'utf8'));
+  expect(syllabus.status).toBe('confirmed');
+  expect(syllabus.requires_confirmation_before_teaching).toBe(false);
+  expect(syllabus.current_phase).toBe('syllabus-confirmed');
+  expect(syllabus.next_action).toBe('Start Foundations.');
+  expect(project.status).toBe('confirmed');
+  expect(project.current_phase).toBe('syllabus-confirmed');
+  expect(project.next_action).toBe('Start Foundations.');
+
+  const lesson = spawnSync(
+    'python',
+    [
+      script,
+      '--topic',
+      'Event Sourcing',
+      '--event',
+      'lesson',
+      '--module',
+      'Foundations',
+      '--summary',
+      'Started the first lesson.',
+      '--next-action',
+      'Ask the first transfer question.',
+      '--log-root',
+      tempDir,
+    ],
+    { encoding: 'utf8' },
+  );
+
+  expect(lesson.status).toBe(0);
+  syllabus = JSON.parse(fs.readFileSync(path.join(topicDir, 'syllabus.json'), 'utf8'));
+  project = JSON.parse(fs.readFileSync(path.join(topicDir, 'project.json'), 'utf8'));
+  const progress = JSON.parse(fs.readFileSync(path.join(topicDir, 'progress.json'), 'utf8'));
+  expect(syllabus.status).toBe('in_progress');
+  expect(syllabus.current_module).toBe('Foundations');
+  expect(project.status).toBe('in_progress');
+  expect(project.current_module).toBe('Foundations');
+  expect(progress.last_event.next_action).toBe('Ask the first transfer question.');
 });
 
 test('quick-learn logger avoids fixed fallback slugs', () => {

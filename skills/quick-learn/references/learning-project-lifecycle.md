@@ -77,6 +77,12 @@ Create a proposed syllabus with:
 
 Ask the user to confirm module boundaries, order, and depth before teaching. If the user changes the goal, revise the syllabus and log the decision.
 
+When the user confirms the syllabus, update durable state before teaching:
+
+- mark the syllabus/project status as `confirmed` or `in_progress`;
+- record the confirmation decision and next action;
+- clear or supersede `pending_user_confirmation` so later sessions do not ask for a decision that already happened.
+
 ## Phase 5: Module Session
 
 For each confirmed module:
@@ -90,6 +96,10 @@ For each confirmed module:
 7. Log mastery, weak points, next review, and source coverage.
 
 Do not let a session become a passive summary. If the user asks a direct question, answer clearly, then return to active checking.
+
+Before the first explanation in a source-heavy module, check that the concrete module sources are recorded. If the module will rely on a specific article, docs page, repository example, PDF section, or course lesson that is not yet in `sources.json` or `source-index.md`, add it first rather than relying only on a broad entry page.
+
+When teaching begins, update project state to `in_progress` and record the current module plus next action. Keep handoff state aligned with the active phase.
 
 ## Phase 6: Assessment And Review
 

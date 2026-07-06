@@ -64,6 +64,8 @@ Capture at least:
 }
 ```
 
+Use stable source IDs such as `S1`, `S2`, and `M3-S1` in the source index. Broad entry pages can seed discovery, but module teaching needs concrete anchors. If a lesson cites a specific article, documentation page, PDF section, repository example, or course page, record that item with its own source ID, URL or local path, tier, quality, freshness, used-for fields, and gaps before teaching from it.
+
 ## Book Learning Pattern
 
 For a book:
@@ -83,3 +85,5 @@ For a technology:
 3. Add tutorials and blog posts only after official surface is mapped.
 4. Track version, package name, runtime, setup constraints, common errors, and compatibility.
 5. Include at least one practical artifact target: a small app, script, refactor, debug task, design note, or decision checklist.
+
+For evolving vendor learning hubs, do not stop at the top-level hub page. Use the hub as `entry/discovery`, then add concrete article, docs, repo, release, or PDF records for each module that will make factual claims.

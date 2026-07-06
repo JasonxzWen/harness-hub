@@ -11,9 +11,11 @@ Run review at these gates:
 3. **Module Synthesis Review**: for long, source-heavy, or high-stakes modules before teaching from the synthesis.
 4. **Final Handoff Review**: before declaring a learning project phase complete.
 
-Use a delegated-agent read-only review when available. The main agent remains responsible for final decisions, integration, and user-facing conclusions.
+Use a delegated-agent read-only review when the active host and user scope allow it. The main agent remains responsible for final decisions, integration, and user-facing conclusions.
 
-If delegated review is unavailable or too expensive for a small stage, run the fallback checklist below and explicitly record that fallback in `reviews.jsonl`.
+If delegated review is unavailable, blocked by the active host policy, explicitly forbidden by the user, or too expensive for a small stage, run the fallback checklist below and explicitly record that fallback in `reviews.jsonl`.
+
+Do not treat lack of a separate user subagent request as a fallback reason by itself. The fallback reason must name the actual blocker: host policy, missing tool, user prohibition, cost/latency tradeoff, or small low-risk stage.
 
 ## Parallel Research Lanes
 
@@ -25,6 +27,8 @@ For broad topics, split source work into independent lanes:
 - assessment/exercise lane.
 
 Each lane should return source IDs, quality/freshness grades, useful excerpts summarized in original words, gaps, and a syllabus recommendation. Do not let subagents make final syllabus decisions.
+
+Before teaching from a specific article, documentation page, PDF section, repository, video, or course lesson, promote that item from a broad entry page into its own source record or source-index row. Directory pages are useful discovery sources, but they should not anchor detailed module claims by themselves.
 
 ## Review Checklist
 
