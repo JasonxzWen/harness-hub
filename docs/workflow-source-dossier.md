@@ -36,7 +36,7 @@ The workflow system must serve this order:
 | Anthropic skills | Selective atoms installed or locally wrapped: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, `slack-gif-creator`. | Provider API, MCP server, skill authoring, doc/comms, visual theme, and Slack GIF atoms. | Helper atoms under owner workflows; document four-pack remains reference-only due licensing. |
 | Karpathy Guidelines | `karpathy-guidelines` installed as a helper baseline. | Coding behavior discipline: state assumptions, keep implementation simple, preserve surgical diffs, and define verifiable success criteria. | Use only under a selected owner workflow; do not let it replace SDD, TDD, review, or pressure-test owners. |
 | Ralph | `ralph-prd`, `ralph-loop`, and `scripts/ralph/prd.json.example` retired on 2026-05-22. | Historical autonomous story-loop reference. | Source evidence only; native Codex and Claude Code goal/story workflows now cover this lane. |
-| Learn Harness / Learn FASTER | Narrow local adaptations. | Historical harness templates and learning lifecycle ideas. | Keep learning coach only; repo harness templates are removed from distribution. |
+| Learn Harness / Learn FASTER | Narrow local adaptations. | Historical harness templates and learning lifecycle ideas. | Fold learning lifecycle ideas into `quick-learn`; repo harness templates are removed from distribution. |
 
 ## Phase Dossier
 

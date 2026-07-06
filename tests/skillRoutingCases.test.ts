@@ -23,7 +23,7 @@ const requiredHighOverlapSkills = [
   'verification-loop',
 ];
 const optionalDemoSkills = [
-  'feynman-learning-coach',
+  'quick-learn',
   'coding-standards',
   'karpathy-guidelines',
   'documentation-lookup',

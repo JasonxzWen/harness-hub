@@ -185,7 +185,7 @@
           "label": "Source registry",
           "value": "docs/source-projects.md",
           "filePath": "docs/source-projects.md",
-          "line": 38,
+          "line": 39,
           "status": "info"
         },
         {
@@ -238,7 +238,7 @@
       "value": "docs/source-projects.md",
       "status": "info",
       "filePath": "docs/source-projects.md",
-      "line": 38
+      "line": 39
     },
     {
       "id": "evidence-vocabulary",

@@ -49,7 +49,7 @@
       "skills/effective-interact/artifacts/",
       ".codex/",
       ".claude/",
-      ".learning/"
+      ".quick-learn/"
     ]
   },
   "npm": {
@@ -81,7 +81,7 @@
     "forbidden": [
       ".github/",
       ".harness-hub/",
-      ".learning/",
+      ".quick-learn/",
       "node_modules/",
       "reports/",
       "site/",
@@ -125,7 +125,7 @@
       "skills/effective-interact/artifacts/",
       ".codex/",
       ".claude/",
-      ".learning/"
+      ".quick-learn/"
     ]
   }
 }
