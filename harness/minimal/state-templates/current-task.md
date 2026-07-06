@@ -42,6 +42,7 @@ State the concrete outcome for the active agent task.
 ## Worktree / Branch
 
 - Record the worktree or branch used for this write task.
+- Freshness status: record `git status --short`, branch/upstream, whether `git fetch --prune` ran, fast-forward result, detached `HEAD` handling, and any dirty/diverged/conflict blockers.
 
 ## Allowed paths
 
@@ -54,6 +55,24 @@ State the concrete outcome for the active agent task.
 ## Acceptance criteria
 
 - Add observable checks that prove the task is done.
+
+## Autonomy envelope
+
+- Main-agent responsibility: task contract, acceptance, allowed/forbidden paths, synthesis, integration, validation, and final user-facing conclusion.
+- Subagent use: aggressive but bounded for independent source exploration, docs or web research, log analysis, code review, verification, stale-read checks, finish closeout review, and leased disjoint write scopes.
+- Do not delegate when: the task is tiny, the next step depends on main-agent judgment, a suitable tool is unavailable, or the risk boundary is unclear.
+- Allowed local side effects:
+- Forbidden side effects requiring user escalation: behavior or acceptance changes, scope expansion, cost, data ownership, credentials, permissions, remote writes, publishing, PR/merge state, destructive non-managed content, or long-lived governance.
+- Validation signal before continue:
+- `maxIterations` for autonomous retry loops:
+- Stop condition:
+
+## Subagent auto-arbiter
+
+- Subagent interruption questions go first to the main agent.
+- Auto-continue allowed when the action is inside allowed paths and outside forbidden paths, writes are covered by a path lease, side effects are local and reversible, validation is known, and evidence can be recorded.
+- Default decisions: continue useful in-scope read-only exploration; allow one bounded retry for the same acceptance criteria; reject scope creep as follow-up; pull work back to the main agent when leases or context are unclear; escalate true human decisions.
+- Record decisions in `.harness-hub/state/interrupt-decisions.jsonl`, `.harness-hub/state/runs/<runId>/integration.json`, progress, or handoff as appropriate.
 
 ## Test matrix
 
@@ -181,6 +200,7 @@ When a loop may repeat, record `iteration`, `maxIterations`, and a stop conditio
 - Update `.harness-hub/state/progress.md`.
 - Update `.harness-hub/state/decisions.md` when decision-level changes occurred.
 - Update `.harness-hub/state/session-handoff.md`.
+- Run a stale-read gate for important previously consulted files: recheck status, reread or diff files that may have changed, and record the result or why stale reads cannot affect the handoff.
 - Update `quality-document.md` when validation evidence changes the quality snapshot.
 - Fill `evaluator-rubric.md` for material implementation or review work.
 - Record validation command status, passed/failed counts when available, output location or summary, and checkpoint commit state.

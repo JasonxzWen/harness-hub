@@ -225,7 +225,7 @@ Use this order as the default local gate:
 5. `bun run validate` when TypeScript, tests, capability metadata, or CLI behavior changes
 6. disposable target smoke tests before publishing install-surface changes
 
-After a requested PR is created or updated, add a remote PR closeout gate: inspect mergeability, CI/check-run status, conflicts, and branch-protection blockers; fix in-scope actionable issues, rerun relevant validation, and push updates before final handoff.
+After a requested PR is created or updated, add a remote PR closeout gate: inspect mergeability, CI/check-run status, conflicts, and branch-protection blockers; fix in-scope actionable issues and rerun relevant validation; push updates before final handoff only when the active task explicitly authorizes updating that PR branch.
 
 Before final handoff, add a finish closeout gate: run or record a final independent review, PR/merge-readiness handling, and `insight` audit; record any technical-debt, drift, conflict, tool-calling, AI-infrastructure, or skill/workflow improvement recommendations.
 

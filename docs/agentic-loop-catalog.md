@@ -11,7 +11,7 @@ Producer -> Verifier -> Arbiter -> Main Agent Decision
 - **Producer** prepares the work under the active workflow owner. It can be the main agent, a delegated agent with an owned write scope, or a deterministic generator.
 - **Verifier** gathers evidence without changing the product decision. It can be a delegated-agent acceptance runner, browser check, test command, CI result, or read-only source review.
 - **Arbiter** evaluates the original task, acceptance criteria, current diff, verifier evidence, and risk. It is read-only and must not edit code, resolve conflicts, push, merge, or make final user-facing decisions.
-- **Main Agent Decision** integrates the verdict, applies or delegates scoped fixes, interrupts for human decisions when needed, and owns the final user-facing handoff.
+- **Main Agent Decision** integrates the verdict, auto-arbitrates subagent interruption questions inside the autonomy envelope, applies or delegates scoped fixes, interrupts for human decisions when needed, and owns the final user-facing handoff.
 
 `delegated-agent` is the host-neutral term. In Codex it may map to a subagent role such as `explorer` or `worker`; in Claude Code it may map to a custom subagent. It can also be replaced by a deterministic command when no model judgement is needed. Generic skills and harness templates must use `delegated-agent`, `verifier`, and `arbiter`; host-specific invocation details belong in adapter docs.
 
@@ -24,6 +24,7 @@ Every loop record should capture:
 - stage and loop type;
 - producer, verifier, arbiter, and main-agent decision owner;
 - input contract: original task, target spec, acceptance criteria, current diff or artifact, commands, and risk boundaries;
+- autonomy envelope: allowed paths, forbidden paths, path leases for writes, local reversible side-effect boundary, validation commands, and user-interrupt conditions;
 - evidence: command output, screenshots, traces, source links, review findings, or explicit skip reason;
 - orchestration evidence when delegated agents run: host, agent id, read-only flag, owned paths, lease status, trace source, trace path, and integration record;
 - verdict: pass, fail, warn, blocked, or skipped;
@@ -48,6 +49,7 @@ The arbiter must use evidence, not majority vote. If reviewers disagree, the arb
 ## Safety Boundaries
 
 - Hooks may remind or validate loop evidence, but must not dispatch agents.
+- Subagent interruption questions go first to the main agent. The main agent may continue without user interruption only when the autonomy envelope covers the action, path leases cover writes, side effects are local and reversible, validation is known, and evidence can be recorded.
 - Delegated agents may write only with explicit disjoint ownership; default loop verification and arbitration are read-only.
 - Write-capable delegated agents may share the current worktree, but they need a path lease and must keep changed paths inside their owned paths.
 - Arbiters do not edit files, close review threads, resolve conflicts, push, publish, merge, or mutate third-party resources.

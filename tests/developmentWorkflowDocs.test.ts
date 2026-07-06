@@ -11,7 +11,7 @@ test('README exposes human-facing visual navigation', () => {
   expect(readme).toContain('## Visual Navigator');
   expect(readme).toContain('## Choose A Path');
   expect(readme).toContain('```mermaid');
-  expect(readme).toContain('Agent execution rules live in synchronized [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md)');
+  expect(readme).toContain('Agent execution rules live in canonical [AGENTS.md](AGENTS.md); [CLAUDE.md](CLAUDE.md) imports it for Claude Code.');
   expect(readme).toContain('harness-hub init-harness --target standard');
   expect(readme).toContain('.harness-hub/context/wiki');
   expect(readme).toContain('docs/development-workflow.md');
@@ -82,6 +82,7 @@ test('standard harness state templates capture planning and handoff memory', () 
   expect(progress).toContain('Finish Closeout');
   expect(progress).toContain('Agentic Loop Records');
   expect(progress).toContain('Main Agent Decision');
+  expect(progress).toContain('Stale-read gate');
   expect(progress).toContain('Insight Recommendations');
   expect(decisions).toContain('Alternatives considered');
   expect(decisions).toContain('State-file impact');
@@ -90,6 +91,8 @@ test('standard harness state templates capture planning and handoff memory', () 
   expect(handoff).toContain('Finish Closeout');
   expect(handoff).toContain('Agentic Loop Records');
   expect(handoff).toContain('Main Agent Decision');
+  expect(handoff).toContain('Stale-read gate');
+  expect(handoff).toContain('Stale-read result');
   expect(handoff).toContain('Insight Recommendations');
 });
 
@@ -191,8 +194,12 @@ test('standard harness state templates expose the full SDD and TDD memory contra
   expect(files.currentTask).toContain('P1');
   expect(files.currentTask).toContain('P2');
   expect(files.currentTask).toContain('Insight audit');
+  expect(files.currentTask).toContain('Autonomy envelope');
+  expect(files.currentTask).toContain('Subagent auto-arbiter');
   expect(files.currentTask).toContain('delegated-agent');
   expect(files.currentTask).toContain('Arbiters are read-only');
+  expect(files.progress).toContain('Stale-read gate');
+  expect(files.handoff).toContain('Stale-read result');
   expect(files.progress).toContain('| Command | Status | Exit code | Passed | Failed | Evidence | Commit |');
   expect(files.handoff).toContain('| Command | Status | Exit code | Passed | Failed | Evidence | Commit |');
 });
@@ -210,6 +217,8 @@ test('agentic loop catalog documents host-neutral arbitration and adapters', () 
     'docs-consistency',
     'insight-retro',
     'maxIterations',
+    'autonomy envelope',
+    'Subagent interruption questions go first to the main agent',
     'Arbiter',
     'must not edit code',
     'Host Adapter Boundary',

@@ -20,6 +20,8 @@ Harness Hub MUST provide a personal workflow routing overlay where each non-triv
 | Loop control plane | The auditable continue/interrupt decision layer for capability actions. It records autonomy decisions but does not replace workflow stages or owners. |
 | Agentic loop | A stage-level producer/verifier/arbiter/main-agent decision pattern for context-isolated acceptance, review, docs/code consistency, PR closeout, or workflow learning. It can use delegated agents or deterministic checks, but it does not replace the workflow owner. |
 | Delegated agent | Host-neutral role for a host-native subagent, isolated agent session, browser run, CI check, deterministic command, or bounded worker. Generic skills and state records should use `delegated-agent` instead of host-specific tool names. |
+| Autonomy envelope | The task-local boundary that lets the main agent continue without user interruption: allowed paths, forbidden paths, path leases for writes, local reversible side effects, validation commands, and explicit user-interrupt conditions. |
+| Subagent auto-arbiter | The main-agent responsibility to receive subagent interruption questions first, auto-continue low-risk actions inside the autonomy envelope, and escalate only decisions that need user judgment. |
 | Arbiter | Read-only loop role that evaluates task intent, acceptance criteria, current evidence, and risk. It must not edit files, resolve conflicts, push, merge, or make final user-facing decisions. |
 | Interaction layer | `effective-interact`, used to reduce human interpretation cost through HTML reports, comparisons, maps, and handoffs. |
 | Alignment gate | A required checkpoint where user-visible goal, constraints, target spec, and acceptance criteria are confirmed before implementation. |
@@ -49,16 +51,16 @@ Every non-trivial change request MUST follow this order unless the selected stat
 | 1 | Align user need | Capture the user's actual goal, current pain, constraints, non-goals, success target, and decisions that require user input. |
 | 2 | Gather required material | Inspect the needed repo-local docs, code paths, prior source decisions, and especially referenced upstream repos/blogs when the change depends on external workflow ideas. |
 | 3 | Write spec and acceptance | Produce target behavior, boundaries, acceptance criteria, verification strategy, and unresolved questions. |
-| 4 | Write executable plan and align | Produce task order, file targets, cleanup list, test plan, subagent plan, and validation commands; wait for user alignment before coding. |
+| 4 | Write executable plan and align | Produce task order, file targets, cleanup list, test plan, autonomy envelope, subagent plan, and validation commands; wait for user alignment before coding. |
 | 5 | Clean unneeded files | Remove, demote, or mark obsolete files only after ownership and safety are clear. |
 | 6 | Implement | Make the smallest scoped changes that satisfy the accepted spec and plan. |
 | 7 | Test and accept | Run agreed tests, deterministic checks, E2E/manual acceptance, and regression gates. |
-| 8 | Finish closeout | Run the required closeout loop for every mutation, with evidence level based on dirty paths or base/head diffs; drive PR work to merge-ready or explicitly authorized merge completion, and run or explicitly skip `insight` for tool-calling and workflow-learning feedback. Surface technical-debt, drift, conflict, and merge risks instead of handling them silently. |
+| 8 | Finish closeout | Run the required closeout loop and stale-read gate for every mutation, with evidence level based on dirty paths or base/head diffs; drive PR work to merge-ready or explicitly authorized merge completion, and run or explicitly skip `insight` for tool-calling and workflow-learning feedback. Surface technical-debt, drift, conflict, stale-read, and merge risks instead of handling them silently. |
 | 9 | Deliver report | Produce a user-facing handoff, using `effective-interact` when the work is material or visual comparison/evidence lowers review cost. |
 
 Loop decisions MAY help decide whether a concrete closeout action continues or interrupts, but Loop MUST NOT remove the closeout stage or bypass its review, PR, insight, and handoff evidence.
 
-Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. For mutation work, a required closeout loop MUST be derived from dirty paths or a base/head diff and MUST record producer, verifier or fallback, arbiter or downgrade reason, evidence, and main-agent decision before handoff. Bounded loops SHOULD record `iteration`, `maxIterations`, and `stopCondition`; deterministic checks MUST reject loop records where the current iteration exceeds the maximum. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
+Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. For non-trivial work, the main agent SHOULD actively look for delegated-agent splits that save context or improve independent evidence, unless the task is tiny, the next step depends on immediate main-agent judgment, tools are unavailable, or risk is too high. For mutation work, a required closeout loop MUST be derived from dirty paths or a base/head diff and MUST record producer, verifier or fallback, arbiter or downgrade reason, evidence, and main-agent decision before handoff. Bounded loops SHOULD record `iteration`, `maxIterations`, and `stopCondition`; deterministic checks MUST reject loop records where the current iteration exceeds the maximum. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
 
 ## Requirements
 
@@ -79,7 +81,7 @@ Agentic loops MAY run inside phases 2 through 8 when context isolation or parall
 2. required material: repo-local references, existing source decisions, relevant code paths, upstream repos/blogs that the repo has cited or that the change depends on, and lightweight brainstorming over 2-3 evidence-backed directions;
 3. target spec: behavior, state transitions, interfaces, compatibility constraints, and non-goals;
 4. acceptance criteria: observable success, regression scope, and verification commands;
-5. executable plan: file targets, task order, cleanup list, test strategy, subagent policy, and rollback/cleanup notes;
+5. executable plan: file targets, task order, cleanup list, test strategy, autonomy envelope, subagent policy, and rollback/cleanup notes;
 6. cleanup safety: what will be removed, demoted, retained, or migrated before implementation;
 7. test plan: unit, integration, E2E, or deterministic substitute.
 
@@ -141,7 +143,7 @@ Loop Control Plane actions are helpers to a workflow owner. They MUST record ris
 
 ### WR-7: Subagent Orchestration
 
-Subagents are parent-workflow controlled. Subagents MAY be used only when the active workflow owner can assign independent work and integrate results.
+Subagents are parent-workflow controlled. For non-trivial work, the active workflow owner SHOULD try to split independent work to delegated agents when doing so saves main-agent context or improves evidence quality. Subagents MAY be used only when the active workflow owner can assign independent work and integrate results.
 
 Allowed uses:
 
@@ -162,6 +164,8 @@ Forbidden uses:
 The main agent MUST own synthesis, integration, and final handoff.
 
 No automatic subagent dispatch is allowed from router logic, hooks, or helper skills.
+
+Subagent interruption questions MUST go first to the main agent. The main agent MAY auto-continue when the action is inside the autonomy envelope, write actions are covered by a non-overlapping path lease, side effects are local and reversible, validation is known, and evidence can be recorded. The main agent MUST escalate to the user for behavior, acceptance, scope, cost, data ownership, credentials, permissions, remote writes, publishing, PR or merge state, destructive non-managed content, or long-lived governance changes.
 
 For finish closeout, run the required closeout loop for every mutation. A subagent or independent review pass SHOULD be used when the required evidence level calls for isolation and the review scope can stay independent; smaller changes may use a deterministic fallback, but must record the reason. The review must focus on technical debt, first-principles implementation fit, project-rule drift, and refactor or warning recommendations. The main agent still owns the final decision and user-facing synthesis.
 
@@ -237,6 +241,7 @@ Workflow changes MUST include:
 - routing eval cases,
 - skill description trigger coverage,
 - docs link consistency,
+- freshness and stale-read gate evidence for the active task,
 - `scripts/validate-skills.ps1 -SkipExternal`,
 - `bun run validate` when TypeScript, tests, capabilities, or CLI behavior change,
 - disposable target smoke tests before install-surface changes.
@@ -246,7 +251,7 @@ After a requested PR is created or updated, delivery MUST verify the remote PR s
 - check mergeability or merge-state status after the pushed head settles;
 - inspect CI/check-run status and identify failing checks;
 - resolve in-scope conflicts, CI failures, or other actionable blockers;
-- rerun relevant validation and push updates when the fix changes files;
+- rerun relevant validation, and push updates only when the active task explicitly authorizes updating that PR branch;
 - stop only for user decisions, credentials, permissions, reviewer action, protected-branch overrides, or external service recovery;
 - do not merge the PR unless the user explicitly requests that remote mutation.
 

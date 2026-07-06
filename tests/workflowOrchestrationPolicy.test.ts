@@ -13,10 +13,29 @@ test('workflow orchestration policy keeps subagents parent-controlled and bounde
   const policy = read(policyPath);
   for (const phrase of [
     'parent workflow owner controls orchestration',
+    'actively look for subagent splits',
     'critical-path blockers stay local',
     'disjoint write scopes only',
     'main agent owns synthesis',
     'final user-facing conclusions',
+  ]) {
+    expect(policy).toContain(phrase);
+  }
+});
+
+test('workflow orchestration policy records autonomy envelope and subagent auto-arbitration', () => {
+  const policy = read('skills/workflow-router/references/orchestration-policy.md');
+
+  for (const phrase of [
+    'Autonomy Envelope',
+    'allowed paths and forbidden paths',
+    'path leases',
+    'Subagent Interrupt Triage',
+    'Subagent interruption questions go first to the main agent',
+    'auto-arbitrate',
+    'maxIterations',
+    'remote writes, publishing, PR/merge state',
+    'Deterministic checks outrank subagent judgment',
   ]) {
     expect(policy).toContain(phrase);
   }

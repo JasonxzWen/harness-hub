@@ -54,7 +54,7 @@ Keep every distributed skill in the standard layout under `skills/<skill-name>/S
 9. PR closeout is part of delivery.
    - After creating or updating a pull request, check the remote PR state before declaring the task complete.
    - Verify mergeability and review the CI/check-run status after the pushed head settles.
-   - If the PR is not clean because of conflicts, failed CI, or another actionable issue, diagnose and resolve it, rerun relevant validation, and push the fix.
+   - If the PR is not clean because of conflicts, failed CI, or another actionable issue, diagnose and resolve it, rerun relevant validation, and push the fix only when the active task explicitly authorizes updating that PR branch; otherwise record the fix and ask before remote mutation.
    - Stop and ask the user only when the blocker requires a user decision, credential, permission, reviewer action, protected-branch override, or external service recovery.
    - Do not merge the PR unless the user explicitly asks for that remote mutation.
 10. Finish closeout is a development stage.
@@ -86,7 +86,7 @@ Keep every distributed skill in the standard layout under `skills/<skill-name>/S
 
 ## Local Agent Resources
 
-Maintain root `AGENTS.md` and root `CLAUDE.md` together. They are the same project contract for Codex and Claude Code; when one changes, update the other in the same change.
+Maintain root `AGENTS.md` as the canonical shared project contract. Root `CLAUDE.md` imports it with `@AGENTS.md` and may contain only Claude Code specific notes that do not duplicate or override shared policy. When shared behavior changes, update `AGENTS.md` and keep the `CLAUDE.md` import valid in the same change.
 
 Canonical skill sources live only under `skills/<skill-name>/`. For local dogfooding, mirror those skills into both host-local ignored directories:
 
@@ -95,6 +95,62 @@ bun run sync:agent-skills
 ```
 
 Use `bun run sync:agent-skills:dry-run` before broad skill maintenance when you need a preview. The generated `.codex/skills/` and `.claude/skills/` trees are local caches, not installable source, not capability metadata, and not checkpoint material.
+
+## Modern Agent Operating Model
+
+Default to a main-agent orchestration stance for every non-trivial session. The main agent owns the task contract, risk boundary, synthesis, integration, final validation, and final user-facing conclusion. Delegated agents and subagents are context-saving executors, not decision owners.
+
+Use subagents aggressively but controllably for independent work:
+
+- source exploration, code mapping, log reading, docs lookup, current web research, review, verification, stale-read checks, finish closeout review, and clearly disjoint write scopes;
+- coding work only when the executable plan names the owned files or modules and the subagent can work under a non-overlapping path lease;
+- multiple read-only subagents in parallel when the questions are independent and their raw findings would otherwise flood the main context;
+- no subagent when the task is tiny, the next step is blocked on main-agent judgment, a suitable tool is unavailable, or the risk boundary is unclear.
+
+The main agent must not outsource its own responsibilities: user alignment, acceptance criteria, allowed/forbidden paths, final conflict resolution, final safety/product/release decisions, and the final handoff stay with the main agent.
+
+## Durable Task State
+
+Important task knowledge must not live only in chat memory. For non-trivial mutation work, create or update ignored state under `.harness-hub/state/` before implementation when the directory is available or can be safely created:
+
+- `current-task.md`: goal, assumptions, non-goals, allowed paths, forbidden paths, target spec, acceptance criteria, validation plan, autonomy envelope, open questions, and checkpoint policy;
+- `decisions.md`: user decisions, accepted direction, rejected alternatives, and changes to behavior, scope, validation, risk, or policy;
+- `progress.md`: completed work, current phase, validation records, runtime signals, blockers, subagent or loop evidence, and checkpoint status;
+- `session-handoff.md`: restart-ready status, changed files, validation evidence, stale-read result, residual risk, PR status, blockers, and next action.
+
+Read these files when resuming, after context compaction, before expanding scope, before final handoff, and whenever chat memory conflicts with repository evidence. Subagents keep private runtime state under `.harness-hub/state/runs/<runId>/`; only the main agent summarizes accepted evidence into root state files.
+
+## Freshness And Stale-Read Gates
+
+Every mutation session starts with a freshness gate:
+
+- inspect `git status --short`, current branch, upstream, and recent remote state before editing;
+- `git fetch --prune` is allowed as a read-only freshness step;
+- if the worktree is on detached `HEAD`, create or switch to a named `codex/...` branch before edits;
+- clean fast-forward is allowed when it only updates the current branch to its upstream and no local work would be overwritten;
+- dirty worktrees, diverged branches, conflicts, missing upstream, or remote changes that cannot be fast-forwarded must be recorded in task state and resolved or surfaced before implementation.
+
+Before final handoff, run a stale-read gate for important files consulted earlier. Recheck `git status --short`, inspect changed files, and reread or diff any task-critical file that may have changed since it informed the plan. If stale reads cannot affect the result, record that judgment; otherwise update the implementation, validation, and handoff from fresh evidence.
+
+## Subagent Auto-Arbiter
+
+Subagent interruption questions go first to the main agent, not directly to the user. The main agent may auto-continue when all conditions are true:
+
+- the action is inside the active task's allowed paths and outside forbidden paths;
+- write actions are covered by a recorded non-overlapping path lease or are performed by the main agent after integration;
+- the side effect is local, reversible, and does not touch credentials, remote services, publishing, protected branches, external money, or non-managed destructive content;
+- the validation signal is known before acting;
+- the decision and evidence can be recorded in `.harness-hub/state/interrupt-decisions.jsonl`, loop run state, progress, or handoff.
+
+Default main-agent decisions for subagent interruptions:
+
+- continue read-only exploration when it is in scope and likely to reduce uncertainty;
+- continue one bounded local fix/test iteration when it still targets the same acceptance criteria and remains under `maxIterations`;
+- reject or defer scope creep, opportunistic cleanup, and unrelated findings as follow-up items;
+- pull the work back to the main agent when the subagent lacks context, crosses leases, or conflicts with deterministic evidence;
+- escalate to the user only for changes to user-visible behavior, acceptance criteria, scope, cost, data ownership, credentials, permissions, remote writes, publishing, PR/merge state, destructive non-managed content, or long-lived governance.
+
+Deterministic checks outrank subagent judgment. A failing test, validator, build, browser check, mergeability result, or policy check cannot be overruled by a delegated-agent pass; it must be fixed, explicitly risk-assessed, or surfaced.
 
 ## Skill Routing
 
@@ -139,10 +195,10 @@ For feature, bug-fix, refactor, product/spec change, or implementation work:
 2. Inspect repo docs, code paths, existing state, tests, source records, and relevant upstream references before proposing a direction.
 3. Treat lightweight brainstorming as part of SDD: compare 2-3 evidence-backed directions, recommend one, and record rejected alternatives.
 4. Write the active task contract before implementation when `.harness-hub/state/` exists:
-   - `current-task.md`: goal, assumptions, non-goals, allowed paths, forbidden paths, requirement intake, discovery/brainstorming, target spec, acceptance criteria, P0/P1/P2 test matrix, validation commands, open questions, alignment status, and checkpoint policy.
+   - `current-task.md`: goal, assumptions, non-goals, allowed paths, forbidden paths, requirement intake, discovery/brainstorming, target spec, acceptance criteria, P0/P1/P2 test matrix, validation commands, open questions, alignment status, freshness status, autonomy envelope, subagent auto-arbiter, and checkpoint policy.
    - `decisions.md`: accepted direction, rationale, alternatives, and decision-level changes.
-   - `progress.md`: current phase, completed work, validation records, runtime signals, blockers, PR status, and checkpoint commit state.
-   - `session-handoff.md`: restart status, changed files, validation evidence, residual risk, blockers, and next action.
+   - `progress.md`: current phase, completed work, validation records, runtime signals, stale-read gate result, blockers, PR status, and checkpoint commit state.
+   - `session-handoff.md`: restart status, changed files, validation evidence, stale-read result, residual risk, blockers, and next action.
 5. Ask only blocking open questions before implementation. A blocking question changes user-visible behavior, safety, data ownership, compatibility, cost, release or rollback behavior, external side effects, allowed paths, or acceptance criteria.
 6. Implement one public behavior at a time through `tdd-workflow`: RED, GREEN, REFACTOR. If direct tests are impractical, define the deterministic substitute before production edits.
 7. Verify with P0/P1/P2 validation: P0 must pass before handoff, P1 is run or risk-assessed, and P2 hardening is run or explicitly deferred.
@@ -182,13 +238,13 @@ Use these verbs for target-repo lifecycle work:
 `install` remains the standard skill install command and must not create root harness files. `init-harness` owns root harness initialization and must stay dry-run/confirmation guarded.
 `check` is read-only startup guidance: it reports CLI and target managed-component freshness separately and must not auto-update either layer.
 
-When another repository's agent receives only this Harness Hub repository link, it must follow [BOOTSTRAP-TARGET.md](BOOTSTRAP-TARGET.md): treat the link as documentation and CLI source, not as a template to copy. Use `npx @jasonwen/harness-hub@latest init-harness <target> --target standard --dry-run --json` followed by `--yes`, or clone this repo outside the target only to run `node bin/harness-hub.mjs init-harness <target> --target standard ...`. Do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `capabilities/`, `harness/`, `package.json`, README files, source files, tests, or other Harness Hub source-repo material into the target. If neither npm nor the source CLI can run, report a bootstrap blocker instead of improvising a manual copy.
+When another repository's agent receives only this Harness Hub repository link, it must follow [BOOTSTRAP-TARGET.md](BOOTSTRAP-TARGET.md): treat the link as documentation and CLI source, not as a template to copy. Because `npx ...@latest` executes registry-supplied code, use `npx @jasonwen/harness-hub@latest init-harness <target> --target standard --dry-run --json` followed by `--yes` only when the task or user explicitly authorizes that package execution; otherwise ask or use a pinned approved version. A source checkout may be cloned outside the target only to run `node bin/harness-hub.mjs init-harness <target> --target standard ...`. Do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `capabilities/`, `harness/`, `package.json`, README files, source files, tests, or other Harness Hub source-repo material into the target. If neither npm nor the source CLI can run, report a bootstrap blocker instead of improvising a manual copy.
 
 Harness initialization is a hard gate for target repositories:
 - Use `init-harness`, not `install`, when root harness files are needed.
 - Do not start implementation in a target repo until `AGENTS.md`, `CLAUDE.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, and `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}` exist.
 - Run `harness-hub check <target> --json` during startup and treat update availability, missing locks, and registry unavailability as non-blocking advisory output unless the task explicitly asks to update.
-- Fill `.harness-hub/state/current-task.md` with goal, non-goals, allowed paths, forbidden paths, acceptance criteria, validation commands, and checkpoint policy before coding.
+- Fill `.harness-hub/state/current-task.md` with goal, non-goals, allowed paths, forbidden paths, target spec, acceptance criteria, validation commands, freshness status, autonomy envelope, subagent auto-arbiter, and checkpoint policy before coding.
 - Run `node scripts/harness-validate.mjs` or `harness-hub validate-harness <target> --json`; fix harness failures before product edits.
 - Record validation command status, passed/failed counts when available, evidence, and checkpoint commit state in progress and handoff state.
 - Use verified checkpoint commits for completed atomic units when the task permits commits; otherwise record the skip reason.

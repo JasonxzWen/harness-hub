@@ -91,7 +91,7 @@ test('agent skill sync output stays ignored local state', () => {
   }
 });
 
-test('agent rules stay synchronized for Codex and Claude Code', () => {
+test('agent rules use AGENTS.md as the Codex and Claude Code source', () => {
   expect(fs.existsSync('CLAUDE.md')).toBe(true);
   const claude = fs.readFileSync('CLAUDE.md', 'utf8');
   const agents = fs.readFileSync('AGENTS.md', 'utf8');
@@ -99,8 +99,11 @@ test('agent rules stay synchronized for Codex and Claude Code', () => {
   const oldPrimaryLabel = ['直', '接', '执', '行'].join('');
   const oldChallengeLabel = ['深', '度', '交', '互'].join('');
 
-  expect(claude).toBe(agents);
+  expect(claude).toContain('@AGENTS.md');
+  expect(claude).toContain('Claude Code');
   expect(agents).toContain('## Communication Style');
+  expect(agents).toContain('## Modern Agent Operating Model');
+  expect(agents).toContain('## Subagent Auto-Arbiter');
   expect(agents).not.toContain(oldSectionTitle);
   expect(agents).not.toContain(oldPrimaryLabel);
   expect(agents).not.toContain(oldChallengeLabel);

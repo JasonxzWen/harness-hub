@@ -27,10 +27,10 @@ During implementation, update `Spec updates` only for decision-level changes to 
 
 When `.harness-hub/state/` exists, persist the plan before implementation instead of relying on chat memory:
 
-- `current-task.md`: goal, assumptions, non-goals, allowed paths, forbidden paths, discovery/brainstorming, target spec, P0/P1/P2 test matrix, validation commands, open questions, alignment status, and checkpoint policy.
+- `current-task.md`: goal, assumptions, non-goals, paths, discovery, target spec, P0/P1/P2 matrix, validation, open questions, alignment, autonomy envelope, subagent auto-arbiter, and checkpoint policy.
 - `decisions.md`: accepted direction, rationale, rejected alternatives, and any decision-level changes.
-- `progress.md`: current phase, completed work, validation records, runtime signals, blockers, PR status, and checkpoint commit state.
-- `session-handoff.md`: restart status, changed files, validation evidence, final review, insight recommendations, residual risk, and next action before ending the session.
+- `progress.md`: current phase, completed work, validation records, runtime signals, stale-read gate result, blockers, PR status, and checkpoint commit state.
+- `session-handoff.md`: restart status, changed files, validation evidence, stale-read result, final review, insight recommendations, residual risk, and next action before ending the session.
 
 Ask only blocking open questions before implementation: answers that change behavior, safety, data ownership, compatibility, cost, release/rollback, external side effects, allowed paths, or acceptance.
 
@@ -72,6 +72,6 @@ Record planned loops in `current-task.md` and actual loop evidence in `progress.
 
 ## Subagents
 
-Use subagents only for independent source gathering, docs lookup, review, verification, or disjoint write scopes. In generic loop evidence, write `delegated-agent`, not host-specific tool names. Follow `workflow-router/references/orchestration-policy.md`: the main agent owns final synthesis and hooks stay advisory.
+Use subagents aggressively but controllably for independent source gathering, docs/web research, log analysis, review, verification, stale-read checks, closeout review, or leased disjoint writes. Skip tiny, judgment-bound, unsupported, or high-risk work. In generic loop evidence, write `delegated-agent`, not host-specific tool names. Follow `workflow-router/references/orchestration-policy.md`: subagent questions go first to the main agent, which may auto-arbitrate inside the autonomy envelope; final synthesis stays with the main agent, and hooks stay advisory.
 
 During finish closeout, derive required loops from dirty paths or a base/head diff when available. Prefer subagent or independent review evidence when the level calls for isolation; otherwise record the fallback reason and deterministic substitute. Do not hide review findings, PR conflicts, merge risks, or insight recommendations.

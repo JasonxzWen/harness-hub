@@ -78,14 +78,15 @@
       "resolve in-scope conflicts",
       "fix failing checks that are within the accepted task scope",
       "rerun relevant validation",
-      "push updates before handoff"
+      "push updates before handoff only when the active task explicitly authorizes updating that PR branch"
     ],
     "stop_conditions": [
       "user decision",
       "credential or permission boundary",
       "reviewer action",
       "protected-branch override",
-      "external service recovery"
+      "external service recovery",
+      "remote push authorization is missing"
     ],
     "merge_boundary": "Do not merge a PR unless the user explicitly requests that remote mutation."
   },
@@ -103,9 +104,75 @@
       "conflict decisions and risk surfaced to the user",
       "insight audit recommendations or explicit skip reason"
     ],
-    "subagent_boundary": "Use subagents only for independent read-only review or verification; the main agent owns synthesis and final decisions.",
+    "subagent_boundary": "Use subagents aggressively but controllably for independent source exploration, docs or web research, log analysis, code review, verification, stale-read checks, finish closeout review, and leased disjoint write scopes; the main agent owns synthesis, integration, validation, and final decisions.",
     "insight_boundary": "Use insight to audit tool calling, repeated low-value lookup loops, misleading evidence, docs/code conflicts, AI infrastructure lessons, and skill or workflow extraction candidates.",
     "merge_boundary": "Drive to merge-ready or complete the merge only when the user explicitly authorizes that remote mutation."
+  },
+  "main_agent_auto_arbitration_policy": {
+    "default": "Subagent interruption questions go first to the main agent, not directly to the user.",
+    "auto_continue_when": [
+      "the action stays inside allowed paths and outside forbidden paths",
+      "write actions are covered by a non-overlapping path lease when a delegated agent writes",
+      "side effects are local and reversible",
+      "validation commands or deterministic substitutes are known",
+      "the decision and evidence can be recorded"
+    ],
+    "interrupt_when": [
+      "user-visible behavior or acceptance criteria would change",
+      "scope, cost, data ownership, credentials, permissions, or release behavior is unclear",
+      "remote writes, publishing, PR readiness, merge state, or external side effects are involved",
+      "destructive non-managed content or long-lived governance would change",
+      "loop iteration reaches maxIterations without a pass, downgrade, or accepted stop condition"
+    ],
+    "record_in": [
+      ".harness-hub/state/interrupt-decisions.jsonl",
+      ".harness-hub/state/runs/<runId>/integration.json",
+      ".harness-hub/state/progress.md",
+      ".harness-hub/state/session-handoff.md"
+    ]
+  },
+  "freshness_gate_policy": {
+    "applies_before": [
+      "file mutation",
+      "implementation",
+      "PR update or push",
+      "final handoff when remote state may matter"
+    ],
+    "required_checks": [
+      "git status --short",
+      "current branch and upstream",
+      "remote freshness after git fetch --prune when a remote exists",
+      "clean fast-forward only"
+    ],
+    "allowed_actions": [
+      "git fetch --prune",
+      "clean fast-forward",
+      "create a named branch from detached HEAD before edits"
+    ],
+    "interrupt_when": [
+      "worktree is dirty outside the accepted task",
+      "branch has diverged",
+      "conflicts exist",
+      "upstream is missing and the task needs remote freshness",
+      "fast-forward is not clean"
+    ]
+  },
+  "stale_read_gate_policy": {
+    "applies_before": [
+      "final handoff",
+      "PR update closeout",
+      "claiming validation complete after long-running work"
+    ],
+    "required_checks": [
+      "recheck git status --short",
+      "inspect changed paths",
+      "reread or diff important files that informed the plan when they may have changed",
+      "record the result or why stale reads cannot affect the handoff"
+    ],
+    "record_in": [
+      ".harness-hub/state/progress.md",
+      ".harness-hub/state/session-handoff.md"
+    ]
   },
   "agentic_loop_policy": {
     "loop_model": "Producer -> Verifier -> Arbiter -> Main Agent Decision",
