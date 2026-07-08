@@ -74,6 +74,74 @@ function buildActivationResult(prompt, metadata, skillsRoot) {
 
 export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
   const text = String(prompt || '').toLowerCase();
+  const codingContextSignal = includesAny(text, [
+    'api',
+    'build',
+    'bug',
+    'code',
+    'codebase',
+    'coding',
+    'component',
+    'dependency',
+    'diff',
+    'feature',
+    'fix',
+    'function',
+    'implementation',
+    'implement',
+    'library',
+    'module',
+    'package',
+    'patch',
+    'refactor',
+    'repo',
+    'test',
+  ]) || matchesAny(text, [
+    /(?:\u4ee3\u7801|\u5b9e\u73b0|\u4fee\u590d|\u91cd\u6784|\u6d4b\u8bd5|\u4f9d\u8d56)/,
+  ]);
+  const ponytailSignal = includesAny(text, [
+    '/ponytail',
+    '@ponytail',
+    'be lazy',
+    'boilerplate',
+    'custom cache class',
+    'do less',
+    'fewest files',
+    'lazy mode',
+    'lazy senior',
+    'native platform',
+    'no unrequested abstractions',
+    'one line before fifty',
+    'over-engineering',
+    'overengineer',
+    'ponytail mode',
+    'shortest correct diff',
+    'stdlib first',
+    'unnecessary dependencies',
+    'yagni',
+  ]) || (
+    codingContextSignal
+    && includesAny(text, [
+      'already-installed dependency',
+      'delete instead of add',
+      'laziest solution',
+      'minimal code',
+      'minimal implementation',
+      'minimal solution',
+      'minimum code',
+      'minimum implementation',
+      'reuse existing code',
+      'shortest diff',
+      'shortest path',
+      'simplest solution',
+      'smallest correct',
+      'smallest diff',
+      'stdlib',
+    ])
+  ) || matchesAny(text, [
+    /(?:\u4ee3\u7801|\u5b9e\u73b0|\u4fee\u590d|\u91cd\u6784|\u6d4b\u8bd5).*(?:yagni|\u6700\u5c0f|\u6700\u7b80|\u5c11\u5199|\u5220\u4ee3\u7801|\u4e0d\u8981\u62bd\u8c61|\u907f\u514d\u8fc7\u5ea6\u5de5\u7a0b|\u590d\u7528|\u6807\u51c6\u5e93|\u539f\u751f)/,
+    /(?:yagni|\u6700\u5c0f|\u6700\u7b80|\u5c11\u5199|\u5220\u4ee3\u7801|\u4e0d\u8981\u62bd\u8c61|\u907f\u514d\u8fc7\u5ea6\u5de5\u7a0b|\u590d\u7528|\u6807\u51c6\u5e93|\u539f\u751f).*(?:\u4ee3\u7801|\u5b9e\u73b0|\u4fee\u590d|\u91cd\u6784|\u6d4b\u8bd5)/,
+  ]);
   const effectiveInteractSignal = includesAny(text, [
     'acceptance report',
     'approval board',
@@ -148,6 +216,13 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'visual handoff',
     'visual language',
     'visual markdown',
+    'output density',
+    'model output',
+    'trim model output',
+    'compact output',
+    'minimal handoff',
+    'trigger hardening',
+    'trigger frequency',
   ]) || matchesAny(text, [
     /(?:\u63cf\u8ff0|\u8bf4\u660e|\u89e3\u91ca|\u4ecb\u7ecd|\u68b3\u7406).*(?:\u672c\u4ed3\u5e93|\u8fd9\u4e2a\u4ed3\u5e93|\u4ed3\u5e93|repo|repository|codebase).*(?:\u80fd\u529b|\u7ed3\u6784|\u529f\u80fd|\u5b9e\u73b0|\u67b6\u6784)/,
     /(?:\u672c\u4ed3\u5e93|\u8fd9\u4e2a\u4ed3\u5e93|\u4ed3\u5e93|repo|repository|codebase).*(?:\u80fd\u529b|\u7ed3\u6784).*(?:\u529f\u80fd|\u5b9e\u73b0|\u67b6\u6784)/,
@@ -187,8 +262,12 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     /\u63d0\u793a\u8bcd\u8c03\u4f18\u5de5\u4f5c\u53f0/,
     /effective-?interact.*(?:invisible|same|no\s+html|no\s+report|not\s+trigger|did\s+not\s+trigger)/,
     /(?:invisible|same|no\s+html|no\s+report|not\s+trigger|did\s+not\s+trigger).*effective-?interact/,
+    /effective-?interact.*(?:trigger\s+frequency|trigger.*hard|hard.*trigger|absorb|fold\s+into|output|compact|minimal|density)/,
+    /(?:trigger\s+frequency|trigger.*hard|hard.*trigger|absorb|fold\s+into|output|compact|minimal|density).*effective-?interact/,
     /effective-?interact.*(?:\u6ca1\u6709\u89e6\u53d1|\u6ca1\u6709\u8d77\u6548|\u6ca1\u8d77\u6548|\u65e0\u611f|\u6709\u4ed6\u6ca1\u4ed6\u4e00\u6837|\u4e3b\u52a8\s*html|\u7ed3\u6784\u5316|\u6da6\u8272)/,
     /(?:\u6ca1\u6709\u89e6\u53d1|\u6ca1\u6709\u8d77\u6548|\u6ca1\u8d77\u6548|\u65e0\u611f|\u6709\u4ed6\u6ca1\u4ed6\u4e00\u6837|\u4e3b\u52a8\s*html|\u7ed3\u6784\u5316|\u6da6\u8272).*effective-?interact/,
+    /effective-?interact.*(?:\u4e0d\u89e6\u53d1|\u6ca1\u89e6\u53d1|\u89e6\u53d1\u9891\u7387|\u89e6\u53d1.*\u4e0d\u591f\u786c|\u5438\u6536|\u5438\u6536\u5230|\u7cbe\u7b80|\u8f93\u51fa)/,
+    /(?:\u4e0d\u89e6\u53d1|\u6ca1\u89e6\u53d1|\u89e6\u53d1\u9891\u7387|\u89e6\u53d1.*\u4e0d\u591f\u786c|\u5438\u6536|\u5438\u6536\u5230|\u7cbe\u7b80|\u8f93\u51fa).*effective-?interact/,
   ]);
   const finalGateSignal = (
     includesAny(text, [
@@ -748,6 +827,10 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
 
   if (harnessQualityCheckSignal && canLoad(metadata, 'harness-quality-check', ['harness quality', 'advisory HTML'])) {
     return 'harness-quality-check';
+  }
+
+  if (ponytailSignal && canLoad(metadata, 'ponytail', ['coding work', 'yagni'])) {
+    return 'ponytail';
   }
 
   if (effectiveInteractSignal && canLoad(metadata, 'effective-interact', ['complex communication', 'handoff'])) {

@@ -87,6 +87,15 @@ License/source note: the upstream README states many examples are Apache 2.0, wh
 |---|---|---|
 | `multica-ai/andrej-karpathy-skills` | Installed as `karpathy-guidelines` | The single upstream skill is small, platform-neutral in its body, and matches Harness Hub's engineering discipline: state assumptions, avoid speculative abstractions, keep diffs surgical, and define verifiable success criteria. The local integration narrows frontmatter routing so it acts as a helper baseline under owner workflows rather than a broad top-level lifecycle owner. Host packaging files such as `CLAUDE.md`, `.cursor/rules/`, and `.claude-plugin/` stay out of the distributed skill tree. License evidence comes from README and plugin metadata because no standalone `LICENSE` file was present in the checked snapshot. |
 
+## 2026-07-08 Output And Coding Minimalism Spot Evaluation
+
+These spot checks are not part of the 2026-06-30 counted candidate pool.
+
+| Source | Decision | Reason |
+|---|---|---|
+| `JuliusBrussee/caveman` | Reject by default; reference-only | Good source evidence for output-token measurement and opt-in terse-mode design, but the broad persistent communication-style override conflicts with this repo's Chinese, clarity-first communication policy and ships host/runtime surfaces outside standard skills. |
+| `DietrichGebert/ponytail` | Installed as `ponytail` core standard skill | Better fit for coding minimalism than `caveman` because it targets over-building rather than prose alone: reuse existing code, stdlib, native features, and already-installed dependencies before adding code. Import only the core standard skill and make it the coding-minimalism helper; keep `effective-interact` focused on communication/report density. Do not import upstream persistent modes, hooks, subagent injection, statusline, slash commands, state files, MCP proxy, or multi-host plugin packaging into `skills/`. |
+
 ## `mattpocock/skills` 2026-06-30 Refresh Decision
 
 | Area | Decision | Reason |
@@ -103,5 +112,6 @@ License/source note: the upstream README states many examples are Apache 2.0, wh
 - After excluding ECC and refreshing `mattpocock/skills`, `anthropics/skills`, `taste-skill`, `stop-slop`, `ai-website-cloner-template`, and `andrej-karpathy-skills`, the candidate pool has 163 scanned surfaces across workflow, SDD, review, debugging, frontend, website reconstruction, engineering behavior baselines, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, creative artifacts, and prose cleanup. Ralph remains source-recorded but is retired from installable distribution.
 - The first Anthropic atom pass promoted seven installable skills or local rewrites into `capabilities/index.json`: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator`. The prose pass promoted `stop-slop`; the taste pass promoted `design-taste-frontend` and also changed `effective-interact` references and validator behavior. The 2026-06-05 local pass added `package-release-sniffer` for primary-source AI/developer-tool package release discovery without introducing registry clients or scheduled monitoring. The 2026-06-12 local pass added `harness-quality-check` for advisory HTML quality/readiness audits that compose existing Hub and target-repo checks without enforcement or remote side effects. The 2026-06-25 local pass added `insight` for private, read-only repository interaction audits from Codex and Claude Code traces with ignored local report output.
 - The Karpathy pass promoted `karpathy-guidelines` as a helper baseline for coding behavior and intentionally avoided importing host-specific rule files or plugin metadata into `skills/`.
+- The Ponytail pass promoted `ponytail` as the standard coding-minimalism helper and intentionally avoided importing host-specific hooks, plugin packaging, mode state, statusline setup, slash commands, or runtime adapters into `skills/`.
 - It does not need to become a general marketplace. Future source expansion should follow recurring personal project needs first.
 - The sustainable direction is to keep Harness Hub's local layer as personal orchestration, routing, lifecycle, provenance, dedupe, and validation; pull atomic skills from upstream only when license, source quality, trigger contract, and personal usefulness pass.

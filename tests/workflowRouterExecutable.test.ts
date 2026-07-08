@@ -272,6 +272,15 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   expect(effectiveInteractDesignRefresh.expectedOutputMode).toBe('html-artifact');
 });
 
+test('workflow-router routes effective-interact trigger hardening into maintenance', async () => {
+  const result = await classify('\u5e0c\u671b\u628a ponytail \u5438\u6536\u5230 effective-interact\uff0c\u5206\u6790\u5386\u53f2\u4f1a\u8bdd\u7684\u89e6\u53d1\u9891\u7387\uff0c\u73b0\u5728\u611f\u89c9\u4e0d\u89e6\u53d1\uff0ctrigger \u4e0d\u591f\u786c');
+
+  expect(result.state).toBe('harness-hub-maintenance');
+  expect(result.owner).toBe('hub-maintenance-workflow');
+  expect(result.expectedOutputMode).toBe('html-artifact');
+  expect(result.mutationAllowed).toBe(true);
+});
+
 test('workflow-router modules can be imported without CLI argv', () => {
   const routeImport = execFileSync(process.execPath, [
     '--input-type=module',

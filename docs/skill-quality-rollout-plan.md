@@ -26,11 +26,11 @@ Current direction note: Harness Hub now optimizes for personal workflow distribu
 
 Observed after the `quick-learn` replacement on 2026-07-06:
 
-- 47 skills validate successfully with the existing validator.
+- 48 skills validate successfully with the existing validator.
 - All scanned skill names match their directory names.
 - All scanned skills have descriptions.
 - 0 descriptions are over the 50-word target.
-- 47 scanned descriptions start with `Load when`.
+- 48 scanned descriptions start with `Load when`.
 - 0 imported or adapted skills are missing source metadata.
 - Some local/adapted skills already use progressive spokes, including `compound-code-review`, `quick-learn`, `effective-interact`, and `prototype`.
 - `scripts/skill-quality-inventory.ts` emits a report-only JSON inventory for description length, `Load when` triggers, name/directory matching, body size, spokes, and imported/adapted metadata warnings.

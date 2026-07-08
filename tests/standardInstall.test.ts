@@ -18,6 +18,7 @@ const REQUIRED_WORKFLOW_COMPONENTS = [
   'skill:review-workflow',
   'skill:delivery-workflow',
   'skill:tdd-workflow',
+  'skill:ponytail',
   'skill:effective-interact',
   'skill:verification-loop',
   'skill:insight',
@@ -86,6 +87,7 @@ test('default standard install writes lock-backed status for the target-distribu
   expect(fs.existsSync(path.join(targetDir, 'skills', 'workflow-router', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'sdd-workflow', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'insight', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'ponytail', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'webapp-testing', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'hub-maintenance-workflow', 'SKILL.md'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, 'AGENTS.md'))).toBe(false);

@@ -922,6 +922,30 @@
       "docsBoundary": "`karpathy-guidelines` loads after a workflow owner has selected implementation, review, or refactor scope and the agent needs behavior guardrails for assumptions, simplicity, surgical diffs, or verifiable success; it is not a top-level workflow, requirements workflow, TDD workflow, or review workflow."
     },
     {
+      "id": "ponytail-positive-minimal-coding",
+      "skill": "ponytail",
+      "kind": "positive",
+      "prompt": "Use the simplest solution: fix this parser with the smallest correct diff, reuse existing code, and avoid unrequested abstractions.",
+      "expectedSkill": "ponytail",
+      "docsBoundary": "`ponytail` loads after a workflow owner has selected coding, refactor, fix, or review scope and the agent should prefer YAGNI, existing code, stdlib/native/already-installed dependencies, the shortest correct diff, and no unrequested abstractions; it does not load for non-coding concise reports, general summaries, or communication artifact density."
+    },
+    {
+      "id": "ponytail-negative-concise-report",
+      "skill": "ponytail",
+      "kind": "negative",
+      "prompt": "Create a concise visual handoff report with validation evidence, risks, and next actions.",
+      "expectedSkill": "effective-interact",
+      "docsBoundary": "`ponytail` loads after a workflow owner has selected coding, refactor, fix, or review scope and the agent should prefer YAGNI, existing code, stdlib/native/already-installed dependencies, the shortest correct diff, and no unrequested abstractions; it does not load for non-coding concise reports, general summaries, or communication artifact density."
+    },
+    {
+      "id": "ponytail-forbidden-final-validation",
+      "skill": "ponytail",
+      "kind": "forbidden-load",
+      "prompt": "Before declaring this task done, run the final build, typecheck, lint, tests, smoke checks, and artifact validation.",
+      "expectedSkill": "verification-loop",
+      "docsBoundary": "`ponytail` loads after a workflow owner has selected coding, refactor, fix, or review scope and the agent should prefer YAGNI, existing code, stdlib/native/already-installed dependencies, the shortest correct diff, and no unrequested abstractions; it does not load for non-coding concise reports, general summaries, or communication artifact density."
+    },
+    {
       "id": "documentation-lookup-forbidden-repo-evidence",
       "skill": "documentation-lookup",
       "kind": "forbidden-load",

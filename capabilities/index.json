@@ -547,10 +547,12 @@
     "skill:effective-interact": {
       "kind": "skill",
       "path": "skills/effective-interact",
-      "version": "0.2.4",
+      "version": "0.2.6",
       "source": "local",
       "provides": [
         "complex-communication-briefs",
+        "communication-density-briefs",
+        "minimum-report-mode-selection",
         "first-principles-alignment-briefs",
         "plain-text-handoffs",
         "structured-markdown-handoffs",
@@ -577,11 +579,12 @@
       ],
       "overlapsWith": [
         "skill:grill-me",
+        "skill:ponytail",
         "skill:web-artifacts-builder",
         "skill:frontend-slides",
         "skill:frontend-design"
       ],
-      "routing": "Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, handoff, proactive HTML reports, or visibly polished structured text, including broad repo capability/structure/function/implementation maps and html-effectiveness families such as Exploration & Planning, Code Review & Understanding, Design, Reports, and Custom Editors; organize from visual language first and read DESIGN.md for component-first HTML artifacts, then choose plain text/Markdown/visual Markdown/HTML by decision cost, defaulting material repo/skill changes to HTML handoff; do not load merely because answer is long; skip trivial chat/bundled apps.",
+      "routing": "Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, communication-density discipline, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, handoff, proactive HTML reports, visibly polished structured text, or trigger-hardening complaints, including broad repo capability/structure/function/implementation maps and html-effectiveness families such as Exploration & Planning, Code Review & Understanding, Design, Reports, and Custom Editors; organize from visual language first and read DESIGN.md for component-first HTML artifacts, then choose plain text/Markdown/visual Markdown/HTML by decision cost, defaulting material repo/skill changes to HTML handoff; use Ponytail for coding minimalism; skip trivial chat/bundled apps.",
       "detects": [
         {
           "path": "skills/effective-interact/SKILL.md"
@@ -597,7 +600,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Structure Chinese-first complex pause reports when material alignment, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, evidence, risks, validation, or continuation notes need first-principles organization; start from useful visual language and the component-first DESIGN.md contract, keep any non-plain-brief output visibly structured instead of linear prose, avoid Markdown-in-HTML, and default material repo/skill change handoffs to validated self-contained HTML unless explicitly waived."
+      "recommendation": "Structure Chinese-first complex pause reports when material alignment, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, evidence, risks, validation, or continuation notes need first-principles organization; apply communication-density checks before expanding into prose or artifacts, start from useful visual language and the component-first DESIGN.md contract, keep any non-plain-brief output visibly structured instead of linear prose, avoid Markdown-in-HTML, use Ponytail for coding minimization, and default material repo/skill change handoffs to validated self-contained HTML unless explicitly waived."
     },
     "skill:handoff": {
       "kind": "skill",
@@ -733,6 +736,39 @@
       ],
       "risk": "low",
       "recommendation": "Use as a helper baseline for assumption surfacing, simple implementation, surgical diffs, and verification criteria inside the selected owner workflow."
+    },
+    "skill:ponytail": {
+      "kind": "skill",
+      "path": "skills/ponytail",
+      "version": "0.1.0",
+      "source": "DietrichGebert/ponytail",
+      "provides": [
+        "coding-minimalism",
+        "yagni-ladder",
+        "overengineering-avoidance",
+        "stdlib-native-first",
+        "shortest-correct-diff",
+        "unrequested-prose-reduction"
+      ],
+      "overlapsWith": [
+        "skill:coding-standards",
+        "skill:karpathy-guidelines",
+        "skill:tdd-workflow",
+        "skill:review-workflow",
+        "skill:verification-loop",
+        "skill:effective-interact"
+      ],
+      "routing": "Load when coding work should be deliberately minimal: YAGNI, reuse existing code, prefer stdlib/native/already-installed dependencies, shortest correct diff, no unrequested abstractions, or over-engineering review; use effective-interact for non-coding reports and communication artifacts, tdd-workflow for lifecycle, and security-review for focused security.",
+      "detects": [
+        {
+          "path": "skills/ponytail/SKILL.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "medium",
+      "recommendation": "Use as the standard coding-minimalism helper so implementation and review work default to YAGNI, reuse, stdlib/native/already-installed dependencies, smallest correct diffs, and short code-first explanations without taking over reporting, lifecycle, security, or requested walkthroughs."
     },
     "skill:tdd-workflow": {
       "kind": "skill",

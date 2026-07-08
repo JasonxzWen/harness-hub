@@ -26,6 +26,7 @@ const optionalDemoSkills = [
   'quick-learn',
   'coding-standards',
   'karpathy-guidelines',
+  'ponytail',
   'documentation-lookup',
   'package-release-sniffer',
   'harness-quality-check',

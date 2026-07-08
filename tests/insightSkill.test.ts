@@ -498,6 +498,12 @@ test('insight activation selects private audits without stealing adjacent source
     'Run a repository interaction insight audit from recent Codex and Claude Code work traces, include agent task profile and tool-call decision audit.',
     '--json',
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const effectiveInteractComplaint = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    '\u5e0c\u671b\u628a ponytail \u5438\u6536\u5230 effective-interact\uff0c\u5206\u6790\u5386\u53f2\u4f1a\u8bdd\u7684\u89e6\u53d1\u9891\u7387\uff0c\u73b0\u5728\u611f\u89c9\u4e0d\u89e6\u53d1\uff0ctrigger \u4e0d\u591f\u786c',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
   const blog = spawnSync(process.execPath, [
     activationScript,
     '--prompt',
@@ -512,6 +518,7 @@ test('insight activation selects private audits without stealing adjacent source
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
 
   expect(JSON.parse(positive.stdout).selectedSkill).toBe('insight');
+  expect(JSON.parse(effectiveInteractComplaint.stdout).selectedSkill).toBe('effective-interact');
   expect(JSON.parse(blog.stdout).selectedSkill).toBe('source-post');
   expect(JSON.parse(singleRun.stdout).selectedSkill).toBe('agent-introspection-debugging');
 });

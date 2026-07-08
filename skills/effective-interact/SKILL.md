@@ -1,6 +1,6 @@
 ---
 name: effective-interact
-description: Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, or handoff; choose plain text/Markdown/visual Markdown/HTML by decision cost; do not load merely because answer is long; skip trivial chat/bundled apps.
+description: Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, handoff; choose plain text/Markdown/visual Markdown/HTML by decision cost; do not load merely because answer is long; skip trivial chat/bundled apps.
 ---
 
 # Effective Interact
@@ -28,7 +28,7 @@ Use the lightest mode that lowers decision cost:
 3. `visual-markdown`: Mermaid, tables, commands, file anchors, or decision matrices.
 4. `html-artifact`: one static HTML file for browser navigation, visualization, filtering, copy/export, or local interaction.
 
-Visual thinking happens before mode selection. Unless you intentionally choose `plain-brief`, include at least one visible visual structure in the final output. HTML only when browser navigation, visualization, or local interaction lowers decision cost; never because the topic is important, long, or validator-backed.
+Density gate: direct answer, evidence, or compact visual before HTML. Unless you intentionally choose `plain-brief`, include at least one visible visual structure in output. HTML only when browser navigation, visualization, or local interaction lowers decision cost; never because the topic is important, long, or validator-backed.
 
 ## Mode Selection Hard Rules
 
@@ -50,7 +50,7 @@ Use for: 复杂状态汇报; complex status reports; long-task fact ledger; chan
 
 Also use for invisible-layer complaints: "effective-interact did not trigger", "no proactive HTML report", "same with or without the skill", or "make the handoff more polished and structured".
 
-Do not use this skill for: approval gates such as pushing/installing; doing code implementation, bug fixes, or test runs; one-command status, or a long but routine explanation; product UI; bundled artifacts; slide decks; use `frontend-slides`.
+Do not use this skill for: approval gates such as pushing/installing; doing code implementation, bug fixes, or test runs; coding minimization; one-command status, or a long but routine explanation; product UI; bundled artifacts; slide decks; use `frontend-slides`. Use `ponytail` for minimal coding.
 
 ## First-Principles Communication Contract
 

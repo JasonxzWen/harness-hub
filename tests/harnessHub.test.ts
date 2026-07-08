@@ -839,7 +839,7 @@ test('effective-interact version bump is discoverable as a managed update', () =
   const preview = getUpdatePlan({ targetDir, components: ['skill:effective-interact'] });
 
   const effectiveInteract = readCapabilityIndex().components['skill:effective-interact'];
-  expect(effectiveInteract.version).toBe('0.2.4');
+  expect(effectiveInteract.version).toBe('0.2.6');
   expect(effectiveInteract.provides).toContain('visual-language-first-handoffs');
   expect(status.updates.some((row) => row.id === 'skill:effective-interact')).toBe(true);
   expect(preview.updates.map((row) => row.id)).toEqual(['skill:effective-interact']);

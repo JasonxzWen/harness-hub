@@ -177,6 +177,7 @@ test('default distributed imported skills have source registry coverage', () => 
     'anthropic-builtins-adapted': 'anthropics/skills',
     'anthropics-skills-adapted': 'anthropics/skills',
     'compound-engineering-plugin-adapted': 'EveryInc/compound-engineering-plugin',
+    'DietrichGebert/ponytail': 'DietrichGebert/ponytail',
     'everything-claude-code': 'everything-claude-code',
     'hardikpandya/stop-slop': 'hardikpandya/stop-slop',
     'JCodesMore/ai-website-cloner-template': 'JCodesMore/ai-website-cloner-template',

@@ -191,7 +191,7 @@ Harness Hub 不会为这条命令创建定时任务、webhook、commit、push、
 | 领域 | 包含内容 |
 |---|---|
 | 路由与生命周期 | `workflow-router`、owner workflow skills、SDD-first 变更流、delivery closeout。 |
-| 计划与实现 | `grill-me`、`product-capability`、`tdd-workflow`、`karpathy-guidelines`、`verification-loop`。 |
+| 计划与实现 | `grill-me`、`product-capability`、`tdd-workflow`、`karpathy-guidelines`、`ponytail`、`verification-loop`。 |
 | 诊断与评审 | `diagnosis-workflow`、`diagnose`、`review-workflow`、`compound-code-review`、`security-review`。 |
 | 沟通与交接 | `effective-interact`、`handoff`、`doc-coauthoring`、`internal-comms`、`documentation-lookup`。 |
 | Web 与 artifacts | `frontend-design`、`design-taste-frontend`、`webapp-testing`、`e2e-testing`、`web-artifacts-builder`、`frontend-slides`、`theme-factory`。 |
