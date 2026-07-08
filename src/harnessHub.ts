@@ -314,6 +314,8 @@ export interface InstallResult {
 
 export type AgentActivationAction = 'sync' | 'remove-stale' | 'block';
 export type AgentHostId = 'codex' | 'claude';
+export type AgentHookPlanAction = 'copy-template-manually' | 'review-existing-config';
+export type AgentHookPlanState = 'missing' | 'review-required';
 
 export interface AgentActivationItem {
   host: AgentHostId;
@@ -354,6 +356,44 @@ export interface AgentActivationResult extends AgentActivationPlan {
 export type CodexActivationItem = AgentActivationItem;
 export type CodexActivationPlan = AgentActivationPlan;
 export type CodexActivationResult = AgentActivationResult;
+
+export interface AgentHookPlanItem {
+  host: AgentHostId;
+  templateRelativePath: string;
+  templatePath: string;
+  destRelativePath: string;
+  dest: string;
+  exists: boolean;
+  state: AgentHookPlanState;
+  action: AgentHookPlanAction;
+  advisory: boolean;
+  enforce: boolean;
+  commands: string[];
+  reason: string;
+  nextSteps: string[];
+}
+
+export interface AgentHookPlanBlocker {
+  id: string;
+  path: string;
+  reason: string;
+}
+
+export interface AgentHooksPlanResult {
+  schemaVersion: 1;
+  generatedAt: string;
+  hubVersion: string;
+  targetDir: string;
+  templatesRoot: string;
+  dryRun: true;
+  mutates: false;
+  installsHooks: false;
+  enablesBlocking: false;
+  agentHookPlans: AgentHookPlanItem[];
+  blockers: AgentHookPlanBlocker[];
+  exitCode: 0 | 3;
+  reason: string;
+}
 
 export interface HarnessPlanItem {
   componentId: string;
@@ -778,6 +818,7 @@ interface LatestPackageVersionResult {
 
 type SourcePostCliAction = 'generate' | 'build' | 'validate' | 'publish';
 type LoopCliAction = 'evaluate' | 'schedule' | 'required' | 'run-start' | 'agent-record' | 'lease-check' | 'collect-trace' | 'integrate' | 'verify';
+type AgentHooksCliAction = 'plan';
 export type LoopDecision = 'continue' | 'interrupt';
 export type LoopDecisionConfidence = 'high' | 'medium';
 export type LoopReviewLevel = 'L0' | 'L1' | 'L2';
@@ -921,6 +962,7 @@ interface CliOptions {
   command: string;
   sourcePostAction: SourcePostCliAction | null;
   loopAction: LoopCliAction | null;
+  agentHooksAction: AgentHooksCliAction | null;
   targetDir: string | null;
   agents: AgentName[];
   dryRun: boolean;
@@ -1004,6 +1046,18 @@ const AGENT_HOST_SKILL_DIRS = Object.freeze([
   { host: 'codex', relativePath: '.codex/skills' },
   { host: 'claude', relativePath: '.claude/skills' },
 ] satisfies Array<{ host: AgentHostId; relativePath: string }>);
+const AGENT_HOOK_TEMPLATE_PLANS = Object.freeze([
+  {
+    host: 'codex',
+    templateRelativePath: 'harness/agent-hooks/codex/hooks.json',
+    destRelativePath: '.codex/hooks.json',
+  },
+  {
+    host: 'claude',
+    templateRelativePath: 'harness/agent-hooks/claude/settings.json',
+    destRelativePath: '.claude/settings.json',
+  },
+] satisfies Array<{ host: AgentHostId; templateRelativePath: string; destRelativePath: string }>);
 const AGENT_MANAGED_MARKER = '.harness-hub-managed';
 const AGENT_PRESERVED_LOCAL_DIRS = new Set(['artifacts']);
 
@@ -7676,6 +7730,140 @@ export function activateCodex(options: { targetDir?: string; dryRun?: boolean } 
   return activateAgents(options);
 }
 
+export function planAgentHooks(options: { hubRoot?: string; targetDir?: string } = {}): AgentHooksPlanResult {
+  const hubRoot = path.resolve(options.hubRoot || HUB_ROOT);
+  const targetDir = path.resolve(options.targetDir || process.cwd());
+  const templatesRoot = assertSafeRelativePath(hubRoot, 'harness/agent-hooks');
+  const index = readCapabilityIndex(hubRoot);
+  const agentHookPlans: AgentHookPlanItem[] = [];
+  const blockers: AgentHookPlanBlocker[] = [];
+
+  for (const template of AGENT_HOOK_TEMPLATE_PLANS) {
+    const templatePath = assertSafeRelativePath(hubRoot, template.templateRelativePath);
+    const dest = assertSafeRelativePath(targetDir, template.destRelativePath);
+    const exists = fs.existsSync(dest);
+    let commands: string[] = [];
+    if (fs.existsSync(templatePath)) {
+      try {
+        commands = collectAgentHookTemplateCommands(readJsonFile<unknown>(templatePath)).sort();
+      } catch (error) {
+        blockers.push({
+          id: `${template.host}-template-invalid`,
+          path: template.templateRelativePath,
+          reason: `Packaged host hook template is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      }
+    }
+    const enforce = commands.some((command) => /(^|\s)--enforce(\s|$)/.test(command));
+
+    if (!fs.existsSync(templatePath)) {
+      blockers.push({
+        id: `${template.host}-template-missing`,
+        path: template.templateRelativePath,
+        reason: 'Packaged host hook template is missing; cannot produce a trustworthy adoption plan.',
+      });
+    }
+    if (enforce) {
+      blockers.push({
+        id: `${template.host}-template-enforce`,
+        path: template.templateRelativePath,
+        reason: 'Packaged host hook template contains --enforce; default hook adoption must remain advisory.',
+      });
+    }
+
+    agentHookPlans.push({
+      host: template.host,
+      templateRelativePath: template.templateRelativePath,
+      templatePath,
+      destRelativePath: template.destRelativePath,
+      dest,
+      exists,
+      state: exists ? 'review-required' : 'missing',
+      action: exists ? 'review-existing-config' : 'copy-template-manually',
+      advisory: true,
+      enforce,
+      commands,
+      reason: exists
+        ? `Existing ${template.host} hook config requires manual review before adding Harness Hub hook entries.`
+        : `No ${template.host} hook config detected at ${template.destRelativePath}; copy the reviewed template only after explicit host trust review.`,
+      nextSteps: exists
+        ? [
+          `Review ${template.destRelativePath} manually.`,
+          `Merge entries from ${template.templateRelativePath} without adding --enforce.`,
+          'Use the host trust flow before enabling the config.',
+        ]
+        : [
+          `Create the parent directory for ${template.destRelativePath}.`,
+          `Copy ${template.templateRelativePath} to ${template.destRelativePath} after review.`,
+          'Use the host trust flow before enabling the config.',
+        ],
+    });
+  }
+
+  const exitCode: AgentHooksPlanResult['exitCode'] = blockers.length > 0 ? 3 : 0;
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    hubVersion: index.version,
+    targetDir,
+    templatesRoot,
+    dryRun: true,
+    mutates: false,
+    installsHooks: false,
+    enablesBlocking: false,
+    agentHookPlans,
+    blockers,
+    exitCode,
+    reason: blockers.length > 0
+      ? `${blockers.length} agent hook template blocker${blockers.length === 1 ? '' : 's'} found.`
+      : `${agentHookPlans.length} host hook adoption plan${agentHookPlans.length === 1 ? '' : 's'} generated. No files were written; templates remain advisory and do not enable blocking.`,
+  };
+}
+
+function collectAgentHookTemplateCommands(value: unknown): string[] {
+  const commands: string[] = [];
+  collectAgentHookTemplateCommandsInto(value, commands);
+  return commands;
+}
+
+function collectAgentHookTemplateCommandsInto(value: unknown, commands: string[]): void {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectAgentHookTemplateCommandsInto(item, commands);
+    }
+    return;
+  }
+
+  if (!value || typeof value !== 'object') {
+    return;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (typeof record.command === 'string') {
+    commands.push(record.command);
+  }
+  for (const child of Object.values(record)) {
+    collectAgentHookTemplateCommandsInto(child, commands);
+  }
+}
+
+function assertAgentHooksOutputPathSafe(targetDir: string, output: string | null): void {
+  if (!output) {
+    return;
+  }
+
+  const targetRoot = path.resolve(targetDir);
+  const outputPath = path.resolve(output);
+  const relative = path.relative(targetRoot, outputPath);
+  const pathToCheck = relative && !relative.startsWith('..') && !path.isAbsolute(relative)
+    ? relative
+    : outputPath;
+  const outputSegments = toPortablePath(pathToCheck).toLowerCase().split('/');
+  if (outputSegments.includes('.codex') || outputSegments.includes('.claude')) {
+    throw new CliError('agent-hooks plan --output cannot write inside .codex/ or .claude/ host config directories.', 2);
+  }
+}
+
 export function applyInstall(plan: InstallPlan, options: { overwrite?: boolean } = {}): InstallResult {
   const overwrite = options.overwrite ?? true;
   const installed: InstallItem[] = [];
@@ -9578,6 +9766,7 @@ function parseArgs(argv: string[]): CliOptions {
     command: argv[0] || 'help',
     sourcePostAction: null,
     loopAction: null,
+    agentHooksAction: null,
     targetDir: null,
     agents: [],
     dryRun: false,
@@ -9615,6 +9804,15 @@ function parseArgs(argv: string[]): CliOptions {
       throw new CliError('Use "harness-hub loop <evaluate|schedule|required|run-start|agent-record|lease-check|collect-trace|integrate|verify>".', 2);
     }
     options.loopAction = parseLoopAction(action);
+    firstOptionIndex = 2;
+  }
+
+  if (options.command === 'agent-hooks') {
+    const action = argv[1];
+    if (!action || action.startsWith('-')) {
+      throw new CliError('Use "harness-hub agent-hooks <plan>".', 2);
+    }
+    options.agentHooksAction = parseAgentHooksAction(action);
     firstOptionIndex = 2;
   }
 
@@ -9702,6 +9900,13 @@ function parseLoopAction(value: string): LoopCliAction {
     return value;
   }
   throw new CliError(`Unknown loop action '${value}'. Available: evaluate, schedule, required, run-start, agent-record, lease-check, collect-trace, integrate, verify`, 2);
+}
+
+function parseAgentHooksAction(value: string): AgentHooksCliAction {
+  if (value === 'plan') {
+    return value;
+  }
+  throw new CliError(`Unknown agent-hooks action '${value}'. Available: plan`, 2);
 }
 
 export async function runCli(argv: string[]): Promise<number> {
@@ -9812,6 +10017,18 @@ async function runCliInner(argv: string[]): Promise<number> {
       options,
     ), options);
     return result.exitCode;
+  }
+
+  if (options.command === 'agent-hooks') {
+    if (options.yes) {
+      throw new CliError('agent-hooks plan is read-only; --yes is not supported.', 2);
+    }
+    if (options.agentHooksAction === 'plan') {
+      const result = planAgentHooks({ targetDir: options.targetDir || undefined });
+      assertAgentHooksOutputPathSafe(result.targetDir, options.output);
+      emitReport(renderLifecycleReport('Harness Hub Agent Hook Plan', result, options), options);
+      return result.exitCode;
+    }
   }
 
   if (options.command === 'source-post') {
@@ -10018,6 +10235,7 @@ type LifecycleReportData =
   | AnalysisResult
   | CodexActivationPlan
   | CodexActivationResult
+  | AgentHooksPlanResult
   | InstallPlan
   | InstallResult
   | DevBootstrapPlan
@@ -10059,6 +10277,10 @@ function renderLifecycleReport(
       rows,
       hubVersion: 'hubVersion' in data ? data.hubVersion : readCapabilityIndex().version,
     });
+  }
+
+  if ('agentHookPlans' in data) {
+    return renderAgentHooksTextReport(data);
   }
 
   return `${summaryForLifecycleData(data)}\n`;
@@ -10351,6 +10573,32 @@ function rowsForLifecycleData(
     ];
   }
 
+  if ('agentHookPlans' in data) {
+    return [
+      {
+        id: 'agent-hooks',
+        state: data.exitCode === 0 ? 'plan' : 'blocked',
+        dest: data.reason,
+        version: data.generatedAt,
+        latestVersion: data.mutates ? 'mutating' : 'read-only',
+      },
+      ...data.agentHookPlans.map((item) => ({
+        id: item.host,
+        agent: item.host,
+        dest: item.destRelativePath,
+        state: item.state,
+        version: item.templateRelativePath,
+        latestVersion: item.commands.join(' | '),
+      })),
+      ...data.blockers.map((blocker) => ({
+        id: blocker.id,
+        state: 'blocked',
+        dest: blocker.path,
+        version: blocker.reason,
+      })),
+    ];
+  }
+
   if ('hostSkillRoots' in data) {
     return data.items.map((item) => ({
       id: item.skillName,
@@ -10563,6 +10811,12 @@ function summaryForLifecycleData(
     return `${installPlanned} skills planned, ${data.harnessFiles.length} harness files planned, ${data.blockers.length} blockers.`;
   }
 
+  if ('agentHookPlans' in data) {
+    const missing = data.agentHookPlans.filter((item) => item.state === 'missing').length;
+    const reviewRequired = data.agentHookPlans.filter((item) => item.state === 'review-required').length;
+    return `${data.agentHookPlans.length} agent hook host plans, ${missing} missing, ${reviewRequired} review-required, ${data.blockers.length} blockers. ${data.reason}`;
+  }
+
   if ('hostSkillRoots' in data) {
     const sync = data.items.filter((item) => item.action === 'sync').length;
     const stale = data.items.filter((item) => item.action === 'remove-stale').length;
@@ -10628,6 +10882,43 @@ function summaryForLifecycleData(
   return `${data.updates.length} updates, ${data.blockers.length} blockers, ${data.forceOverridable.length} force-overridable, ${data.unchanged.length} unchanged.`;
 }
 
+function renderAgentHooksTextReport(data: AgentHooksPlanResult): string {
+  const lines = [
+    summaryForLifecycleData(data),
+    `Target: ${data.targetDir}`,
+    'Writes: no host config, lock, trust, or blocking hook state.',
+    '',
+  ];
+
+  for (const item of data.agentHookPlans) {
+    lines.push(
+      `- ${item.host}: ${item.state}`,
+      `  Template: ${item.templateRelativePath}`,
+      `  Destination: ${item.destRelativePath}`,
+      `  Action: ${item.action}`,
+      `  Advisory: ${item.advisory ? 'yes' : 'no'}, enforce: ${item.enforce ? 'yes' : 'no'}`,
+      `  Reason: ${item.reason}`,
+      '  Commands:',
+    );
+    for (const command of item.commands) {
+      lines.push(`    - ${command}`);
+    }
+    lines.push('  Next steps:');
+    for (const step of item.nextSteps) {
+      lines.push(`    - ${step}`);
+    }
+  }
+
+  if (data.blockers.length > 0) {
+    lines.push('', 'Blockers:');
+    for (const blocker of data.blockers) {
+      lines.push(`- ${blocker.id}: ${blocker.path} - ${blocker.reason}`);
+    }
+  }
+
+  return `${lines.join('\n')}\n`;
+}
+
 function summaryForReadinessAnalysis(data: AnalysisResult): string {
   const recommended = data.findings.filter((finding) => finding.state === 'recommended').length;
   const detected = data.findings.filter((finding) => finding.state === 'detected').length;
@@ -10680,6 +10971,7 @@ Usage:
   harness-hub init-harness [target] [--dry-run|--yes] [--force] [--json|--html] [--output file]
   harness-hub validate-harness [target] [--json|--html] [--output file]
   harness-hub activate-agents [target] [--dry-run|--yes] [--json|--html] [--output file]
+  harness-hub agent-hooks plan [target] [--json|--html] [--output file]
   harness-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub source-post generate [target] --input file [--slug slug] [--json|--html] [--output file]
@@ -10707,6 +10999,7 @@ Use self-check for read-only aggregate status checks; strict harness validation 
 Install selects every target-distributed standard skill component and overwrites same-name skill directories by default.
 Use init-harness for agent dev bootstrap: standard skills plus root harness files for Codex and Claude Code.
 Use activate-agents to sync installed project-local skills into ignored .codex/skills and .claude/skills without global installation.
+Use agent-hooks plan to inspect Codex and Claude Code hook templates and destinations without writing host config.
 validate-harness includes standard harness checks, five-subsystem assessment, and a structural benchmark.
 Use source-post for structured source-post generation and GitHub Pages preflight.
 Use loop evaluate/schedule to decide continue vs interrupt and optionally append local Loop ledgers with --yes.
