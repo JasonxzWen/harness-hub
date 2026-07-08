@@ -19,8 +19,9 @@ test('package manifest keeps release validation and source traceability explicit
   };
 
   expect(packageJson.name).toBe('@jasonwen/harness-hub');
-  expect(Object.keys(packageJson.bin ?? {})).toEqual(['harness-hub']);
+  expect(Object.keys(packageJson.bin ?? {}).sort()).toEqual(['harness-agent-hook', 'harness-hub']);
   expect(packageJson.bin?.['harness-hub']).toBe('bin/harness-hub.mjs');
+  expect(packageJson.bin?.['harness-agent-hook']).toBe('scripts/harness-agent-hook-adapter.mjs');
   expect(packageJson.repository?.url).toBe('git+https://github.com/JasonxzWen/harness-hub.git');
   expect(packageJson.homepage).toBe('https://github.com/JasonxzWen/harness-hub#readme');
   expect(packageJson.bugs?.url).toBe('https://github.com/JasonxzWen/harness-hub/issues');
@@ -42,6 +43,7 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.files).toContain('config/');
   expect(packageJson.files).toContain('harness/');
   expect(packageJson.files).toContain('scripts/sync-agent-skills.mjs');
+  expect(packageJson.files).toContain('scripts/harness-agent-hook-adapter.mjs');
   expect(packageJson.files).toContain('scripts/harness-agent-gate.mjs');
   expect(packageJson.files).not.toContain('scripts/check-codex-worktree.mjs');
   expect(packageJson.files).not.toContain('scripts/sync-codex-skills.mjs');

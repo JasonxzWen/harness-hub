@@ -70,6 +70,8 @@ Harness components use explicit lifecycle commands. `install` never writes root 
 
 `scripts/harness-agent-gate.mjs` is the first source-distributed control-plane adapter. It maps host lifecycle event timing to existing Harness Hub routing, advisory, risk, and closeout evidence checks without creating a new workflow owner, hook installer, or agentic loop type. It is side-effect free and advisory by default; `--enforce` is an explicit caller choice for deterministic blocker exit codes and does not waive the separate security review required before default blocking hooks.
 
+`harness-agent-hook` adapts Codex and Claude Code hook stdin/stdout conventions to that shared gate. The source templates in `harness/agent-hooks/` are review material only: they are packaged for explicit adoption, omit `--enforce`, avoid subagent-dispatching hook types, and do not create `.codex/` or `.claude/` host-local config during install, activation, check, or validation.
+
 Source-post publishing is a first-class product domain, but it is intentionally outside the target managed install set. Its public source lives under Git-only `site/`; ignored local artifacts such as `.harness-hub/reports/` and `skills/effective-interact/artifacts/` are not valid Pages sources.
 
 ## Atomic Capability Candidate Map
