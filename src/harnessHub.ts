@@ -405,6 +405,19 @@ export interface AgentHooksInstallResult extends AgentHooksPlanResult {
   skipped: AgentHookPlanItem[];
 }
 
+export type AgentHooksCheckState = 'current' | 'missing' | 'review-required' | 'attention-required';
+
+export interface AgentHooksCheckResult {
+  state: AgentHooksCheckState;
+  targetDir: string;
+  templatesRoot: string;
+  agentHookPlans: AgentHookPlanItem[];
+  blockers: AgentHookPlanBlocker[];
+  recommendedCommand: string | null;
+  message: string;
+  evidence: string[];
+}
+
 export interface HarnessPlanItem {
   componentId: string;
   componentVersion: string;
@@ -781,6 +794,7 @@ export interface HarnessHubCheckResult {
   hubVersion: string;
   cli: HarnessHubCliCheck;
   target: HarnessHubTargetCheck;
+  agentHooks: AgentHooksCheckResult;
   externalTools: ExternalToolSuggestion[];
   reason: string;
 }
@@ -8174,6 +8188,10 @@ export async function checkHarnessHub(options: CheckOptions = {}): Promise<Harne
     targetDir: options.targetDir || process.cwd(),
     index,
   });
+  const agentHooks = buildAgentHooksCheck({
+    hubRoot,
+    targetDir: target.targetDir,
+  });
   const externalTools = buildExternalToolSuggestions({
     targetDir: target.targetDir,
     pathEnv: options.pathEnv,
@@ -8183,6 +8201,7 @@ export async function checkHarnessHub(options: CheckOptions = {}): Promise<Harne
   const reason = [
     `CLI ${cli.state}: ${cli.message}`,
     `Target ${target.state}: ${target.message}`,
+    `Agent hooks ${agentHooks.state}: ${agentHooks.message}`,
     `External tools: ${externalToolSummary(externalTools)}`,
   ].join(' ');
 
@@ -8193,6 +8212,7 @@ export async function checkHarnessHub(options: CheckOptions = {}): Promise<Harne
     hubVersion: index.version,
     cli,
     target,
+    agentHooks,
     externalTools,
     reason,
   };
@@ -8348,6 +8368,15 @@ function buildSelfCheckAdvisories(
       recommendedCommand: check.target.recommendedCommand,
     });
   }
+  if (check.agentHooks.state !== 'current') {
+    advisories.push({
+      id: `target.agent-hooks.${check.agentHooks.state}`,
+      severity: 'advisory',
+      message: check.agentHooks.message,
+      evidence: check.agentHooks.evidence,
+      recommendedCommand: check.agentHooks.recommendedCommand,
+    });
+  }
   for (const tool of check.externalTools) {
     if (tool.state === 'configured') {
       continue;
@@ -8370,6 +8399,75 @@ function buildSelfCheckAdvisories(
     });
   }
   return advisories;
+}
+
+function buildAgentHooksCheck({
+  hubRoot,
+  targetDir,
+}: {
+  hubRoot: string;
+  targetDir: string;
+}): AgentHooksCheckResult {
+  const resolvedTarget = path.resolve(targetDir);
+  const result = installAgentHooks({ hubRoot, targetDir: resolvedTarget, dryRun: true });
+  const templateBlockers = result.blockers.filter((blocker) => !blocker.id.endsWith('-existing-config'));
+  const divergent = result.agentHookPlans.filter((item) => item.state === 'blocked' || item.action === 'block-existing-config');
+  const planned = result.agentHookPlans.filter((item) => item.state === 'planned-install');
+  const upToDate = result.agentHookPlans.filter((item) => item.state === 'up-to-date');
+  const evidence = [
+    ...result.agentHookPlans.map((item) => `${item.destRelativePath}:${item.state}`),
+    ...result.blockers.map((blocker) => `blocker:${blocker.path}:${blocker.reason}`),
+  ];
+
+  if (templateBlockers.length > 0) {
+    return {
+      state: 'attention-required',
+      targetDir: resolvedTarget,
+      templatesRoot: result.templatesRoot,
+      agentHookPlans: result.agentHookPlans,
+      blockers: result.blockers,
+      recommendedCommand: `harness-hub agent-hooks plan "${resolvedTarget}" --json`,
+      message: `${templateBlockers.length} packaged agent hook template blocker${templateBlockers.length === 1 ? '' : 's'} found; adoption status cannot be trusted until the source templates are fixed.`,
+      evidence,
+    };
+  }
+
+  if (divergent.length > 0) {
+    return {
+      state: 'review-required',
+      targetDir: resolvedTarget,
+      templatesRoot: result.templatesRoot,
+      agentHookPlans: result.agentHookPlans,
+      blockers: result.blockers,
+      recommendedCommand: `harness-hub agent-hooks plan "${resolvedTarget}" --json`,
+      message: `${divergent.length} existing agent hook config file${divergent.length === 1 ? '' : 's'} differ from the reviewed advisory templates; review manually before installing.`,
+      evidence,
+    };
+  }
+
+  if (planned.length > 0) {
+    return {
+      state: 'missing',
+      targetDir: resolvedTarget,
+      templatesRoot: result.templatesRoot,
+      agentHookPlans: result.agentHookPlans,
+      blockers: result.blockers,
+      recommendedCommand: `harness-hub agent-hooks install "${resolvedTarget}" --dry-run --json`,
+      message: `${planned.length} project-local agent hook config file${planned.length === 1 ? '' : 's'} missing; preview explicit advisory hook adoption before confirmed install.`,
+      evidence,
+    };
+  }
+
+  return {
+    state: 'current',
+    targetDir: resolvedTarget,
+    templatesRoot: result.templatesRoot,
+    agentHookPlans: result.agentHookPlans,
+    blockers: result.blockers,
+    recommendedCommand: null,
+    message: `${upToDate.length} project-local agent hook config file${upToDate.length === 1 ? '' : 's'} match the reviewed advisory templates.`,
+    evidence,
+  };
 }
 
 function readHarnessHubPackageJson(hubRoot: string): { name?: string; version?: string } {
@@ -10451,6 +10549,13 @@ function rowsForLifecycleData(
         latestVersion: data.check.target.recommendedCommand,
       },
       {
+        id: 'agent-hooks',
+        state: data.check.agentHooks.state,
+        dest: data.check.agentHooks.message,
+        version: data.check.agentHooks.evidence.join(', '),
+        latestVersion: data.check.agentHooks.recommendedCommand,
+      },
+      {
         id: 'harness-validation',
         state: data.harnessValidation.state,
         dest: data.harnessValidation.reason,
@@ -10489,6 +10594,13 @@ function rowsForLifecycleData(
         dest: data.target.message,
         version: data.target.lockPath || '',
         latestVersion: data.target.recommendedCommand,
+      },
+      {
+        id: 'agent-hooks',
+        state: data.agentHooks.state,
+        dest: data.agentHooks.message,
+        version: data.agentHooks.evidence.join(', '),
+        latestVersion: data.agentHooks.recommendedCommand,
       },
       ...data.externalTools.map((tool) => ({
         id: `external:${tool.id}`,
