@@ -1,0 +1,67 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "harness-agent-hook --host codex --event SessionStart",
+            "statusMessage": "Running Harness Hub session gate",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "harness-agent-hook --host codex --event UserPromptSubmit",
+            "statusMessage": "Routing prompt through Harness Hub",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "harness-agent-hook --host codex --event PreToolUse",
+            "statusMessage": "Checking Harness Hub tool policy",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "harness-agent-hook --host codex --event PostToolUse",
+            "statusMessage": "Recording Harness Hub tool signal",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "harness-agent-hook --host codex --event Stop",
+            "statusMessage": "Checking Harness Hub closeout evidence",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
