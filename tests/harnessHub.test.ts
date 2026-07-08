@@ -3104,6 +3104,155 @@ test('check recommends project-local agent activation when installed skills are 
   expect(afterActivation.target.recommendedCommand).toBe(null);
 });
 
+test('check reports missing agent hook adoption without side effects', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-agent-hooks-missing-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+  const before = snapshotDirectory(targetDir);
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.agentHooks.state).toBe('missing');
+  expect(result.agentHooks.recommendedCommand).toContain('agent-hooks install');
+  expect(result.agentHooks.recommendedCommand).toContain('--dry-run');
+  expect(result.agentHooks.message).toContain('missing');
+  expect(result.agentHooks.evidence).toContain('.codex/hooks.json:planned-install');
+  expect(result.agentHooks.evidence).toContain('.claude/settings.json:planned-install');
+  expect(snapshotDirectory(targetDir)).toEqual(before);
+  expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.claude'))).toBe(false);
+});
+
+test('check reports current agent hook adoption when host configs match templates', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-agent-hooks-current-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+  installAgentHooks({ targetDir });
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.agentHooks.state).toBe('current');
+  expect(result.agentHooks.recommendedCommand).toBe(null);
+  expect(result.agentHooks.evidence).toContain('.codex/hooks.json:up-to-date');
+  expect(result.agentHooks.evidence).toContain('.claude/settings.json:up-to-date');
+});
+
+test('check reports divergent agent hook config as review-required without writing missing host config', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-agent-hooks-diverge-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+  fs.mkdirSync(path.join(targetDir, '.claude'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.claude', 'settings.json'), '{"hooks":{"UserPromptSubmit":[]}}\n');
+  const before = snapshotDirectory(targetDir);
+
+  const result = await checkHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.agentHooks.state).toBe('review-required');
+  expect(result.agentHooks.recommendedCommand).toContain('agent-hooks plan');
+  expect(result.agentHooks.evidence).toContain('.codex/hooks.json:planned-install');
+  expect(result.agentHooks.evidence).toContain('.claude/settings.json:blocked');
+  expect(result.agentHooks.blockers.map((item) => item.path)).toContain('.claude/settings.json');
+  expect(snapshotDirectory(targetDir)).toEqual(before);
+  expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
+  expect(fs.readFileSync(path.join(targetDir, '.claude', 'settings.json'), 'utf8')).toBe('{"hooks":{"UserPromptSubmit":[]}}\n');
+});
+
+test('check reports packaged agent hook template blockers as attention-required without target side effects', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-agent-hooks-template-blocker-'));
+  const hubRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-agent-hooks-hub-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+  fs.mkdirSync(path.join(hubRoot, 'capabilities'), { recursive: true });
+  fs.mkdirSync(path.join(hubRoot, 'harness', 'agent-hooks', 'codex'), { recursive: true });
+  fs.copyFileSync(path.join(process.cwd(), 'capabilities', 'index.json'), path.join(hubRoot, 'capabilities', 'index.json'));
+  fs.copyFileSync(path.join(process.cwd(), 'package.json'), path.join(hubRoot, 'package.json'));
+  fs.copyFileSync(path.join(process.cwd(), 'harness', 'agent-hooks', 'codex', 'hooks.json'), path.join(hubRoot, 'harness', 'agent-hooks', 'codex', 'hooks.json'));
+  const before = snapshotDirectory(targetDir);
+
+  const result = await checkHarnessHub({
+    hubRoot,
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.agentHooks.state).toBe('attention-required');
+  expect(result.agentHooks.recommendedCommand).toContain('agent-hooks plan');
+  expect(result.agentHooks.blockers.map((item) => item.path)).toContain('harness/agent-hooks/claude/settings.json');
+  expect(result.agentHooks.message).toContain('template blocker');
+  expect(snapshotDirectory(targetDir)).toEqual(before);
+  expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.claude'))).toBe(false);
+});
+
+test('check CLI json includes read-only agent hook adoption status', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-agent-hooks-cli-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+  const before = snapshotDirectory(targetDir);
+
+  const result = await captureCli(['check', targetDir, '--json']);
+  const parsed = JSON.parse(result.stdout);
+
+  expect(result.code).toBe(0);
+  expect(parsed.agentHooks.state).toBe('missing');
+  expect(parsed.reason).toContain('Agent hooks missing');
+  expect(parsed.agentHooks.recommendedCommand).toContain('agent-hooks install');
+  expect(snapshotDirectory(targetDir)).toEqual(before);
+});
+
+test('self-check surfaces agent hook adoption advisory separately from target status', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-self-check-agent-hooks-'));
+  applyInstall(planInstall({ targetDir, agents: ['standard'] }));
+
+  const result = await selfCheckHarnessHub({
+    targetDir,
+    currentVersion: '1.0.0',
+    latestVersionResolver: async () => ({
+      ok: true,
+      latestVersion: '1.0.0',
+      registryUrl: 'https://registry.test/@jasonwen%2Fharness-hub/latest',
+      reason: 'test registry response',
+    }),
+  });
+
+  expect(result.check.agentHooks.state).toBe('missing');
+  expect(result.advisories).toContainEqual(expect.objectContaining({
+    id: 'target.agent-hooks.missing',
+    severity: 'advisory',
+  }));
+  expect(result.advisories.find((item) => item.id === 'target.agent-hooks.missing')?.recommendedCommand).toContain('agent-hooks install');
+  expect(result.hardFailures.map((item) => item.id)).not.toContain('target.agent-hooks.missing');
+});
+
 test('check reports external tool installation suggestions without side effects', async () => {
   const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-check-external-tools-'));
   const before = snapshotDirectory(targetDir);

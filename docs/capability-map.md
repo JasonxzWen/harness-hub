@@ -33,7 +33,7 @@ flowchart TD
 
 | Command | Mutates target? | Purpose |
 |---|---:|---|
-| `harness-hub check <target>` | No | Report CLI package freshness, target lock-managed component freshness, and explicit CodeGraph/Headroom configuration advice without applying updates or installing tools. |
+| `harness-hub check <target>` | No | Report CLI package freshness, target lock-managed component freshness, project-local agent activation visibility, project-local hook adoption status, and explicit CodeGraph/Headroom configuration advice without applying updates, installing tools, or writing host config. |
 | `harness-hub self-check <target>` | No | Aggregate read-only health status, split hard failures from advisory items, and run strict harness validation only for initialized harness targets unless explicitly requested. |
 | `harness-hub analyze <target>` | No | Detect existing standard skills, missing capabilities, conflicts, and recommendations. |
 | `harness-hub analyze <target> --harness` | No | Detect repo harness gaps, existing root harness evidence, and initialization recommendations. |
