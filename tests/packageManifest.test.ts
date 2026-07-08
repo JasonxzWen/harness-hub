@@ -42,6 +42,7 @@ test('package manifest keeps release validation and source traceability explicit
   expect(packageJson.files).toContain('config/');
   expect(packageJson.files).toContain('harness/');
   expect(packageJson.files).toContain('scripts/sync-agent-skills.mjs');
+  expect(packageJson.files).toContain('scripts/harness-agent-gate.mjs');
   expect(packageJson.files).not.toContain('scripts/check-codex-worktree.mjs');
   expect(packageJson.files).not.toContain('scripts/sync-codex-skills.mjs');
   expect(packageJson.files).not.toContain('scripts/setup-codex-worktree.mjs');

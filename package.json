@@ -37,6 +37,7 @@
     ".claude-plugin/",
     "skills/",
     "scripts/sync-agent-skills.mjs",
+    "scripts/harness-agent-gate.mjs",
     "scripts/run-validate-skills.mjs",
     "scripts/smoke-managed-update.ps1",
     "scripts/skill-quality-inventory.ts",
