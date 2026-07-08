@@ -314,8 +314,13 @@ export interface InstallResult {
 
 export type AgentActivationAction = 'sync' | 'remove-stale' | 'block';
 export type AgentHostId = 'codex' | 'claude';
-export type AgentHookPlanAction = 'copy-template-manually' | 'review-existing-config';
-export type AgentHookPlanState = 'missing' | 'review-required';
+export type AgentHookPlanAction =
+  | 'copy-template-manually'
+  | 'review-existing-config'
+  | 'install-template'
+  | 'skip-up-to-date'
+  | 'block-existing-config';
+export type AgentHookPlanState = 'missing' | 'review-required' | 'planned-install' | 'installed' | 'up-to-date' | 'blocked';
 
 export interface AgentActivationItem {
   host: AgentHostId;
@@ -385,14 +390,19 @@ export interface AgentHooksPlanResult {
   hubVersion: string;
   targetDir: string;
   templatesRoot: string;
-  dryRun: true;
-  mutates: false;
-  installsHooks: false;
+  dryRun: boolean;
+  mutates: boolean;
+  installsHooks: boolean;
   enablesBlocking: false;
   agentHookPlans: AgentHookPlanItem[];
   blockers: AgentHookPlanBlocker[];
   exitCode: 0 | 3;
   reason: string;
+}
+
+export interface AgentHooksInstallResult extends AgentHooksPlanResult {
+  installed: AgentHookPlanItem[];
+  skipped: AgentHookPlanItem[];
 }
 
 export interface HarnessPlanItem {
@@ -818,7 +828,7 @@ interface LatestPackageVersionResult {
 
 type SourcePostCliAction = 'generate' | 'build' | 'validate' | 'publish';
 type LoopCliAction = 'evaluate' | 'schedule' | 'required' | 'run-start' | 'agent-record' | 'lease-check' | 'collect-trace' | 'integrate' | 'verify';
-type AgentHooksCliAction = 'plan';
+type AgentHooksCliAction = 'plan' | 'install';
 export type LoopDecision = 'continue' | 'interrupt';
 export type LoopDecisionConfidence = 'high' | 'medium';
 export type LoopReviewLevel = 'L0' | 'L1' | 'L2';
@@ -7820,6 +7830,115 @@ export function planAgentHooks(options: { hubRoot?: string; targetDir?: string }
   };
 }
 
+export function installAgentHooks(options: { hubRoot?: string; targetDir?: string; dryRun?: boolean } = {}): AgentHooksInstallResult {
+  const dryRun = options.dryRun === true;
+  const plan = planAgentHooks(options);
+  const agentHookPlans = plan.agentHookPlans.map((item): AgentHookPlanItem => {
+    if (item.enforce) {
+      return item;
+    }
+
+    if (!fs.existsSync(item.templatePath)) {
+      return item;
+    }
+
+    if (!item.exists) {
+      return {
+        ...item,
+        state: dryRun ? 'planned-install' : 'installed',
+        action: 'install-template',
+        reason: dryRun
+          ? `Install reviewed advisory ${item.host} hook template at ${item.destRelativePath}.`
+          : `Installed reviewed advisory ${item.host} hook template at ${item.destRelativePath}.`,
+        nextSteps: [
+          'Review the installed host config before relying on the hook.',
+          'Use the host trust flow before enabling the config.',
+        ],
+      };
+    }
+
+    if (agentHookTemplateMatchesDestination(item.templatePath, item.dest)) {
+      return {
+        ...item,
+        state: 'up-to-date',
+        action: 'skip-up-to-date',
+        reason: `${item.destRelativePath} already matches the reviewed advisory template.`,
+        nextSteps: [
+          'No file change is needed.',
+          'Use the host trust flow before relying on the config.',
+        ],
+      };
+    }
+
+    return {
+      ...item,
+      state: 'blocked',
+      action: 'block-existing-config',
+      reason: `Existing ${item.host} hook config differs from the reviewed template and must be merged manually.`,
+      nextSteps: [
+        `Review ${item.destRelativePath} manually.`,
+        `Merge entries from ${item.templateRelativePath} without adding --enforce.`,
+        'Rerun agent-hooks install only after the destination matches the reviewed template or is removed intentionally.',
+      ],
+    };
+  });
+  const blockers = [
+    ...plan.blockers,
+    ...agentHookPlans
+      .filter((item) => item.action === 'block-existing-config')
+      .map((item) => ({
+        id: `${item.host}-existing-config`,
+        path: item.destRelativePath,
+        reason: item.reason,
+      })),
+  ];
+  const exitCode: AgentHooksInstallResult['exitCode'] = blockers.length > 0 ? 3 : 0;
+  const reportedAgentHookPlans = exitCode === 0
+    ? agentHookPlans
+    : agentHookPlans.map((item) => (
+      item.action === 'install-template'
+        ? {
+          ...item,
+          state: 'planned-install' as const,
+          reason: `Install reviewed advisory ${item.host} hook template at ${item.destRelativePath} after blockers are resolved.`,
+        }
+        : item
+    ));
+  const installable = reportedAgentHookPlans.filter((item) => item.action === 'install-template');
+  const skipped = reportedAgentHookPlans.filter((item) => item.action === 'skip-up-to-date');
+
+  if (!dryRun && exitCode === 0) {
+    for (const item of installable) {
+      fs.mkdirSync(path.dirname(item.dest), { recursive: true });
+      fs.copyFileSync(item.templatePath, item.dest);
+    }
+  }
+
+  return {
+    ...plan,
+    dryRun,
+    mutates: !dryRun && exitCode === 0 && installable.length > 0,
+    installsHooks: !dryRun && exitCode === 0 && installable.length > 0,
+    agentHookPlans: reportedAgentHookPlans,
+    blockers,
+    installed: !dryRun && exitCode === 0 ? installable : [],
+    skipped,
+    exitCode,
+    reason: blockers.length > 0
+      ? `${blockers.length} agent hook install blocker${blockers.length === 1 ? '' : 's'} found. No host config files were written.`
+      : dryRun
+        ? `${installable.length} host hook config file${installable.length === 1 ? '' : 's'} planned, ${skipped.length} up-to-date. No files were written.`
+        : `${installable.length} host hook config file${installable.length === 1 ? '' : 's'} installed, ${skipped.length} up-to-date. Blocking hooks were not enabled.`,
+  };
+}
+
+function agentHookTemplateMatchesDestination(templatePath: string, dest: string): boolean {
+  if (!fs.existsSync(dest)) {
+    return false;
+  }
+  return fs.readFileSync(templatePath).equals(fs.readFileSync(dest));
+}
+
 function collectAgentHookTemplateCommands(value: unknown): string[] {
   const commands: string[] = [];
   collectAgentHookTemplateCommandsInto(value, commands);
@@ -7860,7 +7979,7 @@ function assertAgentHooksOutputPathSafe(targetDir: string, output: string | null
     : outputPath;
   const outputSegments = toPortablePath(pathToCheck).toLowerCase().split('/');
   if (outputSegments.includes('.codex') || outputSegments.includes('.claude')) {
-    throw new CliError('agent-hooks plan --output cannot write inside .codex/ or .claude/ host config directories.', 2);
+    throw new CliError('agent-hooks --output cannot write inside .codex/ or .claude/ host config directories.', 2);
   }
 }
 
@@ -9810,7 +9929,7 @@ function parseArgs(argv: string[]): CliOptions {
   if (options.command === 'agent-hooks') {
     const action = argv[1];
     if (!action || action.startsWith('-')) {
-      throw new CliError('Use "harness-hub agent-hooks <plan>".', 2);
+      throw new CliError('Use "harness-hub agent-hooks <plan|install>".', 2);
     }
     options.agentHooksAction = parseAgentHooksAction(action);
     firstOptionIndex = 2;
@@ -9903,10 +10022,10 @@ function parseLoopAction(value: string): LoopCliAction {
 }
 
 function parseAgentHooksAction(value: string): AgentHooksCliAction {
-  if (value === 'plan') {
+  if (value === 'plan' || value === 'install') {
     return value;
   }
-  throw new CliError(`Unknown agent-hooks action '${value}'. Available: plan`, 2);
+  throw new CliError(`Unknown agent-hooks action '${value}'. Available: plan, install`, 2);
 }
 
 export async function runCli(argv: string[]): Promise<number> {
@@ -10020,13 +10139,33 @@ async function runCliInner(argv: string[]): Promise<number> {
   }
 
   if (options.command === 'agent-hooks') {
-    if (options.yes) {
+    if (options.force) {
+      throw new CliError('agent-hooks does not support --force; existing host configs must be reviewed manually.', 2);
+    }
+    if (options.agentHooksAction === 'plan' && options.yes) {
       throw new CliError('agent-hooks plan is read-only; --yes is not supported.', 2);
     }
     if (options.agentHooksAction === 'plan') {
       const result = planAgentHooks({ targetDir: options.targetDir || undefined });
       assertAgentHooksOutputPathSafe(result.targetDir, options.output);
       emitReport(renderLifecycleReport('Harness Hub Agent Hook Plan', result, options), options);
+      return result.exitCode;
+    }
+    if (options.agentHooksAction === 'install') {
+      if (!options.dryRun && !options.yes) {
+        throw new CliError('Use --yes to install reviewed project-local agent hook config or --dry-run to preview.', 2);
+      }
+      const targetDir = path.resolve(options.targetDir || process.cwd());
+      assertAgentHooksOutputPathSafe(targetDir, options.output);
+      const result = installAgentHooks({
+        targetDir,
+        dryRun: options.dryRun,
+      });
+      emitReport(renderLifecycleReport(
+        options.dryRun ? 'Harness Hub Agent Hook Install Plan' : 'Harness Hub Agent Hook Install Report',
+        result,
+        options,
+      ), options);
       return result.exitCode;
     }
   }
@@ -10577,7 +10716,9 @@ function rowsForLifecycleData(
     return [
       {
         id: 'agent-hooks',
-        state: data.exitCode === 0 ? 'plan' : 'blocked',
+        state: data.exitCode === 0
+          ? data.installsHooks ? 'installed' : 'plan'
+          : 'blocked',
         dest: data.reason,
         version: data.generatedAt,
         latestVersion: data.mutates ? 'mutating' : 'read-only',
@@ -10886,7 +11027,9 @@ function renderAgentHooksTextReport(data: AgentHooksPlanResult): string {
   const lines = [
     summaryForLifecycleData(data),
     `Target: ${data.targetDir}`,
-    'Writes: no host config, lock, trust, or blocking hook state.',
+    data.mutates
+      ? 'Writes: project-local host config files were written; lock, trust, and blocking hook state were not changed.'
+      : 'Writes: no host config, lock, trust, or blocking hook state.',
     '',
   ];
 
@@ -10972,6 +11115,7 @@ Usage:
   harness-hub validate-harness [target] [--json|--html] [--output file]
   harness-hub activate-agents [target] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub agent-hooks plan [target] [--json|--html] [--output file]
+  harness-hub agent-hooks install [target] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub install [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub init [target] [--target standard] [--dry-run|--yes] [--json|--html] [--output file]
   harness-hub source-post generate [target] --input file [--slug slug] [--json|--html] [--output file]
@@ -10999,7 +11143,7 @@ Use self-check for read-only aggregate status checks; strict harness validation 
 Install selects every target-distributed standard skill component and overwrites same-name skill directories by default.
 Use init-harness for agent dev bootstrap: standard skills plus root harness files for Codex and Claude Code.
 Use activate-agents to sync installed project-local skills into ignored .codex/skills and .claude/skills without global installation.
-Use agent-hooks plan to inspect Codex and Claude Code hook templates and destinations without writing host config.
+Use agent-hooks plan/install to inspect or explicitly copy advisory Codex and Claude Code hook templates without global config or blocking hooks.
 validate-harness includes standard harness checks, five-subsystem assessment, and a structural benchmark.
 Use source-post for structured source-post generation and GitHub Pages preflight.
 Use loop evaluate/schedule to decide continue vs interrupt and optionally append local Loop ledgers with --yes.

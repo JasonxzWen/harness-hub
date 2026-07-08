@@ -16,6 +16,7 @@ import {
   getRemovePlan,
   getStatus,
   getUpdatePlan,
+  installAgentHooks,
   migrateLock,
   planAgentHooks,
   planHarnessInit,
@@ -175,6 +176,23 @@ test('agent hook planning reports Codex and Claude destinations without writing 
   expect(result.agentHookPlans.flatMap((item) => item.commands).some((command) => command.includes('--enforce'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, '.claude'))).toBe(false);
+});
+
+test('confirmed agent hook install writes reviewed advisory templates only when missing', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-'));
+
+  const result = installAgentHooks({ targetDir });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.dryRun).toBe(false);
+  expect(result.mutates).toBe(true);
+  expect(result.installsHooks).toBe(true);
+  expect(result.installed.map((item) => item.destRelativePath).sort()).toEqual(['.claude/settings.json', '.codex/hooks.json']);
+  const codexDest = path.join(targetDir, '.codex', 'hooks.json');
+  const claudeDest = path.join(targetDir, '.claude', 'settings.json');
+  expect(fs.readFileSync(codexDest, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'harness', 'agent-hooks', 'codex', 'hooks.json'), 'utf8'));
+  expect(fs.readFileSync(claudeDest, 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'harness', 'agent-hooks', 'claude', 'settings.json'), 'utf8'));
+  expect(result.agentHookPlans.flatMap((item) => item.commands).some((command) => command.includes('--enforce'))).toBe(false);
 });
 
 test('confirmed install overwrites same-name skill directories by default', () => {
@@ -1318,6 +1336,7 @@ test('help lists the full public command surface', async () => {
   expect(result.stdout).toContain('harness-hub init-harness');
   expect(result.stdout).toContain('harness-hub activate-agents');
   expect(result.stdout).toContain('harness-hub agent-hooks plan');
+  expect(result.stdout).toContain('harness-hub agent-hooks install');
   expect(result.stdout).not.toContain('harness-hub activate-codex');
   expect(result.stdout).toContain('harness-hub source-post generate');
   expect(result.stdout).toContain('harness-hub source-post build');
@@ -2866,6 +2885,115 @@ test('agent-hooks plan CLI allows ordinary report output from Codex worktree pat
   expect(JSON.parse(fs.readFileSync(reportOutput, 'utf8')).mutates).toBe(false);
   expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
   expect(fs.existsSync(path.join(targetDir, '.claude'))).toBe(false);
+});
+
+test('agent-hooks install CLI supports dry-run and confirmed exact template install', async () => {
+  const dryRunTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-dry-'));
+  const installTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-yes-'));
+
+  const dryRun = await captureCli(['agent-hooks', 'install', dryRunTarget, '--dry-run', '--json']);
+  const confirmed = await captureCli(['agent-hooks', 'install', installTarget, '--yes', '--json']);
+  const parsedDryRun = JSON.parse(dryRun.stdout);
+  const parsedConfirmed = JSON.parse(confirmed.stdout);
+
+  expect(dryRun.code).toBe(0);
+  expect(parsedDryRun.dryRun).toBe(true);
+  expect(parsedDryRun.mutates).toBe(false);
+  expect(parsedDryRun.agentHookPlans.map((item: { state: string }) => item.state)).toEqual(['planned-install', 'planned-install']);
+  expect(fs.existsSync(path.join(dryRunTarget, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(dryRunTarget, '.claude'))).toBe(false);
+  expect(confirmed.code).toBe(0);
+  expect(parsedConfirmed.dryRun).toBe(false);
+  expect(parsedConfirmed.mutates).toBe(true);
+  expect(parsedConfirmed.installsHooks).toBe(true);
+  expect(parsedConfirmed.installed.map((item: { destRelativePath: string }) => item.destRelativePath).sort()).toEqual(['.claude/settings.json', '.codex/hooks.json']);
+  expect(fs.readFileSync(path.join(installTarget, '.codex', 'hooks.json'), 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'harness', 'agent-hooks', 'codex', 'hooks.json'), 'utf8'));
+  expect(fs.readFileSync(path.join(installTarget, '.claude', 'settings.json'), 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'harness', 'agent-hooks', 'claude', 'settings.json'), 'utf8'));
+});
+
+test('agent-hooks install CLI rejects unsafe output before writing host config', async () => {
+  const codexOutputTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-output-codex-'));
+  const claudeOutputTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-output-claude-'));
+  const codexOutput = path.join(codexOutputTarget, '.codex', 'hooks.json');
+  const claudeOutput = path.join(claudeOutputTarget, '.claude', 'settings.json');
+
+  const codexResult = await captureCli(['agent-hooks', 'install', codexOutputTarget, '--yes', '--json', '--output', codexOutput]);
+  const claudeResult = await captureCli(['agent-hooks', 'install', claudeOutputTarget, '--yes', '--html', '--output', claudeOutput]);
+
+  expect(codexResult.code).toBe(2);
+  expect(codexResult.stderr).toContain('cannot write inside .codex/ or .claude/');
+  expect(claudeResult.code).toBe(2);
+  expect(claudeResult.stderr).toContain('cannot write inside .codex/ or .claude/');
+  expect(fs.existsSync(path.join(codexOutputTarget, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(codexOutputTarget, '.claude'))).toBe(false);
+  expect(fs.existsSync(path.join(claudeOutputTarget, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(claudeOutputTarget, '.claude'))).toBe(false);
+});
+
+test('agent-hooks install CLI requires confirmation and blocks divergent existing config atomically', async () => {
+  const missingConfirmationTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-confirm-'));
+  const divergentTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-diverge-'));
+  fs.mkdirSync(path.join(divergentTarget, '.codex'), { recursive: true });
+  fs.writeFileSync(path.join(divergentTarget, '.codex', 'hooks.json'), '{"hooks":{"Local":[]}}\n');
+
+  const missingConfirmation = await captureCli(['agent-hooks', 'install', missingConfirmationTarget, '--json']);
+  const divergent = await captureCli(['agent-hooks', 'install', divergentTarget, '--yes', '--json']);
+  const parsedDivergent = JSON.parse(divergent.stdout);
+
+  expect(missingConfirmation.code).toBe(2);
+  expect(missingConfirmation.stderr).toContain('--yes');
+  expect(divergent.code).toBe(3);
+  expect(parsedDivergent.blockers.map((item: { path: string }) => item.path)).toContain('.codex/hooks.json');
+  expect(parsedDivergent.agentHookPlans.find((item: { host: string }) => item.host === 'codex').state).toBe('blocked');
+  expect(parsedDivergent.agentHookPlans.find((item: { host: string }) => item.host === 'claude').state).toBe('planned-install');
+  expect(parsedDivergent.installed).toEqual([]);
+  expect(fs.readFileSync(path.join(divergentTarget, '.codex', 'hooks.json'), 'utf8')).toBe('{"hooks":{"Local":[]}}\n');
+  expect(fs.existsSync(path.join(divergentTarget, '.claude'))).toBe(false);
+});
+
+test('agent-hooks install CLI rejects force without writing host config', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-force-'));
+
+  const result = await captureCli(['agent-hooks', 'install', targetDir, '--yes', '--force', '--json']);
+
+  expect(result.code).toBe(2);
+  expect(result.stderr).toContain('does not support --force');
+  expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.claude'))).toBe(false);
+});
+
+test('agent-hooks install CLI blocks divergent Claude config atomically', async () => {
+  const divergentTarget = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-claude-diverge-'));
+  fs.mkdirSync(path.join(divergentTarget, '.claude'), { recursive: true });
+  fs.writeFileSync(path.join(divergentTarget, '.claude', 'settings.json'), '{"hooks":{"UserPromptSubmit":[]}}\n');
+
+  const result = await captureCli(['agent-hooks', 'install', divergentTarget, '--yes', '--json']);
+  const parsed = JSON.parse(result.stdout);
+
+  expect(result.code).toBe(3);
+  expect(parsed.blockers.map((item: { path: string }) => item.path)).toContain('.claude/settings.json');
+  expect(parsed.agentHookPlans.find((item: { host: string }) => item.host === 'codex').state).toBe('planned-install');
+  expect(parsed.agentHookPlans.find((item: { host: string }) => item.host === 'claude').state).toBe('blocked');
+  expect(parsed.installed).toEqual([]);
+  expect(fs.existsSync(path.join(divergentTarget, '.codex'))).toBe(false);
+  expect(fs.readFileSync(path.join(divergentTarget, '.claude', 'settings.json'), 'utf8')).toBe('{"hooks":{"UserPromptSubmit":[]}}\n');
+});
+
+test('agent-hooks install CLI treats matching existing configs as up-to-date', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-install-current-'));
+  fs.mkdirSync(path.join(targetDir, '.codex'), { recursive: true });
+  fs.mkdirSync(path.join(targetDir, '.claude'), { recursive: true });
+  fs.copyFileSync(path.join(process.cwd(), 'harness', 'agent-hooks', 'codex', 'hooks.json'), path.join(targetDir, '.codex', 'hooks.json'));
+  fs.copyFileSync(path.join(process.cwd(), 'harness', 'agent-hooks', 'claude', 'settings.json'), path.join(targetDir, '.claude', 'settings.json'));
+
+  const result = await captureCli(['agent-hooks', 'install', targetDir, '--yes', '--json']);
+  const parsed = JSON.parse(result.stdout);
+
+  expect(result.code).toBe(0);
+  expect(parsed.mutates).toBe(false);
+  expect(parsed.installsHooks).toBe(false);
+  expect(parsed.installed).toEqual([]);
+  expect(parsed.agentHookPlans.map((item: { state: string }) => item.state)).toEqual(['up-to-date', 'up-to-date']);
 });
 
 test('activate-codex remains a compatibility alias for agent activation', async () => {
