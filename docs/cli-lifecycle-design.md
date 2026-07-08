@@ -27,6 +27,7 @@ harness-hub init-harness <target> --yes
 harness-hub validate-harness <target> --json
 harness-hub activate-agents <target> --dry-run --json
 harness-hub activate-agents <target> --yes
+harness-hub agent-hooks plan <target> --json
 harness-hub install <target> --target standard --dry-run
 harness-hub install <target> --target standard --yes
 harness-hub init-harness <target> --target standard --dry-run
@@ -61,6 +62,8 @@ Local agent dogfooding is intentionally outside the managed target lifecycle: `s
 `scripts/harness-agent-gate.mjs` is a source-distributed, read-only hook-event adapter for future Codex and Claude Code lifecycle integration. It is not a hook installer, not a workflow owner, not a new agentic loop catalog, and not an authority layer. The runner accepts event names such as `session-start`, `user-prompt`, `pre-tool`, `post-tool`, and `session-stop`, emits stable JSON, never writes local state or remote resources, and stays advisory by default. A caller must pass `--enforce` before deterministic blocker findings become a non-zero exit code; default blocking hook rollout still requires the security review and explicit approval described in `skills/workflow-router/references/orchestration-policy.md`.
 
 `harness-agent-hook` is the package-exposed host adapter for Codex and Claude Code hook commands. It reads host hook JSON from stdin, calls the shared gate runner, and emits host-compatible JSON output. Reviewable templates live under `harness/agent-hooks/`; they intentionally omit `--enforce` and are never installed into `.codex/` or `.claude/` by default. Copying a template into a host config layer remains an explicit user-controlled action that must go through the host's normal trust and review flow.
+
+`agent-hooks plan` is the read-only adoption planning command for those templates. It reports the Codex and Claude Code source template paths, intended host-local destination files, existing-config review requirements, extracted hook commands, and manual next steps. It rejects `--yes`, refuses report `--output` paths containing `.codex/` or `.claude/` host config directories, writes no host config, lock, global skill, trust, or hook state, and never enables blocking behavior.
 
 Skill visibility has three separate layers and troubleshooting must name the layer being fixed. The canonical source is `skills/<name>/SKILL.md`. Project-local activation is `.codex/skills/<name>/SKILL.md` and `.claude/skills/<name>/SKILL.md`, written by `activate-agents` for targets or `scripts/sync-agent-skills.mjs` for this source checkout. User-level/global slash-palette availability is host-owned state such as `$CODEX_HOME/skills/<name>/SKILL.md`; neither `install`, `activate-agents`, nor `sync-agent-skills` should silently write that user-level root. If source and project-local mirrors are correct but a host UI still shows an old name or description, treat it as a host index/cache refresh issue and ask for a reload or restart instead of repeating repository sync.
 

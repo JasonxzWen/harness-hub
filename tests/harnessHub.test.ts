@@ -17,6 +17,7 @@ import {
   getStatus,
   getUpdatePlan,
   migrateLock,
+  planAgentHooks,
   planHarnessInit,
   planInstall,
   readCapabilityIndex,
@@ -153,6 +154,27 @@ test('activate-agents blocks unmarked existing host skill directories', () => {
   expect(result.blockers.map((item) => item.skillName)).toContain('workflow-router');
   expect(result.blockers.map((item) => item.host)).toContain('claude');
   expect(fs.readFileSync(path.join(targetDir, '.claude', 'skills', 'workflow-router', 'SKILL.md'), 'utf8')).toBe('# local override\n');
+});
+
+test('agent hook planning reports Codex and Claude destinations without writing host config', () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-plan-'));
+  const result = planAgentHooks({ targetDir });
+
+  expect(result.exitCode).toBe(0);
+  expect(result.dryRun).toBe(true);
+  expect(result.mutates).toBe(false);
+  expect(result.installsHooks).toBe(false);
+  expect(result.enablesBlocking).toBe(false);
+  expect(result.agentHookPlans.map((item) => item.host).sort()).toEqual(['claude', 'codex']);
+  expect(result.agentHookPlans.map((item) => item.destRelativePath).sort()).toEqual(['.claude/settings.json', '.codex/hooks.json']);
+  expect(result.agentHookPlans.every((item) => item.state === 'missing')).toBe(true);
+  expect(result.agentHookPlans.every((item) => item.action === 'copy-template-manually')).toBe(true);
+  expect(result.agentHookPlans.every((item) => item.advisory && !item.enforce)).toBe(true);
+  expect(result.agentHookPlans.every((item) => item.commands.length > 0)).toBe(true);
+  expect(result.agentHookPlans.flatMap((item) => item.commands).every((command) => command.includes('harness-agent-hook'))).toBe(true);
+  expect(result.agentHookPlans.flatMap((item) => item.commands).some((command) => command.includes('--enforce'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.claude'))).toBe(false);
 });
 
 test('confirmed install overwrites same-name skill directories by default', () => {
@@ -1295,6 +1317,7 @@ test('help lists the full public command surface', async () => {
   expect(result.stdout).toContain('harness-hub check');
   expect(result.stdout).toContain('harness-hub init-harness');
   expect(result.stdout).toContain('harness-hub activate-agents');
+  expect(result.stdout).toContain('harness-hub agent-hooks plan');
   expect(result.stdout).not.toContain('harness-hub activate-codex');
   expect(result.stdout).toContain('harness-hub source-post generate');
   expect(result.stdout).toContain('harness-hub source-post build');
@@ -2755,6 +2778,94 @@ test('activate-agents CLI requires confirmation and supports json output', async
   expect(JSON.parse(confirmed.stdout).synced.length).toBeGreaterThan(0);
   expect(fs.existsSync(path.join(targetDir, '.codex', 'skills', 'package-release-sniffer', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, '.claude', 'skills', 'package-release-sniffer', 'SKILL.md'))).toBe(true);
+});
+
+test('agent-hooks plan CLI reports existing host configs without overwriting them', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-cli-'));
+  fs.mkdirSync(path.join(targetDir, '.codex'), { recursive: true });
+  fs.mkdirSync(path.join(targetDir, '.claude'), { recursive: true });
+  const codexConfig = path.join(targetDir, '.codex', 'hooks.json');
+  const claudeConfig = path.join(targetDir, '.claude', 'settings.json');
+  fs.writeFileSync(codexConfig, '{"hooks":{"Local":[]}}\n');
+  fs.writeFileSync(claudeConfig, '{"hooks":{"Local":[]}}\n');
+
+  const result = await captureCli(['agent-hooks', 'plan', targetDir, '--json']);
+  const parsed = JSON.parse(result.stdout);
+
+  expect(result.code).toBe(0);
+  expect(parsed.mutates).toBe(false);
+  expect(parsed.installsHooks).toBe(false);
+  expect(parsed.enablesBlocking).toBe(false);
+  expect(parsed.agentHookPlans.map((item: { state: string }) => item.state)).toEqual(['review-required', 'review-required']);
+  expect(parsed.agentHookPlans.map((item: { action: string }) => item.action)).toEqual(['review-existing-config', 'review-existing-config']);
+  expect(parsed.agentHookPlans.flatMap((item: { commands: string[] }) => item.commands).some((command: string) => command.includes('--enforce'))).toBe(false);
+  expect(fs.readFileSync(codexConfig, 'utf8')).toBe('{"hooks":{"Local":[]}}\n');
+  expect(fs.readFileSync(claudeConfig, 'utf8')).toBe('{"hooks":{"Local":[]}}\n');
+});
+
+test('agent-hooks plan CLI text output includes both host adoption details', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-text-'));
+
+  const result = await captureCli(['agent-hooks', 'plan', targetDir]);
+
+  expect(result.code).toBe(0);
+  expect(result.stdout).toContain('harness/agent-hooks/codex/hooks.json');
+  expect(result.stdout).toContain('.codex/hooks.json');
+  expect(result.stdout).toContain('harness-agent-hook --host codex');
+  expect(result.stdout).toContain('harness/agent-hooks/claude/settings.json');
+  expect(result.stdout).toContain('.claude/settings.json');
+  expect(result.stdout).toContain('harness-agent-hook --host claude');
+  expect(result.stdout).toContain('Next steps:');
+  expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.claude'))).toBe(false);
+});
+
+test('agent-hooks plan CLI rejects confirmation because planning is read-only', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-yes-'));
+
+  const result = await captureCli(['agent-hooks', 'plan', targetDir, '--yes', '--json']);
+
+  expect(result.code).toBe(2);
+  expect(result.stderr).toContain('read-only');
+  expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.claude'))).toBe(false);
+});
+
+test('agent-hooks plan CLI rejects report output inside host config directories', async () => {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-output-'));
+  const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-output-outside-'));
+  const codexOutput = path.join(targetDir, '.codex', 'hooks.json');
+  const claudeOutput = path.join(targetDir, '.claude', 'settings.json');
+  const outsideCodexOutput = path.join(outsideDir, '.codex', 'hooks.json');
+
+  const codexResult = await captureCli(['agent-hooks', 'plan', targetDir, '--json', '--output', codexOutput]);
+  const claudeResult = await captureCli(['agent-hooks', 'plan', targetDir, '--html', '--output', claudeOutput]);
+  const outsideCodexResult = await captureCli(['agent-hooks', 'plan', targetDir, '--json', '--output', outsideCodexOutput]);
+
+  expect(codexResult.code).toBe(2);
+  expect(codexResult.stderr).toContain('cannot write inside .codex/ or .claude/');
+  expect(claudeResult.code).toBe(2);
+  expect(claudeResult.stderr).toContain('cannot write inside .codex/ or .claude/');
+  expect(outsideCodexResult.code).toBe(2);
+  expect(outsideCodexResult.stderr).toContain('cannot write inside .codex/ or .claude/');
+  expect(fs.existsSync(codexOutput)).toBe(false);
+  expect(fs.existsSync(claudeOutput)).toBe(false);
+  expect(fs.existsSync(outsideCodexOutput)).toBe(false);
+});
+
+test('agent-hooks plan CLI allows ordinary report output from Codex worktree paths', async () => {
+  const worktreeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-hooks-worktree-'));
+  const targetDir = path.join(worktreeRoot, '.codex', 'worktrees', 'demo-target');
+  fs.mkdirSync(targetDir, { recursive: true });
+  const reportOutput = path.join(targetDir, 'agent-hooks-report.json');
+
+  const result = await captureCli(['agent-hooks', 'plan', targetDir, '--json', '--output', reportOutput]);
+
+  expect(result.code).toBe(0);
+  expect(fs.existsSync(reportOutput)).toBe(true);
+  expect(JSON.parse(fs.readFileSync(reportOutput, 'utf8')).mutates).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, '.claude'))).toBe(false);
 });
 
 test('activate-codex remains a compatibility alias for agent activation', async () => {

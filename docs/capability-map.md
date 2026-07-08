@@ -47,6 +47,7 @@ flowchart TD
 | `harness-hub loop verify <target> --input verify.json` | No | Verify run, agent, and integration evidence against required loops; return a non-zero gate when evidence is missing or blocked. |
 | `harness-hub activate-agents <target> --dry-run` | No | Preview syncing installed project-local skills into `.codex/skills` and `.claude/skills` for local agent metadata activation. |
 | `harness-hub activate-agents <target> --yes` | Yes | Write only the target repository's local `.codex/skills` and `.claude/skills` activation caches; no global skills and no lock ownership changes. |
+| `harness-hub agent-hooks plan <target>` | No | Report Codex and Claude Code advisory hook templates, intended host-local destination files, existing-config review requirements, and manual adoption steps without writing host config or enabling blocking hooks. |
 | `harness-hub install <target> --target standard --dry-run` | No | Preview managed installation of every target-distributed standard skill. |
 | `harness-hub install <target> --target standard --yes` | Yes | Copy every managed standard skill and write `.harness-hub/lock.json`. |
 | `harness-hub init-harness <target> --target standard --dry-run` | No | Preview standard skill installation plus canonical `AGENTS.md` and importing `CLAUDE.md` root harness files for Codex and Claude Code. |
@@ -71,6 +72,8 @@ Harness components use explicit lifecycle commands. `install` never writes root 
 `scripts/harness-agent-gate.mjs` is the first source-distributed control-plane adapter. It maps host lifecycle event timing to existing Harness Hub routing, advisory, risk, and closeout evidence checks without creating a new workflow owner, hook installer, or agentic loop type. It is side-effect free and advisory by default; `--enforce` is an explicit caller choice for deterministic blocker exit codes and does not waive the separate security review required before default blocking hooks.
 
 `harness-agent-hook` adapts Codex and Claude Code hook stdin/stdout conventions to that shared gate. The source templates in `harness/agent-hooks/` are review material only: they are packaged for explicit adoption, omit `--enforce`, avoid subagent-dispatching hook types, and do not create `.codex/` or `.claude/` host-local config during install, activation, check, or validation.
+
+`harness-hub agent-hooks plan` is the read-only CLI bridge between packaged review material and host-local adoption. It produces a machine-readable plan for Codex and Claude Code destinations, reports existing configs as review-required instead of overwriting them, rejects confirmation flags, refuses report output paths containing `.codex/` or `.claude/` host directories, and leaves trust, copying, and blocking-mode enablement outside the default lifecycle.
 
 Source-post publishing is a first-class product domain, but it is intentionally outside the target managed install set. Its public source lives under Git-only `site/`; ignored local artifacts such as `.harness-hub/reports/` and `skills/effective-interact/artifacts/` are not valid Pages sources.
 
