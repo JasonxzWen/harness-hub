@@ -4,7 +4,7 @@ The v1 host adapters support Codex and Claude Code. They are discovery rules, no
 
 ## Codex Adapter
 
-Collect current-repo traces from standard repo-level and user-level Codex work locations. Prefer repo-local host work directories, user-level session roots, automation logs, and Codex prompt/rule roots. User-level sessions must have cwd or workspace metadata inside `--repo` unless `--include-cross-repo` is explicit; package, remote, or repo-name text matches are not enough to include an external session.
+Collect current-repo traces from standard repo-level and user-level Codex work locations. Prefer repo-local host work directories, user-level session roots, automation logs, and Codex prompt/rule roots. User-level sessions must have cwd or workspace metadata inside `--repo`, or inside another checkout with the same logical Git/package identity, unless `--include-cross-repo` is explicit. Package, remote, or repo-name text matches in message content are not enough to include an external session.
 
 Large Codex JSONL traces should be sampled from the tail by default so recent work is preserved. If older lines matter, rerun collection with a larger `--jsonl-tail-bytes` value.
 
@@ -12,7 +12,7 @@ Codex prompt context includes repository agent instruction files plus repo-local
 
 ## Claude Code Adapter
 
-Collect current-repo traces from standard repo-level and user-level Claude Code work locations. Prefer repo-local host work directories, exact encoded project roots, history exports, task state, and Claude prompt/rule roots. Treat project-name-only matches as out of scope unless the source has already passed the current-repo cwd/workspace gate or `--include-cross-repo` is explicit.
+Collect current-repo traces from standard repo-level and user-level Claude Code work locations. Prefer repo-local host work directories, exact encoded project roots, history exports, task state, and Claude prompt/rule roots. Treat project-name-only matches as out of scope unless the source has already passed the current-repo or same-logical-repo cwd/workspace gate, or `--include-cross-repo` is explicit.
 
 Large Claude Code JSONL traces follow the same tail-sampling rule as Codex traces.
 

@@ -16,7 +16,7 @@ If this skill is loaded, the answer must contain actual insights and recommendat
 
 Use layered evidence and confidence levels. Strong insights require confirmed, non-low-confidence interaction evidence with exact or strong repository affinity. Candidate traces, ordinary repo state, low-confidence evidence, or sparse samples can support only weak leads, unknowns, or next-instrumentation recommendations. Do not fabricate patterns to fill the report shape.
 
-Default scope: last 30 days, current repository, Codex and Claude Code. User-level sessions and scheduled tasks are in scope only when their cwd, workspace, or automation config resolves inside the repository passed with `--repo`; text mentions of the repository name, package, or remote do not pull an otherwise external run into scope. The user may override the window, repository, host roots, prompt roots, automation roots, or explicitly allow cross-repo collection.
+Default scope: last 30 days, current repository, Codex and Claude Code. User-level sessions and scheduled tasks are in scope only when their cwd, workspace, or automation config resolves inside the repository passed with `--repo`, or to another checkout of the same logical repository by Git remote, Git root, or package identity. Text mentions of the repository name, package, or remote do not pull an otherwise external run into scope. The user may override the window, repository, host roots, prompt roots, automation roots, or explicitly allow cross-repo collection.
 
 Current executable capabilities:
 
