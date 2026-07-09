@@ -158,7 +158,7 @@ test('agent-interaction-audit capability metadata registers standard install sur
   expect(component.overlapsWith).toContain('skill:source-post');
   expect(component.overlapsWith).toContain('skill:agent-introspection-debugging');
   expect(component.routing).toContain('private agent interaction audit');
-  expect(component.routing).toContain('legacy insight mentions route here only when paired with sessions');
+  expect(component.routing).toContain('legacy insight mentions route here only when paired with agent sessions');
   expect(component.routing).toContain('prompt/rule context audit');
   expect(component.routing).toContain('automation log audit');
   expect(component.routing).toContain('executable improvement queue');
@@ -1007,6 +1007,42 @@ test('agent-interaction-audit activation selects private audits without stealing
     'Turn this external OpenAI article into a Chinese source-backed public post with media references and repo iteration review.',
     '--json',
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const sourcePostInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Create an insight report for this source-backed public post from the external article and preserve figures and links.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const ordinaryArticleInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Analyze this article and write insight recommendations for readers.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const singleAgentRunInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Review an agent run and provide insight recommendations.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const agentProductImprovementInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Run insight recommendations for an agent product improvement plan.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const legacySessionInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Run legacy insight recommendations across recent agent sessions and tool-call traces.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const singleRunInsightFailure = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'A single agent run hit a tool loop failure; recover and provide insight recommendations.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
   const singleRun = spawnSync(process.execPath, [
     activationScript,
     '--prompt',
@@ -1017,5 +1053,11 @@ test('agent-interaction-audit activation selects private audits without stealing
   expect(JSON.parse(positive.stdout).selectedSkill).toBe('agent-interaction-audit');
   expect(JSON.parse(effectiveInteractComplaint.stdout).selectedSkill).toBe('effective-interact');
   expect(JSON.parse(blog.stdout).selectedSkill).toBe('source-post');
+  expect(JSON.parse(sourcePostInsight.stdout).selectedSkill).toBe('source-post');
+  expect(JSON.parse(ordinaryArticleInsight.stdout).selectedSkill).not.toBe('agent-interaction-audit');
+  expect(JSON.parse(singleAgentRunInsight.stdout).selectedSkill).not.toBe('agent-interaction-audit');
+  expect(JSON.parse(agentProductImprovementInsight.stdout).selectedSkill).not.toBe('agent-interaction-audit');
+  expect(JSON.parse(legacySessionInsight.stdout).selectedSkill).toBe('agent-interaction-audit');
+  expect(JSON.parse(singleRunInsightFailure.stdout).selectedSkill).toBe('agent-introspection-debugging');
   expect(JSON.parse(singleRun.stdout).selectedSkill).toBe('agent-introspection-debugging');
 });

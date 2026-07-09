@@ -99,6 +99,12 @@ interface ManagedComponentRename {
   reason: string;
 }
 
+interface LegacyRenamedComponentFile {
+  path: string;
+  sha256: string;
+  size: number;
+}
+
 export interface RepoSignals {
   packageJson: boolean;
   tsconfig: boolean;
@@ -1098,6 +1104,45 @@ const MANAGED_COMPONENT_RENAMES: Readonly<Record<string, ManagedComponentRename>
 const HOST_SKILL_DIR_RENAMES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   'agent-interaction-audit': ['insight'],
   'effective-interact': ['html-work-reports'],
+});
+const LEGACY_RENAMED_COMPONENT_FILES: Readonly<Record<string, readonly LegacyRenamedComponentFile[]>> = Object.freeze({
+  'skill:insight': [
+    {
+      path: 'skills/insight/SKILL.md',
+      sha256: '999d03b149ea11ec3d9e39b7af6a0c31561a2523699dc4d75616e02bf7077116',
+      size: 13108,
+    },
+    {
+      path: 'skills/insight/references/analysis-rubric.md',
+      sha256: '2efedf7dbb9323bb929b3610c058fd79bf3b198c2c2501ec508ab67ed7084942',
+      size: 5629,
+    },
+    {
+      path: 'skills/insight/references/data-sources.md',
+      sha256: '0eb2f9bead61294636e559aaaf95fb8e3b1b03afd6f9346d312c51e30511a6b1',
+      size: 3792,
+    },
+    {
+      path: 'skills/insight/references/host-adapters.md',
+      sha256: '1f15b97de939487b9bd6ef0e46b38a7200e692b2a90c0c888aab93ec0ac65c09',
+      size: 2862,
+    },
+    {
+      path: 'skills/insight/references/report-shape.md',
+      sha256: 'c9439469ff1db9a8a4330d65af50953143a91a4cbf5dbcc86e986cbb62797675',
+      size: 4262,
+    },
+    {
+      path: 'skills/insight/scripts/build-insight-report.mjs',
+      sha256: '365a0d63599bd8bf8f1b527d30aac423af4477346984c8d151193be5bce87ffd',
+      size: 65507,
+    },
+    {
+      path: 'skills/insight/scripts/collect-insight-events.mjs',
+      sha256: 'a26546589c94656d0891f1991a44d8def4836eff8a2f49b0ad8622007d52a91a',
+      size: 53025,
+    },
+  ],
 });
 
 const VALID_RISKS = new Set<LifecycleRisk>(['low', 'medium', 'high']);
@@ -8889,7 +8934,8 @@ function buildTargetCheck({
     : hasUpdates
       ? 'update-available'
       : 'current';
-  const agentActivationMissing = state === 'current' && isAgentActivationMissing(resolvedTarget, status);
+  const agentActivationEvidence = state === 'current' ? agentActivationMissingEvidence(resolvedTarget, status) : [];
+  const agentActivationMissing = agentActivationEvidence.length > 0;
   const message = [
     targetCheckMessage({ state, status, updatePlan }),
     agentActivationMissing
@@ -8914,13 +8960,7 @@ function buildTargetCheck({
       : targetRecommendedCommand(state, resolvedTarget),
     message,
     evidence: agentActivationMissing
-      ? [
-        status.lock.path,
-        ...AGENT_HOST_SKILL_DIRS.flatMap((host) => [
-          `${host.relativePath}/workflow-router/SKILL.md`,
-          `${host.relativePath}/package-release-sniffer/SKILL.md`,
-        ]),
-      ]
+      ? [status.lock.path, ...agentActivationEvidence]
       : [status.lock.path],
   };
 }
@@ -8959,19 +8999,26 @@ function targetRecommendedCommand(state: HarnessHubTargetCheck['state'], targetD
   return null;
 }
 
-function isAgentActivationMissing(targetDir: string, status: HarnessHubStatus): boolean {
-  const hasActivationSource = status.rows.some((row) => (
-    row.id === 'skill:workflow-router'
-    || row.id === 'skill:package-release-sniffer'
-  ));
+function agentActivationMissingEvidence(targetDir: string, status: HarnessHubStatus): string[] {
+  const hasActivationSource = status.rows.some((row) => row.id.startsWith('skill:'));
   if (!hasActivationSource) {
-    return false;
+    return [];
   }
 
-  return AGENT_HOST_SKILL_DIRS.flatMap((host) => [
-    path.join(targetDir, host.relativePath, 'workflow-router', 'SKILL.md'),
-    path.join(targetDir, host.relativePath, 'package-release-sniffer', 'SKILL.md'),
-  ]).some((filePath) => !fs.existsSync(filePath));
+  try {
+    const plan = planAgentActivation({ targetDir, dryRun: true });
+    return uniqueStrings(plan.items
+      .filter((item) => (item.action === 'sync' && !item.exists) || item.action === 'remove-stale')
+      .map((item) => {
+        const relativeDest = toPortablePath(path.relative(targetDir, item.dest));
+        return item.action === 'remove-stale'
+          ? `staleHostCache:${relativeDest}`
+          : `${relativeDest}/SKILL.md`;
+      }))
+      .sort();
+  } catch {
+    return [];
+  }
 }
 
 function buildExternalToolSuggestions({
@@ -9801,6 +9848,43 @@ export function migrateLock(
       continue;
     }
 
+    if (latestRef.rename) {
+      const verification = verifyLegacyRenamedComponentFiles(targetDir, component.id);
+      if (!fs.existsSync(dest) || verification.missing.length > 0 || verification.modified.length > 0) {
+        const state = fs.existsSync(dest) && verification.missing.length === 0 ? 'modified' : 'missing';
+        const evidence = [
+          ...verification.missing,
+          ...verification.modified,
+          ...(verification.unknown.length > 0 ? verification.unknown : []),
+        ];
+        blockers.push(makeStatusRow(
+          targetDir,
+          component,
+          latest,
+          state,
+          'Legacy renamed schema version 1 component does not exactly match the recorded pre-rename managed files; migration is blocked.',
+          evidence.length > 0 ? evidence : [component.dest],
+        ));
+        continue;
+      }
+      const files = verification.files;
+      const reason = `${latestRef.rename.reason} Migrated as a schema version 2 legacy record; run update to move it to ${latestRef.id}.`;
+      migratable.push(makeStatusRow(targetDir, component, latest, 'current', reason, files.map((file) => file.path)));
+      nextComponents.push({
+        id: component.id,
+        version: component.version,
+        agent: component.agent,
+        kind: latest.kind,
+        source: normalizePortablePath(component.dest),
+        dest: normalizePortablePath(component.dest),
+        files,
+        installedAt: migratedAt,
+        migratedAt,
+        status: 'installed',
+      });
+      continue;
+    }
+
     const source = componentSourcePath(hubRoot, latest);
     const comparison = compareSourceAndDestination(source, dest);
     if (!comparison.matches) {
@@ -9865,6 +9949,46 @@ export function migrateLock(
     skipped,
     lock: writtenLock,
     reason: `${migrated.length} schema version 1 records migrated.`,
+  };
+}
+
+function verifyLegacyRenamedComponentFiles(
+  targetDir: string,
+  componentId: string,
+): { files: ManagedFileRecord[]; missing: string[]; modified: string[]; unknown: string[] } {
+  const expectedFiles = LEGACY_RENAMED_COMPONENT_FILES[componentId];
+  if (!expectedFiles) {
+    return { files: [], missing: [], modified: [], unknown: [componentId] };
+  }
+
+  const files: ManagedFileRecord[] = [];
+  const missing: string[] = [];
+  const modified: string[] = [];
+  for (const expected of expectedFiles) {
+    const filePath = assertSafeRelativePath(targetDir, expected.path);
+    if (!fs.existsSync(filePath)) {
+      missing.push(expected.path);
+      continue;
+    }
+
+    const digest = fileDigest(filePath);
+    if (digest.sha256 !== expected.sha256 || digest.size !== expected.size) {
+      modified.push(expected.path);
+      continue;
+    }
+
+    files.push({
+      path: expected.path,
+      sha256: expected.sha256,
+      size: expected.size,
+    });
+  }
+
+  return {
+    files: files.sort((left, right) => left.path.localeCompare(right.path)),
+    missing,
+    modified,
+    unknown: [],
   };
 }
 

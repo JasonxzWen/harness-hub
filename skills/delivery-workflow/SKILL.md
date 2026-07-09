@@ -28,6 +28,9 @@ Use agentic loops from `workflow-router/references/agentic-loops.md` during deli
 
 - `frontend-acceptance`: a fresh-context verifier gathers browser/user-flow evidence, then a read-only arbiter judges the original task, acceptance criteria, current evidence, and residual risk.
 - `implementation-review`: parallel read-only review lenses inspect correctness, maintainability, tests, security, performance, and harness compliance when relevant.
+- `test-review`: a read-only verifier checks that new or changed tests cover the risk boundary, fail for the intended regression, and avoid brittle fixture-only confidence.
+- `workflow-review`: a read-only verifier checks owner workflow fit, required loop integration, routing drift, and project-rule alignment.
+- `security-review`: a focused read-only verifier checks security-sensitive paths such as auth, credentials, unsafe IO, injection, remote mutation, publishing, or destructive behavior.
 - `docs-consistency`: a documentation/code verifier compares changed docs, installable templates, tests, and implementation; a read-only arbiter reports drift, accepted exceptions, or required fixes.
 - `pr-closeout`: a PR status verifier gathers mergeability, CI/check-run, conflict, and branch-protection evidence; a release-risk arbiter decides which blockers are in-scope and which require user interrupt.
 - `agent-interaction-retro`: `agent-interaction-audit` produces trace evidence; a workflow-learning arbiter recommends rule, eval, source-record, skill, or no-op outcomes.

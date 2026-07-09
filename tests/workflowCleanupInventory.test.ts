@@ -47,3 +47,27 @@ test('workflow cleanup inventory covers the noisy workflow sources', () => {
     expect(doc).toContain(phrase);
   }
 });
+
+test('workflow cleanup inventory keeps install and package count boundaries aligned', () => {
+  const doc = read(inventoryPath);
+  const capabilityIndex = JSON.parse(read('capabilities/index.json')) as {
+    components: Record<string, { kind: string; distribution?: string }>;
+  };
+  const packageJson = JSON.parse(read('package.json')) as { files: string[] };
+  const skillDirs = fs.readdirSync('skills', { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && fs.existsSync(`skills/${entry.name}/SKILL.md`))
+    .map((entry) => entry.name);
+  const targetSkillComponents = Object.values(capabilityIndex.components)
+    .filter((component) => component.kind === 'skill' && (component.distribution || 'target') === 'target');
+  const hubInternalSkillComponents = Object.entries(capabilityIndex.components)
+    .filter(([, component]) => component.kind === 'skill' && component.distribution === 'hub-internal')
+    .map(([id]) => id);
+
+  expect(hubInternalSkillComponents).toContain('skill:hub-maintenance-workflow');
+  expect(packageJson.files).toContain('skills/');
+  expect(doc).toContain(`| Installable skill components | ${targetSkillComponents.length} |`);
+  expect(doc).toContain(`| Local \`skills\` directories | ${skillDirs.length} |`);
+  expect(doc).toContain(`| Packaged source \`skills\` directories | ${skillDirs.length} |`);
+  expect(doc).toContain('`hub-maintenance-workflow` is packaged with the source tree');
+  expect(doc).toContain('excluded from standard target install as `hub-internal`');
+});

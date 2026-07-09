@@ -699,7 +699,56 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'effective-interact summary',
     'repo should change',
   ]);
-  const agentInteractionAuditSignal = (
+  const publicSourceContentSignal = includesAny(text, [
+    'article',
+    'blog',
+    'external article',
+    'external source',
+    'public post',
+    'source-backed post',
+    'source-backed public post',
+  ]);
+  const singleAgentDebugSignal = (
+    includesAny(text, ['agent run', 'single agent', 'single-run', 'tool loop'])
+    && includesAny(text, ['debug', 'failure', 'failed', 'fix', 'introspection', 'recover'])
+  );
+  const agentTraceContextSignal = includesAny(text, [
+    'agent traces',
+    'agent work traces',
+    'claude code',
+    'codex',
+    'cross-session',
+    'conversation',
+    'conversations',
+    'local agent traces',
+    'sessions',
+    'session trace',
+    'tool-call',
+    'tool call',
+    'traces',
+    'work trace',
+  ]) || matchesAny(text, [
+    /\b(?:agent|codex|claude code|tool-call|tool call)\b.*\b(?:session|trace|conversation|work history|audit|recommendation|recommendations|improvement|bottleneck|bottlenecks)\b/,
+    /\b(?:session|trace|conversation|work history)\b.*\b(?:agent|codex|claude code|tool-call|tool call)\b/,
+  ]);
+  const legacyInsightTraceContextSignal = includesAny(text, [
+    'agent traces',
+    'agent work traces',
+    'claude code',
+    'codex',
+    'cross-session',
+    'local agent traces',
+    'session trace',
+    'tool-call',
+    'tool call',
+    'work history',
+    'work trace',
+  ]) || matchesAny(text, [
+    /\b(?:session|sessions|trace|traces|conversation|conversations|work history)\b.*\b(?:agent|codex|claude code|tool-call|tool call)\b/,
+    /\b(?:codex|claude code|tool-call|tool call)\b.*\b(?:session|sessions|trace|traces|conversation|conversations|work history|audit|recommendation|recommendations|improvement|bottleneck|bottlenecks)\b/,
+    /\bagent\b.*\b(?:session|sessions|trace|traces|work history)\b/,
+  ]);
+  const explicitAgentInteractionAuditSignal = (
     includesAny(text, [
       'agent interaction audit',
       'agent-interaction-audit',
@@ -727,22 +776,26 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
       /\b(?:codex|claude code)\b.*\b(?:session|trace|work history)\b.*\b(?:audit|review|profile)\b/,
       /\b(?:agent|tool-call)\b.*\b(?:decision|trace)\b.*\b(?:audit|review)\b/,
       /\bagent[-\s](?:interaction[-\s]audit|session[-\s]analysis|usage[-\s]insight)\b/,
-      /\binsight\b.*\b(?:session|trace|conversation|audit|analysis|recommendation|recommendations|improvement|bottleneck|bottlenecks)\b/,
-      /\b(?:session|trace|conversation|audit|analysis|recommendation|recommendations|improvement|bottleneck|bottlenecks)\b.*\binsight\b/,
       /(?:\u4eba\u673a\u4ea4\u4e92|\u4eba\u673a\u534f\u4f5c).*(?:\u590d\u76d8|\u5ba1\u8ba1|\u5361\u70b9|\u753b\u50cf)/,
       /(?:\u4f1a\u8bdd\u8bb0\u5f55|\u5de5\u4f5c\u8bb0\u5f55).*(?:codex|claude code).*(?:\u68b3\u7406|\u590d\u76d8|\u5ba1\u8ba1)/,
-      /insight.*(?:\u4f1a\u8bdd|\u8f68\u8ff9|\u6d1e\u5bdf|\u5206\u6790|\u590d\u76d8|\u5ba1\u8ba1|\u6539\u8fdb\u5efa\u8bae|\u5efa\u8bae|\u5361\u70b9)/,
-      /(?:\u4f1a\u8bdd|\u8f68\u8ff9|\u6d1e\u5bdf|\u5206\u6790|\u590d\u76d8|\u5ba1\u8ba1|\u6539\u8fdb\u5efa\u8bae|\u5efa\u8bae|\u5361\u70b9).*insight/,
       /(?:codex|claude code|agent|tool-call|\u4ee3\u7406|\u5de5\u5177\u8c03\u7528).*(?:\u4f1a\u8bdd|\u8f68\u8ff9|\u6d1e\u5bdf|\u590d\u76d8|\u5ba1\u8ba1|\u6539\u8fdb\u5efa\u8bae|\u5361\u70b9)/,
       /(?:\u5206\u6790|\u68b3\u7406|\u590d\u76d8|\u5ba1\u8ba1).*(?:\u51e0\u5341\u4e2a|\u591a\u4e2a|\u8de8\u4f1a\u8bdd|\u6700\u8fd1|\u5386\u53f2|\u4e4b\u524d)?.*(?:\u4f1a\u8bdd|session|trace|\u8f68\u8ff9|\u8bb0\u5f55).*(?:\u6d1e\u5bdf|\u6539\u8fdb\u5efa\u8bae|\u5efa\u8bae|\u5361\u70b9|\u89e6\u53d1|\u8c03\u7528)/,
       /(?:\u4f1a\u8bdd|session|trace|\u8f68\u8ff9|\u8bb0\u5f55).*(?:\u6d1e\u5bdf|\u6539\u8fdb\u5efa\u8bae|\u5efa\u8bae|\u5361\u70b9|\u5e94\u8be5\u8c03\u7528|\u6ca1\u8c03\u7528|\u89e6\u53d1\u540e|\u8fc7\u7a0b\u548c\u7ed3\u679c)/,
     ])
-  ) && !sourcePostSignal && !includesAny(text, [
-    'external article',
-    'public post',
-    'source-backed post',
-    'source-backed public post',
-  ]);
+  );
+  const legacyInsightSignal = includesAny(text, ['insight'])
+    && legacyInsightTraceContextSignal
+    && !publicSourceContentSignal
+    && !singleAgentDebugSignal
+    && matchesAny(text, [
+      /\binsight\b.*\b(?:session|trace|conversation|audit|recommendation|recommendations|improvement|bottleneck|bottlenecks)\b/,
+      /\b(?:session|trace|conversation|audit|recommendation|recommendations|improvement|bottleneck|bottlenecks)\b.*\binsight\b/,
+      /insight.*(?:\u4f1a\u8bdd|\u8f68\u8ff9|\u590d\u76d8|\u5ba1\u8ba1|\u6539\u8fdb\u5efa\u8bae|\u5efa\u8bae|\u5361\u70b9)/,
+      /(?:\u4f1a\u8bdd|\u8f68\u8ff9|\u590d\u76d8|\u5ba1\u8ba1|\u6539\u8fdb\u5efa\u8bae|\u5efa\u8bae|\u5361\u70b9).*insight/,
+    ]);
+  const agentInteractionAuditSignal = (explicitAgentInteractionAuditSignal || legacyInsightSignal)
+    && !sourcePostSignal
+    && !singleAgentDebugSignal;
   const docCoauthoringSignal = includesAny(text, [
     'collaboratively draft',
     'decision record',

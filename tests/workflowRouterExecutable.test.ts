@@ -591,6 +591,27 @@ test('workflow check accepts explicit HTML handoff waiver for material delivery'
   expect(result.advisory.warnings).toEqual([]);
 });
 
+test('workflow check accepts legacy insight closeout flag alias', () => {
+  const result = runWorkflowCheck(workflowCheckScript, [
+    '--prompt',
+    'Finish the accepted work: run validation and produce the handoff.',
+    '--phase',
+    'pre-delivery',
+    '--has-validation',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-insight',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
+    '--handoff-waiver',
+    'Plain handoff is enough.',
+  ]);
+
+  expect(result.route.state).toBe('delivery');
+  expect(result.advisory.ok).toBe(true);
+  expect(result.advisory.warnings).toEqual([]);
+});
+
 test('workflow check only warns on read-only owners when mutation is explicitly planned', () => {
   const readOnly = runWorkflowCheck(workflowCheckScript, [
     '--prompt',

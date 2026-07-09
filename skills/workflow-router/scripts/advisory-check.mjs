@@ -86,7 +86,7 @@ function parseArgs(argv) {
       options.htmlHandoffWaiver = readValue(argv, ++index, arg);
     } else if (arg === '--has-closeout-review') {
       options.hasCloseoutReview = true;
-    } else if (arg === '--has-agent-interaction-audit') {
+    } else if (arg === '--has-agent-interaction-audit' || arg === '--has-insight') {
       options.hasAgentInteractionAudit = true;
     } else if (arg === '--has-pr-readiness') {
       options.hasPrReadiness = true;
@@ -372,7 +372,11 @@ function inferCurrentTaskGates(markdown) {
       || sectionHasMeaningfulContent(markdown, 'Validation commands'),
     hasCloseoutReview: sectionHasEvidencePhrase(markdown, 'Finish closeout', ['review', 'subagent', 'independent']),
     hasAgentInteractionAudit: sectionHasEvidencePhrase(markdown, 'Finish closeout', ['agent-interaction-audit'])
-      || sectionHasMeaningfulContent(markdown, 'Agent Interaction Audit Recommendations'),
+      || sectionHasEvidencePhrase(markdown, 'Finish closeout', ['agent interaction audit'])
+      || sectionHasEvidencePhrase(markdown, 'Finish closeout', ['insight audit'])
+      || sectionHasMeaningfulContent(markdown, 'Agent Interaction Audit Recommendations')
+      || sectionHasMeaningfulContent(markdown, 'Agent interaction audit recommendations')
+      || sectionHasMeaningfulContent(markdown, 'Insight Recommendations'),
     hasPrReadiness: sectionHasEvidencePhrase(markdown, 'PR closeout', ['merge', 'conflict', 'ci/check', 'no pr', 'skip'])
       || sectionHasEvidencePhrase(markdown, 'Finish closeout', ['pr', 'merge', 'conflict', 'no pr', 'skip']),
     hasAgenticLoopPlan: sectionHasMeaningfulContent(markdown, 'Agentic loops'),
@@ -539,6 +543,7 @@ Flags:
   --html-handoff-waiver <reason>
   --has-closeout-review
   --has-agent-interaction-audit
+  --has-insight (legacy alias for --has-agent-interaction-audit)
   --has-pr-readiness
   --has-agentic-loop-plan
   --has-acceptance-arbiter

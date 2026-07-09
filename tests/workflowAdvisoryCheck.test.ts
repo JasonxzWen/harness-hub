@@ -220,6 +220,71 @@ test('advisory check passes delivery when validation, closeout evidence, and HTM
   expect(result.warnings).toEqual([]);
 });
 
+test('advisory check keeps legacy insight closeout evidence compatible', () => {
+  const flagAlias = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--has-validation',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-insight',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
+    '--handoff-waiver',
+    'Plain handoff is enough.',
+  ]);
+  const spacedLabelDir = makeTempDir('harness-hub-advisory-agent-interaction-label-');
+  const spacedLabelTask = writeCurrentTask(spacedLabelDir, `${completeCurrentTaskBody()}
+
+## Finish closeout
+
+- Agent interaction audit recommendations: skipped after review; no workflow lesson.
+`);
+  const spacedLabel = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--has-validation',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
+    '--handoff-waiver',
+    'Plain handoff is enough.',
+    '--current-task',
+    spacedLabelTask,
+  ]);
+  const legacyHeadingDir = makeTempDir('harness-hub-advisory-insight-heading-');
+  const legacyHeadingTask = writeCurrentTask(legacyHeadingDir, `${completeCurrentTaskBody()}
+
+## Insight Recommendations
+
+- skipped after review; no workflow lesson.
+`);
+  const legacyHeading = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--has-validation',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
+    '--handoff-waiver',
+    'Plain handoff is enough.',
+    '--current-task',
+    legacyHeadingTask,
+  ]);
+
+  expect(flagAlias.warnings).toEqual([]);
+  expect(spacedLabel.warnings).toEqual([]);
+  expect(legacyHeading.warnings).toEqual([]);
+});
+
 test('advisory check accepts explicit HTML handoff waiver for material delivery', () => {
   const result = runAdvisory([
     '--state',

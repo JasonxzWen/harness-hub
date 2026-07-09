@@ -76,7 +76,7 @@ function parseArgs(argv) {
       options.htmlHandoffWaiver = readValue(argv, ++index, arg);
     } else if (arg === '--has-closeout-review') {
       options.hasCloseoutReview = true;
-    } else if (arg === '--has-agent-interaction-audit') {
+    } else if (arg === '--has-agent-interaction-audit' || arg === '--has-insight') {
       options.hasAgentInteractionAudit = true;
     } else if (arg === '--has-pr-readiness') {
       options.hasPrReadiness = true;
@@ -228,6 +228,7 @@ Flags mirror advisory-check.mjs:
   --html-handoff-waiver <reason>
   --has-closeout-review
   --has-agent-interaction-audit
+  --has-insight (legacy alias for --has-agent-interaction-audit)
   --has-pr-readiness
   --has-agentic-loop-plan
   --has-acceptance-arbiter
