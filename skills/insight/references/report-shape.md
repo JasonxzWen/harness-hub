@@ -63,7 +63,7 @@ Every actionable item must include:
 
 Findings without a validation signal stay in report observations and do not enter the actionable queue.
 
-`patchDraftPath` is `null` by default. It may point to a draft artifact only when evidence is strong, the item is still `new`, the expected future cost reduction priority is P0/P1, the target file is explicit and inside the audited repo, and the proposed change is reversible. Draft artifacts should cite evidence IDs, source classes, counter-evidence, and rejection reasons, not long raw excerpts.
+`patchDraftPath` is `null` by default. It may point to a draft artifact only when evidence is strong, the item is still `new`, the expected future cost reduction priority is P0/P1, the target file is explicit and inside the audited repo, and the proposed change is reversible. Draft artifacts should cite evidence IDs, source classes, counter-evidence, and rejection reasons, not long raw excerpts. For strict report + queue audits, run the builder with `--no-patch-drafts`; the queue should then keep every `patchDraftPath` as `null` and set `patchDraftPolicy` to `disabled-by-request`.
 
 ## Language
 

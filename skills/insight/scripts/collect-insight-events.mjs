@@ -108,6 +108,7 @@ const PROMPT_SKIP_DIRS = new Set([
 const DEFAULT_MAX_FILES = 1200;
 const MAX_FILE_BYTES = 250_000;
 const DEFAULT_JSONL_TAIL_BYTES = 2_000_000;
+const MAX_SCOPE_SAMPLES = 8;
 const AFFINITY_RANK = {
   none: 0,
   weak: 1,
@@ -746,11 +747,22 @@ function includeFile(rootEntry, identity, filePath, stat, sinceDate, warnings, s
   if (rootEntry.scanMode === 'automation-log' && !isAutomationEvidenceFile(filePath)) {
     return false;
   }
-  if (rootEntry.scanMode === 'automation-log'
-    && rootEntry.requiresRepoScope
-    && !isScopedAutomationFile(rootEntry, identity, filePath, warnings)) {
-    scopeStats.skippedOutOfScopeAutomations += 1;
-    return false;
+  if (rootEntry.scanMode === 'automation-log' && rootEntry.requiresRepoScope) {
+    const automationScope = automationScopePathMatch(rootEntry, identity, filePath, warnings);
+    if (!automationScope.scoped) {
+      scopeStats.skippedOutOfScopeAutomations += 1;
+      recordScopeSample(scopeStats.skippedOutOfScopeAutomationSamples, {
+        kind: 'automation',
+        reason: automationScope.reason,
+        host: rootEntry.host,
+        sourceType: rootEntry.sourceType,
+        sourceClass: rootEntry.sourceClass,
+        path: filePath,
+        configPath: automationScope.configPath,
+        scopePath: automationScope.scopePath,
+      });
+      return false;
+    }
   }
   if (rootEntry.scanMode === 'prompt-context' && !isPromptContext) {
     return false;
@@ -785,16 +797,29 @@ function isAutomationEvidenceFile(filePath) {
 }
 
 function isScopedAutomationFile(rootEntry, identity, filePath, warnings) {
+  return automationScopePathMatch(rootEntry, identity, filePath, warnings).scoped;
+}
+
+function automationScopePathMatch(rootEntry, identity, filePath, warnings) {
   if (isInside(filePath, identity.repo)) {
-    return true;
+    return { scoped: true, reason: 'repo-scoped-path', configPath: null, scopePath: filePath };
   }
   const configPath = findAutomationConfigPath(rootEntry, filePath);
   if (!configPath) {
-    return false;
+    return { scoped: false, reason: 'missing-automation-config', configPath: null, scopePath: null };
   }
   const config = readSmallTextFile(configPath, warnings);
   const cwds = extractAutomationCwds(config);
-  return cwds.some((cwd) => isRepoScopePath(cwd, identity));
+  if (cwds.length === 0) {
+    return { scoped: false, reason: 'missing-automation-cwd', configPath, scopePath: null };
+  }
+  for (const cwd of cwds) {
+    const scopeMatch = repoScopePathMatch(cwd, identity);
+    if (scopeMatch.scoped) {
+      return { scoped: true, reason: scopeMatch.reason || 'repo-scoped-cwd', configPath, scopePath: cwd };
+    }
+  }
+  return { scoped: false, reason: 'automation-cwd-outside-current-repo', configPath, scopePath: cwds[0] || null };
 }
 
 function findAutomationConfigPath(rootEntry, filePath) {
@@ -1205,10 +1230,11 @@ function extractJsonlEvents(candidate, content, identity, warnings, scopeStats, 
   let sessionAffinity = assessRepoAffinity(candidate.path, content, candidate.rootEntry, identity);
   let hasScopedCwd = false;
   let includedSameRepoWorktree = false;
+  const scopePaths = [];
   for (const record of records) {
-    const cwd = extractCwd(record.value);
-    if (cwd) {
-      const scopeMatch = repoScopePathMatch(cwd, identity);
+    for (const scopePath of extractScopePaths(record.value)) {
+      scopePaths.push(scopePath);
+      const scopeMatch = repoScopePathMatch(scopePath, identity);
       if (scopeMatch.scoped) {
         hasScopedCwd = true;
         if (scopeMatch.reason && scopeMatch.reason !== 'repo-scoped-cwd') {
@@ -1216,13 +1242,22 @@ function extractJsonlEvents(candidate, content, identity, warnings, scopeStats, 
         }
         sessionAffinity = mergeAffinity(sessionAffinity, repoScopedAffinity([scopeMatch.reason || 'repo-scoped-cwd']));
       } else if (!candidate.rootEntry.requiresRepoScope) {
-        sessionAffinity = mergeAffinity(sessionAffinity, assessRepoAffinity(candidate.path, cwd, candidate.rootEntry, identity));
+        sessionAffinity = mergeAffinity(sessionAffinity, assessRepoAffinity(candidate.path, scopePath, candidate.rootEntry, identity));
       }
     }
   }
 
   if (candidate.rootEntry.requiresRepoScope && !hasScopedCwd) {
     scopeStats.skippedOutOfScopeSessions += 1;
+    recordScopeSample(scopeStats.skippedOutOfScopeSessionSamples, {
+      kind: 'session',
+      reason: scopePaths.length > 0 ? 'scope-path-outside-current-repo' : 'missing-cwd-or-workspace',
+      host: candidate.rootEntry.host,
+      sourceType: candidate.rootEntry.sourceType,
+      sourceClass: candidate.rootEntry.sourceClass,
+      path: candidate.path,
+      scopePath: scopePaths[0] || null,
+    });
     return [];
   }
   if (includedSameRepoWorktree) {
@@ -1270,6 +1305,47 @@ function extractCwd(record) {
     || record?.message?.cwd
     || record?.toolUseResult?.cwd
     || null;
+}
+
+function extractScopePaths(record) {
+  const candidates = [
+    extractCwd(record),
+    record?.payload?.workspace,
+    record?.payload?.workspaceRoot,
+    record?.payload?.workspace_root,
+    record?.payload?.workspace?.root,
+    record?.workspace,
+    record?.workspaceRoot,
+    record?.workspace_root,
+  ];
+  const rootArrays = [
+    record?.payload?.workspace_roots,
+    record?.payload?.workspaceRoots,
+    record?.workspace_roots,
+    record?.workspaceRoots,
+  ];
+  for (const roots of rootArrays) {
+    if (Array.isArray(roots)) {
+      candidates.push(...roots);
+    }
+  }
+  return unique(compact(candidates));
+}
+
+function recordScopeSample(samples, sample) {
+  if (!Array.isArray(samples) || samples.length >= MAX_SCOPE_SAMPLES) {
+    return;
+  }
+  const normalized = Object.fromEntries(
+    Object.entries(sample)
+      .filter(([, value]) => value !== null && value !== undefined && value !== '')
+      .map(([key, value]) => [key, typeof value === 'string' ? value.slice(0, 500) : value]),
+  );
+  const key = `${normalized.kind}:${normalized.reason}:${normalized.path}`;
+  if (samples.some((entry) => `${entry.kind}:${entry.reason}:${entry.path}` === key)) {
+    return;
+  }
+  samples.push(normalized);
 }
 
 function extractCodexRecord(record) {
@@ -1463,6 +1539,8 @@ export function collectInsightEvents(options) {
     skippedOutOfScopeSessions: 0,
     skippedOutOfScopeAutomations: 0,
     includedSameRepoWorktreeSessions: 0,
+    skippedOutOfScopeSessionSamples: [],
+    skippedOutOfScopeAutomationSamples: [],
   };
   const roots = discoverRoots(options, identity, hosts, warnings);
   const outDir = path.resolve(options.out || defaultOutDir(identity));

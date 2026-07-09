@@ -450,7 +450,7 @@ test('insight report writes patch draft artifacts only for strong targeted findi
     'Keep project guidance evidence-backed.',
   ].join('\n'));
 
-  function runReport(events: Array<Record<string, unknown>>, name: string) {
+  function runReport(events: Array<Record<string, unknown>>, name: string, extraArgs: string[] = []) {
     const outDir = path.join(root, name);
     const ledgerPath = path.join(outDir, 'insight-events.jsonl');
     const manifestPath = path.join(outDir, 'insight-manifest.json');
@@ -473,11 +473,13 @@ test('insight report writes patch draft artifacts only for strong targeted findi
       manifestPath,
       '--out',
       reportPath,
+      ...extraArgs,
       '--json',
     ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
     expect(report.status, report.stderr || report.stdout).toBe(0);
     const payload = JSON.parse(report.stdout) as { improvementQueuePath: string };
     const queue = JSON.parse(fs.readFileSync(payload.improvementQueuePath, 'utf8')) as {
+      policy: { patchDraftPolicy: string };
       counts: { patchDrafts: number };
       items: Array<{
         category: string;
@@ -531,6 +533,46 @@ test('insight report writes patch draft artifacts only for strong targeted findi
   expect(draft).toContain('diff --git a/AGENTS.md b/AGENTS.md');
   expect(draft).toContain('Insight Project Rule Candidate');
   expect(fs.readFileSync(path.join(repo, 'AGENTS.md'), 'utf8')).not.toContain('Insight Project Rule Candidate');
+
+  const noDraft = runReport([
+    {
+      id: 'evt-no-draft-user-friction',
+      ts: now,
+      host: 'codex',
+      sourceType: 'user-host-trace',
+      sourceClass: 'host-trace',
+      evidenceRole: 'interaction',
+      eventType: 'user-message',
+      path: path.join(root, 'session.jsonl'),
+      relevance: 'confirmed',
+      repoAffinity: 'exact',
+      confidence: 'high',
+      signals: { userFriction: true, guidanceDrift: true, promptContext: true },
+      excerpt: 'User corrected misleading project guidance.',
+    },
+    {
+      id: 'evt-no-draft-tool-friction',
+      ts: now,
+      host: 'codex',
+      sourceType: 'user-host-trace',
+      sourceClass: 'host-trace',
+      evidenceRole: 'interaction',
+      eventType: 'tool-result',
+      path: path.join(root, 'session.jsonl'),
+      relevance: 'confirmed',
+      repoAffinity: 'exact',
+      confidence: 'high',
+      signals: { userFriction: true, guidanceDrift: true },
+      excerpt: 'The same stale instruction caused the agent to follow the wrong path again.',
+    },
+  ], 'strong-no-drafts', ['--no-patch-drafts']);
+  const noDraftRule = noDraft.queue.items.find((item) => item.category === 'project-rule-candidate');
+  expect(noDraft.queue.policy.patchDraftPolicy).toBe('disabled-by-request');
+  expect(noDraftRule?.status).toBe('new');
+  expect(noDraftRule?.evidenceTier).toBe('strong');
+  expect(noDraftRule?.patchDraftPath).toBeNull();
+  expect(noDraft.queue.counts.patchDrafts).toBe(0);
+  expect(fs.existsSync(path.join(path.dirname(noDraft.queuePath), 'patch-drafts'))).toBe(false);
 
   const weak = runReport([
     {
@@ -655,6 +697,19 @@ test('insight collector keeps host sessions and automations inside the invoking 
       skippedOutOfScopeSessions: number;
       skippedOutOfScopeAutomations: number;
       includedSameRepoWorktreeSessions: number;
+      skippedOutOfScopeSessionSamples: Array<{
+        reason: string;
+        path: string;
+        scopePath?: string;
+        sourceClass: string;
+      }>;
+      skippedOutOfScopeAutomationSamples: Array<{
+        reason: string;
+        path: string;
+        configPath?: string;
+        scopePath?: string;
+        sourceClass: string;
+      }>;
     };
   };
 
@@ -668,6 +723,15 @@ test('insight collector keeps host sessions and automations inside the invoking 
   expect(manifest.scope.includedSameRepoWorktreeSessions).toBeGreaterThanOrEqual(1);
   expect(manifest.scope.skippedOutOfScopeSessions).toBeGreaterThanOrEqual(2);
   expect(manifest.scope.skippedOutOfScopeAutomations).toBeGreaterThanOrEqual(1);
+  expect(manifest.scope.skippedOutOfScopeSessionSamples.length).toBeGreaterThanOrEqual(2);
+  expect(manifest.scope.skippedOutOfScopeAutomationSamples.length).toBeGreaterThanOrEqual(1);
+  expect(manifest.scope.skippedOutOfScopeSessionSamples.map((sample) => sample.reason)).toContain('scope-path-outside-current-repo');
+  expect(manifest.scope.skippedOutOfScopeSessionSamples.map((sample) => sample.reason)).toContain('missing-cwd-or-workspace');
+  expect(manifest.scope.skippedOutOfScopeAutomationSamples.map((sample) => sample.reason)).toContain('automation-cwd-outside-current-repo');
+  expect(manifest.scope.skippedOutOfScopeSessionSamples.some((sample) => sample.scopePath?.includes(otherRepo))).toBe(true);
+  expect(manifest.scope.skippedOutOfScopeAutomationSamples.some((sample) => sample.configPath?.endsWith('automation.toml'))).toBe(true);
+  expect(JSON.stringify(manifest.scope.skippedOutOfScopeSessionSamples)).not.toContain('out-of-scope codex session mentions');
+  expect(JSON.stringify(manifest.scope.skippedOutOfScopeAutomationSamples)).not.toContain('out-of-scope automation memory mentions');
 }, 20_000);
 
 test('insight report weights bottlenecks toward primary interaction evidence', () => {
