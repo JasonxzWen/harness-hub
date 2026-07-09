@@ -38,6 +38,7 @@ const QUEUE_PRIORITY_SCORE = { P0: 3, P1: 2, P2: 1 };
 const COST_REDUCTION_SCORE = { high: 3, medium: 2, low: 1, unknown: 0 };
 const EVIDENCE_TIER_SCORE = { strong: 3, medium: 2, weak: 1, unknown: 0 };
 const RISK_SCORE = { low: 3, medium: 2, high: 1, unknown: 0 };
+const PATCH_DRAFT_PRIORITIES = new Set(['P0', 'P1']);
 
 function usage() {
   return `Usage: node skills/insight/scripts/build-insight-report.mjs --ledger <events.jsonl> [--manifest <manifest.json>] [--out <report.md>] [--effective-interact-input <input.json>] [--json]
@@ -746,7 +747,7 @@ function formatLearningMap(events) {
   return rows.map((row) => `- ${row.signal}: ${row.count} event(s). Evidence: ${formatEvidenceIds(row.ids)}.`).join('\n') + '\n';
 }
 
-function buildImprovementQueue(events, manifest, warnings) {
+function buildImprovementQueue(events, manifest, warnings, outputDir = null) {
   const itemConfigs = [
     {
       category: 'project-rule-candidate',
@@ -760,6 +761,11 @@ function buildImprovementQueue(events, manifest, warnings) {
       validationSignal: 'A routing or insight fixture reproduces the phrase/pattern and selects the intended workflow or recommendation category.',
       expectedFutureCostReduction: 'high',
       risk: 'medium',
+      patchDraft: {
+        targetPath: 'AGENTS.md',
+        kind: 'markdown-append',
+        heading: 'Insight Project Rule Candidate',
+      },
       costRationale: {
         frequency: 'medium',
         timeLostPerOccurrence: 'medium',
@@ -806,6 +812,11 @@ function buildImprovementQueue(events, manifest, warnings) {
       expectedFutureCostReduction: 'medium',
       risk: 'low',
       confirmationPolicy: 'agent-actionable-after-review',
+      patchDraft: {
+        targetPath: 'AGENTS.md',
+        kind: 'markdown-append',
+        heading: 'Insight SOP Candidate',
+      },
       costRationale: {
         frequency: 'medium',
         timeLostPerOccurrence: 'medium',
@@ -872,6 +883,11 @@ function buildImprovementQueue(events, manifest, warnings) {
       validationSignal: 'The workflow advisory or owner-contract test captures the new gate and passes after the contract change.',
       expectedFutureCostReduction: 'high',
       risk: 'medium',
+      patchDraft: {
+        targetPath: 'skills/workflow-router/SKILL.md',
+        kind: 'markdown-append',
+        heading: 'Insight Workflow Contract Candidate',
+      },
       costRationale: {
         frequency: 'medium',
         timeLostPerOccurrence: 'high',
@@ -888,8 +904,9 @@ function buildImprovementQueue(events, manifest, warnings) {
     .map((config) => buildQueueItem(events, config))
     .filter(Boolean)
     .sort(compareQueueItems);
+  const configByCategory = new Map(itemConfigs.map((config) => [config.category, config]));
 
-  return {
+  const queue = {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     repo: manifest?.repo || null,
@@ -906,16 +923,21 @@ function buildImprovementQueue(events, manifest, warnings) {
       allowedStatuses: QUEUE_STATUSES,
       allowedCategories: QUEUE_CATEGORIES,
       rawExcerptPolicy: 'report-only',
+      patchDraftPolicy: 'optional-separate-artifact-never-auto-applied',
     },
     counts: {
       total: items.length,
       byCategory: Object.fromEntries(countBy(items, (item) => item.category)),
       byStatus: Object.fromEntries(countBy(items, (item) => item.status)),
       byPriority: Object.fromEntries(countBy(items, (item) => item.priority)),
+      patchDrafts: 0,
     },
     warnings,
     items,
   };
+
+  attachPatchDraftArtifacts(queue, events, manifest, configByCategory, outputDir);
+  return queue;
 }
 
 function buildQueueItem(events, config) {
@@ -979,6 +1001,127 @@ function buildQueueItem(events, config) {
     counterEvidence: config.counterEvidence || [],
     rejectionReasons: config.rejectionReasons || [],
   };
+}
+
+function attachPatchDraftArtifacts(queue, events, manifest, configByCategory, outputDir) {
+  if (!outputDir) {
+    return;
+  }
+
+  const draftDir = path.join(outputDir, 'patch-drafts');
+  for (const item of queue.items) {
+    const config = configByCategory.get(item.category);
+    const artifact = buildPatchDraftArtifact(item, events, manifest, config?.patchDraft);
+    if (!artifact) {
+      continue;
+    }
+
+    fs.mkdirSync(draftDir, { recursive: true });
+    const relativePath = toPosixPath(path.join('patch-drafts', `${item.id}.patch.md`));
+    fs.writeFileSync(path.join(outputDir, relativePath), artifact, 'utf8');
+    item.patchDraftPath = relativePath;
+    queue.counts.patchDrafts += 1;
+  }
+}
+
+function buildPatchDraftArtifact(item, events, manifest, patchDraft) {
+  if (!isPatchDraftEligible(item, manifest, patchDraft)) {
+    return null;
+  }
+  const repoRoot = path.resolve(manifest.repo);
+  const targetPath = toPosixPath(patchDraft.targetPath);
+  const targetAbs = safeResolveUnder(repoRoot, targetPath);
+  if (!targetAbs || !fs.existsSync(targetAbs) || !fs.statSync(targetAbs).isFile()) {
+    return null;
+  }
+
+  const targetText = fs.readFileSync(targetAbs, 'utf8');
+  const evidenceEvents = item.evidenceIds
+    .map((id) => events.find((event) => event.id === id))
+    .filter(Boolean);
+  const diff = buildMarkdownAppendDiff(targetPath, targetText, markdownPatchDraftLines(item, patchDraft, evidenceEvents));
+
+  return [
+    `# Insight Patch Draft: ${item.id}`,
+    '',
+    'Status: draft-only; do not apply automatically.',
+    `Target file: \`${targetPath}\``,
+    `Queue category: \`${item.category}\``,
+    `Evidence tier: \`${item.evidenceTier}\``,
+    `Evidence IDs: ${formatEvidenceIds(item.evidenceIds)}`,
+    `Counter-evidence: ${formatShortList(item.counterEvidence)}`,
+    `Rejection reasons: ${formatShortList(item.rejectionReasons)}`,
+    '',
+    '```diff',
+    diff.trimEnd(),
+    '```',
+    '',
+  ].join('\n');
+}
+
+function formatShortList(values) {
+  if (!Array.isArray(values) || values.length === 0) {
+    return 'none';
+  }
+  return values.map((value) => `\`${String(value)}\``).join(', ');
+}
+
+function isPatchDraftEligible(item, manifest, patchDraft) {
+  return Boolean(
+    patchDraft
+    && patchDraft.kind === 'markdown-append'
+    && manifest?.repo
+    && item.status === 'new'
+    && item.evidenceTier === 'strong'
+    && PATCH_DRAFT_PRIORITIES.has(item.priority)
+  );
+}
+
+function safeResolveUnder(root, relativePath) {
+  const resolved = path.resolve(root, relativePath);
+  const rootWithSep = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
+  return resolved === root || resolved.startsWith(rootWithSep) ? resolved : null;
+}
+
+function markdownPatchDraftLines(item, patchDraft, evidenceEvents) {
+  const sourceClasses = unique(evidenceEvents.map((event) => event.sourceClass || event.sourceType || 'unknown'));
+  return [
+    '',
+    `## ${patchDraft.heading}`,
+    '',
+    `- Candidate: \`${item.id}\``,
+    `- Destination: ${item.targetDestination}`,
+    `- Summary: ${item.summary}`,
+    `- Suggested change: ${item.suggestedChange}`,
+    `- Evidence IDs: ${formatEvidenceIds(item.evidenceIds)}`,
+    `- Source classes: ${sourceClasses.join(', ') || item.sourceClasses.join(', ')}`,
+    `- Validation signal: ${item.validationSignal}`,
+    '',
+  ];
+}
+
+function buildMarkdownAppendDiff(targetPath, targetText, additionLines) {
+  const normalized = targetText.replace(/\r\n/g, '\n');
+  const body = normalized.endsWith('\n') ? normalized.slice(0, -1) : normalized;
+  const lines = body.length > 0 ? body.split('\n') : [];
+  const context = lines.slice(-3);
+  const startLine = context.length > 0 ? Math.max(1, lines.length - context.length + 1) : 0;
+  const oldRange = context.length > 0 ? `${startLine},${context.length}` : '0,0';
+  const newStart = context.length > 0 ? startLine : 1;
+  const newRange = `${newStart},${context.length + additionLines.length}`;
+  return [
+    `diff --git a/${targetPath} b/${targetPath}`,
+    `--- a/${targetPath}`,
+    `+++ b/${targetPath}`,
+    `@@ -${oldRange} +${newRange} @@`,
+    ...context.map((line) => ` ${line}`),
+    ...additionLines.map((line) => `+${line}`),
+    '',
+  ].join('\n');
+}
+
+function toPosixPath(filePath) {
+  return String(filePath).replaceAll(path.sep, '/');
 }
 
 function evidenceTierFor(events, actionable) {
@@ -1392,7 +1535,7 @@ export function buildInsightReport(options) {
   const recs = recommendations(events, bottlenecks, manifest);
   const outPath = path.resolve(options.out || path.join(path.dirname(path.resolve(options.ledger)), 'insight-report.md'));
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  const improvementQueue = buildImprovementQueue(events, manifest, warnings);
+  const improvementQueue = buildImprovementQueue(events, manifest, warnings, path.dirname(outPath));
   const improvementQueuePath = path.join(path.dirname(outPath), 'insight-improvement-queue.json');
 
   const hostRows = countBy(events, (event) => event.host);

@@ -16,11 +16,11 @@ If this skill is loaded, the answer must contain actual insights and recommendat
 
 Use layered evidence and confidence levels. Strong insights require confirmed, non-low-confidence interaction evidence with exact or strong repository affinity. Candidate traces, ordinary repo state, low-confidence evidence, or sparse samples can support only weak leads, unknowns, or next-instrumentation recommendations. Do not fabricate patterns to fill the report shape.
 
-Default scope: last 30 days, current repository, Codex and Claude Code. The user may override the window, repository, host roots, prompt roots, or automation roots.
+Default scope: last 30 days, current repository, Codex and Claude Code. User-level sessions and scheduled tasks are in scope only when their cwd, workspace, or automation config resolves inside the repository passed with `--repo`; text mentions of the repository name, package, or remote do not pull an otherwise external run into scope. The user may override the window, repository, host roots, prompt roots, automation roots, or explicitly allow cross-repo collection.
 
 Current executable capabilities:
 
-- collect project-related Codex and Claude Code events into a local JSONL ledger;
+- collect current-repo Codex and Claude Code events into a local JSONL ledger;
 - collect repository state, prompt/rule context, and automation log evidence as separate source classes;
 - classify evidence by relevance, repo affinity, confidence, evidence role, event type, and learning signals;
 - build a private Markdown report, machine-readable improvement queue JSON, and optional `effective-interact` input;
@@ -29,7 +29,7 @@ Current executable capabilities:
 ## Boundaries
 
 - Default to read-only analysis. Do not edit project files, memory, schedules, tasks, remotes, PRs, or tracked docs.
-- Read project-related local evidence broadly. Sensitive local evidence may be used in the private report.
+- Read current-repo local evidence broadly. Sensitive local evidence may be used in the private report, but default collection must not cross into unrelated sessions or automations just because their text mentions this repository.
 - Write report output to an ignored or outside-repo local path by default. Do not publish, push, post, or place raw evidence in tracked docs unless the user explicitly asks.
 - Support Codex and Claude Code in v1. Treat other hosts as out of scope unless the user provides a trace export.
 - Keep the skill portable. Do not assume Harness Hub files exist in the target repository.
@@ -39,7 +39,7 @@ Current executable capabilities:
 
 1. Establish the audit window. Default to the last 30 days unless the user specifies another range.
 2. Identify the repository: current path, project name, package metadata when present, and git remote when available.
-3. Collect evidence with `scripts/collect-insight-events.mjs`. Include repo-local context, layered prompt/rule context, automation logs, and project-related host traces. Keep source class, repo affinity, confidence, confirmed relevance, and candidate relevance separate.
+3. Collect evidence with `scripts/collect-insight-events.mjs`. Include repo-local context, layered prompt/rule context, automation logs, and current-repo host traces. Keep source class, repo affinity, confidence, confirmed relevance, and candidate relevance separate.
 4. Build a private report with `scripts/build-insight-report.mjs`.
 5. Read both `insight-report.md` and `insight-improvement-queue.json` before answering. Do not rely on memory-only impressions.
 6. For high-volume, multi-session, multi-case, or option-heavy audits, also generate an `effective-interact` input with `--effective-interact-input <input.json>` and use a validated HTML artifact as the presentation layer. `insight` still owns the analysis.
@@ -67,13 +67,15 @@ Collect with explicit nonstandard roots:
 node skills/insight/scripts/collect-insight-events.mjs --repo . --since 30d --prompt-root <path> --automation-root <path> --codex-root <path> --claude-root <path> --json
 ```
 
+Explicit host and automation roots remain repo-scoped by default. Use `--include-cross-repo` only when the intended audit is deliberately cross-checkout or cross-repository.
+
 Build the report:
 
 ```bash
 node skills/insight/scripts/build-insight-report.mjs --ledger <events.jsonl> --manifest <manifest.json> --json
 ```
 
-This writes `insight-report.md` and `insight-improvement-queue.json` in the output directory. The Markdown report is for humans; the JSON queue is the authoritative machine-readable action queue.
+This writes `insight-report.md` and `insight-improvement-queue.json` in the output directory. When evidence is strong and a target file is explicit, it may also write separate `patch-drafts/*.patch.md` draft artifacts. The Markdown report is for humans; the JSON queue is the authoritative machine-readable action queue.
 
 Build the report plus an `effective-interact` visual-report input:
 
@@ -118,9 +120,11 @@ V1 categories:
 - `eval-case-candidate`
 - `workflow-change-candidate`
 
-Each item must include stable `id`, `status`, `actionability`, `scope`, `targetDestination`, `summary`, `suggestedChange`, `evidenceIds`, `evidenceTier`, `sourceClasses`, `privacy`, `rawExcerptPolicy`, `confirmationPolicy`, `costRationale`, `expectedFutureCostReduction`, `risk`, `priority`, `validationSignal`, `counterEvidence`, and `rejectionReasons`.
+Each item must include stable `id`, `status`, `actionability`, `scope`, `targetDestination`, `summary`, `suggestedChange`, `executionLevel`, `patchDraftPath`, `evidenceIds`, `evidenceTier`, `sourceClasses`, `privacy`, `rawExcerptPolicy`, `confirmationPolicy`, `costRationale`, `expectedFutureCostReduction`, `risk`, `priority`, `validationSignal`, `counterEvidence`, and `rejectionReasons`.
 
 Do not include long raw excerpts in queue items. Raw excerpts belong only in the local private report appendix. Findings without a concrete `validationSignal` stay in the report observations and do not become actionable queue items.
+
+Patch drafts are optional level-2-plus artifacts, not applied changes. Generate a draft only when the item has strong evidence, status `new`, P0/P1 priority, an explicit target file under the audited repo, and a reversible change shape. Store the draft as a separate local `patch-drafts/<queue-id>.patch.md` artifact and leave `patchDraftPath: null` for weak, vague, or untargeted items.
 
 ## Output Quality Bar
 
@@ -129,7 +133,7 @@ Do not include long raw excerpts in queue items. Raw excerpts belong only in the
 - Recommendations should be operational: add a routing case, change a skill contract, record a state file, run a validation command, ask a narrower intake question, or change a handoff shape.
 - SOP recommendations should name the durable target: project rule, validation script, runbook, eval case, wiki/cache entry, or workflow change.
 - Knowledge-cache recommendations should cite repeated rediscovery evidence and should not write memory by default.
-- Improvement queue items should be actionable enough for a later human-confirmed patch, eval case, SOP, or knowledge-cache update, but `insight` must not apply them automatically.
+- Improvement queue items should be actionable enough for a later human-confirmed patch, eval case, SOP, or knowledge-cache update, but `insight` must not apply them automatically. Patch drafts are review artifacts only.
 - It is acceptable to return fewer than three strong insights or recommendations when evidence is thin. Label weak findings by evidence tier instead of padding the report.
 - Use `effective-interact` for dense final reports when navigation, visual comparison, evidence coverage, trace clusters, or option tradeoffs would reduce human interpretation cost. Use it as the presentation layer only; `insight` still owns the analysis and recommendations.
 - When an `effective-interact` artifact is generated, validate it before handoff. If HTML is waived, unavailable, or the audit is thin enough for Markdown, say why.

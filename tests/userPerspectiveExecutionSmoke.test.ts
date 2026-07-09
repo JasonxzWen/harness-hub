@@ -128,6 +128,40 @@ function runWorkflowCheck(scriptPath: string, prompt: string, extraArgs: string[
   return JSON.parse(output) as WorkflowCheckResult;
 }
 
+function runWorkflowCheckBatch(scriptPath: string, cases: WorkflowSmokeCase[], cwd = process.cwd()): {
+  schemaVersion: 1;
+  mutates: boolean;
+  dispatchesSubagents: boolean;
+  results: Array<{
+    id: string | null;
+    index: number;
+    result: WorkflowCheckResult;
+  }>;
+} {
+  const batchDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-user-workflow-batch-'));
+  const batchPath = path.join(batchDir, 'cases.json');
+  fs.writeFileSync(batchPath, `${JSON.stringify(cases.map((entry, index) => ({
+    id: `case-${index}`,
+    prompt: entry.prompt,
+    args: entry.args ?? [],
+  })), null, 2)}\n`);
+  const output = execFileSync(process.execPath, [scriptPath, '--batch-json', batchPath, '--json'], {
+    cwd,
+    encoding: 'utf8',
+  });
+
+  return JSON.parse(output) as {
+    schemaVersion: 1;
+    mutates: boolean;
+    dispatchesSubagents: boolean;
+    results: Array<{
+      id: string | null;
+      index: number;
+      result: WorkflowCheckResult;
+    }>;
+  };
+}
+
 function runActivationCheck(scriptPath: string, prompt: string): ActivationCheckResult {
   const output = execFileSync(process.execPath, [scriptPath, '--prompt', prompt, '--json'], {
     encoding: 'utf8',
@@ -270,10 +304,18 @@ test('installed workflow check has a passing gate path for every owner state', (
       args: ['--has-validation', '--has-html-handoff', '--has-closeout-review', '--has-pr-readiness', '--has-insight', '--has-acceptance-arbiter', '--has-final-review-arbiter', '--material-changes'],
     },
   ];
+  const batch = runWorkflowCheckBatch(workflowCheckScript, cases, targetDir);
 
-  for (const entry of cases) {
-    const result = runWorkflowCheck(workflowCheckScript, entry.prompt, entry.args ?? [], targetDir);
+  expect(batch.schemaVersion).toBe(1);
+  expect(batch.results.length).toBe(cases.length);
+  expect(batch.mutates).toBe(false);
+  expect(batch.dispatchesSubagents).toBe(false);
 
+  for (const [index, entry] of cases.entries()) {
+    const result = batch.results[index].result;
+
+    expect(batch.results[index].id).toBe(`case-${index}`);
+    expect(batch.results[index].index).toBe(index);
     expect(result.route.state).toBe(entry.state);
     expect(result.route.owner).toBe(entry.owner);
     if (entry.expectedOutputMode !== undefined) {

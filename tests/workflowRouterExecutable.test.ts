@@ -136,6 +136,35 @@ function runWorkflowCheck(scriptPath: string, args: string[]): {
   };
 }
 
+function runWorkflowCheckBatch(scriptPath: string, cases: Array<{ id?: string; prompt: string; args?: string[] }>): {
+  schemaVersion: 1;
+  mutates: boolean;
+  dispatchesSubagents: boolean;
+  results: Array<{
+    id: string | null;
+    index: number;
+    result: ReturnType<typeof runWorkflowCheck>;
+  }>;
+} {
+  const batchDir = makeTempDir('harness-hub-workflow-check-batch-');
+  const batchPath = path.join(batchDir, 'cases.json');
+  fs.writeFileSync(batchPath, `${JSON.stringify(cases, null, 2)}\n`);
+  const output = execFileSync(process.execPath, [path.resolve(scriptPath), '--batch-json', batchPath, '--json'], {
+    cwd: makeTempDir(),
+    encoding: 'utf8',
+  });
+  return JSON.parse(output) as {
+    schemaVersion: 1;
+    mutates: boolean;
+    dispatchesSubagents: boolean;
+    results: Array<{
+      id: string | null;
+      index: number;
+      result: ReturnType<typeof runWorkflowCheck>;
+    }>;
+  };
+}
+
 test('workflow-router has an executable side-effect-free classifier', async () => {
   const result = await classify('Review this workflow-router plan and tell me what is risky, but do not change files yet.');
 
@@ -184,6 +213,7 @@ test('workflow-router executable classifier matches routing fixture owners', asy
 test('workflow-check CLI matches routing fixtures and stays side-effect free', () => {
   const fixture = JSON.parse(fs.readFileSync('tests/fixtures/workflow-router-cases.json', 'utf8')) as {
     cases: Array<{
+      id: string;
       prompt: string;
       expectedState: string;
       expectedOwner: string | null;
@@ -191,10 +221,21 @@ test('workflow-check CLI matches routing fixtures and stays side-effect free', (
       requiredGates: string[];
     }>;
   };
+  const batch = runWorkflowCheckBatch(workflowCheckScript, fixture.cases.map((entry) => ({
+    id: entry.id,
+    prompt: entry.prompt,
+  })));
 
-  for (const entry of fixture.cases) {
-    const result = runWorkflowCheck(workflowCheckScript, ['--prompt', entry.prompt]);
+  expect(batch.schemaVersion).toBe(1);
+  expect(batch.results.length).toBe(fixture.cases.length);
+  expect(batch.mutates).toBe(false);
+  expect(batch.dispatchesSubagents).toBe(false);
 
+  for (const [index, entry] of fixture.cases.entries()) {
+    const result = batch.results[index].result;
+
+    expect(batch.results[index].id).toBe(entry.id);
+    expect(batch.results[index].index).toBe(index);
     expect(result.route.state).toBe(entry.expectedState);
     expect(result.route.owner).toBe(entry.expectedOwner);
     expect(result.route.mutationAllowed).toBe(entry.mutationAllowed);

@@ -85,6 +85,8 @@ Prioritize after evidence gating by expected future cost reduction, not by raw e
 
 Every queue item must include `counterEvidence` and `rejectionReasons` so necessary project policy, one-off incidents, or already-covered rules are not accidentally converted into process churn.
 
+Patch drafts are allowed only after the queue item passes the normal gate: strong evidence, `new` status, P0/P1 priority, explicit repo-local target file, and a reversible edit shape. Weak leads, vague destinations, missing target files, or risky changes must keep `patchDraftPath: null`.
+
 ## Recommendation Bar
 
 Recommendations should be few and sharp:
