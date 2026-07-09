@@ -1230,20 +1230,27 @@ function extractJsonlEvents(candidate, content, identity, warnings, scopeStats, 
   let sessionAffinity = assessRepoAffinity(candidate.path, content, candidate.rootEntry, identity);
   let hasScopedCwd = false;
   let includedSameRepoWorktree = false;
-  const scopePaths = [];
+  const primaryScopePaths = [];
+  const workspaceRootScopePaths = [];
   for (const record of records) {
-    for (const scopePath of extractScopePaths(record.value)) {
-      scopePaths.push(scopePath);
-      const scopeMatch = repoScopePathMatch(scopePath, identity);
-      if (scopeMatch.scoped) {
-        hasScopedCwd = true;
-        if (scopeMatch.reason && scopeMatch.reason !== 'repo-scoped-cwd') {
-          includedSameRepoWorktree = true;
-        }
-        sessionAffinity = mergeAffinity(sessionAffinity, repoScopedAffinity([scopeMatch.reason || 'repo-scoped-cwd']));
-      } else if (!candidate.rootEntry.requiresRepoScope) {
-        sessionAffinity = mergeAffinity(sessionAffinity, assessRepoAffinity(candidate.path, scopePath, candidate.rootEntry, identity));
+    const scopePaths = extractScopePathGroups(record.value);
+    primaryScopePaths.push(...scopePaths.primary);
+    workspaceRootScopePaths.push(...scopePaths.workspaceRoots);
+  }
+
+  const scopePaths = candidate.rootEntry.requiresRepoScope && primaryScopePaths.length > 0
+    ? unique(primaryScopePaths)
+    : unique([...primaryScopePaths, ...workspaceRootScopePaths]);
+  for (const scopePath of scopePaths) {
+    const scopeMatch = repoScopePathMatch(scopePath, identity);
+    if (scopeMatch.scoped) {
+      hasScopedCwd = true;
+      if (scopeMatch.reason && scopeMatch.reason !== 'repo-scoped-cwd') {
+        includedSameRepoWorktree = true;
       }
+      sessionAffinity = mergeAffinity(sessionAffinity, repoScopedAffinity([scopeMatch.reason || 'repo-scoped-cwd']));
+    } else if (!candidate.rootEntry.requiresRepoScope) {
+      sessionAffinity = mergeAffinity(sessionAffinity, assessRepoAffinity(candidate.path, scopePath, candidate.rootEntry, identity));
     }
   }
 
@@ -1308,6 +1315,11 @@ function extractCwd(record) {
 }
 
 function extractScopePaths(record) {
+  const scopePaths = extractScopePathGroups(record);
+  return unique(compact([...scopePaths.primary, ...scopePaths.workspaceRoots]));
+}
+
+function extractScopePathGroups(record) {
   const candidates = [
     extractCwd(record),
     record?.payload?.workspace,
@@ -1318,6 +1330,7 @@ function extractScopePaths(record) {
     record?.workspaceRoot,
     record?.workspace_root,
   ];
+  const workspaceRoots = [];
   const rootArrays = [
     record?.payload?.workspace_roots,
     record?.payload?.workspaceRoots,
@@ -1326,10 +1339,13 @@ function extractScopePaths(record) {
   ];
   for (const roots of rootArrays) {
     if (Array.isArray(roots)) {
-      candidates.push(...roots);
+      workspaceRoots.push(...roots);
     }
   }
-  return unique(compact(candidates));
+  return {
+    primary: unique(compact(candidates)),
+    workspaceRoots: unique(compact(workspaceRoots)),
+  };
 }
 
 function recordScopeSample(samples, sample) {

@@ -647,6 +647,21 @@ test('insight collector keeps host sessions and automations inside the invoking 
       },
     }),
   ].join('\n'));
+  writeFile(path.join(codexRoot, 'mixed-workspace.jsonl'), [
+    JSON.stringify({
+      timestamp: '2026-06-20T11:30:00.000Z',
+      type: 'session_meta',
+      payload: { cwd: otherRepo, workspace_roots: [repo] },
+    }),
+    JSON.stringify({
+      timestamp: '2026-06-20T11:31:00.000Z',
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: `mixed workspace codex session mentions ${packageName} but primary cwd belongs elsewhere`,
+      },
+    }),
+  ].join('\n'));
   writeFile(path.join(codexRoot, 'no-cwd.jsonl'), JSON.stringify({
     timestamp: '2026-06-20T12:01:00.000Z',
     type: 'event_msg',
@@ -718,10 +733,11 @@ test('insight collector keeps host sessions and automations inside the invoking 
   expect(ledgerText).toContain('repo-scoped-git-remote');
   expect(ledgerText).toContain('in-scope automation memory');
   expect(ledgerText).not.toContain('out-of-scope codex session');
+  expect(ledgerText).not.toContain('mixed workspace codex session');
   expect(ledgerText).not.toContain('no-cwd codex session');
   expect(ledgerText).not.toContain('out-of-scope automation memory');
   expect(manifest.scope.includedSameRepoWorktreeSessions).toBeGreaterThanOrEqual(1);
-  expect(manifest.scope.skippedOutOfScopeSessions).toBeGreaterThanOrEqual(2);
+  expect(manifest.scope.skippedOutOfScopeSessions).toBeGreaterThanOrEqual(3);
   expect(manifest.scope.skippedOutOfScopeAutomations).toBeGreaterThanOrEqual(1);
   expect(manifest.scope.skippedOutOfScopeSessionSamples.length).toBeGreaterThanOrEqual(2);
   expect(manifest.scope.skippedOutOfScopeAutomationSamples.length).toBeGreaterThanOrEqual(1);
@@ -729,8 +745,12 @@ test('insight collector keeps host sessions and automations inside the invoking 
   expect(manifest.scope.skippedOutOfScopeSessionSamples.map((sample) => sample.reason)).toContain('missing-cwd-or-workspace');
   expect(manifest.scope.skippedOutOfScopeAutomationSamples.map((sample) => sample.reason)).toContain('automation-cwd-outside-current-repo');
   expect(manifest.scope.skippedOutOfScopeSessionSamples.some((sample) => sample.scopePath?.includes(otherRepo))).toBe(true);
+  expect(manifest.scope.skippedOutOfScopeSessionSamples.some((sample) => (
+    sample.path.endsWith('mixed-workspace.jsonl') && sample.scopePath?.includes(otherRepo)
+  ))).toBe(true);
   expect(manifest.scope.skippedOutOfScopeAutomationSamples.some((sample) => sample.configPath?.endsWith('automation.toml'))).toBe(true);
   expect(JSON.stringify(manifest.scope.skippedOutOfScopeSessionSamples)).not.toContain('out-of-scope codex session mentions');
+  expect(JSON.stringify(manifest.scope.skippedOutOfScopeSessionSamples)).not.toContain('mixed workspace codex session mentions');
   expect(JSON.stringify(manifest.scope.skippedOutOfScopeAutomationSamples)).not.toContain('out-of-scope automation memory mentions');
 }, 20_000);
 
