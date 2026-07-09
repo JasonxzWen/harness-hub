@@ -7,9 +7,9 @@ Read current-repository local evidence broadly. Use the widest read-only evidenc
 - Current repository files that explain identity, workflow, state, decisions, validation, and handoff.
 - Layered prompt and rule context: user-level, repository-level, host-local, and project-local `AGENTS.md`, `CLAUDE.md`, host instruction files, and harness context packs when present.
 - Repo-local host work directories for supported agent hosts.
-- User-level host work directories only for sessions whose cwd, workspace, or explicit repo metadata resolves inside the current repository.
+- User-level host work directories only for sessions whose cwd, workspace, or explicit repo metadata resolves inside the current repository, or to another checkout of the same logical repository by Git remote, Git root, or package identity.
 - Session logs, message exports, JSONL traces, tool-call records, task state, local memory files, report artifacts, validation logs, and schedule/task logs when they are scoped to the current repository.
-- Automation logs, recurring task state, monitor output, and scheduled-task memory when their automation config or storage path resolves inside the current repository, or when the user explicitly opts into cross-repo collection.
+- Automation logs, recurring task state, monitor output, and scheduled-task memory when their automation config or storage path resolves inside the current repository or another checkout of the same logical repository, or when the user explicitly opts into cross-repo collection.
 - Generated handoff and progress artifacts when they explain why the next session would behave differently.
 
 ## Evidence Model

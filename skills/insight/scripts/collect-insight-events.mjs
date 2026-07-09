@@ -355,6 +355,7 @@ function discoverRepoIdentity(repoPath) {
     packageName,
     remoteUrl,
     remoteName,
+    scopePathCache: new Map(),
     exactTerms: unique(compact([repo, gitRoot]).flatMap(pathTermVariants)),
     strongTerms: unique(compact([packageName, remoteUrl])),
     weakTerms: unique(compact([basename, remoteName])),
@@ -1024,16 +1025,92 @@ function repoScopedAffinity(matchedTerms = ['repo-scoped-cwd']) {
 }
 
 function isRepoScopePath(value, identity) {
+  return repoScopePathMatch(value, identity).scoped;
+}
+
+function repoScopePathMatch(value, identity) {
   const text = String(value || '').trim();
   if (!text) {
-    return false;
+    return { scoped: false, reason: null };
   }
   const normalized = text.startsWith('file://') ? fileURLToPathSafe(text) : text;
   if (!normalized) {
-    return false;
+    return { scoped: false, reason: null };
   }
   const resolved = path.resolve(normalized);
-  return isInside(resolved, identity.repo);
+  if (isInside(resolved, identity.repo)) {
+    return { scoped: true, reason: 'repo-scoped-cwd' };
+  }
+  const logicalMatch = sameLogicalRepoPath(resolved, identity);
+  return logicalMatch
+    ? { scoped: true, reason: logicalMatch }
+    : { scoped: false, reason: null };
+}
+
+function sameLogicalRepoPath(candidatePath, identity) {
+  const cacheKey = path.resolve(candidatePath);
+  if (identity.scopePathCache?.has(cacheKey)) {
+    return identity.scopePathCache.get(cacheKey);
+  }
+
+  if (!fs.existsSync(candidatePath)) {
+    identity.scopePathCache?.set(cacheKey, null);
+    return null;
+  }
+  const candidateGitRoot = runGit(candidatePath, ['rev-parse', '--show-toplevel']);
+  const candidateRemoteUrl = runGit(candidatePath, ['config', '--get', 'remote.origin.url']);
+  if (sameNormalizedRemote(candidateRemoteUrl, identity.remoteUrl)) {
+    identity.scopePathCache?.set(cacheKey, 'repo-scoped-git-remote');
+    return 'repo-scoped-git-remote';
+  }
+  if (candidateGitRoot && identity.gitRoot && path.resolve(candidateGitRoot) === path.resolve(identity.gitRoot)) {
+    identity.scopePathCache?.set(cacheKey, 'repo-scoped-git-root');
+    return 'repo-scoped-git-root';
+  }
+  const candidatePackageName = readPackageName(candidateGitRoot || candidatePath);
+  const candidateBase = path.basename(candidateGitRoot || candidatePath);
+  if (candidatePackageName
+    && identity.packageName
+    && candidatePackageName === identity.packageName
+    && candidateBase === identity.basename) {
+    identity.scopePathCache?.set(cacheKey, 'repo-scoped-package');
+    return 'repo-scoped-package';
+  }
+  identity.scopePathCache?.set(cacheKey, null);
+  return null;
+}
+
+function readPackageName(repoPath) {
+  const packagePath = path.join(repoPath, 'package.json');
+  if (!fs.existsSync(packagePath)) {
+    return null;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(packagePath, 'utf8')).name || null;
+  } catch {
+    return null;
+  }
+}
+
+function sameNormalizedRemote(first, second) {
+  const normalizedFirst = normalizeRemoteUrl(first);
+  const normalizedSecond = normalizeRemoteUrl(second);
+  return Boolean(normalizedFirst && normalizedSecond && normalizedFirst === normalizedSecond);
+}
+
+function normalizeRemoteUrl(value) {
+  const text = String(value || '').trim().replace(/\\/g, '/');
+  if (!text) {
+    return null;
+  }
+  const github = text.match(/github\.com[:/]([^/]+\/.+?)(?:\.git)?$/i);
+  if (github) {
+    return `github.com/${github[1].replace(/\.git$/i, '').toLowerCase()}`;
+  }
+  return text
+    .replace(/^git\+/, '')
+    .replace(/\.git$/i, '')
+    .toLowerCase();
 }
 
 function fileURLToPathSafe(value) {
@@ -1127,12 +1204,17 @@ function extractJsonlEvents(candidate, content, identity, warnings, scopeStats, 
 
   let sessionAffinity = assessRepoAffinity(candidate.path, content, candidate.rootEntry, identity);
   let hasScopedCwd = false;
+  let includedSameRepoWorktree = false;
   for (const record of records) {
     const cwd = extractCwd(record.value);
     if (cwd) {
-      if (isRepoScopePath(cwd, identity)) {
+      const scopeMatch = repoScopePathMatch(cwd, identity);
+      if (scopeMatch.scoped) {
         hasScopedCwd = true;
-        sessionAffinity = mergeAffinity(sessionAffinity, repoScopedAffinity());
+        if (scopeMatch.reason && scopeMatch.reason !== 'repo-scoped-cwd') {
+          includedSameRepoWorktree = true;
+        }
+        sessionAffinity = mergeAffinity(sessionAffinity, repoScopedAffinity([scopeMatch.reason || 'repo-scoped-cwd']));
       } else if (!candidate.rootEntry.requiresRepoScope) {
         sessionAffinity = mergeAffinity(sessionAffinity, assessRepoAffinity(candidate.path, cwd, candidate.rootEntry, identity));
       }
@@ -1142,6 +1224,9 @@ function extractJsonlEvents(candidate, content, identity, warnings, scopeStats, 
   if (candidate.rootEntry.requiresRepoScope && !hasScopedCwd) {
     scopeStats.skippedOutOfScopeSessions += 1;
     return [];
+  }
+  if (includedSameRepoWorktree) {
+    scopeStats.includedSameRepoWorktreeSessions += 1;
   }
 
   const events = [];
@@ -1377,6 +1462,7 @@ export function collectInsightEvents(options) {
   const scopeStats = {
     skippedOutOfScopeSessions: 0,
     skippedOutOfScopeAutomations: 0,
+    includedSameRepoWorktreeSessions: 0,
   };
   const roots = discoverRoots(options, identity, hosts, warnings);
   const outDir = path.resolve(options.out || defaultOutDir(identity));

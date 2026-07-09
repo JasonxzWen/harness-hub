@@ -20,6 +20,11 @@ function writeFile(filePath: string, content: string) {
   fs.writeFileSync(filePath, content);
 }
 
+function runGit(cwd: string, args: string[]) {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8', shell: false });
+  expect(result.status, result.stderr || result.stdout).toBe(0);
+}
+
 function makeFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-skill-'));
   const projectName = `insight-target-${path.basename(root).replace(/[^a-z0-9-]/gi, '').toLowerCase()}`;
@@ -554,16 +559,24 @@ test('insight report writes patch draft artifacts only for strong targeted findi
 test('insight collector keeps host sessions and automations inside the invoking repo scope', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-scope-'));
   const repo = path.join(root, 'target-repo');
+  const siblingRepo = path.join(root, 'sibling-worktree');
   const otherRepo = path.join(root, 'other-repo');
   const codexRoot = path.join(root, 'codex-sessions');
   const automationRoot = path.join(root, 'automations');
   const out = path.join(root, 'reports');
   const packageName = '@demo/target-repo';
+  const remoteUrl = 'git@github.com:demo/target-repo.git';
 
   fs.mkdirSync(repo, { recursive: true });
+  fs.mkdirSync(siblingRepo, { recursive: true });
   fs.mkdirSync(otherRepo, { recursive: true });
   writeFile(path.join(repo, 'package.json'), JSON.stringify({ name: packageName }, null, 2));
+  writeFile(path.join(siblingRepo, 'package.json'), JSON.stringify({ name: packageName }, null, 2));
   writeFile(path.join(repo, 'AGENTS.md'), 'Target repo rules.');
+  runGit(repo, ['init', '-q']);
+  runGit(repo, ['remote', 'add', 'origin', remoteUrl]);
+  runGit(siblingRepo, ['init', '-q']);
+  runGit(siblingRepo, ['remote', 'add', 'origin', remoteUrl]);
 
   writeFile(path.join(codexRoot, 'in-scope.jsonl'), [
     JSON.stringify({ timestamp: '2026-06-20T10:00:00.000Z', type: 'session_meta', payload: { cwd: repo } }),
@@ -571,6 +584,14 @@ test('insight collector keeps host sessions and automations inside the invoking 
       timestamp: '2026-06-20T10:01:00.000Z',
       type: 'event_msg',
       payload: { type: 'user_message', message: 'in-scope codex session for target repo' },
+    }),
+  ].join('\n'));
+  writeFile(path.join(codexRoot, 'same-logical-repo.jsonl'), [
+    JSON.stringify({ timestamp: '2026-06-20T10:30:00.000Z', type: 'session_meta', payload: { cwd: siblingRepo } }),
+    JSON.stringify({
+      timestamp: '2026-06-20T10:31:00.000Z',
+      type: 'event_msg',
+      payload: { type: 'user_message', message: 'same logical repo sibling worktree codex session' },
     }),
   ].join('\n'));
   writeFile(path.join(codexRoot, 'out-of-scope.jsonl'), [
@@ -630,17 +651,24 @@ test('insight collector keeps host sessions and automations inside the invoking 
   const collectPayload = JSON.parse(collect.stdout) as { ledgerPath: string; manifestPath: string };
   const ledgerText = fs.readFileSync(collectPayload.ledgerPath, 'utf8');
   const manifest = JSON.parse(fs.readFileSync(collectPayload.manifestPath, 'utf8')) as {
-    scope: { skippedOutOfScopeSessions: number; skippedOutOfScopeAutomations: number };
+    scope: {
+      skippedOutOfScopeSessions: number;
+      skippedOutOfScopeAutomations: number;
+      includedSameRepoWorktreeSessions: number;
+    };
   };
 
   expect(ledgerText).toContain('in-scope codex session');
+  expect(ledgerText).toContain('same logical repo sibling worktree codex session');
+  expect(ledgerText).toContain('repo-scoped-git-remote');
   expect(ledgerText).toContain('in-scope automation memory');
   expect(ledgerText).not.toContain('out-of-scope codex session');
   expect(ledgerText).not.toContain('no-cwd codex session');
   expect(ledgerText).not.toContain('out-of-scope automation memory');
+  expect(manifest.scope.includedSameRepoWorktreeSessions).toBeGreaterThanOrEqual(1);
   expect(manifest.scope.skippedOutOfScopeSessions).toBeGreaterThanOrEqual(2);
   expect(manifest.scope.skippedOutOfScopeAutomations).toBeGreaterThanOrEqual(1);
-});
+}, 20_000);
 
 test('insight report weights bottlenecks toward primary interaction evidence', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-report-weighting-'));
