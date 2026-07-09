@@ -24,6 +24,8 @@ Use layered evidence instead of a flat keyword scan:
 
 Strong conclusions should use `confirmed` evidence. `candidate` evidence is useful for trend discovery and missing-context warnings only after the source has passed the current-repo scope gate.
 
+The manifest should make scope decisions debuggable. It records aggregate skipped counts plus bounded samples for out-of-scope sessions and automations. Samples should include source path, source class/type, cwd/workspace/config path when available, and a short reason. They must not include long raw message excerpts.
+
 Primary bottleneck conclusions should be driven by `interaction` evidence with confirmed exact or strong repo affinity. Repo-state evidence explains background constraints and should not by itself become a top bottleneck or recommendation.
 
 Repo files are not automatically interaction evidence. Treat ordinary source files, installed skill bodies, generated wrappers, builds, reports, and caches as noise unless they are explicit task, decision, progress, handoff, or host trace state.

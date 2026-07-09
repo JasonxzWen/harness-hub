@@ -22,6 +22,7 @@ Current executable capabilities:
 
 - collect current-repo Codex and Claude Code events into a local JSONL ledger;
 - collect repository state, prompt/rule context, and automation log evidence as separate source classes;
+- record bounded skipped-scope samples in the manifest for out-of-scope session and automation debugging;
 - classify evidence by relevance, repo affinity, confidence, evidence role, event type, and learning signals;
 - build a private Markdown report, machine-readable improvement queue JSON, and optional `effective-interact` input;
 - separate strong conclusions from weak leads, unknowns, and next-instrumentation gaps.
@@ -76,6 +77,12 @@ node skills/insight/scripts/build-insight-report.mjs --ledger <events.jsonl> --m
 ```
 
 This writes `insight-report.md` and `insight-improvement-queue.json` in the output directory. When evidence is strong and a target file is explicit, it may also write separate `patch-drafts/*.patch.md` draft artifacts. The Markdown report is for humans; the JSON queue is the authoritative machine-readable action queue.
+
+For strict report + queue audits that should not create patch draft artifacts, add `--no-patch-drafts`:
+
+```bash
+node skills/insight/scripts/build-insight-report.mjs --ledger <events.jsonl> --manifest <manifest.json> --no-patch-drafts --json
+```
 
 Build the report plus an `effective-interact` visual-report input:
 

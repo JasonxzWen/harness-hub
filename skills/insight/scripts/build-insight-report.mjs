@@ -41,10 +41,11 @@ const RISK_SCORE = { low: 3, medium: 2, high: 1, unknown: 0 };
 const PATCH_DRAFT_PRIORITIES = new Set(['P0', 'P1']);
 
 function usage() {
-  return `Usage: node skills/insight/scripts/build-insight-report.mjs --ledger <events.jsonl> [--manifest <manifest.json>] [--out <report.md>] [--effective-interact-input <input.json>] [--json]
+  return `Usage: node skills/insight/scripts/build-insight-report.mjs --ledger <events.jsonl> [--manifest <manifest.json>] [--out <report.md>] [--effective-interact-input <input.json>] [--no-patch-drafts] [--json]
 
 Builds a private Markdown report from an insight event ledger.
-Optionally writes an effective-interact JSON input for a visual HTML handoff.`;
+Optionally writes an effective-interact JSON input for a visual HTML handoff.
+Use --no-patch-drafts for strict report + queue runs that should not create draft patch artifacts.`;
 }
 
 function parseArgs(argv) {
@@ -53,6 +54,7 @@ function parseArgs(argv) {
     manifest: null,
     out: null,
     effectiveInteractInput: null,
+    noPatchDrafts: false,
     json: false,
     help: false,
   };
@@ -67,6 +69,8 @@ function parseArgs(argv) {
       options.out = readValue(argv, ++index, arg);
     } else if (arg === '--effective-interact-input') {
       options.effectiveInteractInput = readValue(argv, ++index, arg);
+    } else if (arg === '--no-patch-drafts') {
+      options.noPatchDrafts = true;
     } else if (arg === '--json') {
       options.json = true;
     } else if (arg === '--help' || arg === '-h') {
@@ -747,7 +751,7 @@ function formatLearningMap(events) {
   return rows.map((row) => `- ${row.signal}: ${row.count} event(s). Evidence: ${formatEvidenceIds(row.ids)}.`).join('\n') + '\n';
 }
 
-function buildImprovementQueue(events, manifest, warnings, outputDir = null) {
+function buildImprovementQueue(events, manifest, warnings, outputDir = null, options = {}) {
   const itemConfigs = [
     {
       category: 'project-rule-candidate',
@@ -923,7 +927,9 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null) {
       allowedStatuses: QUEUE_STATUSES,
       allowedCategories: QUEUE_CATEGORIES,
       rawExcerptPolicy: 'report-only',
-      patchDraftPolicy: 'optional-separate-artifact-never-auto-applied',
+      patchDraftPolicy: options.noPatchDrafts
+        ? 'disabled-by-request'
+        : 'optional-separate-artifact-never-auto-applied',
     },
     counts: {
       total: items.length,
@@ -936,7 +942,9 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null) {
     items,
   };
 
-  attachPatchDraftArtifacts(queue, events, manifest, configByCategory, outputDir);
+  if (!options.noPatchDrafts) {
+    attachPatchDraftArtifacts(queue, events, manifest, configByCategory, outputDir);
+  }
   return queue;
 }
 
@@ -1535,7 +1543,9 @@ export function buildInsightReport(options) {
   const recs = recommendations(events, bottlenecks, manifest);
   const outPath = path.resolve(options.out || path.join(path.dirname(path.resolve(options.ledger)), 'insight-report.md'));
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  const improvementQueue = buildImprovementQueue(events, manifest, warnings, path.dirname(outPath));
+  const improvementQueue = buildImprovementQueue(events, manifest, warnings, path.dirname(outPath), {
+    noPatchDrafts: Boolean(options.noPatchDrafts),
+  });
   const improvementQueuePath = path.join(path.dirname(outPath), 'insight-improvement-queue.json');
 
   const hostRows = countBy(events, (event) => event.host);
