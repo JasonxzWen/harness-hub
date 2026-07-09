@@ -4,7 +4,7 @@ The v1 host adapters support Codex and Claude Code. They are discovery rules, no
 
 ## Codex Adapter
 
-Collect project-related traces from standard repo-level and user-level Codex work locations. Prefer repo-local host work directories, user-level session roots, automation logs, and Codex prompt/rule roots. Use explicit cwd, repo path, package, or remote matches to classify evidence as high-confidence confirmed.
+Collect current-repo traces from standard repo-level and user-level Codex work locations. Prefer repo-local host work directories, user-level session roots, automation logs, and Codex prompt/rule roots. User-level sessions must have cwd or workspace metadata inside `--repo` unless `--include-cross-repo` is explicit; package, remote, or repo-name text matches are not enough to include an external session.
 
 Large Codex JSONL traces should be sampled from the tail by default so recent work is preserved. If older lines matter, rerun collection with a larger `--jsonl-tail-bytes` value.
 
@@ -12,7 +12,7 @@ Codex prompt context includes repository agent instruction files plus repo-local
 
 ## Claude Code Adapter
 
-Collect project-related traces from standard repo-level and user-level Claude Code work locations. Prefer repo-local host work directories, matching encoded project roots, history exports, task state, and Claude prompt/rule roots. Treat project-name-only matches as candidates; classify as confirmed only when cwd, repo path, package, or remote identity is present.
+Collect current-repo traces from standard repo-level and user-level Claude Code work locations. Prefer repo-local host work directories, exact encoded project roots, history exports, task state, and Claude prompt/rule roots. Treat project-name-only matches as out of scope unless the source has already passed the current-repo cwd/workspace gate or `--include-cross-repo` is explicit.
 
 Large Claude Code JSONL traces follow the same tail-sampling rule as Codex traces.
 
@@ -30,10 +30,11 @@ node skills/insight/scripts/collect-insight-events.mjs \
   --claude-root <path> \
   --prompt-root <path> \
   --automation-root <path> \
+  --include-cross-repo \
   --jsonl-tail-bytes <bytes>
 ```
 
-Use multiple overrides by repeating the option or by using the operating system path separator inside one value. Use `--prompt-root` for nonstandard user/project instruction layers and `--automation-root` for scheduled task logs outside the default Codex automation directory.
+Use multiple overrides by repeating the option or by using the operating system path separator inside one value. Use `--prompt-root` for nonstandard user/project instruction layers and `--automation-root` for scheduled task logs outside the default Codex automation directory. Overrides still remain current-repo scoped by default; add `--include-cross-repo` only for deliberate cross-checkout or cross-repository audits.
 
 ## Degraded Mode
 

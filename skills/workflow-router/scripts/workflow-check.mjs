@@ -37,6 +37,7 @@ function parseArgs(argv) {
     willMutate: false,
     expectedOutputMode: null,
     currentTaskPath: null,
+    batchFile: null,
     json: false,
     help: false,
   };
@@ -93,6 +94,8 @@ function parseArgs(argv) {
       options.expectedOutputMode = readValue(argv, ++index, arg);
     } else if (arg === '--current-task') {
       options.currentTaskPath = readValue(argv, ++index, arg);
+    } else if (arg === '--batch-json') {
+      options.batchFile = readValue(argv, ++index, arg);
     } else if (arg === '--json') {
       options.json = true;
     } else if (arg === '--help' || arg === '-h') {
@@ -174,9 +177,42 @@ export function checkWorkflow(options) {
   };
 }
 
+function readBatchEntries(batchFile) {
+  const payload = JSON.parse(fs.readFileSync(batchFile, 'utf8'));
+  const entries = Array.isArray(payload) ? payload : payload.cases;
+  if (!Array.isArray(entries)) {
+    throw new Error('--batch-json must point to a JSON array or an object with a cases array');
+  }
+  return entries;
+}
+
+export function checkWorkflowBatch(options) {
+  const entries = readBatchEntries(options.batchFile);
+  const results = entries.map((entry, index) => {
+    if (!entry || typeof entry.prompt !== 'string' || entry.prompt.trim().length === 0) {
+      throw new Error(`Batch entry ${index} must include a non-empty prompt string`);
+    }
+    const entryArgs = Array.isArray(entry.args) ? entry.args : [];
+    const entryOptions = parseArgs(['--prompt', entry.prompt, ...entryArgs]);
+    return {
+      id: typeof entry.id === 'string' ? entry.id : null,
+      index,
+      result: checkWorkflow(entryOptions),
+    };
+  });
+
+  return {
+    schemaVersion: 1,
+    mutates: false,
+    dispatchesSubagents: false,
+    results,
+  };
+}
+
 function printHelp() {
   console.log(`Usage: workflow-check.mjs --prompt <request> [--phase <phase>] [flags] [--json]
        workflow-check.mjs --prompt-file <file> [--phase <phase>] [flags] [--json]
+       workflow-check.mjs --batch-json <file> [--json]
 
 Flags mirror advisory-check.mjs:
   --has-spec
@@ -200,6 +236,7 @@ Flags mirror advisory-check.mjs:
   --will-mutate
   --expected-output-mode <mode>
   --current-task <path>
+  --batch-json <file>
 
 This command composes intent routing, advisory gates, and owner contract checks. It is side-effect free:
 it never edits files, dispatches subagents, calls remote services, or starts implementation.`);
@@ -227,6 +264,13 @@ function printText(result) {
   console.log(`NEXT_ACTION: ${result.nextAction}`);
 }
 
+function printBatchText(batch) {
+  for (const entry of batch.results) {
+    console.log(`# ${entry.index}${entry.id ? ` ${entry.id}` : ''}`);
+    printText(entry.result);
+  }
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     const options = parseArgs(process.argv.slice(2));
@@ -234,9 +278,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       printHelp();
       process.exitCode = 0;
     } else {
-      const result = checkWorkflow(options);
+      const result = options.batchFile ? checkWorkflowBatch(options) : checkWorkflow(options);
       if (options.json) {
         console.log(JSON.stringify(result, null, 2));
+      } else if (options.batchFile) {
+        printBatchText(result);
       } else {
         printText(result);
       }

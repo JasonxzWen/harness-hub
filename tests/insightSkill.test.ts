@@ -103,7 +103,8 @@ test('insight documents private read-only repository interaction audits', () => 
   expect(skill).toContain('ignored or outside-repo local path');
   expect(skill).toContain('Do not confuse this with `source-post`');
   expect(skill).toContain('Do not confuse this with `agent-introspection-debugging`');
-  expect(dataSources).toContain('Read project-related local evidence broadly');
+  expect(dataSources).toContain('Read current-repository local evidence broadly');
+  expect(dataSources).toContain('only for sessions whose cwd, workspace, or explicit repo metadata resolves inside the current repository');
   expect(dataSources).toContain('Layered prompt and rule context');
   expect(dataSources).toContain('Automation logs');
   expect(dataSources).toContain('`confirmed`');
@@ -290,7 +291,8 @@ test('insight collection and report scripts produce a private audit from fixture
 
   const improvementQueue = JSON.parse(fs.readFileSync(reportPayload.improvementQueuePath, 'utf8')) as {
     schemaVersion: number;
-    policy: { rawExcerptPolicy: string; defaultMutation: string };
+    policy: { rawExcerptPolicy: string; defaultMutation: string; patchDraftPolicy: string };
+    counts: { patchDrafts: number };
     items: Array<{
       id: string;
       category: string;
@@ -301,6 +303,8 @@ test('insight collection and report scripts produce a private audit from fixture
       targetDestination: string;
       summary: string;
       suggestedChange: string;
+      executionLevel: string;
+      patchDraftPath: string | null;
       evidenceIds: string[];
       evidenceTier: string;
       sourceClasses: string[];
@@ -322,6 +326,7 @@ test('insight collection and report scripts produce a private audit from fixture
   expect(improvementQueue.schemaVersion).toBe(1);
   expect(improvementQueue.policy.defaultMutation).toBe('none');
   expect(improvementQueue.policy.rawExcerptPolicy).toBe('report-only');
+  expect(improvementQueue.policy.patchDraftPolicy).toBe('optional-separate-artifact-never-auto-applied');
   expect(categories).toContain('project-rule-candidate');
   expect(categories).toContain('stale-info-removal-candidate');
   expect(categories).toContain('sop-candidate');
@@ -330,6 +335,9 @@ test('insight collection and report scripts produce a private audit from fixture
   expect(categories).toContain('workflow-change-candidate');
   expect(queueText).not.toContain('excerpt');
   expect(queueText).not.toContain('The previous wording was ambiguous');
+  const patchDraftItems = improvementQueue.items.filter((item) => item.patchDraftPath);
+  expect(improvementQueue.counts.patchDrafts).toBe(patchDraftItems.length);
+  expect(patchDraftItems.length).toBeGreaterThan(0);
   for (const item of improvementQueue.items) {
     expect(item.id).toMatch(/^iq-[a-z0-9-]+-[a-f0-9]{10}$/);
     expect(item.tags.length).toBeGreaterThan(0);
@@ -339,6 +347,8 @@ test('insight collection and report scripts produce a private audit from fixture
     expect(item.targetDestination.length).toBeGreaterThan(0);
     expect(item.summary.length).toBeGreaterThan(0);
     expect(item.suggestedChange.length).toBeGreaterThan(0);
+    expect(item.executionLevel).toBe('level-2-actionable-candidate');
+    expect(item.patchDraftPath === null || item.patchDraftPath.startsWith('patch-drafts/')).toBe(true);
     expect(item.evidenceIds.length).toBeGreaterThan(0);
     expect(['strong', 'medium', 'weak']).toContain(item.evidenceTier);
     expect(item.sourceClasses.length).toBeGreaterThan(0);
@@ -356,6 +366,17 @@ test('insight collection and report scripts produce a private audit from fixture
     expect(item.validationSignal.length).toBeGreaterThan(0);
     expect(Array.isArray(item.counterEvidence)).toBe(true);
     expect(Array.isArray(item.rejectionReasons)).toBe(true);
+    if (item.patchDraftPath) {
+      const draftPath = path.join(path.dirname(reportPayload.improvementQueuePath), item.patchDraftPath);
+      expect(fs.existsSync(draftPath)).toBe(true);
+      const draft = fs.readFileSync(draftPath, 'utf8');
+      expect(draft).toContain('Status: draft-only; do not apply automatically.');
+      expect(draft).toContain('```diff');
+      expect(draft).toContain('Evidence IDs:');
+      expect(draft).toContain('Counter-evidence:');
+      expect(draft).toContain('Rejection reasons:');
+      expect(draft).not.toContain('The previous wording was ambiguous');
+    }
   }
 
   const originalIds = improvementQueue.items.map((item) => item.id);
@@ -412,6 +433,214 @@ test('insight collection and report scripts produce a private audit from fixture
   expect(validation.status, validation.stderr || validation.stdout).toBe(0);
   expect(JSON.parse(validation.stdout).ok).toBe(true);
 }, 20_000);
+
+test('insight report writes patch draft artifacts only for strong targeted findings', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-patch-draft-'));
+  const repo = path.join(root, 'repo');
+  const now = '2026-06-20T10:00:00.000Z';
+  fs.mkdirSync(repo, { recursive: true });
+  writeFile(path.join(repo, 'AGENTS.md'), [
+    '# Agent Rules',
+    '',
+    'Keep project guidance evidence-backed.',
+  ].join('\n'));
+
+  function runReport(events: Array<Record<string, unknown>>, name: string) {
+    const outDir = path.join(root, name);
+    const ledgerPath = path.join(outDir, 'insight-events.jsonl');
+    const manifestPath = path.join(outDir, 'insight-manifest.json');
+    const reportPath = path.join(outDir, 'insight-report.md');
+    writeFile(ledgerPath, `${events.map((event) => JSON.stringify(event)).join('\n')}\n`);
+    writeFile(manifestPath, JSON.stringify({
+      schemaVersion: 2,
+      repo,
+      since: now,
+      hosts: ['codex'],
+      identity: { basename: 'repo' },
+      roots: [],
+      warnings: [],
+    }, null, 2));
+    const report = spawnSync(process.execPath, [
+      reportScript,
+      '--ledger',
+      ledgerPath,
+      '--manifest',
+      manifestPath,
+      '--out',
+      reportPath,
+      '--json',
+    ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+    expect(report.status, report.stderr || report.stdout).toBe(0);
+    const payload = JSON.parse(report.stdout) as { improvementQueuePath: string };
+    const queue = JSON.parse(fs.readFileSync(payload.improvementQueuePath, 'utf8')) as {
+      counts: { patchDrafts: number };
+      items: Array<{
+        category: string;
+        status: string;
+        evidenceTier: string;
+        patchDraftPath: string | null;
+      }>;
+    };
+    return { queue, queuePath: payload.improvementQueuePath };
+  }
+
+  const strong = runReport([
+    {
+      id: 'evt-strong-user-friction',
+      ts: now,
+      host: 'codex',
+      sourceType: 'user-host-trace',
+      sourceClass: 'host-trace',
+      evidenceRole: 'interaction',
+      eventType: 'user-message',
+      path: path.join(root, 'session.jsonl'),
+      relevance: 'confirmed',
+      repoAffinity: 'exact',
+      confidence: 'high',
+      signals: { userFriction: true, guidanceDrift: true, promptContext: true },
+      excerpt: 'User corrected misleading project guidance.',
+    },
+    {
+      id: 'evt-strong-tool-friction',
+      ts: now,
+      host: 'codex',
+      sourceType: 'user-host-trace',
+      sourceClass: 'host-trace',
+      evidenceRole: 'interaction',
+      eventType: 'tool-result',
+      path: path.join(root, 'session.jsonl'),
+      relevance: 'confirmed',
+      repoAffinity: 'exact',
+      confidence: 'high',
+      signals: { userFriction: true, guidanceDrift: true },
+      excerpt: 'The same stale instruction caused the agent to follow the wrong path again.',
+    },
+  ], 'strong');
+  const strongRule = strong.queue.items.find((item) => item.category === 'project-rule-candidate');
+  expect(strongRule?.status).toBe('new');
+  expect(strongRule?.evidenceTier).toBe('strong');
+  expect(strongRule?.patchDraftPath).toBeTruthy();
+  expect(strong.queue.counts.patchDrafts).toBeGreaterThan(0);
+  const draftPath = path.join(path.dirname(strong.queuePath), strongRule?.patchDraftPath || '');
+  const draft = fs.readFileSync(draftPath, 'utf8');
+  expect(draft).toContain('diff --git a/AGENTS.md b/AGENTS.md');
+  expect(draft).toContain('Insight Project Rule Candidate');
+  expect(fs.readFileSync(path.join(repo, 'AGENTS.md'), 'utf8')).not.toContain('Insight Project Rule Candidate');
+
+  const weak = runReport([
+    {
+      id: 'evt-weak-context',
+      ts: now,
+      host: 'repo',
+      sourceType: 'repo-context',
+      sourceClass: 'repo-state',
+      evidenceRole: 'context',
+      eventType: 'file-evidence',
+      path: path.join(repo, 'AGENTS.md'),
+      relevance: 'confirmed',
+      repoAffinity: 'background',
+      confidence: 'medium',
+      signals: { userFriction: true, guidanceDrift: true, promptContext: true },
+      excerpt: 'A stale-looking rule may be misleading, but no interaction confirms impact.',
+    },
+  ], 'weak');
+  const weakRule = weak.queue.items.find((item) => item.category === 'project-rule-candidate');
+  expect(weakRule?.status).toBe('needs-more-evidence');
+  expect(weakRule?.evidenceTier).toBe('weak');
+  expect(weakRule?.patchDraftPath).toBeNull();
+  expect(weak.queue.counts.patchDrafts).toBe(0);
+});
+
+test('insight collector keeps host sessions and automations inside the invoking repo scope', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-scope-'));
+  const repo = path.join(root, 'target-repo');
+  const otherRepo = path.join(root, 'other-repo');
+  const codexRoot = path.join(root, 'codex-sessions');
+  const automationRoot = path.join(root, 'automations');
+  const out = path.join(root, 'reports');
+  const packageName = '@demo/target-repo';
+
+  fs.mkdirSync(repo, { recursive: true });
+  fs.mkdirSync(otherRepo, { recursive: true });
+  writeFile(path.join(repo, 'package.json'), JSON.stringify({ name: packageName }, null, 2));
+  writeFile(path.join(repo, 'AGENTS.md'), 'Target repo rules.');
+
+  writeFile(path.join(codexRoot, 'in-scope.jsonl'), [
+    JSON.stringify({ timestamp: '2026-06-20T10:00:00.000Z', type: 'session_meta', payload: { cwd: repo } }),
+    JSON.stringify({
+      timestamp: '2026-06-20T10:01:00.000Z',
+      type: 'event_msg',
+      payload: { type: 'user_message', message: 'in-scope codex session for target repo' },
+    }),
+  ].join('\n'));
+  writeFile(path.join(codexRoot, 'out-of-scope.jsonl'), [
+    JSON.stringify({ timestamp: '2026-06-20T11:00:00.000Z', type: 'session_meta', payload: { cwd: otherRepo } }),
+    JSON.stringify({
+      timestamp: '2026-06-20T11:01:00.000Z',
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: `out-of-scope codex session mentions ${packageName} and target-repo but belongs elsewhere`,
+      },
+    }),
+  ].join('\n'));
+  writeFile(path.join(codexRoot, 'no-cwd.jsonl'), JSON.stringify({
+    timestamp: '2026-06-20T12:01:00.000Z',
+    type: 'event_msg',
+    payload: {
+      type: 'user_message',
+      message: `no-cwd codex session mentions ${packageName} but has no repo scope metadata`,
+    },
+  }));
+
+  writeFile(path.join(automationRoot, 'target-task', 'automation.toml'), [
+    'kind = "cron"',
+    'name = "Target task"',
+    `cwds = ["${repo.replace(/\\/g, '\\\\')}"]`,
+  ].join('\n'));
+  writeFile(path.join(automationRoot, 'target-task', 'memory.md'), 'in-scope automation memory for target repo');
+  writeFile(path.join(automationRoot, 'other-task', 'automation.toml'), [
+    'kind = "cron"',
+    'name = "Other task"',
+    `cwds = ["${otherRepo.replace(/\\/g, '\\\\')}"]`,
+  ].join('\n'));
+  writeFile(
+    path.join(automationRoot, 'other-task', 'memory.md'),
+    `out-of-scope automation memory mentions ${packageName} and target-repo but belongs elsewhere`,
+  );
+
+  const collect = spawnSync(process.execPath, [
+    collectScript,
+    '--repo',
+    repo,
+    '--since',
+    '30d',
+    '--hosts',
+    'codex',
+    '--codex-root',
+    codexRoot,
+    '--automation-root',
+    automationRoot,
+    '--out',
+    out,
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+
+  expect(collect.status, collect.stderr || collect.stdout).toBe(0);
+  const collectPayload = JSON.parse(collect.stdout) as { ledgerPath: string; manifestPath: string };
+  const ledgerText = fs.readFileSync(collectPayload.ledgerPath, 'utf8');
+  const manifest = JSON.parse(fs.readFileSync(collectPayload.manifestPath, 'utf8')) as {
+    scope: { skippedOutOfScopeSessions: number; skippedOutOfScopeAutomations: number };
+  };
+
+  expect(ledgerText).toContain('in-scope codex session');
+  expect(ledgerText).toContain('in-scope automation memory');
+  expect(ledgerText).not.toContain('out-of-scope codex session');
+  expect(ledgerText).not.toContain('no-cwd codex session');
+  expect(ledgerText).not.toContain('out-of-scope automation memory');
+  expect(manifest.scope.skippedOutOfScopeSessions).toBeGreaterThanOrEqual(2);
+  expect(manifest.scope.skippedOutOfScopeAutomations).toBeGreaterThanOrEqual(1);
+});
 
 test('insight report weights bottlenecks toward primary interaction evidence', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-report-weighting-'));

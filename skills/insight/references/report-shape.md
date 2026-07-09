@@ -40,6 +40,7 @@ Bottleneck and recommendation evidence should prefer primary interaction events:
 - SOP, repeated-mistake, and knowledge-cache sections can include weak leads; do not silently upgrade them into strong recommendations.
 - The Markdown report should render only a queue summary. `insight-improvement-queue.json` is the authoritative machine-readable queue.
 - Queue items must avoid long raw excerpts. Use evidence IDs, evidence tier, source classes, and short summaries.
+- Patch drafts, when generated, live in separate `patch-drafts/*.patch.md` artifacts next to the report and are never applied by `insight`.
 
 ## Improvement Queue JSON
 
@@ -52,6 +53,7 @@ Every actionable item must include:
 - stable `id`;
 - `status`, initially `new` or `needs-more-evidence`;
 - `actionability`, `scope`, `targetDestination`, `summary`, and `suggestedChange`;
+- `executionLevel` and `patchDraftPath`;
 - `evidenceIds`, `evidenceTier`, and `sourceClasses`;
 - `privacy: private-local` and `rawExcerptPolicy: report-only`;
 - `confirmationPolicy`;
@@ -60,6 +62,8 @@ Every actionable item must include:
 - `counterEvidence` and `rejectionReasons`.
 
 Findings without a validation signal stay in report observations and do not enter the actionable queue.
+
+`patchDraftPath` is `null` by default. It may point to a draft artifact only when evidence is strong, the item is still `new`, the expected future cost reduction priority is P0/P1, the target file is explicit and inside the audited repo, and the proposed change is reversible. Draft artifacts should cite evidence IDs, source classes, counter-evidence, and rejection reasons, not long raw excerpts.
 
 ## Language
 

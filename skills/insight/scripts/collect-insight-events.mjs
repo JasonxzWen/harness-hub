@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const TEXT_EXTENSIONS = new Set(['.md', '.markdown', '.txt', '.log', '.json', '.jsonl', '.yaml', '.yml']);
 const CORE_REPO_FILES = new Set([
@@ -218,6 +218,7 @@ Options:
   --claude-root <path>   Extra Claude Code trace root. Repeat or use the OS path separator.
   --prompt-root <path>   Extra prompt/rule context root. Repeat or use the OS path separator.
   --automation-root <path> Extra automation log root. Repeat or use the OS path separator.
+  --include-cross-repo   Allow text-based matches from sessions or automations outside --repo.
   --out <dir>            Output directory. Defaults to an OS temp directory.
   --max-files <n>        Maximum files scanned across selected roots. Defaults to ${DEFAULT_MAX_FILES}.
   --jsonl-tail-bytes <n> Maximum tail bytes read from each JSONL trace. Defaults to ${DEFAULT_JSONL_TAIL_BYTES}.
@@ -235,6 +236,7 @@ function parseArgs(argv) {
     claudeRoots: [],
     promptRoots: [],
     automationRoots: [],
+    includeCrossRepo: false,
     maxFiles: DEFAULT_MAX_FILES,
     jsonlTailBytes: DEFAULT_JSONL_TAIL_BYTES,
     json: false,
@@ -259,6 +261,8 @@ function parseArgs(argv) {
       options.promptRoots.push(...splitPathList(readValue(argv, ++index, arg)));
     } else if (arg === '--automation-root') {
       options.automationRoots.push(...splitPathList(readValue(argv, ++index, arg)));
+    } else if (arg === '--include-cross-repo') {
+      options.includeCrossRepo = true;
     } else if (arg === '--max-files') {
       options.maxFiles = Number.parseInt(readValue(argv, ++index, arg), 10);
       if (!Number.isFinite(options.maxFiles) || options.maxFiles <= 0) {
@@ -464,6 +468,7 @@ function discoverRoots(options, identity, hosts, warnings) {
         sourceClass: 'host-trace',
         scanMode: 'host-trace',
         required: false,
+        requiresRepoScope: !options.includeCrossRepo,
       });
     }
     roots.push({
@@ -473,6 +478,7 @@ function discoverRoots(options, identity, hosts, warnings) {
       sourceClass: 'host-trace',
       scanMode: 'host-trace',
       required: false,
+      requiresRepoScope: !options.includeCrossRepo,
     });
     roots.push({
       root: path.join(home, '.codex', 'automations'),
@@ -481,6 +487,7 @@ function discoverRoots(options, identity, hosts, warnings) {
       sourceClass: 'automation-log',
       scanMode: 'automation-log',
       required: false,
+      requiresRepoScope: !options.includeCrossRepo,
     });
     roots.push({
       root: path.join(home, '.codex'),
@@ -520,11 +527,12 @@ function discoverRoots(options, identity, hosts, warnings) {
         sourceClass: 'host-trace',
         scanMode: 'host-trace',
         required: false,
+        requiresRepoScope: !options.includeCrossRepo,
       });
     }
 
     const claudeHome = path.join(home, '.claude');
-    roots.push(...discoverClaudeProjectRoots(path.join(claudeHome, 'projects'), identity, warnings));
+    roots.push(...discoverClaudeProjectRoots(path.join(claudeHome, 'projects'), identity, warnings, options.includeCrossRepo));
     roots.push({
       root: path.join(claudeHome, 'history.jsonl'),
       host: 'claude-code',
@@ -532,6 +540,7 @@ function discoverRoots(options, identity, hosts, warnings) {
       sourceClass: 'host-trace',
       scanMode: 'single-file',
       required: false,
+      requiresRepoScope: !options.includeCrossRepo,
     });
     roots.push({
       root: path.join(claudeHome, 'tasks'),
@@ -540,6 +549,7 @@ function discoverRoots(options, identity, hosts, warnings) {
       sourceClass: 'host-trace',
       scanMode: 'host-trace',
       required: false,
+      requiresRepoScope: !options.includeCrossRepo,
     });
     roots.push({
       root: claudeHome,
@@ -560,6 +570,7 @@ function discoverRoots(options, identity, hosts, warnings) {
       sourceClass: 'automation-log',
       scanMode: 'automation-log',
       required: false,
+      requiresRepoScope: !options.includeCrossRepo,
     });
   }
 
@@ -582,7 +593,7 @@ function discoverRoots(options, identity, hosts, warnings) {
   });
 }
 
-function discoverClaudeProjectRoots(projectsRoot, identity, warnings) {
+function discoverClaudeProjectRoots(projectsRoot, identity, warnings, includeCrossRepo = false) {
   if (!fs.existsSync(projectsRoot)) {
     return [{
       root: projectsRoot,
@@ -595,7 +606,9 @@ function discoverClaudeProjectRoots(projectsRoot, identity, warnings) {
   }
 
   const exactKeys = new Set(compact([identity.repo, identity.gitRoot]).map(normalizeProjectKey));
-  const weakKeys = new Set(compact([identity.basename, identity.remoteName]).map(normalizeProjectKey));
+  const weakKeys = includeCrossRepo
+    ? new Set(compact([identity.basename, identity.remoteName]).map(normalizeProjectKey))
+    : new Set();
   const roots = [];
   let projectCount = 0;
   for (const entry of fs.readdirSync(projectsRoot, { withFileTypes: true })) {
@@ -605,7 +618,7 @@ function discoverClaudeProjectRoots(projectsRoot, identity, warnings) {
     projectCount += 1;
     const key = normalizeProjectKey(entry.name);
     const exact = exactKeys.has(key);
-    const weak = [...weakKeys].some((weakKey) => weakKey && key.includes(weakKey));
+    const weak = includeCrossRepo && [...weakKeys].some((weakKey) => weakKey && key.includes(weakKey));
     if (exact || weak) {
       roots.push({
         root: path.join(projectsRoot, entry.name),
@@ -632,7 +645,7 @@ function normalizeProjectKey(value) {
     .replace(/^-+|-+$/g, '');
 }
 
-function listCandidateFiles(rootEntry, identity, sinceDate, maxRemaining, warnings) {
+function listCandidateFiles(rootEntry, identity, sinceDate, maxRemaining, warnings, scopeStats) {
   if (!fs.existsSync(rootEntry.root)) {
     warnings.push(`Skipped missing ${rootEntry.host} root: ${rootEntry.root}`);
     return [];
@@ -644,7 +657,7 @@ function listCandidateFiles(rootEntry, identity, sinceDate, maxRemaining, warnin
   }
 
   if (rootStat.isFile()) {
-    return includeFile(rootEntry, identity, rootEntry.root, rootStat, sinceDate) ? [{
+    return includeFile(rootEntry, identity, rootEntry.root, rootStat, sinceDate, warnings, scopeStats) ? [{
       path: rootEntry.root,
       stat: rootStat,
       rootEntry,
@@ -677,7 +690,7 @@ function listCandidateFiles(rootEntry, identity, sinceDate, maxRemaining, warnin
       }
 
       const stat = safeStat(child, warnings);
-      if (!stat || !includeFile(rootEntry, identity, child, stat, sinceDate)) {
+      if (!stat || !includeFile(rootEntry, identity, child, stat, sinceDate, warnings, scopeStats)) {
         continue;
       }
       files.push({ path: child, stat, rootEntry });
@@ -712,7 +725,7 @@ function shouldDescend(rootEntry, name) {
   return !HOST_SKIP_DIRS.has(lower);
 }
 
-function includeFile(rootEntry, identity, filePath, stat, sinceDate) {
+function includeFile(rootEntry, identity, filePath, stat, sinceDate, warnings, scopeStats) {
   const name = path.basename(filePath);
   const ext = path.extname(name).toLowerCase();
   const isPromptContext = rootEntry.scanMode === 'prompt-context' && isPromptContextFile(identity, filePath);
@@ -730,6 +743,12 @@ function includeFile(rootEntry, identity, filePath, stat, sinceDate) {
     return false;
   }
   if (rootEntry.scanMode === 'automation-log' && !isAutomationEvidenceFile(filePath)) {
+    return false;
+  }
+  if (rootEntry.scanMode === 'automation-log'
+    && rootEntry.requiresRepoScope
+    && !isScopedAutomationFile(rootEntry, identity, filePath, warnings)) {
+    scopeStats.skippedOutOfScopeAutomations += 1;
     return false;
   }
   if (rootEntry.scanMode === 'prompt-context' && !isPromptContext) {
@@ -762,6 +781,59 @@ function isRepoStateFile(identity, filePath) {
 function isAutomationEvidenceFile(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   return TEXT_EXTENSIONS.has(ext);
+}
+
+function isScopedAutomationFile(rootEntry, identity, filePath, warnings) {
+  if (isInside(filePath, identity.repo)) {
+    return true;
+  }
+  const configPath = findAutomationConfigPath(rootEntry, filePath);
+  if (!configPath) {
+    return false;
+  }
+  const config = readSmallTextFile(configPath, warnings);
+  const cwds = extractAutomationCwds(config);
+  return cwds.some((cwd) => isRepoScopePath(cwd, identity));
+}
+
+function findAutomationConfigPath(rootEntry, filePath) {
+  const root = path.resolve(rootEntry.root);
+  let current = path.dirname(path.resolve(filePath));
+  while (isInside(current, root)) {
+    const configPath = path.join(current, 'automation.toml');
+    if (fs.existsSync(configPath)) {
+      return configPath;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) {
+      break;
+    }
+    current = parent;
+  }
+  return null;
+}
+
+function readSmallTextFile(filePath, warnings) {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    warnings.push(`Unreadable automation config: ${filePath} (${error.message})`);
+    return '';
+  }
+}
+
+function extractAutomationCwds(config) {
+  const values = [];
+  const pattern = /^\s*cwd[s]?\s*=\s*(\[[^\]]*\]|"[^"]*"|'[^']*')/gmi;
+  for (const match of config.matchAll(pattern)) {
+    const raw = match[1] || '';
+    for (const quoted of raw.matchAll(/"((?:\\"|[^"])*)"|'((?:\\'|[^'])*)'/g)) {
+      values.push((quoted[1] || quoted[2] || '')
+        .replace(/\\\\/g, '\\')
+        .replace(/\\(["'])/g, '$1'));
+    }
+  }
+  return values;
 }
 
 function isPromptContextFile(identity, filePath) {
@@ -829,6 +901,10 @@ function assessRepoAffinity(filePath, content, rootEntry, identity) {
       confidence: 'high',
       matchedTerms: ['repo-local-host-root'],
     };
+  }
+
+  if (rootEntry.requiresRepoScope && rootEntry.scanMode === 'automation-log') {
+    return repoScopedAffinity(['repo-scoped-automation']);
   }
 
   if (rootEntry.scanMode === 'repo-state' && isInside(filePath, identity.repo)) {
@@ -938,6 +1014,36 @@ function mergeAffinity(primary, secondary) {
   };
 }
 
+function repoScopedAffinity(matchedTerms = ['repo-scoped-cwd']) {
+  return {
+    repoAffinity: 'exact',
+    relevance: 'confirmed',
+    confidence: 'high',
+    matchedTerms,
+  };
+}
+
+function isRepoScopePath(value, identity) {
+  const text = String(value || '').trim();
+  if (!text) {
+    return false;
+  }
+  const normalized = text.startsWith('file://') ? fileURLToPathSafe(text) : text;
+  if (!normalized) {
+    return false;
+  }
+  const resolved = path.resolve(normalized);
+  return isInside(resolved, identity.repo);
+}
+
+function fileURLToPathSafe(value) {
+  try {
+    return fileURLToPath(value);
+  } catch {
+    return null;
+  }
+}
+
 function classifySignals(content, eventType = 'file-evidence') {
   const text = String(content || '').toLowerCase();
   return {
@@ -983,13 +1089,10 @@ function eventId(filePath, stat, index, eventType) {
   return `evt-${hash}`;
 }
 
-function extractEvents(candidate, content, identity, warnings, baseIndex) {
+function extractEvents(candidate, content, identity, warnings, scopeStats, baseIndex) {
   const ext = path.extname(candidate.path).toLowerCase();
   if (candidate.rootEntry.sourceClass === 'host-trace' && ext === '.jsonl') {
-    const structured = extractJsonlEvents(candidate, content, identity, warnings, baseIndex);
-    if (structured.length > 0) {
-      return structured;
-    }
+    return extractJsonlEvents(candidate, content, identity, warnings, scopeStats, baseIndex);
   }
 
   const affinity = assessRepoAffinity(candidate.path, content, candidate.rootEntry, identity);
@@ -1005,7 +1108,7 @@ function extractEvents(candidate, content, identity, warnings, baseIndex) {
   }, identity)];
 }
 
-function extractJsonlEvents(candidate, content, identity, warnings, baseIndex) {
+function extractJsonlEvents(candidate, content, identity, warnings, scopeStats, baseIndex) {
   const records = [];
   for (const [lineIndex, line] of content.split(/\r?\n/).entries()) {
     if (!line.trim()) {
@@ -1023,11 +1126,22 @@ function extractJsonlEvents(candidate, content, identity, warnings, baseIndex) {
   }
 
   let sessionAffinity = assessRepoAffinity(candidate.path, content, candidate.rootEntry, identity);
+  let hasScopedCwd = false;
   for (const record of records) {
     const cwd = extractCwd(record.value);
     if (cwd) {
-      sessionAffinity = mergeAffinity(sessionAffinity, assessRepoAffinity(candidate.path, cwd, candidate.rootEntry, identity));
+      if (isRepoScopePath(cwd, identity)) {
+        hasScopedCwd = true;
+        sessionAffinity = mergeAffinity(sessionAffinity, repoScopedAffinity());
+      } else if (!candidate.rootEntry.requiresRepoScope) {
+        sessionAffinity = mergeAffinity(sessionAffinity, assessRepoAffinity(candidate.path, cwd, candidate.rootEntry, identity));
+      }
     }
+  }
+
+  if (candidate.rootEntry.requiresRepoScope && !hasScopedCwd) {
+    scopeStats.skippedOutOfScopeSessions += 1;
+    return [];
   }
 
   const events = [];
@@ -1041,7 +1155,9 @@ function extractJsonlEvents(candidate, content, identity, warnings, baseIndex) {
 
     const recordAffinity = mergeAffinity(
       sessionAffinity,
-      assessRepoAffinity(candidate.path, `${extracted.text} ${extractCwd(record.value) || ''}`, candidate.rootEntry, identity),
+      candidate.rootEntry.requiresRepoScope
+        ? { repoAffinity: 'none', relevance: 'unrelated', confidence: 'low', matchedTerms: [] }
+        : assessRepoAffinity(candidate.path, `${extracted.text} ${extractCwd(record.value) || ''}`, candidate.rootEntry, identity),
     );
     if (recordAffinity.relevance === 'unrelated') {
       continue;
@@ -1258,6 +1374,10 @@ export function collectInsightEvents(options) {
   const hosts = normalizeHosts(options.hosts || 'codex,claude-code');
   const identity = discoverRepoIdentity(repoPath);
   const warnings = [];
+  const scopeStats = {
+    skippedOutOfScopeSessions: 0,
+    skippedOutOfScopeAutomations: 0,
+  };
   const roots = discoverRoots(options, identity, hosts, warnings);
   const outDir = path.resolve(options.out || defaultOutDir(identity));
   fs.mkdirSync(outDir, { recursive: true });
@@ -1269,7 +1389,7 @@ export function collectInsightEvents(options) {
       warnings.push(`Stopped scanning after ${options.maxFiles || DEFAULT_MAX_FILES} files.`);
       break;
     }
-    candidates.push(...listCandidateFiles(rootEntry, identity, sinceDate, remaining, warnings));
+    candidates.push(...listCandidateFiles(rootEntry, identity, sinceDate, remaining, warnings, scopeStats));
   }
 
   const events = [];
@@ -1278,7 +1398,7 @@ export function collectInsightEvents(options) {
     if (!content.trim()) {
       continue;
     }
-    events.push(...extractEvents(candidate, content, identity, warnings, events.length));
+    events.push(...extractEvents(candidate, content, identity, warnings, scopeStats, events.length));
   }
 
   const filteredEvents = events
@@ -1311,6 +1431,7 @@ export function collectInsightEvents(options) {
       sourceType: entry.sourceType,
       sourceClass: entry.sourceClass,
       scanMode: entry.scanMode,
+      requiresRepoScope: Boolean(entry.requiresRepoScope),
       root: entry.root,
       exists: fs.existsSync(entry.root),
     })),
@@ -1320,6 +1441,7 @@ export function collectInsightEvents(options) {
       manifestPath,
     },
     counts: summarizeEvents(filteredEvents),
+    scope: scopeStats,
     warnings,
   };
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);

@@ -1,15 +1,15 @@
 # Data Sources
 
-Read project-related local evidence broadly. Use the widest project-related local evidence surface that remains read-only.
+Read current-repository local evidence broadly. Use the widest read-only evidence surface that remains scoped to the repository passed with `--repo`.
 
 ## Include
 
 - Current repository files that explain identity, workflow, state, decisions, validation, and handoff.
 - Layered prompt and rule context: user-level, repository-level, host-local, and project-local `AGENTS.md`, `CLAUDE.md`, host instruction files, and harness context packs when present.
 - Repo-local host work directories for supported agent hosts.
-- User-level host work directories when events mention the current project path, project name, package name, or git remote.
-- Session logs, message exports, JSONL traces, tool-call records, task state, local memory files, report artifacts, validation logs, and schedule/task logs when they are project-related.
-- Automation logs, recurring task state, monitor output, and scheduled-task memory when they are project-related or explicitly supplied by the user.
+- User-level host work directories only for sessions whose cwd, workspace, or explicit repo metadata resolves inside the current repository.
+- Session logs, message exports, JSONL traces, tool-call records, task state, local memory files, report artifacts, validation logs, and schedule/task logs when they are scoped to the current repository.
+- Automation logs, recurring task state, monitor output, and scheduled-task memory when their automation config or storage path resolves inside the current repository, or when the user explicitly opts into cross-repo collection.
 - Generated handoff and progress artifacts when they explain why the next session would behave differently.
 
 ## Evidence Model
@@ -19,10 +19,10 @@ Use layered evidence instead of a flat keyword scan:
 - `sourceClass`: `host-trace`, `automation-log`, `automation-memory`, `prompt-context`, `repo-state`, `env-state`, or `cache-noise`.
 - `repoAffinity`: `exact`, `strong`, `background`, `weak`, or `none`.
 - `confidence`: `high`, `medium`, or `low`.
-- `confirmed`: evidence with exact/strong project identity, or repo-state background context.
-- `candidate`: evidence that only references the repository name or another weak project term.
+- `confirmed`: evidence with exact current-repo identity, or repo-state background context.
+- `candidate`: evidence that passed the current-repo scope gate but only has weak project terms in the specific event text.
 
-Strong conclusions should use `confirmed` evidence. `candidate` evidence is useful for trend discovery and missing-context warnings.
+Strong conclusions should use `confirmed` evidence. `candidate` evidence is useful for trend discovery and missing-context warnings only after the source has passed the current-repo scope gate.
 
 Primary bottleneck conclusions should be driven by `interaction` evidence with confirmed exact or strong repo affinity. Repo-state evidence explains background constraints and should not by itself become a top bottleneck or recommendation.
 
