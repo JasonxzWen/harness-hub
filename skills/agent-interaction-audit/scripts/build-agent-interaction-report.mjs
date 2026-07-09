@@ -32,7 +32,7 @@ const QUEUE_STATUSES = [
   'rejected',
   'needs-more-evidence',
   'superseded',
-  'applied-outside-insight',
+  'applied-outside-agent-interaction-audit',
 ];
 const QUEUE_PRIORITY_SCORE = { P0: 3, P1: 2, P2: 1 };
 const COST_REDUCTION_SCORE = { high: 3, medium: 2, low: 1, unknown: 0 };
@@ -41,9 +41,9 @@ const RISK_SCORE = { low: 3, medium: 2, high: 1, unknown: 0 };
 const PATCH_DRAFT_PRIORITIES = new Set(['P0', 'P1']);
 
 function usage() {
-  return `Usage: node skills/insight/scripts/build-insight-report.mjs --ledger <events.jsonl> [--manifest <manifest.json>] [--out <report.md>] [--effective-interact-input <input.json>] [--no-patch-drafts] [--json]
+  return `Usage: node skills/agent-interaction-audit/scripts/build-agent-interaction-report.mjs --ledger <events.jsonl> [--manifest <manifest.json>] [--out <report.md>] [--effective-interact-input <input.json>] [--no-patch-drafts] [--json]
 
-Builds a private Markdown report from an insight event ledger.
+Builds a private Markdown report from an agent interaction event ledger.
 Optionally writes an effective-interact JSON input for a visual HTML handoff.
 Use --no-patch-drafts for strict report + queue runs that should not create draft patch artifacts.`;
 }
@@ -486,7 +486,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (missingClaude) {
     recs.push({
       title: 'Locate or configure the Claude Code project trace root before judging Claude behavior',
-      owner: 'insight',
+      owner: 'agent-interaction-audit',
       evidence: events.filter((event) => event.host === 'claude-code').slice(0, 3).map((event) => event.id),
     });
   }
@@ -502,7 +502,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (userFriction.length > 0) {
     recs.push({
       title: 'Add a request-friction review before changing prompt or routing rules',
-      owner: 'insight or sdd-workflow',
+      owner: 'agent-interaction-audit or sdd-workflow',
       evidence: userFriction.map((event) => event.id),
     });
   }
@@ -518,7 +518,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (repeatedMistakes.length > 0) {
     recs.push({
       title: 'Convert repeated agent mistakes into a guardrail, eval case, or SOP note',
-      owner: 'insight-retro or hub-maintenance-workflow',
+      owner: 'agent-interaction-retro or hub-maintenance-workflow',
       evidence: repeatedMistakes.map((event) => event.id),
     });
   }
@@ -566,7 +566,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (recs.length === 0) {
     recs.push({
       title: 'Keep the current workflow and rerun this audit after more trace evidence accumulates',
-      owner: 'insight',
+      owner: 'agent-interaction-audit',
       evidence: strong.slice(0, 3).map((event) => event.id),
     });
   }
@@ -762,13 +762,13 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
       targetDestination: 'project agent instructions or routing docs',
       summary: 'Clarify project-specific agent instructions where traces or prompt context show misunderstanding or stale guidance.',
       suggestedChange: 'Review the cited evidence and add, narrow, or correct the project rule that would prevent the same interpretation error.',
-      validationSignal: 'A routing or insight fixture reproduces the phrase/pattern and selects the intended workflow or recommendation category.',
+      validationSignal: 'A routing or agent-interaction-audit fixture reproduces the phrase/pattern and selects the intended workflow or recommendation category.',
       expectedFutureCostReduction: 'high',
       risk: 'medium',
       patchDraft: {
         targetPath: 'AGENTS.md',
         kind: 'markdown-append',
-        heading: 'Insight Project Rule Candidate',
+        heading: 'Agent Interaction Audit Project Rule Candidate',
       },
       costRationale: {
         frequency: 'medium',
@@ -819,7 +819,7 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
       patchDraft: {
         targetPath: 'AGENTS.md',
         kind: 'markdown-append',
-        heading: 'Insight SOP Candidate',
+        heading: 'Agent Interaction Audit SOP Candidate',
       },
       costRationale: {
         frequency: 'medium',
@@ -840,7 +840,7 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
       targetDestination: 'project knowledge cache, wiki, or restart handoff',
       summary: 'Promote repeatedly rediscovered project facts, file locations, or workflow decisions into a durable knowledge-cache candidate.',
       suggestedChange: 'Record the fact only after confirming it is stable, source-backed, and useful across future sessions.',
-      validationSignal: 'A later insight audit shows fewer repeated lookup or relearning events for the same project fact.',
+      validationSignal: 'A later agent interaction audit shows fewer repeated lookup or relearning events for the same project fact.',
       expectedFutureCostReduction: 'medium',
       risk: 'medium',
       costRationale: {
@@ -890,7 +890,7 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
       patchDraft: {
         targetPath: 'skills/workflow-router/SKILL.md',
         kind: 'markdown-append',
-        heading: 'Insight Workflow Contract Candidate',
+        heading: 'Agent Interaction Audit Workflow Contract Candidate',
       },
       costRationale: {
         frequency: 'medium',
@@ -921,7 +921,7 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
     policy: {
       defaultMutation: 'none',
       artifact: 'private-local',
-      authoritativeSource: 'insight-improvement-queue.json',
+      authoritativeSource: 'agent-interaction-improvement-queue.json',
       reportRole: 'human-summary',
       historyMerge: 'not-in-v1',
       allowedStatuses: QUEUE_STATUSES,
@@ -1050,7 +1050,7 @@ function buildPatchDraftArtifact(item, events, manifest, patchDraft) {
   const diff = buildMarkdownAppendDiff(targetPath, targetText, markdownPatchDraftLines(item, patchDraft, evidenceEvents));
 
   return [
-    `# Insight Patch Draft: ${item.id}`,
+    `# Agent Interaction Audit Patch Draft: ${item.id}`,
     '',
     'Status: draft-only; do not apply automatically.',
     `Target file: \`${targetPath}\``,
@@ -1276,7 +1276,7 @@ function buildEffectiveInteractInput({
   ];
 
   return {
-    title: 'Insight 交互审计可视化汇报',
+    title: 'Agent Interaction Audit 交互审计可视化汇报',
     summary: `结论：${verdict.label}。${verdict.text}`,
     status: statusForVerdict(verdict.label),
     renderMode: 'pre-rendered',
@@ -1468,14 +1468,14 @@ function buildEffectiveInteractInput({
     claims: [
       {
         id: 'claim-verdict',
-        statement: `Insight verdict is ${verdict.label}: ${verdict.text}`,
+        statement: `Agent interaction audit verdict is ${verdict.label}: ${verdict.text}`,
         kind: 'conclusion',
         evidenceIds: strong.slice(0, 5).map((event) => event.id),
         confidence: strong.length >= 2 ? 'medium' : 'low',
         knownLimits: warnings,
       },
       ...insights.map((item, index) => ({
-        id: `claim-insight-${index + 1}`,
+        id: `claim-agent-interaction-audit-${index + 1}`,
         statement: item.title,
         kind: item.tier === 'unknown' ? 'assumption' : 'trend',
         evidenceIds: item.evidence,
@@ -1486,7 +1486,7 @@ function buildEffectiveInteractInput({
       {
         id: 'evidence-ledger',
         kind: 'file',
-        label: 'Insight event ledger',
+        label: 'Agent interaction event ledger',
         value: path.basename(outPath),
         status: 'info',
         knownLimits: ['Ledger location may be temporary or ignored by design.'],
@@ -1494,14 +1494,14 @@ function buildEffectiveInteractInput({
       {
         id: 'evidence-manifest',
         kind: 'file',
-        label: 'Insight manifest',
+        label: 'Agent interaction audit manifest',
         value: manifest ? 'manifest provided' : 'manifest missing',
         status: manifest ? 'pass' : 'warn',
       },
     ],
     verification: [
       {
-        label: 'Insight Markdown report generated',
+        label: 'Agent interaction audit Markdown report generated',
         status: 'pass',
         detail: outPath,
       },
@@ -1531,7 +1531,7 @@ function formatEvidenceAppendix(events) {
   }).join('\n');
 }
 
-export function buildInsightReport(options) {
+export function buildAgentInteractionReport(options) {
   const ledger = readLedger(options.ledger);
   const manifest = readManifest(options.manifest);
   const events = ledger.events;
@@ -1541,12 +1541,12 @@ export function buildInsightReport(options) {
   const bottlenecks = topBottlenecks(events);
   const insights = topInsights(events, bottlenecks, manifest);
   const recs = recommendations(events, bottlenecks, manifest);
-  const outPath = path.resolve(options.out || path.join(path.dirname(path.resolve(options.ledger)), 'insight-report.md'));
+  const outPath = path.resolve(options.out || path.join(path.dirname(path.resolve(options.ledger)), 'agent-interaction-report.md'));
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   const improvementQueue = buildImprovementQueue(events, manifest, warnings, path.dirname(outPath), {
     noPatchDrafts: Boolean(options.noPatchDrafts),
   });
-  const improvementQueuePath = path.join(path.dirname(outPath), 'insight-improvement-queue.json');
+  const improvementQueuePath = path.join(path.dirname(outPath), 'agent-interaction-improvement-queue.json');
 
   const hostRows = countBy(events, (event) => event.host);
   const relevanceRows = countBy(events, (event) => event.relevance);
@@ -1559,7 +1559,7 @@ export function buildInsightReport(options) {
   const signalRows = signalCountRows(events);
   const clusters = taskClusters(events);
 
-  const report = `# Insight Interaction Audit
+  const report = `# Agent Interaction Audit
 
 Generated: ${new Date().toISOString()}
 Repository: ${manifest?.repo || 'unknown'}
@@ -1756,7 +1756,7 @@ ${warnings.length > 0 ? warnings.map((warning) => `- ${warning}`).join('\n') : '
 }
 
 function printText(result) {
-  console.log(`Insight report: ${result.reportPath}`);
+  console.log(`Agent interaction audit report: ${result.reportPath}`);
   console.log(`Improvement queue: ${result.improvementQueuePath}`);
   console.log(`Verdict: ${result.verdict}`);
   console.log(`Events: ${result.counts.total}`);
@@ -1769,7 +1769,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       console.log(usage());
       process.exitCode = 0;
     } else {
-      const result = buildInsightReport(options);
+      const result = buildAgentInteractionReport(options);
       if (options.json) {
         console.log(JSON.stringify(result, null, 2));
       } else {
@@ -1780,7 +1780,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     if (process.argv.includes('--json')) {
       console.log(JSON.stringify({ ok: false, error: error.message }, null, 2));
     } else {
-      console.error(`build-insight-report: ${error.message}`);
+      console.error(`build-agent-interaction-report: ${error.message}`);
     }
     process.exitCode = 1;
   }

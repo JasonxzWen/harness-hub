@@ -61,7 +61,7 @@ Keep every distributed skill in the standard layout under `skills/<skill-name>/S
    - After validation and before final handoff for any mutation, run the required closeout loop. Materiality scales the evidence level, not whether review exists: small source/test edits still need `implementation-review` or `test-review`; workflow, harness, security, or release paths require stronger independent evidence.
    - Use a subagent or isolated delegated-agent when the scope is independent and read-only; material or multi-scope reviews should split independent read-only lenses unless unavailable, and then record the explicit fallback reason and deterministic substitute. Focus on technical debt, first-principles implementation fit, project-rule drift, and refactor or warning recommendations.
    - For PR work, expose conflict, merge, behavior, compatibility, and release-risk decisions to the user instead of handling them silently.
-   - Run or explicitly skip `insight` to review tool-calling quality, repeated low-value lookup loops, misleading evidence, docs/code conflicts, AI infrastructure lessons, and whether the work should become a skill, source record, eval case, or existing workflow change.
+   - Run or explicitly skip `agent-interaction-audit` to review tool-calling quality, repeated low-value lookup loops, misleading evidence, docs/code conflicts, AI infrastructure lessons, and whether the work should become a skill, source record, eval case, or existing workflow change.
 
 ## Communication Style
 

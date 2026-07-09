@@ -42,7 +42,7 @@
         "pr-handoff-policy",
         "finish-closeout-policy",
         "final-review-closeout",
-        "insight-closeout-audit",
+        "agent-interaction-closeout-audit",
           "workflow-loop-separation",
           "agentic-loop-policy",
           "agentic-loop-records",
@@ -162,7 +162,7 @@
       "kind": "harness-template",
       "path": "harness/website-cloner",
       "dest": ".",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "JCodesMore/ai-website-cloner-template",
       "provides": [
         "authorized-website-clone-scaffold",
@@ -303,7 +303,7 @@
         "embedded-tdd",
         "pre-implementation-alignment",
         "finish-closeout-lifecycle",
-        "insight-closeout-audit"
+        "agent-interaction-closeout-audit"
       ],
       "overlapsWith": [
         "skill:product-capability",
@@ -391,7 +391,7 @@
         "pr-closeout-handoff",
         "finish-closeout-delivery",
         "pr-merge-readiness-closeout",
-        "insight-closeout-audit"
+        "agent-interaction-closeout-audit"
       ],
       "overlapsWith": [
         "skill:verification-loop",
@@ -1414,21 +1414,24 @@
       "risk": "medium",
       "recommendation": "Use as a bounded source-to-public-blog workflow that preserves source evidence, media references, and iteration decisions while forcing reader-first article flow; do not turn effective-interact reports, source ledgers, or copyrighted source text into the main post."
     },
-    "skill:insight": {
+    "skill:agent-interaction-audit": {
       "kind": "skill",
-      "path": "skills/insight",
-      "version": "0.1.0",
+      "path": "skills/agent-interaction-audit",
+      "version": "0.2.0",
       "source": "local-original",
       "provides": [
-        "repository-interaction-insight-audits",
+        "agent-interaction-audits",
         "codex-claude-code-trace-review",
         "local-agent-event-ledgers",
-        "private-insight-reports",
+        "private-agent-interaction-audit-reports",
         "tool-call-decision-audits",
         "prompt-rule-context-audits",
         "automation-log-audits",
+        "agent-interaction-retro-closeout",
         "sop-and-script-lesson-mining",
         "knowledge-cache-candidate-mining",
+        "eval-case-candidate-mining",
+        "workflow-change-candidate-mining",
         "executable-improvement-queues",
         "private-improvement-queue-json",
         "effective-interact-visual-report-inputs"
@@ -1440,23 +1443,23 @@
         "skill:answer-workflow",
         "skill:harness-quality-check"
       ],
-      "routing": "Load when the user asks for a private repository interaction insight audit, Codex or Claude Code trace review, agent task profile, tool-call decision audit, collaboration bottleneck analysis, prompt/rule context audit, automation log audit, SOP/script lesson mining, knowledge-cache candidates, executable improvement queue, session-level insight, or concrete improvement recommendations from agent traces; use effective-interact as the visual presentation layer for dense reports, source-post for public external-source posts, and agent-introspection-debugging for single-run failures.",
+      "routing": "Load when the user asks for a private agent interaction audit, repository interaction audit, cross-session Codex or Claude Code trace analysis, agent task profile, tool-call decision audit, collaboration bottleneck analysis, prompt/rule context audit, prompt/rule drift audit, automation log audit or review, closeout retrospective, agent-interaction-retro evidence, SOP/script lesson mining, knowledge-cache/eval/workflow-change candidates, executable improvement queue, or concrete improvement recommendations from local agent traces; legacy insight mentions route here only when paired with sessions, traces, audits, recommendations, improvements, or bottlenecks. Use effective-interact as the visual presentation layer for dense reports, source-post for public external-source posts, agent-introspection-debugging for single-run failures, and harness-quality-check for advisory harness readiness audits.",
       "detects": [
         {
-          "path": "skills/insight/SKILL.md"
+          "path": "skills/agent-interaction-audit/SKILL.md"
         },
         {
-          "path": "skills/insight/scripts/collect-insight-events.mjs"
+          "path": "skills/agent-interaction-audit/scripts/collect-agent-interaction-events.mjs"
         },
         {
-          "path": "skills/insight/scripts/build-insight-report.mjs"
+          "path": "skills/agent-interaction-audit/scripts/build-agent-interaction-report.mjs"
         }
       ],
       "agents": [
         "standard"
       ],
       "risk": "medium",
-      "recommendation": "Audit recent project-related Codex and Claude Code collaboration traces, prompt/rule layers, automation logs, stale guidance, SOP lessons, repeated agent mistakes, and cacheable knowledge candidates into ignored private reports plus private improvement queue JSON with confirmed/candidate evidence separation, optional effective-interact visual report inputs for dense audits, and no default project, memory, schedule, remote, or tracked-doc mutation."
+      "recommendation": "Audit recent project-related Codex and Claude Code collaboration traces, prompt/rule layers, automation logs, stale guidance, closeout retrospectives, SOP lessons, repeated agent mistakes, eval/workflow-change candidates, and cacheable knowledge candidates into ignored private reports plus private improvement queue JSON with confirmed/candidate evidence separation, optional effective-interact visual report inputs for dense audits, and no default project, memory, schedule, remote, or tracked-doc mutation."
     },
     "skill:doc-coauthoring": {
       "kind": "skill",

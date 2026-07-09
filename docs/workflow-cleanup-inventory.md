@@ -12,7 +12,7 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 |---|---:|---|
 | Install bundles | 0 | The CLI no longer supports selectable install bundles. |
 | Installable skill components | 47 | All active default skill components are under `skills/<name>/`. Harness templates are lifecycle components, not skill-install payloads. |
-| Local `skills` directories | 47 | Matches installable skill component directories after later additions such as `insight`, `harness-quality-check`, `package-release-sniffer`, and selected platform atoms. |
+| Local `skills` directories | 47 | Matches installable skill component directories after later additions such as `agent-interaction-audit`, `harness-quality-check`, `package-release-sniffer`, and selected platform atoms. |
 | Packaged `skills` directories | 47 | npm publishes the personal distributed skill source tree. |
 | First-class target path | 1 | `standard` is the only user-facing target path. `install` writes skills only; `init-harness --target standard` writes the root harness contract. Host packaging stays outside skill bodies. |
 

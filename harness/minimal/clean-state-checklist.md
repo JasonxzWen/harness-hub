@@ -19,7 +19,7 @@ Use this checklist before handoff.
 - Web browser acceptance records local URL, scenario, viewport, console/network findings, and screenshot or trace evidence when the task touches Web user-visible behavior.
 - PR status is checked and recorded after any PR creation or update, including mergeability, CI/check-run status, conflicts, branch-protection blockers, fixes pushed, validation reruns, and any user/external blocker.
 - Required Agentic loop records are captured for any mutation: loop type, producer, verifier, read-only arbiter, evidence, main-agent decision, and follow-up or explicit unresolved finding.
-- Finish closeout is recorded for mutations: required loop result, final independent review findings or fallback reason, technical-debt/drift warnings, PR/merge readiness, conflict decisions surfaced to the user, and `insight` recommendations or skip reason.
+- Finish closeout is recorded for mutations: required loop result, final independent review findings or fallback reason, technical-debt/drift warnings, PR/merge readiness, conflict decisions surfaced to the user, and `agent-interaction-audit` recommendations or skip reason.
 - Review Feedback To Rules entries are updated when a repeated comment should become a durable harness rule.
 - Repeated review feedback has been promoted to a rule, validation command, or explicit follow-up.
 - Each completed atomic work unit has a verified checkpoint commit when commits are permitted, or the skip reason is recorded.

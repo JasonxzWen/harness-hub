@@ -8,11 +8,14 @@ const ALLOWED_LOOPS = new Set([
   'plan-review',
   'test-design',
   'implementation-review',
+  'test-review',
+  'workflow-review',
+  'security-review',
   'frontend-acceptance',
   'diagnosis-regression',
   'docs-consistency',
   'pr-closeout',
-  'insight-retro',
+  'agent-interaction-retro',
 ]);
 
 const ALLOWED_VERDICTS = new Set([

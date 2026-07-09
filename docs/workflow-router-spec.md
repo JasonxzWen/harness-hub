@@ -55,10 +55,10 @@ Every non-trivial change request MUST follow this order unless the selected stat
 | 5 | Clean unneeded files | Remove, demote, or mark obsolete files only after ownership and safety are clear. |
 | 6 | Implement | Make the smallest scoped changes that satisfy the accepted spec and plan. |
 | 7 | Test and accept | Run agreed tests, deterministic checks, E2E/manual acceptance, and regression gates. |
-| 8 | Finish closeout | Run the required closeout loop and stale-read gate for every mutation, with evidence level based on dirty paths or base/head diffs; drive PR work to merge-ready or explicitly authorized merge completion, and run or explicitly skip `insight` for tool-calling and workflow-learning feedback. Surface technical-debt, drift, conflict, stale-read, and merge risks instead of handling them silently. |
+| 8 | Finish closeout | Run the required closeout loop and stale-read gate for every mutation, with evidence level based on dirty paths or base/head diffs; drive PR work to merge-ready or explicitly authorized merge completion, and run or explicitly skip `agent-interaction-audit` for tool-calling and workflow-learning feedback. Surface technical-debt, drift, conflict, stale-read, and merge risks instead of handling them silently. |
 | 9 | Deliver report | Produce a user-facing handoff, using `effective-interact` when the work is material or visual comparison/evidence lowers review cost. |
 
-Loop decisions MAY help decide whether a concrete closeout action continues or interrupts, but Loop MUST NOT remove the closeout stage or bypass its review, PR, insight, and handoff evidence.
+Loop decisions MAY help decide whether a concrete closeout action continues or interrupts, but Loop MUST NOT remove the closeout stage or bypass its review, PR, agent-interaction-audit, and handoff evidence.
 
 Agentic loops MAY run inside phases 2 through 8 when context isolation or parallel review reduces risk. For non-trivial work, the main agent SHOULD actively look for delegated-agent splits that save context or improve independent evidence, unless the task is tiny, the next step depends on immediate main-agent judgment, tools are unavailable, or risk is too high. For mutation work, a required closeout loop MUST be derived from dirty paths or a base/head diff and MUST record producer, verifier or fallback, arbiter or downgrade reason, evidence, and main-agent decision before handoff. Bounded loops SHOULD record `iteration`, `maxIterations`, and `stopCondition`; deterministic checks MUST reject loop records where the current iteration exceeds the maximum. Hooks and advisory checks MAY validate loop evidence but MUST NOT auto-dispatch delegated agents.
 
@@ -255,7 +255,7 @@ After a requested PR is created or updated, delivery MUST verify the remote PR s
 - stop only for user decisions, credentials, permissions, reviewer action, protected-branch overrides, or external service recovery;
 - do not merge the PR unless the user explicitly requests that remote mutation.
 
-Finish closeout MUST also run or explicitly skip an `insight` audit. The audit should inspect the current session's tool-calling quality, repeated low-value lookups, misleading evidence, code/docs conflicts, AI infrastructure lessons, candidate harness rules, and whether the workflow should become a skill, source record, eval case, or change to an existing workflow. External self-evolution systems such as Hermes-style skill evaluation are source material for this audit, not default runtime dependencies.
+Finish closeout MUST also run or explicitly skip an `agent-interaction-audit` audit. The audit should inspect the current session's tool-calling quality, repeated low-value lookups, misleading evidence, code/docs conflicts, AI infrastructure lessons, candidate harness rules, and whether the workflow should become a skill, source record, eval case, or change to an existing workflow. External self-evolution systems such as Hermes-style skill evaluation are source material for this audit, not default runtime dependencies.
 
 Workflow or harness changes that also touch docs, templates, tests, or implementation SHOULD use a `docs-consistency` loop or an explicit downgrade reason during closeout. The loop compares user-facing docs, installable skill or template behavior, tests, and source implementation so code/docs drift is surfaced before handoff.
 
@@ -278,7 +278,7 @@ The redesign is accepted when:
 3. Source gathering fixtures prove referenced repos/docs are checked or explicitly scoped out before spec lock-in.
 4. Executable plan fixtures include cleanup decisions before implementation.
 5. Review and question fixtures do not mutate files.
-6. Finish closeout fixtures include final review, PR/merge readiness, and insight-learning evidence.
+6. Finish closeout fixtures include final review, PR/merge readiness, and agent-interaction-learning evidence.
 7. Effective Interact handoff fixtures validate in browser mode.
 8. Standard-target install dry runs include the expected workflow set.
 9. Status/update/remove smoke tests preserve managed-file ownership and deleted-file cleanup.

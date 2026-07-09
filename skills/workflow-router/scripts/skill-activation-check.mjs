@@ -699,25 +699,34 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'effective-interact summary',
     'repo should change',
   ]);
-  const insightSignal = (
+  const agentInteractionAuditSignal = (
     includesAny(text, [
+      'agent interaction audit',
+      'agent-interaction-audit',
+      'agent session analysis',
+      'agent-session-analysis',
       'agent task profile',
+      'agent usage insight',
+      'agent-usage-insight',
       'collaboration bottleneck',
       'cross-session codex',
       'cross-session claude code',
+      'closeout retrospective',
+      'interaction retrospective',
       'human-agent collaboration',
-      'insight audit',
-      'interaction insight audit',
+      'improvement queue from agent traces',
       'project interaction audit',
       'repository interaction audit',
       'session-level insight',
       'session insights',
+      'trace-backed recommendations',
       'tool-call decision audit',
       'work trace review',
     ]) || matchesAny(text, [
       /\bhuman-agent\b.*\b(?:audit|bottleneck|collaboration|interaction|trace)\b/,
       /\b(?:codex|claude code)\b.*\b(?:session|trace|work history)\b.*\b(?:audit|review|profile)\b/,
       /\b(?:agent|tool-call)\b.*\b(?:decision|trace)\b.*\b(?:audit|review)\b/,
+      /\bagent[-\s](?:interaction[-\s]audit|session[-\s]analysis|usage[-\s]insight)\b/,
       /\binsight\b.*\b(?:session|trace|conversation|audit|analysis|recommendation|recommendations|improvement|bottleneck|bottlenecks)\b/,
       /\b(?:session|trace|conversation|audit|analysis|recommendation|recommendations|improvement|bottleneck|bottlenecks)\b.*\binsight\b/,
       /(?:\u4eba\u673a\u4ea4\u4e92|\u4eba\u673a\u534f\u4f5c).*(?:\u590d\u76d8|\u5ba1\u8ba1|\u5361\u70b9|\u753b\u50cf)/,
@@ -878,8 +887,8 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     return null;
   }
 
-  if (insightSignal && canLoad(metadata, 'insight', ['interaction insight audit', 'claude code'])) {
-    return 'insight';
+  if (agentInteractionAuditSignal && canLoad(metadata, 'agent-interaction-audit', ['agent interaction audits', 'claude code'])) {
+    return 'agent-interaction-audit';
   }
 
   if (agentSignal && canLoad(metadata, 'agent-introspection-debugging', ['agent run', 'harness/tool'])) {

@@ -168,7 +168,7 @@ test('advisory check warns when material delivery lacks an effective-interact ha
     'missing-validation',
     'missing-closeout-review',
     'missing-pr-readiness',
-    'missing-insight-audit',
+    'missing-agent-interaction-audit',
     'missing-acceptance-arbiter',
     'missing-final-review-arbiter',
     'missing-effective-interact-html-handoff',
@@ -192,7 +192,7 @@ test('advisory check requires closeout evidence for delivery even when work is n
   expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
     'missing-closeout-review',
     'missing-pr-readiness',
-    'missing-insight-audit',
+    'missing-agent-interaction-audit',
     'missing-acceptance-arbiter',
     'missing-final-review-arbiter',
   ]);
@@ -209,7 +209,7 @@ test('advisory check passes delivery when validation, closeout evidence, and HTM
     '--has-html-handoff',
     '--has-closeout-review',
     '--has-pr-readiness',
-    '--has-insight',
+    '--has-agent-interaction-audit',
     '--has-acceptance-arbiter',
     '--has-final-review-arbiter',
   ]);
@@ -230,7 +230,7 @@ test('advisory check accepts explicit HTML handoff waiver for material delivery'
     '--has-validation',
     '--has-closeout-review',
     '--has-pr-readiness',
-    '--has-insight',
+    '--has-agent-interaction-audit',
     '--has-acceptance-arbiter',
     '--has-final-review-arbiter',
     '--html-handoff-waiver',
@@ -256,7 +256,7 @@ test('advisory check can explicitly require html-artifact output mode', () => {
     '--has-handoff',
     '--has-closeout-review',
     '--has-pr-readiness',
-    '--has-insight',
+    '--has-agent-interaction-audit',
     '--has-acceptance-arbiter',
     '--has-final-review-arbiter',
     '--expected-output-mode',
@@ -436,7 +436,7 @@ test('advisory check does not treat closeout template labels as evidence', () =>
   expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
     'missing-closeout-review',
     'missing-pr-readiness',
-    'missing-insight-audit',
+    'missing-agent-interaction-audit',
     'missing-acceptance-arbiter',
     'missing-final-review-arbiter',
   ]);

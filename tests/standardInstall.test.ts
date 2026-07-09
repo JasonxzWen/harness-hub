@@ -21,7 +21,7 @@ const REQUIRED_WORKFLOW_COMPONENTS = [
   'skill:ponytail',
   'skill:effective-interact',
   'skill:verification-loop',
-  'skill:insight',
+  'skill:agent-interaction-audit',
 ];
 
 const FORBIDDEN_STANDARD_INSTALL_ROOT_ARTIFACTS = [
@@ -56,7 +56,7 @@ test('capability index keeps harness metadata outside the standard install surfa
     component.kind === 'skill' || component.kind === 'harness-template'
   ))).toBe(true);
   expect(index.components['skill:hub-maintenance-workflow']?.distribution).toBe('hub-internal');
-  expect(index.components['skill:insight']?.distribution || 'target').toBe('target');
+  expect(index.components['skill:agent-interaction-audit']?.distribution || 'target').toBe('target');
 });
 
 test('default standard install exposes target workflow skills and omits hub-internal maintenance skills', () => {
@@ -86,7 +86,7 @@ test('default standard install writes lock-backed status for the target-distribu
   expect(result.installed.length).toBe(plan.items.length);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'workflow-router', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'sdd-workflow', 'SKILL.md'))).toBe(true);
-  expect(fs.existsSync(path.join(targetDir, 'skills', 'insight', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'agent-interaction-audit', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'ponytail', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'webapp-testing', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'hub-maintenance-workflow', 'SKILL.md'))).toBe(false);

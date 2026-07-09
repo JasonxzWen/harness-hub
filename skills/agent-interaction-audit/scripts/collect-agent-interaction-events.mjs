@@ -209,7 +209,7 @@ const AUTOMATION_TERMS = [
 ];
 
 function usage() {
-  return `Usage: node skills/insight/scripts/collect-insight-events.mjs --repo <path> [--since 30d] [--hosts codex,claude-code] [--out <dir>] [--json]
+  return `Usage: node skills/agent-interaction-audit/scripts/collect-agent-interaction-events.mjs --repo <path> [--since 30d] [--hosts codex,claude-code] [--out <dir>] [--json]
 
 Options:
   --repo <path>          Repository to audit. Defaults to cwd.
@@ -399,7 +399,7 @@ function slugify(value) {
 
 function defaultOutDir(identity) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  return path.join(os.tmpdir(), 'insight-reports', `${slugify(identity.packageName || identity.basename)}-${stamp}`);
+  return path.join(os.tmpdir(), 'agent-interaction-audit-reports', `${slugify(identity.packageName || identity.basename)}-${stamp}`);
 }
 
 function discoverRoots(options, identity, hosts, warnings) {
@@ -1541,7 +1541,7 @@ function isInside(child, parent) {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
-export function collectInsightEvents(options) {
+export function collectAgentInteractionEvents(options) {
   const repoPath = path.resolve(options.repo || process.cwd());
   if (!fs.existsSync(repoPath) || !fs.statSync(repoPath).isDirectory()) {
     throw new Error(`Repository path does not exist or is not a directory: ${repoPath}`);
@@ -1585,8 +1585,8 @@ export function collectInsightEvents(options) {
     .filter((event) => event.relevance !== 'unrelated' && event.sourceClass !== 'cache-noise')
     .sort((a, b) => a.ts.localeCompare(b.ts) || a.path.localeCompare(b.path) || a.id.localeCompare(b.id));
 
-  const ledgerPath = path.join(outDir, 'insight-events.jsonl');
-  const manifestPath = path.join(outDir, 'insight-manifest.json');
+  const ledgerPath = path.join(outDir, 'agent-interaction-events.jsonl');
+  const manifestPath = path.join(outDir, 'agent-interaction-manifest.json');
   fs.writeFileSync(ledgerPath, `${filteredEvents.map((event) => JSON.stringify(event)).join('\n')}${filteredEvents.length ? '\n' : ''}`);
 
   if (filteredEvents.length === 0) {
@@ -1685,7 +1685,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       console.log(usage());
       process.exitCode = 0;
     } else {
-      const result = collectInsightEvents(options);
+      const result = collectAgentInteractionEvents(options);
       if (options.json) {
         console.log(JSON.stringify({
           ok: true,
@@ -1703,7 +1703,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     if (process.argv.includes('--json')) {
       console.log(JSON.stringify({ ok: false, error: error.message }, null, 2));
     } else {
-      console.error(`collect-insight-events: ${error.message}`);
+      console.error(`collect-agent-interaction-events: ${error.message}`);
     }
     process.exitCode = 1;
   }

@@ -1090,6 +1090,14 @@ const MANAGED_COMPONENT_RENAMES: Readonly<Record<string, ManagedComponentRename>
     to: 'skill:effective-interact',
     reason: 'Component was renamed from skill:html-work-reports to skill:effective-interact.',
   },
+  'skill:insight': {
+    to: 'skill:agent-interaction-audit',
+    reason: 'Component was renamed from skill:insight to skill:agent-interaction-audit.',
+  },
+});
+const HOST_SKILL_DIR_RENAMES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  'agent-interaction-audit': ['insight'],
+  'effective-interact': ['html-work-reports'],
 });
 
 const VALID_RISKS = new Set<LifecycleRisk>(['low', 'medium', 'high']);
@@ -2742,7 +2750,7 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/decisions.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md', 'quality-document.md', 'evaluator-rubric.md'], 'State artifacts are routed from instructions'),
       assessmentTextCheck(agents + currentTask, ['P0/P1/P2', 'agent-run browser', 'Web browser acceptance'], 'Validation priority and browser acceptance rules are discoverable'),
       assessmentTextCheck(agents + currentTask + definitionOfDone, ['PR status', 'mergeability', 'CI/check-run'], 'PR closeout gate is documented'),
-      assessmentTextCheck(agents + currentTask + definitionOfDone + cleanState, ['finish closeout', 'insight', 'technical debt'], 'Finish closeout gate is documented'),
+      assessmentTextCheck(agents + currentTask + definitionOfDone + cleanState, ['finish closeout', 'agent-interaction-audit', 'technical debt'], 'Finish closeout gate is documented'),
       assessmentFileCheck(files, ['.harness-hub/context/AGENTS.md', '.harness-hub/context/llm-wiki-schema.md'], 'LLM Wiki agent context rules exist'),
       assessmentTextCheck(agents + contextAgents + contextSchema, ['LLM Wiki', 'Raw sources', 'No Redundant Facts', 'human confirmation'], 'Context engineering write boundary is documented'),
     ],
@@ -2766,10 +2774,10 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands'], 'Verification entrypoint is referenced by the harness'),
       assessmentTextCheck(validationScript, ['process.exit', 'set -e', 'failures'], 'Verification entrypoint can fail the run'),
       assessmentTextCheck(progress + handoff + currentTask, ['Validation Evidence', 'Recent Validation', 'Command', 'Status', 'Passed', 'Failed', 'Evidence', 'Commit'], 'Validation evidence has a durable place to be recorded'),
-      assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'P0', 'P1', 'P2', 'Static', 'Runtime', 'User flow', 'Web browser acceptance', 'Runtime Signals', 'Standard startup path', 'PR Status', 'Mergeability', 'CI/check', 'Finish Closeout', 'Insight Recommendations'], 'Static, runtime, startup, user-flow, priority, closeout, and PR tiers are represented'),
+      assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'P0', 'P1', 'P2', 'Static', 'Runtime', 'User flow', 'Web browser acceptance', 'Runtime Signals', 'Standard startup path', 'PR Status', 'Mergeability', 'CI/check', 'Finish Closeout', 'Agent Interaction Audit Recommendations'], 'Static, runtime, startup, user-flow, priority, closeout, and PR tiers are represented'),
       assessmentTextCheck(interruptGoodCases + interruptBadCases + interruptRegressionCases, ['expectedDecision', 'continue', 'interrupt', 'riskSignals'], 'Interrupt policy eval cases are present and machine-readable'),
       assessmentFileCheck(files, ['evaluator-rubric.md'], 'Evaluator rubric exists'),
-      assessmentTextCheck(evaluatorRubric, ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Finish closeout', 'Insight recommendations', 'Handoff readiness', 'Verdict'], 'Evaluator rubric covers correctness, evidence, scope, reliability, browser acceptance, finish closeout, insight, and handoff readiness'),
+      assessmentTextCheck(evaluatorRubric, ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Finish closeout', 'Agent interaction audit recommendations', 'Handoff readiness', 'Verdict'], 'Evaluator rubric covers correctness, evidence, scope, reliability, browser acceptance, finish closeout, agent-interaction-audit, and handoff readiness'),
       assessmentCheck(project.verificationCommands.length > 0, 'Project verification command is detected', project.verificationCommands),
     ],
     scope: [
@@ -3267,7 +3275,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'stale-read gate',
     'Arbiters are read-only',
     'finish closeout',
-    'insight',
+    'agent-interaction-audit',
   ];
   const claudeImportMarkers = [
     '@AGENTS.md',
@@ -3364,7 +3372,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Agentic Loop Records',
     'Main Agent Decision',
     'Finish Closeout',
-    'Insight Recommendations',
+    'Agent Interaction Audit Recommendations',
     'Review Feedback To Rules',
   ]));
   checks.push(validateJsonlFile(targetDir, '.harness-hub/state/loop-runs.jsonl', 'loop-policy'));
@@ -3390,7 +3398,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Main Agent Decision',
     'Finish Closeout',
     'Stale-read result',
-    'Insight Recommendations',
+    'Agent Interaction Audit Recommendations',
     'Review Feedback To Rules',
   ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/current-task.md', [
@@ -3421,7 +3429,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Mergeability',
     'CI/check-run status',
     'Finish closeout',
-    'Insight audit',
+    'Agent interaction audit',
     'Checkpoint policy',
     'Spec updates',
     'Decision log',
@@ -3443,7 +3451,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Agentic loop records',
     'main-agent decision',
     'Finish closeout',
-    'insight',
+    'agent-interaction-audit',
     'Review Feedback',
     'evaluator-rubric.md',
     'quality-document.md',
@@ -3465,7 +3473,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'mergeability',
     'CI/check-run',
     'finish closeout',
-    'insight',
+    'agent-interaction-audit',
     'evaluator rubric',
     'quality snapshot',
   ]));
@@ -3477,7 +3485,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Browser acceptance',
     'Agentic loops',
     'Finish closeout',
-    'Insight recommendations',
+    'Agent interaction audit recommendations',
     'Handoff readiness',
     'Verdict',
   ]));
@@ -8750,15 +8758,16 @@ function hostActivationProbePaths(
   }
   const skillName = parts[1];
   const skillRelative = parts.slice(2).join('/');
-  return AGENT_HOST_SKILL_DIRS.map((host) => {
-    const relativeSkillDir = toPortablePath(path.join(host.relativePath, skillName));
-    const relativeFile = toPortablePath(path.join(relativeSkillDir, skillRelative));
-    return {
-      absoluteFile: assertSafeRelativePath(targetDir, relativeFile),
-      absoluteSkillDir: assertSafeRelativePath(targetDir, relativeSkillDir),
-      relativeFile,
-    };
-  });
+  const skillNames = uniqueStrings([skillName, ...(HOST_SKILL_DIR_RENAMES[skillName] || [])]);
+  return AGENT_HOST_SKILL_DIRS.flatMap((host) => skillNames.map((hostSkillName) => {
+      const relativeSkillDir = toPortablePath(path.join(host.relativePath, hostSkillName));
+      const relativeFile = toPortablePath(path.join(relativeSkillDir, skillRelative));
+      return {
+        absoluteFile: assertSafeRelativePath(targetDir, relativeFile),
+        absoluteSkillDir: assertSafeRelativePath(targetDir, relativeSkillDir),
+        relativeFile,
+      };
+    }));
 }
 
 function legacyAggregationMessage(signal: LegacyAggregationSignal): string {

@@ -23,7 +23,7 @@ Claude Code prompt context includes repository Claude instruction files plus rep
 Use script overrides when the host stores traces somewhere nonstandard:
 
 ```bash
-node skills/insight/scripts/collect-insight-events.mjs \
+node skills/agent-interaction-audit/scripts/collect-agent-interaction-events.mjs \
   --repo . \
   --hosts codex,claude-code \
   --codex-root <path> \

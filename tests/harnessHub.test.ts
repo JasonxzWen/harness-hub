@@ -1118,6 +1118,31 @@ test('update migrates legacy html-work-reports locks to effective-interact', () 
   expect(getStatus({ targetDir }).current.some((row) => row.id === 'skill:effective-interact')).toBe(true);
 });
 
+test('update migrates legacy insight locks to agent-interaction-audit', () => {
+  const targetDir = createLegacyInsightTarget('harness-hub-update-legacy-insight-');
+
+  const status = getStatus({ targetDir });
+  const preview = getUpdatePlan({ targetDir, components: ['skill:agent-interaction-audit'] });
+  const result = updateManaged(targetDir, { yes: true, components: ['skill:agent-interaction-audit'] });
+
+  expect(status.updates.some((row) => row.id === 'skill:insight')).toBe(true);
+  expect(preview.updates.map((row) => row.id)).toEqual(['skill:insight']);
+  expect(preview.blockers).toEqual([]);
+  expect(result.exitCode).toBe(0);
+  expect(result.updated.map((row) => row.id)).toEqual(['skill:agent-interaction-audit']);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'insight', 'SKILL.md'))).toBe(false);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'agent-interaction-audit', 'SKILL.md'))).toBe(true);
+
+  const lock = readLock(targetDir);
+  if (!lock || lock.data.schemaVersion !== 2) {
+    throw new Error('expected schema version 2 lock');
+  }
+  const migrated = lock.data.components.find((component) => component.id === 'skill:agent-interaction-audit');
+  expect(migrated?.dest).toBe('skills/agent-interaction-audit');
+  expect(migrated?.source).toBe('skills/agent-interaction-audit');
+  expect(getStatus({ targetDir }).current.some((row) => row.id === 'skill:agent-interaction-audit')).toBe(true);
+});
+
 test('legacy html-work-reports migration overwrites same-name replacement destinations', () => {
   const targetDir = createLegacyHtmlWorkReportsTarget('harness-hub-update-legacy-html-overwrite-');
   const replacementDir = path.join(targetDir, 'skills', 'effective-interact');
@@ -3402,7 +3427,7 @@ test('check detects legacy Codex aggregation and recommends standard harness mig
   expect(result.target.evidence).toContain('.codex/harness-hub-aggregation.json');
   expect(result.target.evidence).toContain('sourceCommit:8ac264bed8a06fc6bf954a88ad92330e13e63e03');
   expect(result.target.evidence.some((item) => item.startsWith('missingStandard:'))).toBe(true);
-  expect(result.target.evidence).toContain('hostLocalOnly:skills/insight/SKILL.md via .codex/skills/insight/SKILL.md');
+  expect(result.target.evidence).toContain('hostLocalOnly:skills/agent-interaction-audit/SKILL.md via .codex/skills/insight/SKILL.md');
   expect(result.target.evidence).toContain('staleHostCache:.codex/skills/workflow-router/references/agentic-loops.md');
 });
 
@@ -3421,7 +3446,7 @@ test('check detects legacy targets that have old sentinels but miss other standa
     'skills/workflow-router/SKILL.md',
     'skills/workflow-router/references/agentic-loops.md',
     'skills/workflow-router/scripts/agentic-loop-check.mjs',
-    'skills/insight/SKILL.md',
+    'skills/agent-interaction-audit/SKILL.md',
     'skills/effective-interact/SKILL.md',
     'AGENTS.md',
     'CLAUDE.md',
@@ -3600,7 +3625,7 @@ test('self-check surfaces legacy aggregation migration guidance as an advisory',
   expect(notManaged?.message).toContain('legacy Codex aggregation');
   expect(notManaged?.message).toContain('managed skills');
   expect(notManaged?.message).toContain('context pack');
-  expect(notManaged?.evidence).toContain('hostLocalOnly:skills/insight/SKILL.md via .codex/skills/insight/SKILL.md');
+  expect(notManaged?.evidence).toContain('hostLocalOnly:skills/agent-interaction-audit/SKILL.md via .codex/skills/insight/SKILL.md');
   expect(notManaged?.recommendedCommand).toContain('--target standard --dry-run --json');
 });
 
@@ -3815,6 +3840,56 @@ function createLegacyHtmlWorkReportsTarget(prefix: string): string {
             path: 'skills/html-work-reports/asset.txt',
             sha256: hashContent(legacyAsset),
             size: Buffer.byteLength(legacyAsset),
+          },
+        ],
+        installedAt: new Date().toISOString(),
+        status: 'installed',
+      },
+    ],
+  }, null, 2)}\n`);
+  return targetDir;
+}
+
+function createLegacyInsightTarget(prefix: string): string {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  const legacyContent = [
+    '---',
+    'name: insight',
+    'description: Legacy interaction insight skill.',
+    '---',
+    '',
+    '# Insight',
+    '',
+  ].join('\n');
+  const legacyReportShape = 'legacy insight report shape\n';
+  const skillDir = path.join(targetDir, 'skills', 'insight');
+  fs.mkdirSync(path.join(skillDir, 'references'), { recursive: true });
+  fs.writeFileSync(path.join(skillDir, 'SKILL.md'), legacyContent);
+  fs.writeFileSync(path.join(skillDir, 'references', 'report-shape.md'), legacyReportShape);
+  fs.mkdirSync(path.join(targetDir, '.harness-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), `${JSON.stringify({
+    schemaVersion: 2,
+    generatedAt: new Date().toISOString(),
+    hubVersion: '0.1.4',
+    agents: ['standard'],
+    components: [
+      {
+        id: 'skill:insight',
+        version: '0.1.0',
+        agent: 'standard',
+        kind: 'skill',
+        source: 'skills/insight',
+        dest: 'skills/insight',
+        files: [
+          {
+            path: 'skills/insight/SKILL.md',
+            sha256: hashContent(legacyContent),
+            size: Buffer.byteLength(legacyContent),
+          },
+          {
+            path: 'skills/insight/references/report-shape.md',
+            sha256: hashContent(legacyReportShape),
+            size: Buffer.byteLength(legacyReportShape),
           },
         ],
         installedAt: new Date().toISOString(),

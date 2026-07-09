@@ -60,13 +60,13 @@
 | PR / merge readiness | not applicable | No PR yet. | Record mergeability, conflicts, and user-visible decisions when a PR exists. |
 | Stale-read result | not run | No stale-read gate result recorded yet. | Record rechecked status and refreshed task-critical file evidence before final handoff. |
 
-## Insight Recommendations
+## Agent Interaction Audit Recommendations
 
 | Area | Recommendation | Evidence | Disposition |
 | --- | --- | --- | --- |
-| Tool calling | Not run yet. | No insight audit recorded. | pending |
-| AI infrastructure | Not run yet. | No insight audit recorded. | pending |
-| Skill or workflow extraction | Not run yet. | No insight audit recorded. | pending |
+| Tool calling | Not run yet. | No agent interaction audit recorded. | pending |
+| AI infrastructure | Not run yet. | No agent interaction audit recorded. | pending |
+| Skill or workflow extraction | Not run yet. | No agent interaction audit recorded. | pending |
 
 ## Review Feedback To Rules
 

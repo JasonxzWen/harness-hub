@@ -93,7 +93,7 @@ Hooks are advisory by default until they have a security review, deterministic t
 Allowed advisory hooks:
 
 - remind before coding when SDD alignment or acceptance is missing;
-- remind after material changes when closeout review, PR readiness, insight, or an `effective-interact` handoff is missing;
+- remind after material changes when closeout review, PR readiness, agent-interaction-audit, or an `effective-interact` handoff is missing;
 - validate generated interaction artifacts;
 - run local deterministic checks that do not mutate repo or remote state.
 
@@ -115,11 +115,11 @@ node skills/workflow-router/scripts/advisory-check.mjs --state sdd-change --phas
 node skills/workflow-router/scripts/advisory-check.mjs --state diagnosis --phase pre-implementation --has-reproduction --has-evidence --json
 node skills/workflow-router/scripts/advisory-check.mjs --state review --phase pre-implementation --will-mutate --json
 node skills/workflow-router/scripts/advisory-check.mjs --state delivery --phase pre-delivery --material-changes --json
-node skills/workflow-router/scripts/advisory-check.mjs --state delivery --phase pre-delivery --material-changes --has-validation --has-closeout-review --has-pr-readiness --has-insight --has-html-handoff --json
-node skills/workflow-router/scripts/advisory-check.mjs --state delivery --phase pre-delivery --material-changes --has-validation --has-closeout-review --has-pr-readiness --has-insight --has-acceptance-arbiter --has-final-review-arbiter --html-handoff-waiver "Tiny packaging-only change; chat handoff is sufficient." --json
+node skills/workflow-router/scripts/advisory-check.mjs --state delivery --phase pre-delivery --material-changes --has-validation --has-closeout-review --has-pr-readiness --has-agent-interaction-audit --has-html-handoff --json
+node skills/workflow-router/scripts/advisory-check.mjs --state delivery --phase pre-delivery --material-changes --has-validation --has-closeout-review --has-pr-readiness --has-agent-interaction-audit --has-acceptance-arbiter --has-final-review-arbiter --html-handoff-waiver "Tiny packaging-only change; chat handoff is sufficient." --json
 ```
 
-The script emits JSON warnings for missing SDD/maintenance scope/spec/acceptance/plan gates, explicit read-only owner mutation attempts, diagnosis without reproduction/evidence, state/phase mismatches, and delivery without validation or handoff evidence. The delivery gate also checks closeout review, PR readiness, insight evidence, and arbiter evidence for material changes. Use `--html-handoff-waiver <reason>` or `--handoff-waiver <reason>` only when the human-facing handoff is intentionally waived and the reason is explicit; it does not waive validation, PR readiness, review, insight, or arbiter evidence. When `--current-task <path>` is provided, that file is inspected first. Without an explicit path, the script only auto-discovers `.harness-hub/state/current-task.md` in the current working directory; it does not recurse upward into parent directories. It always reports `blocking: false`, and never writes local or remote state.
+The script emits JSON warnings for missing SDD/maintenance scope/spec/acceptance/plan gates, explicit read-only owner mutation attempts, diagnosis without reproduction/evidence, state/phase mismatches, and delivery without validation or handoff evidence. The delivery gate also checks closeout review, PR readiness, agent interaction audit evidence, and arbiter evidence for material changes. Use `--html-handoff-waiver <reason>` or `--handoff-waiver <reason>` only when the human-facing handoff is intentionally waived and the reason is explicit; it does not waive validation, PR readiness, review, agent-interaction-audit, or arbiter evidence. When `--current-task <path>` is provided, that file is inspected first. Without an explicit path, the script only auto-discovers `.harness-hub/state/current-task.md` in the current working directory; it does not recurse upward into parent directories. It always reports `blocking: false`, and never writes local or remote state.
 
 ## Planning Contract
 

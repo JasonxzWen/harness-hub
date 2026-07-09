@@ -16,10 +16,10 @@ Use this owner for Harness Hub repository work.
 5. Clean unneeded files only when ownership is clear; preserve source evidence, upstream skill bodies, and unrelated user edits.
 6. Apply narrow changes.
 7. Validate with routing tests, `scripts/validate-skills.ps1 -SkipExternal`, and `bun run validate` when TypeScript, tests, capabilities, or CLI behavior changed.
-8. Finish closeout: run the required closeout loop for every mutation, expose any routing/spec drift or technical debt, and run or explicitly skip `insight` for tool-calling quality and skill/workflow improvement candidates.
+8. Finish closeout: run the required closeout loop for every mutation, expose any routing/spec drift or technical debt, and run or explicitly skip `agent-interaction-audit` for tool-calling quality and skill/workflow improvement candidates.
 9. Use `effective-interact` for material handoff reports.
 
-Use agentic loops from `workflow-router/references/agentic-loops.md` for Harness Hub mutations. Prefer `plan-review` for workflow or harness architecture changes, `implementation-review` for routing/CLI/template changes, `docs-consistency` when docs, templates, tests, and implementation must stay aligned, `pr-closeout` for release-bound work, and `insight-retro` when repeated corrections or tool-calling lessons should become rules, eval cases, source records, or workflow changes. Verifiers may be `delegated-agent` passes or deterministic checks; small changes can use lower evidence but still need review or fallback evidence. Record `iteration`, `maxIterations`, and a stop condition when a loop may repeat.
+Use agentic loops from `workflow-router/references/agentic-loops.md` for Harness Hub mutations. Prefer `plan-review` for workflow or harness architecture changes, `implementation-review` for routing/CLI/template changes, `docs-consistency` when docs, templates, tests, and implementation must stay aligned, `pr-closeout` for release-bound work, and `agent-interaction-retro` when repeated corrections or tool-calling lessons should become rules, eval cases, source records, or workflow changes. Verifiers may be `delegated-agent` passes or deterministic checks; small changes can use lower evidence but still need review or fallback evidence. Record `iteration`, `maxIterations`, and a stop condition when a loop may repeat.
 
 ## Source And Evaluation Inputs
 

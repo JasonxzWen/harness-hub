@@ -16,7 +16,7 @@ Use this owner when the task starts from a failure or regression.
 5. Write the regression test or deterministic check when possible.
 6. Fix only the confirmed cause.
 7. Test and accept against the symptom and regression scope.
-8. Finish closeout when the diagnosis changed files: run the required closeout loop, inspect PR/merge readiness when relevant, and run or explicitly skip `insight` for tool-calling and workflow-learning signals.
+8. Finish closeout when the diagnosis changed files: run the required closeout loop, inspect PR/merge readiness when relevant, and run or explicitly skip `agent-interaction-audit` for tool-calling and workflow-learning signals.
 9. Deliver report with `effective-interact` when evidence, timeline, closeout findings, or validation is non-trivial.
 
 ## Helpers

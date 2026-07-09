@@ -38,13 +38,13 @@ Bottleneck and recommendation evidence should prefer primary interaction events:
 - Successful handoffs and state updates can appear in task clusters, but should not become Top Bottlenecks without explicit friction evidence.
 - Prompt/rule context, automation logs, and ordinary repo state should be visible in the report, but labeled as context unless parsed as interaction events.
 - SOP, repeated-mistake, and knowledge-cache sections can include weak leads; do not silently upgrade them into strong recommendations.
-- The Markdown report should render only a queue summary. `insight-improvement-queue.json` is the authoritative machine-readable queue.
+- The Markdown report should render only a queue summary. `agent-interaction-improvement-queue.json` is the authoritative machine-readable queue.
 - Queue items must avoid long raw excerpts. Use evidence IDs, evidence tier, source classes, and short summaries.
-- Patch drafts, when generated, live in separate `patch-drafts/*.patch.md` artifacts next to the report and are never applied by `insight`.
+- Patch drafts, when generated, live in separate `patch-drafts/*.patch.md` artifacts next to the report and are never applied by `agent-interaction-audit`.
 
 ## Improvement Queue JSON
 
-The report builder writes `insight-improvement-queue.json` next to `insight-report.md`.
+The report builder writes `agent-interaction-improvement-queue.json` next to `agent-interaction-report.md`.
 
 V1 queue items cover `project-rule-candidate`, `stale-info-removal-candidate`, `sop-candidate`, `knowledge-cache-candidate`, `eval-case-candidate`, and `workflow-change-candidate`.
 

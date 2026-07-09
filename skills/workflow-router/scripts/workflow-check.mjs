@@ -28,7 +28,7 @@ function parseArgs(argv) {
     handoffWaiver: null,
     htmlHandoffWaiver: null,
     hasCloseoutReview: false,
-    hasInsight: false,
+    hasAgentInteractionAudit: false,
     hasPrReadiness: false,
     hasAgenticLoopPlan: false,
     hasAcceptanceArbiter: false,
@@ -76,8 +76,8 @@ function parseArgs(argv) {
       options.htmlHandoffWaiver = readValue(argv, ++index, arg);
     } else if (arg === '--has-closeout-review') {
       options.hasCloseoutReview = true;
-    } else if (arg === '--has-insight') {
-      options.hasInsight = true;
+    } else if (arg === '--has-agent-interaction-audit') {
+      options.hasAgentInteractionAudit = true;
     } else if (arg === '--has-pr-readiness') {
       options.hasPrReadiness = true;
     } else if (arg === '--has-agentic-loop-plan') {
@@ -150,7 +150,7 @@ export function checkWorkflow(options) {
     handoffWaiver: options.handoffWaiver,
     htmlHandoffWaiver: options.htmlHandoffWaiver,
     hasCloseoutReview: Boolean(options.hasCloseoutReview),
-    hasInsight: Boolean(options.hasInsight),
+    hasAgentInteractionAudit: Boolean(options.hasAgentInteractionAudit),
     hasPrReadiness: Boolean(options.hasPrReadiness),
     hasAgenticLoopPlan: Boolean(options.hasAgenticLoopPlan),
     hasAcceptanceArbiter: Boolean(options.hasAcceptanceArbiter),
@@ -227,7 +227,7 @@ Flags mirror advisory-check.mjs:
   --handoff-waiver <reason>
   --html-handoff-waiver <reason>
   --has-closeout-review
-  --has-insight
+  --has-agent-interaction-audit
   --has-pr-readiness
   --has-agentic-loop-plan
   --has-acceptance-arbiter

@@ -43,7 +43,7 @@ function parseArgs(argv) {
     handoffWaiver: null,
     htmlHandoffWaiver: null,
     hasCloseoutReview: false,
-    hasInsight: false,
+    hasAgentInteractionAudit: false,
     hasPrReadiness: false,
     hasAgenticLoopPlan: false,
     hasAcceptanceArbiter: false,
@@ -86,8 +86,8 @@ function parseArgs(argv) {
       options.htmlHandoffWaiver = readValue(argv, ++index, arg);
     } else if (arg === '--has-closeout-review') {
       options.hasCloseoutReview = true;
-    } else if (arg === '--has-insight') {
-      options.hasInsight = true;
+    } else if (arg === '--has-agent-interaction-audit') {
+      options.hasAgentInteractionAudit = true;
     } else if (arg === '--has-pr-readiness') {
       options.hasPrReadiness = true;
     } else if (arg === '--has-agentic-loop-plan') {
@@ -234,10 +234,10 @@ export function evaluateAdvisory(options) {
         message: 'Delivery should record PR readiness, mergeability, conflict status, or an explicit no-PR/skip reason before handoff.',
       });
     }
-    if (!hydratedOptions.hasInsight) {
+    if (!hydratedOptions.hasAgentInteractionAudit) {
       warnings.push({
-        id: 'missing-insight-audit',
-        message: 'Delivery should run insight or record an explicit skip reason before handoff.',
+        id: 'missing-agent-interaction-audit',
+        message: 'Delivery should run agent-interaction-audit or record an explicit skip reason before handoff.',
       });
     }
     if (!hydratedOptions.hasAcceptanceArbiter) {
@@ -319,7 +319,7 @@ function hydrateFromCurrentTask(options) {
       handoffWaiver: options.handoffWaiver,
       htmlHandoffWaiver: options.htmlHandoffWaiver,
       hasCloseoutReview: Boolean(options.hasCloseoutReview || inferred.hasCloseoutReview),
-      hasInsight: Boolean(options.hasInsight || inferred.hasInsight),
+      hasAgentInteractionAudit: Boolean(options.hasAgentInteractionAudit || inferred.hasAgentInteractionAudit),
       hasPrReadiness: Boolean(options.hasPrReadiness || inferred.hasPrReadiness),
       hasAgenticLoopPlan: Boolean(options.hasAgenticLoopPlan || inferred.hasAgenticLoopPlan),
       hasAcceptanceArbiter: Boolean(options.hasAcceptanceArbiter || inferred.hasAcceptanceArbiter),
@@ -371,8 +371,8 @@ function inferCurrentTaskGates(markdown) {
     hasPlan: sectionHasMeaningfulContent(markdown, 'Test matrix')
       || sectionHasMeaningfulContent(markdown, 'Validation commands'),
     hasCloseoutReview: sectionHasEvidencePhrase(markdown, 'Finish closeout', ['review', 'subagent', 'independent']),
-    hasInsight: sectionHasEvidencePhrase(markdown, 'Finish closeout', ['insight'])
-      || sectionHasMeaningfulContent(markdown, 'Insight Recommendations'),
+    hasAgentInteractionAudit: sectionHasEvidencePhrase(markdown, 'Finish closeout', ['agent-interaction-audit'])
+      || sectionHasMeaningfulContent(markdown, 'Agent Interaction Audit Recommendations'),
     hasPrReadiness: sectionHasEvidencePhrase(markdown, 'PR closeout', ['merge', 'conflict', 'ci/check', 'no pr', 'skip'])
       || sectionHasEvidencePhrase(markdown, 'Finish closeout', ['pr', 'merge', 'conflict', 'no pr', 'skip']),
     hasAgenticLoopPlan: sectionHasMeaningfulContent(markdown, 'Agentic loops'),
@@ -424,7 +424,7 @@ function isMeaningfulLine(line) {
   if (/^\|\s*(priority|question|command|phase|url|pr|signal|date|stage)\s*\|/i.test(trimmed)) {
     return false;
   }
-  if (/^[*-]?\s*(final independent review|technical debt \/ drift review|technical debt \/ drift|insight audit|insight recommendations|pr\/merge readiness|pr \/ merge readiness|conflict decisions|blockers):\s*$/i.test(trimmed)) {
+  if (/^[*-]?\s*(final independent review|technical debt \/ drift review|technical debt \/ drift|agent interaction audit|agent interaction audit recommendations|pr\/merge readiness|pr \/ merge readiness|conflict decisions|blockers):\s*$/i.test(trimmed)) {
     return false;
   }
 
@@ -499,8 +499,8 @@ function isMeaningfulLine(line) {
     'review method: subagent / independent local pass / explicit skip',
     'review focus: technical debt',
     'review findings:',
-    'insight audit required: yes/no',
-    'insight focus:',
+    'agent interaction audit required: yes/no',
+    'agent interaction audit focus:',
     'evidence: screenshot, trace, video, log, or explicit skip reason',
     'process improvement candidate: none /',
     'pr or merge readiness:',
@@ -513,7 +513,7 @@ function isMeaningfulLine(line) {
     'not required yet',
     'no review evidence recorded yet',
     'no closeout findings recorded yet',
-    'no insight audit recorded',
+    'no agent interaction audit recorded',
     'none recorded',
     'nothing recorded',
     'no active task',
@@ -538,7 +538,7 @@ Flags:
   --handoff-waiver <reason>
   --html-handoff-waiver <reason>
   --has-closeout-review
-  --has-insight
+  --has-agent-interaction-audit
   --has-pr-readiness
   --has-agentic-loop-plan
   --has-acceptance-arbiter
