@@ -3,8 +3,8 @@ name: diagnose
 description: Load when a workflow-router-selected owner workflow needs hard bugs and performance regressions, failing commands, hard-to-reproduce behavior, or unknown root causes diagnosed; use agent-introspection-debugging instead for agent/tool harness failures.
 license: MIT
 metadata:
-  source: "mattpocock/skills skills/engineering/diagnose"
-  upstream_commit: "9fecab929abb904c68ce3366a1781df31ab22832"
+  source: "mattpocock/skills skills/engineering/diagnosing-bugs"
+  upstream_commit: "d574778f94cf620fcc8ce741584093bc650a61d3"
 ---
 
 # Diagnose
@@ -29,7 +29,10 @@ Prefer, in order:
 4. A replayed artifact such as a log, event payload, HAR file, trace, or saved input.
 5. A throwaway harness that exercises the failing code path in isolation.
 6. A stress, property, fuzz, or looped reproduction for nondeterministic failures.
-7. A human-in-the-loop script only when manual steps cannot be automated.
+7. A bisection or differential loop when the bug appeared between known commits, versions, datasets, or configs.
+8. A human-in-the-loop script only when manual steps cannot be automated; adapt `scripts/hitl-loop.template.ps1`.
+
+Before moving on, name the exact command or manual-loop script that has already been run and can catch this bug. It should be red-capable, deterministic or high-reproduction for flaky bugs, fast enough to iterate, and runnable by an agent without hidden human judgment.
 
 If no credible loop can be built, stop and report what was tried. Ask for the missing artifact, environment access, or permission for temporary instrumentation.
 

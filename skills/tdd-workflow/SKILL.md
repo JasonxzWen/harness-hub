@@ -4,7 +4,7 @@ description: Load when a workflow-router-selected owner workflow needs implement
 license: MIT
 metadata:
   source: "mattpocock/skills skills/engineering/tdd"
-  upstream_commit: "d54c497aa94400a496d3f2c38be10fa5f284c5a9"
+  upstream_commit: "d574778f94cf620fcc8ce741584093bc650a61d3"
 ---
 
 # TDD Workflow
@@ -45,6 +45,7 @@ Read `references/tests.md` and `references/mocking.md` when choosing seams or mo
 Before editing production code:
 
 - identify the public interface or user flow being changed
+- name the seam under test and confirm it when the owner workflow or user has not already accepted it
 - list the first behavior to prove
 - inspect nearby tests and project conventions
 - name any design uncertainty that should be prototyped first

@@ -69,6 +69,9 @@ test('sdd-workflow enforces the canonical lifecycle before implementation', () =
 
   expect(skill).toContain('Do not start implementation');
   expect(skill).toContain('TDD');
+  expect(skill).toContain('grill-with-docs');
+  expect(skill).toContain('fastest honest feedback loop');
+  expect(skill).toContain('boundary is muddy');
   expect(skill).toContain('insight');
   expect(skill).toContain('goal/story workflows');
   expect(skill).toContain('without approval');
@@ -81,6 +84,8 @@ test('read-only workflow owners block mutation by default', () => {
   expect(answer).toContain('Do not edit files');
   expect(review).toContain('Do not implement fixes');
   expect(review).toContain('Findings first');
+  expect(review).toContain('deep modules');
+  expect(review).toContain('honest feedback loops');
 });
 
 test('delivery workflow captures PR closeout without remote side effects', () => {
@@ -91,6 +96,8 @@ test('delivery workflow captures PR closeout without remote side effects', () =>
   expect(delivery).toContain('CI/check runs');
   expect(delivery).toContain('Resolve actionable PR blockers in scope');
   expect(delivery).toContain('finish closeout');
+  expect(delivery).toContain('architecture drift');
+  expect(delivery).toContain('deep-module fit');
   expect(delivery).toContain('insight recommendations');
   expect(delivery).toContain('PR URL or number');
   expect(delivery).toContain('Do not mark a PR ready');

@@ -49,12 +49,18 @@ test('development workflow guide documents state files, TDD, and skill extension
     'State File Responsibilities',
     'Skill Extension Rules',
     'Current State Model',
+    'Composable Skill Layers',
+    'Owner workflows are the process spine',
+    'Orchestration helpers shape a moment',
+    'Discipline helpers hold reusable engineering habits',
     'not a daemon or automatic dispatcher',
     'deterministic gates for required loops',
     'maxIterations',
     'New workflow owner',
     'Helper atom',
     'Source-only idea',
+    'feedback loops as the speed limit',
+    'deep-module opportunities',
   ]) {
     expect(doc).toContain(phrase);
   }

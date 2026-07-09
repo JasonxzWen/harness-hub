@@ -22,7 +22,7 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 |---|---|---|
 | Workflow owners | Install | `workflow-router`, SDD, diagnosis, review, delivery, answer, and Harness Hub maintenance are the public lifecycle lanes. |
 | `effective-interact` | Install | High-priority interaction layer that reduces user interpretation cost for material alignment and handoff. |
-| Matt Pocock adapted skills | Install | `grill-me`, `diagnose`, `prototype`, `handoff`, and `tdd-workflow` are narrow, adapted helpers with stable routing. |
+| Matt Pocock adapted skills | Install | `grill-me`, `grill-with-docs`, `diagnose`, `prototype`, `handoff`, and `tdd-workflow` are narrow, adapted helpers with stable routing. |
 | Everything Claude Code core helpers | Install | Keep bounded helpers such as `verification-loop`, `security-review`, `coding-standards`, and `agent-introspection-debugging`. |
 | Web, communication, platform, learning, and creative atoms | Install | The installer now ships the complete standard skill set rather than asking users to choose bundles. |
 

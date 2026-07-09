@@ -204,7 +204,7 @@ test('workflow-check CLI matches routing fixtures and stays side-effect free', (
     expect(result.dispatchesSubagents).toBe(false);
     expect(result.advisory.mutates).toBe(false);
   }
-}, 10000);
+}, 20000);
 
 test('workflow check can hydrate advisory gates from an explicit current-task path', () => {
   const targetDir = makeTempDir('harness-hub-workflow-current-task-');

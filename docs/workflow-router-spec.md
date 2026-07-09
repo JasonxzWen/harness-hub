@@ -121,7 +121,7 @@ It is REQUIRED when:
 - evidence, validation, or residual risk needs to remain inspectable,
 - an HTML artifact lowers user review cost more than chat.
 
-Question forecasting is required only when the answer can affect the next decision. `grill-me` or the selected review owner handles pressure-testing questions; `effective-interact` structures the result and creates the handoff surface. HTML is required after material repo or skill changes unless explicitly waived; otherwise choose the lightest output rung that lowers understanding, choice, verification, navigation, memory, or rework cost.
+Question forecasting is required only when the answer can affect the next decision. `grill-me`, `grill-with-docs`, or the selected review owner handles pressure-testing questions; `grill-with-docs` is the variant for glossary, context wiki, domain-model, ADR, or code/docs contradiction capture. `effective-interact` structures the result and creates the handoff surface. HTML is required after material repo or skill changes unless explicitly waived; otherwise choose the lightest output rung that lowers understanding, choice, verification, navigation, memory, or rework cost.
 
 It MUST NOT replace production UI, slide decks, bundled apps, credential tools, repo-writing editors, or external writes.
 

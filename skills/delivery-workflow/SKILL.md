@@ -13,7 +13,7 @@ Use this owner after work has been accepted or implemented and needs closure.
 2. Clean only approved or owned local artifacts; preserve unrelated user edits.
 3. Run agreed validation commands and acceptance checks.
 4. Record failures, skipped checks, and residual risk honestly.
-5. Run finish closeout for every mutation: derive the required closeout loop, use subagent or independent review evidence when the level calls for isolation, or record a fallback reason plus deterministic substitute. Inspect technical debt, implementation fit, project-rule drift, and refactor or warning recommendations.
+5. Run finish closeout for every mutation: derive the required closeout loop, use subagent or independent review evidence when the level calls for isolation, or record a fallback reason plus deterministic substitute. Inspect technical debt, architecture drift, deep-module fit, project-rule drift, and refactor or warning recommendations.
 6. Run a stale-read gate before final handoff: recheck status, inspect changed paths, reread or diff task-critical files consulted earlier when they may have changed, and record the result or why stale reads cannot affect delivery.
 7. If a PR was created or updated, check remote PR state after push: mergeability, CI/check runs, conflicts, and branch protection blockers.
 8. Resolve actionable PR blockers in scope, rerun relevant validation, and push updates; expose conflict decisions and risk to the user instead of handling them silently. Stop only for user decisions, credentials, permissions, reviewer action, protected-branch overrides, or external outages.

@@ -11,9 +11,10 @@ Use this owner for review-only work.
 
 1. Confirm the review scope and artifact under review.
 2. Gather required material: diffs, specs, tests, release notes, UI screenshots, or security-sensitive paths.
-3. Report Findings first, ordered by severity and grounded in file/line or source evidence.
-4. Do not implement fixes unless the user explicitly redirects into `sdd-workflow`.
-5. Default-consider `effective-interact` for material reviews, severity filters, option comparison, or evidence tours.
+3. Check whether the work preserves deep modules, clear seams, and honest feedback loops when code design is in scope.
+4. Report Findings first, ordered by severity and grounded in file/line or source evidence.
+5. Do not implement fixes unless the user explicitly redirects into `sdd-workflow`.
+6. Default-consider `effective-interact` for material reviews, severity filters, option comparison, or evidence tours.
 
 ## Helpers
 

@@ -4,7 +4,7 @@ description: Load when a workflow-router-selected owner workflow needs cases whe
 license: MIT
 metadata:
   source: "mattpocock/skills skills/productivity/grill-me"
-  upstream_commit: "9fecab929abb904c68ce3366a1781df31ab22832"
+  upstream_commit: "d574778f94cf620fcc8ce741584093bc650a61d3"
 ---
 
 # Grill Me
@@ -28,6 +28,7 @@ Do not use this skill when:
 
 - the user already gave clear implementation instructions and wants execution
 - a normal brainstorming session is enough
+- the user wants the interview to update glossary, context wiki, domain model, or ADR-style decisions; use `grill-with-docs`
 - the next step is producing an implementation-ready capability plan; use `product-capability`
 - the user asks for a code review; use the normal review posture or `verification-loop`
 

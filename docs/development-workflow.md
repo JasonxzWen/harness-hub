@@ -18,6 +18,16 @@ Harness Hub has three stateful layers today:
 
 This is not a daemon or automatic dispatcher. There is no retry scheduler, merge queue, or unattended hook that starts delegated agents. The local orchestration runtime now provides deterministic gates for required loops and evidence verification; the active workflow owner still decides when to spawn agents and how to integrate their output. For non-trivial work, the main agent should still aggressively but controllably look for independent delegated-agent splits that reduce context pressure or improve evidence quality.
 
+## Composable Skill Layers
+
+Harness Hub adapts the Matt Pocock README model as a local layering rule: small skills should either orchestrate a bounded user-requested moment or provide reusable model-invoked discipline under a selected owner. They should not seize the whole process when an existing workflow owner can compose them.
+
+- Owner workflows are the process spine: `sdd-workflow`, `diagnosis-workflow`, `review-workflow`, `delivery-workflow`, and `hub-maintenance-workflow`.
+- Orchestration helpers shape a moment in the workflow: `grill-me`, `grill-with-docs`, `prototype`, `product-capability`, `doc-coauthoring`, and `effective-interact`.
+- Discipline helpers hold reusable engineering habits: `tdd-workflow`, `diagnose`, `verification-loop`, `karpathy-guidelines`, `ponytail`, `coding-standards`, `compound-code-review`, and provider/domain atoms.
+
+When importing or adapting upstream skills, prefer this composition model over broad process ownership. A user-invoked upstream flow may become a local helper only when its side effects, persistence model, and trigger boundary fit Harness Hub.
+
 ## Capability Map
 
 ```mermaid
@@ -35,7 +45,7 @@ flowchart LR
   Loops --> State
 
   Owner --> Helpers["Helper atoms"]
-  Helpers --> Grill["grill-me"]
+  Helpers --> Grill["grill-me / grill-with-docs"]
   Helpers --> Capability["product-capability"]
   Helpers --> Docs["documentation-lookup"]
   Helpers --> Review["compound-code-review / security-review"]
@@ -47,12 +57,12 @@ flowchart LR
 |---|---|---|---|
 | 0. Harness and freshness gate | Verify the target has the standard harness files, run the freshness gate, and run `node scripts/harness-validate.mjs` before product edits. `git fetch --prune`, clean fast-forward, and creating a named branch from detached `HEAD` are allowed; dirty, diverged, conflicted, or missing-upstream states must be recorded and resolved before edits. | Preserve existing local state; fill missing `current-task.md` fields before coding, including branch, freshness status, autonomy envelope, and validation plan. | `workflow-router` |
 | 1. Requirement intake | Restate actor, outcome, pain, constraints, non-goals, and success target. Inspect repo evidence before asking. | `current-task.md`: Goal, assumptions, non-goals, allowed/forbidden paths. | `answer-workflow` for evidence lookup |
-| 2. Discovery and brainstorming | Produce 2-3 viable directions from repo context, recommend one, and record rejected alternatives. Do not add a standalone brainstorming skill unless a routing gap proves it. | `current-task.md`: Discovery and brainstorming; `decisions.md`: accepted direction and alternatives. | `grill-me`, `prototype`, `product-capability` |
+| 2. Discovery and brainstorming | Produce 2-3 viable directions from repo context, recommend one, and record rejected alternatives. Default-consider one pressure-test pass for non-trivial changes; use `grill-with-docs` when the answers should update shared language, context, ADR candidates, or code/docs contradictions. Do not add a standalone brainstorming skill unless a routing gap proves it. | `current-task.md`: Discovery and brainstorming; `decisions.md`: accepted direction and alternatives. | `grill-me`, `grill-with-docs`, `prototype`, `product-capability` |
 | 3. Spec and acceptance | Define target behavior, boundaries, compatibility, acceptance criteria, and validation commands. | `current-task.md`: Target spec, acceptance criteria, validation tiers, web acceptance if relevant. | `product-capability`, OpenSpec only when explicit |
-| 4. Detail alignment | Ask only blocking open questions. Every user-visible or irreversible detail must be clear before implementation. | `current-task.md`: Open questions and alignment status; `decisions.md`: resolved decisions. | `grill-me`, `effective-interact` |
+| 4. Detail alignment | Ask only blocking open questions. Every user-visible or irreversible detail must be clear before implementation. | `current-task.md`: Open questions and alignment status; `decisions.md`: resolved decisions. | `grill-me`, `grill-with-docs`, `effective-interact` |
 | 5. TDD execution | Implement one public behavior at a time: RED, GREEN, REFACTOR. Keep changes narrow. | `progress.md`: plan checkpoints, validation records, blockers, checkpoint commit state. | `tdd-workflow`, `karpathy-guidelines` |
 | 6. Verification and acceptance | Run P0, run or risk-assess P1, run or defer P2 with a reason. Browser-visible changes need agent-run browser acceptance. | `progress.md`: validation records, runtime signals, web acceptance, PR status. | `verification-loop`, `webapp-testing`, `e2e-testing` |
-| 7. Finish closeout | Run the required closeout loop for every mutation, with evidence level based on changed paths. Small source/test changes still need implementation or test review evidence; workflow, harness, security, release, credential, permission, or remote-action paths need stronger isolated review. Run the stale-read gate before handoff. Drive PR work to merge-ready or explicitly authorized merge completion, and run `insight` to audit tool-calling and workflow-learning evidence. Expose conflict, merge, and technical-debt decisions instead of handling them silently. | `progress.md`: stale-read gate result, required loop result, final review findings, PR/merge readiness, insight recommendations, workflow/skill candidates; `decisions.md`: durable rule or workflow changes. | `delivery-workflow`, `compound-code-review`, `insight`, `skill-creator` |
+| 7. Finish closeout | Run the required closeout loop for every mutation, with evidence level based on changed paths. Small source/test changes still need implementation or test review evidence; workflow, harness, security, release, credential, permission, or remote-action paths need stronger isolated review. Run the stale-read gate before handoff. Drive PR work to merge-ready or explicitly authorized merge completion, and run `insight` to audit tool-calling and workflow-learning evidence. Expose conflict, merge, technical-debt, and architecture-drift decisions instead of handling them silently. | `progress.md`: stale-read gate result, required loop result, final review findings, PR/merge readiness, insight recommendations, workflow/skill candidates; `decisions.md`: durable rule or workflow changes. | `delivery-workflow`, `compound-code-review`, `insight`, `skill-creator` |
 | 8. Delivery and handoff | Report changes, evidence, stale-read result, residual risk, skipped checks, final review outcome, insight recommendations, next action, and PR state when applicable. | `session-handoff.md`: status, changed files, validation, stale-read result, final review, insight recommendations, residual risk, next action. | `delivery-workflow`, `effective-interact` |
 
 ## Agentic Loops
@@ -103,7 +113,7 @@ The agent should ask questions only when the answer changes the next action or p
 - Which failure mode is acceptable, and which one must be blocked?
 - Can this change alter data, cost, privacy, compatibility, release, rollback, or external side effects?
 
-Use `grill-me` when the plan needs pressure testing. Ask one high-leverage question at a time, give the recommended answer, and explain the tradeoff.
+Use `grill-me` when the plan needs pressure testing. Use `grill-with-docs` when the same interview should also propose glossary, context wiki, domain-model, ADR, or code/docs contradiction updates. Ask one high-leverage question at a time, give the recommended answer, and explain the tradeoff.
 
 ## State File Responsibilities
 
@@ -141,11 +151,15 @@ Checklist before adding an installable skill:
 ## Best Practice Summary
 
 - Optimize for one clear owner, not many competing prompts.
+- Prefer small composable helpers over process-owning imports; keep user control with one workflow owner.
+- Treat shared domain language as an engineering asset: capture it through `grill-with-docs` only when it is durable enough for the LLM Wiki/state model.
 - Treat the main agent as the orchestrator: split non-trivial independent work to subagents when it saves context or improves evidence, but keep final decisions local to the main agent.
 - Start with a freshness gate and finish with a stale-read gate; important facts should be refreshed or explicitly judged unaffected before handoff.
 - Brainstorm before spec lock-in, but record the chosen direction and rejected alternatives.
 - Make tests part of the plan, not an afterthought.
+- Treat feedback loops as the speed limit; if no honest feedback loop exists, surface the design or seam problem instead of pretending with shallow tests.
 - Ask fewer questions, but make every question decision-forcing.
 - Keep implementation boring: smallest scoped diff, public-behavior tests, refactor only while green.
+- Invest in design during ordinary closeout: surface muddy modules, weak seams, and deep-module opportunities before they compound.
 - Close deliberately: final review, PR/merge readiness, and insight learning happen before the final handoff.
 - Treat harness state as memory: current-task for the contract, decisions for rationale, progress for evidence, handoff for restart.

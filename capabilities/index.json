@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "generatedAt": "2026-07-06",
+  "generatedAt": "2026-07-09",
   "components": {
     "harness:minimal": {
       "kind": "harness-template",
@@ -472,6 +472,7 @@
         "assumption-surfacing"
       ],
       "overlapsWith": [
+        "skill:grill-with-docs",
         "skill:product-capability"
       ],
       "routing": "Use when the user asks to be grilled, challenged, pressure-tested, or wants assumptions surfaced before implementation.",
@@ -485,6 +486,38 @@
       ],
       "risk": "low",
       "recommendation": "Use when the user asks to be grilled, challenged, pressure-tested, or wants assumptions surfaced before implementation."
+    },
+    "skill:grill-with-docs": {
+      "kind": "skill",
+      "path": "skills/grill-with-docs",
+      "version": "0.1.0",
+      "source": "mattpocock-skills-adapted",
+      "provides": [
+        "documented-plan-pressure-testing",
+        "domain-model-interview",
+        "context-wiki-update-planning",
+        "adr-candidate-surfacing",
+        "code-doc-contradiction-capture"
+      ],
+      "overlapsWith": [
+        "skill:grill-me",
+        "skill:product-capability",
+        "skill:doc-coauthoring"
+      ],
+      "routing": "Use when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants plan pressure testing that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; do not load when the skill name is only background context for implementation, maintenance, or review; wiki writes require human confirmation.",
+      "detects": [
+        {
+          "path": "skills/grill-with-docs/SKILL.md"
+        },
+        {
+          "path": "skills/grill-with-docs/references/domain-modeling.md"
+        }
+      ],
+      "agents": [
+        "standard"
+      ],
+      "risk": "medium",
+      "recommendation": "Use as a Harness Hub-compatible grill-with-docs entrypoint that preserves one-question-at-a-time pressure testing while mapping durable knowledge to confirmed LLM Wiki, contradiction, and task-state updates."
     },
     "skill:diagnose": {
       "kind": "skill",

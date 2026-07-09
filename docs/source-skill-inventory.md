@@ -1,10 +1,10 @@
 # Source Skill Inventory
 
-Date: 2026-06-30
+Date: 2026-07-09
 
-This inventory records the local refresh of Harness Hub's referenced source repositories after removing `affaan-m/everything-claude-code` from the atomic skill candidate pool. Existing local skill lineage is not rewritten here; this file is only the candidate-source inventory for future atom selection and routing placement. `mattpocock/skills` was refreshed again on 2026-06-30 to evaluate the newer domain, codebase design, issue-flow, and skill-authoring guidance without expanding the default install surface.
+This inventory records the local refresh of Harness Hub's referenced source repositories after removing `affaan-m/everything-claude-code` from the atomic skill candidate pool. Existing local skill lineage is not rewritten here; this file is only the candidate-source inventory for future atom selection and routing placement. `mattpocock/skills` was refreshed again on 2026-07-09 to update existing adapted skills, install a Harness Hub-compatible `grill-with-docs`, and re-evaluate newer engineering, productivity, in-progress, personal, and misc candidates.
 
-The refresh cache is outside the repo at `C:\Users\Admin\.codex\source-cache\harness-hub` so source inspection does not mutate installable skills.
+The 2026-07-09 Matt Pocock refresh cache was kept under ignored task state at `.harness-hub/state/runs/mattpocock-skills-upstream`; prior broader refresh caches may still live outside the repo at `C:\Users\Admin\.codex\source-cache\harness-hub`.
 
 Scan scope:
 
@@ -17,7 +17,7 @@ Scan scope:
 
 | Source | Refreshed checkout | Commit | Candidate skills |
 |---|---|---:|---:|
-| `mattpocock/skills` | `mattpocock-skills-20260630-183437` | `999745ead1b37119380ad1f4de2bcdda5aa5bc84` | 37 total `SKILL.md`; 17 plugin-registered active |
+| `mattpocock/skills` | `.harness-hub/state/runs/mattpocock-skills-upstream` | `d574778f94cf620fcc8ce741584093bc650a61d3` | 38 total `SKILL.md`; 21 plugin-registered active |
 | `Fission-AI/OpenSpec` | `openspec` | `79303b521068c5f525ee61db06b915fc44b098f4` | 11 generated |
 | `obra/superpowers` | `superpowers` | `f2cbfbefebbfef77321e4c9abc9e949826bea9d7` | 14 |
 | `EveryInc/compound-engineering-plugin` | `compound-engineering-plugin` | `f61d1b33eaba7be6e75902e31e49e022abdca3a0` | 38 |
@@ -34,7 +34,7 @@ Scan scope:
 | `JCodesMore/ai-website-cloner-template` | `ai-website-cloner-template` | `c9b4fea5b257370af339abedad727c8903490dac` | 1 |
 | `multica-ai/andrej-karpathy-skills` | `andrej-karpathy-skills` | `2c606141936f1eeef17fa3043a72095b4765b9c2` | 1 |
 
-Total non-ECC canonical/reference skill surfaces scanned: 163.
+Total non-ECC canonical/reference skill surfaces scanned: 164.
 
 ## Excluded Sources
 
@@ -96,20 +96,22 @@ These spot checks are not part of the 2026-06-30 counted candidate pool.
 | `JuliusBrussee/caveman` | Reject by default; reference-only | Good source evidence for output-token measurement and opt-in terse-mode design, but the broad persistent communication-style override conflicts with this repo's Chinese, clarity-first communication policy and ships host/runtime surfaces outside standard skills. |
 | `DietrichGebert/ponytail` | Installed as `ponytail` core standard skill | Better fit for coding minimalism than `caveman` because it targets over-building rather than prose alone: reuse existing code, stdlib, native features, and already-installed dependencies before adding code. Import only the core standard skill and make it the coding-minimalism helper; keep `effective-interact` focused on communication/report density. Do not import upstream persistent modes, hooks, subagent injection, statusline, slash commands, state files, MCP proxy, or multi-host plugin packaging into `skills/`. |
 
-## `mattpocock/skills` 2026-06-30 Refresh Decision
+## `mattpocock/skills` 2026-07-09 Refresh Decision
 
 | Area | Decision | Reason |
 |---|---|---|
-| Already adapted skills | Keep current local adaptations | `grill-me`, `diagnose`, `prototype`, `tdd-workflow`, and `handoff` remain the right default subset. The refreshed upstream reinforces their value but does not require replacing local routing or skill bodies. |
+| Already adapted skills | Refreshed current local adaptations | `grill-me`, `diagnose`, `prototype`, `tdd-workflow`, and `handoff` remain the right default subset. Local bodies stay adapted to Harness Hub owner workflows; source metadata now points to `d574778f94cf620fcc8ce741584093bc650a61d3`, and high-value upstream details were folded into `diagnose`, `prototype`, and `tdd-workflow` references. |
+| `grill-with-docs` | Installed as adapted standard skill | The user explicitly asked to revisit it, and the upstream skill is now a thin orchestrator over `grilling` plus `domain-modeling`. Harness Hub installs a local wrapper that preserves one-question-at-a-time grilling while mapping glossary, contradiction, and ADR-style updates to `.harness-hub/context` and `.harness-hub/state` with human confirmation. |
 | `codebase-design` and `improve-codebase-architecture` | Source ideas, not installed yet | Strong material for deep modules, interface/test-surface discipline, dependency categories, deletion tests, and Design It Twice comparisons. Fold into review/refactor rubrics before considering a new helper skill. |
-| `domain-modeling` and `grill-with-docs` | Source ideas for context rules | Useful terminology, scenario, code/doc contradiction, and ADR-trigger discipline. Direct import would write `CONTEXT.md` and `docs/adr/`, which overlaps the standard harness LLM Wiki and worktree state model. |
+| `domain-modeling` | Source idea absorbed through `grill-with-docs` | Useful terminology, scenario, code/doc contradiction, and ADR-trigger discipline. Direct import would write `CONTEXT.md` and `docs/adr/`, which overlaps the standard harness LLM Wiki and worktree state model. |
 | `writing-great-skills` | Source idea for skill quality | Useful vocabulary for invocation modes, description quality, progressive disclosure, completion criteria, no-op, sediment, and sprawl. Fold into skill-quality guidance and evals instead of installing another authoring skill. |
-| Issue-tracker flows | Reject by default | `to-prd`, `to-issues`, `triage`, `setup-matt-pocock-skills`, and `implement` assume external issue trackers, labels, PRD publication, or root host-file edits. Keep vertical-slice and durable agent-brief patterns as source evidence only. |
+| Issue-tracker and orchestration flows | Reject by default | `ask-matt`, `to-spec`, `to-tickets`, `triage`, `setup-matt-pocock-skills`, `implement`, and `wayfinder` overlap `workflow-router`, SDD/OpenSpec/local issue-routing surfaces, or assume external issue trackers, labels, spec/ticket publication, or root host-file edits. Keep vertical-slice and durable agent-brief patterns as source evidence only. |
 | Host/project setup helpers | Explicit-only reference | `git-guardrails-claude-code`, `setup-pre-commit`, `migrate-to-shoehorn`, and similar helpers are too host- or project-mutating for default distribution. |
+| Research, teaching, writing, personal, and in-progress skills | Not installed | `research` overlaps `documentation-lookup` / `answer-workflow` and assumes background-agent file capture; `teach` overlaps `quick-learn`; `edit-article`, `obsidian-vault`, writing fragments/beats/shape, `wizard`, `loop-me`, and `claude-handoff` are personal, in-progress, host-specific, or too narrow for the standard distribution. |
 
 ## Coverage Notes
 
-- After excluding ECC and refreshing `mattpocock/skills`, `anthropics/skills`, `taste-skill`, `stop-slop`, `ai-website-cloner-template`, and `andrej-karpathy-skills`, the candidate pool has 163 scanned surfaces across workflow, SDD, review, debugging, frontend, website reconstruction, engineering behavior baselines, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, creative artifacts, and prose cleanup. Ralph remains source-recorded but is retired from installable distribution.
+- After excluding ECC and refreshing `mattpocock/skills`, `anthropics/skills`, `taste-skill`, `stop-slop`, `ai-website-cloner-template`, and `andrej-karpathy-skills`, the candidate pool has 164 scanned surfaces across workflow, SDD, review, debugging, frontend, website reconstruction, engineering behavior baselines, Vercel, architecture diagrams, document processing, Claude API, MCP building, skill creation, brand/communications, creative artifacts, and prose cleanup. Ralph remains source-recorded but is retired from installable distribution.
 - The first Anthropic atom pass promoted seven installable skills or local rewrites into `capabilities/index.json`: `claude-api`, `mcp-builder`, `skill-creator`, `doc-coauthoring`, `internal-comms`, `theme-factory`, and `slack-gif-creator`. The prose pass promoted `stop-slop`; the taste pass promoted `design-taste-frontend` and also changed `effective-interact` references and validator behavior. The 2026-06-05 local pass added `package-release-sniffer` for primary-source AI/developer-tool package release discovery without introducing registry clients or scheduled monitoring. The 2026-06-12 local pass added `harness-quality-check` for advisory HTML quality/readiness audits that compose existing Hub and target-repo checks without enforcement or remote side effects. The 2026-06-25 local pass added `insight` for private, read-only repository interaction audits from Codex and Claude Code traces with ignored local report output.
 - The Karpathy pass promoted `karpathy-guidelines` as a helper baseline for coding behavior and intentionally avoided importing host-specific rule files or plugin metadata into `skills/`.
 - The Ponytail pass promoted `ponytail` as the standard coding-minimalism helper and intentionally avoided importing host-specific hooks, plugin packaging, mode state, statusline setup, slash commands, or runtime adapters into `skills/`.

@@ -115,9 +115,12 @@ test('local vocabulary governs concept boundaries without rewriting imported ski
 test('Matt Pocock source refresh records selective absorption without expanding install surface', () => {
   const docs = `${sourceProjects}\n${sourceSkillInventory}\n${workflowSourceDossier}\n${capabilityMap}`;
 
-  expect(sourceProjects).toContain('999745ead1b37119380ad1f4de2bcdda5aa5bc84');
-  expect(sourceSkillInventory).toContain('37 total `SKILL.md`; 17 plugin-registered active');
-  expect(sourceSkillInventory).toContain('`mattpocock/skills` 2026-06-30 Refresh Decision');
+  expect(sourceProjects).toContain('d574778f94cf620fcc8ce741584093bc650a61d3');
+  expect(sourceSkillInventory).toContain('38 total `SKILL.md`; 21 plugin-registered active');
+  expect(sourceSkillInventory).toContain('`mattpocock/skills` 2026-07-09 Refresh Decision');
+  expect(docs).toContain('`grill-with-docs`');
+  expect(docs).toContain('Harness Hub-compatible');
+  expect(docs).toContain('human confirmation');
 
   expect(docs).toContain('`codebase-design`');
   expect(docs).toContain('`improve-codebase-architecture`');
@@ -133,7 +136,7 @@ test('Matt Pocock source refresh records selective absorption without expanding 
   expect(docs).toContain('skill-quality');
   expect(docs).toContain('evals');
 
-  expect(sourceProjects).toContain('`to-prd`, `to-issues`, `triage`, `setup-matt-pocock-skills`, and `implement`');
+  expect(sourceProjects).toContain('`ask-matt`, `to-spec`, `to-tickets`, `triage`, `setup-matt-pocock-skills`, `implement`, and `wayfinder`');
   expect(sourceProjects).toContain('Reject by default');
   expect(sourceProjects).toContain('external issue-tracker');
   expect(sourceProjects).toContain('Do not import the hard rule to always resolve and never abort');

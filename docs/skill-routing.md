@@ -22,6 +22,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 | Validation closeout, finish closeout, cleanup, release notes, handoff, or post-PR status triage | `delivery-workflow` | Run accepted checks, final review/insight closeout, inspect PR mergeability/CI/conflicts after PR creation or update, resolve actionable blockers, and report residual risk. |
 | Harness Hub source, routing, capability metadata, npm lifecycle, or managed cleanup work | `hub-maintenance-workflow` | Use source records and CLI dry-runs instead of removed broad helper skills. |
 | Plan/design pressure testing before implementation | `grill-me` | Ask one hard question at a time and surface assumptions. |
+| Plan/design pressure testing that should also capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates | `grill-with-docs` | Use the `grill-me` interview loop plus Harness Hub context rules; wiki writes require human confirmation. |
 | Diagnose runtime bug, failing command, flaky behavior, or performance regression | `diagnose` | `diagnose` owns unknown runtime bugs and performance regressions; use `tdd-workflow` after the behavior is understood. |
 | Implement production feature, confirmed bug fix, or refactor through tests | `tdd-workflow` | One public behavior at a time through red-green-refactor. |
 | Build throwaway prototype to answer one design question | `prototype` | `prototype` owns disposable learning artifacts only; delete or fold findings into production. |
@@ -71,7 +72,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - Native goal/story loops are handled by current Codex and Claude Code capabilities; Harness Hub no longer distributes Ralph PRD or loop skills.
 - Use `quick-learn` only when the user explicitly wants a source-backed learning project, custom syllabus, study plan, mastery coaching, quizzes, or staged learning review.
 - `sdd-workflow` is the default change lane and `tdd-workflow` is an embedded implementation discipline, not a competing owner.
-- Lightweight brainstorming belongs inside `sdd-workflow`: use repo/source inspection, 2-3 direction comparison, `grill-me` for pressure questions, `prototype` for disposable proof, and `product-capability` for implementation constraints. Do not add or trigger a standalone brainstorming skill unless a future routing gap is explicitly accepted.
+- Lightweight brainstorming belongs inside `sdd-workflow`: use repo/source inspection, 2-3 direction comparison, `grill-me` or `grill-with-docs` for pressure questions, `prototype` for disposable proof, and `product-capability` for implementation constraints. Do not add or trigger a standalone brainstorming skill unless a future routing gap is explicitly accepted.
 - Use `ponytail` as the coding-minimalism layer under `sdd-workflow`, `tdd-workflow`, or `review-workflow` when the request calls for YAGNI, shortest correct diffs, reuse, stdlib/native/already-installed dependencies, or over-engineering review. Use `karpathy-guidelines` for broader engineering behavior guardrails, `coding-standards` for cross-project code quality conventions, and `grill-me` when the user wants an interview-style pressure test.
 - Do not treat `effective-interact` as a default-considered skill for non-trivial sessions merely because a reply may be long; the trigger is a real communication, alignment, verification, approval, handoff, or continuation need.
 - Use `effective-interact` as the default reporting layer when the agent is about to pause on relatively complex information. For material repo or skill behavior changes, default to a validated HTML handoff unless the user explicitly waives HTML or the work is tiny and has no durable evidence trail.
@@ -114,6 +115,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `web-design-guidelines` loads for UI, UX, accessibility, or web interface guideline compliance review.
 - `e2e-testing` loads for durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy.
 - `grill-me` loads when the user says "grill me", asks to be challenged, or wants assumptions surfaced one question at a time.
+- `grill-with-docs` loads when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants a one-question-at-a-time interview that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; it does not load when the skill name is only background context for implementation, maintenance, or review.
 - `product-capability` loads for implementation-ready capability plans with constraints, invariants, interfaces, and unresolved decisions.
 - `claude-api` loads for Claude API or Anthropic SDK build, debug, migration, or tuning work.
 - `mcp-builder` loads for MCP server design, build, review, testing, tool schema, resource, or prompt work.

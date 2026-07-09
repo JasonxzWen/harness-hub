@@ -16,7 +16,7 @@ The source root is `skills/`. Host-specific metadata directories are not part of
 
 | Group | Skills |
 |---|---|
-| Planning and product shaping | `grill-me`, `product-capability`, OpenSpec skills |
+| Planning and product shaping | `grill-me`, `grill-with-docs`, `product-capability`, OpenSpec skills |
 | Debugging and implementation | `diagnose`, `tdd-workflow`, `verification-loop`, `karpathy-guidelines`, `ponytail`, `agent-introspection-debugging` |
 | Review and safety | `compound-code-review`, `security-review`, `coding-standards`, `karpathy-guidelines`, `ponytail` |
 | Documentation, communications, and learning | `doc-coauthoring`, `internal-comms`, `stop-slop`, `documentation-lookup`, `handoff`, `quick-learn` |

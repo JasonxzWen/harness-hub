@@ -39,6 +39,7 @@ const optionalDemoSkills = [
   'web-design-guidelines',
   'e2e-testing',
   'grill-me',
+  'grill-with-docs',
   'product-capability',
   'claude-api',
   'mcp-builder',

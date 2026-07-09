@@ -658,6 +658,62 @@
       "docsBoundary": "`grill-me` loads when the user says \"grill me\", asks to be challenged, or wants assumptions surfaced one question at a time."
     },
     {
+      "id": "grill-with-docs-positive-context-pressure-test",
+      "skill": "grill-with-docs",
+      "kind": "positive",
+      "prompt": "Run grill-with-docs on this architecture plan and capture glossary terms, ADR candidates, and context wiki contradictions as we go.",
+      "expectedSkill": "grill-with-docs",
+      "docsBoundary": "`grill-with-docs` loads when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants a one-question-at-a-time interview that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; it does not load when the skill name is only background context for implementation, maintenance, or review."
+    },
+    {
+      "id": "grill-with-docs-negative-plain-pressure-test",
+      "skill": "grill-with-docs",
+      "kind": "negative",
+      "prompt": "Grill me one question at a time and challenge my assumptions before implementation.",
+      "expectedSkill": "grill-me",
+      "docsBoundary": "`grill-with-docs` loads when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants a one-question-at-a-time interview that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; it does not load when the skill name is only background context for implementation, maintenance, or review."
+    },
+    {
+      "id": "grill-with-docs-forbidden-background-review",
+      "skill": "grill-with-docs",
+      "kind": "forbidden-load",
+      "prompt": "Do a read-only code review of this routing change. Background: it adds skills/grill-with-docs and fixture coverage.",
+      "expectedSkill": "compound-code-review",
+      "docsBoundary": "`grill-with-docs` loads when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants a one-question-at-a-time interview that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; it does not load when the skill name is only background context for implementation, maintenance, or review."
+    },
+    {
+      "id": "grill-with-docs-forbidden-routine-implementation",
+      "skill": "grill-with-docs",
+      "kind": "forbidden-load",
+      "prompt": "Implement support for the grill-with-docs routing fixture with tests.",
+      "expectedSkill": "tdd-workflow",
+      "docsBoundary": "`grill-with-docs` loads when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants a one-question-at-a-time interview that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; it does not load when the skill name is only background context for implementation, maintenance, or review."
+    },
+    {
+      "id": "grill-with-docs-negative-quadrant-pressure-test",
+      "skill": "grill-with-docs",
+      "kind": "negative",
+      "prompt": "Pressure test this quadrant model before implementation.",
+      "expectedSkill": "grill-me",
+      "docsBoundary": "`grill-with-docs` loads when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants a one-question-at-a-time interview that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; it does not load when the skill name is only background context for implementation, maintenance, or review."
+    },
+    {
+      "id": "grill-with-docs-negative-product-capability-plan",
+      "skill": "grill-with-docs",
+      "kind": "negative",
+      "prompt": "Turn this roadmap item into an implementation-ready capability plan with product constraints, invariants, interfaces, acceptance boundaries, and ADR candidates.",
+      "expectedSkill": "product-capability",
+      "docsBoundary": "`grill-with-docs` loads when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants a one-question-at-a-time interview that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; it does not load when the skill name is only background context for implementation, maintenance, or review."
+    },
+    {
+      "id": "grill-with-docs-negative-doc-coauthoring",
+      "skill": "grill-with-docs",
+      "kind": "negative",
+      "prompt": "Collaboratively draft an ADR decision record from these notes and reader-test the structure.",
+      "expectedSkill": "doc-coauthoring",
+      "docsBoundary": "`grill-with-docs` loads when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants a one-question-at-a-time interview that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; it does not load when the skill name is only background context for implementation, maintenance, or review."
+    },
+    {
       "id": "product-capability-positive-capability-plan",
       "skill": "product-capability",
       "kind": "positive",

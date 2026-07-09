@@ -4,7 +4,7 @@ description: Load when a workflow-router-selected owner workflow needs a throwaw
 license: MIT
 metadata:
   source: "mattpocock/skills skills/engineering/prototype"
-  upstream_commit: "9fecab929abb904c68ce3366a1781df31ab22832"
+  upstream_commit: "d574778f94cf620fcc8ce741584093bc650a61d3"
 ---
 
 # Prototype
@@ -23,6 +23,8 @@ First identify the question.
 - UI prototype: use when the question is about layout, interaction, hierarchy, density, or visual alternatives.
 
 If the question is ambiguous, inspect the surrounding code and state the assumption before writing anything.
+
+Read `references/logic-prototype.md` or `references/ui-prototype.md` after choosing the branch when implementation details matter.
 
 ## Rules For Both Branches
 

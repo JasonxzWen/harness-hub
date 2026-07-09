@@ -23,6 +23,8 @@ Switcher rules:
 - previous and next controls
 - URL updates so variants are shareable
 - keyboard shortcuts when practical
+- do not intercept shortcuts while an input, textarea, or contenteditable element is focused
+- visually distinct enough that it cannot be mistaken for production UI
 - hidden or removed before production
 
 Cleanup:
@@ -31,3 +33,10 @@ Cleanup:
 - delete losing variants
 - delete the switcher
 - harden the chosen implementation through normal feature workflow
+
+Anti-patterns:
+
+- variants that differ only in color or copy
+- shared layout code that prevents variants from testing different structures
+- real mutations unless the question is specifically about the mutation experience
+- promoting prototype code directly to production without the normal implementation and verification workflow
