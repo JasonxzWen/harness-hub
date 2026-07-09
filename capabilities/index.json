@@ -1392,6 +1392,12 @@
         "local-agent-event-ledgers",
         "private-insight-reports",
         "tool-call-decision-audits",
+        "prompt-rule-context-audits",
+        "automation-log-audits",
+        "sop-and-script-lesson-mining",
+        "knowledge-cache-candidate-mining",
+        "executable-improvement-queues",
+        "private-improvement-queue-json",
         "effective-interact-visual-report-inputs"
       ],
       "overlapsWith": [
@@ -1401,7 +1407,7 @@
         "skill:answer-workflow",
         "skill:harness-quality-check"
       ],
-      "routing": "Load when the user asks for a private repository interaction insight audit, Codex or Claude Code trace review, agent task profile, tool-call decision audit, collaboration bottleneck analysis, session-level insight, or concrete improvement recommendations from agent traces; use effective-interact as the visual presentation layer for dense reports, source-post for public external-source posts, and agent-introspection-debugging for single-run failures.",
+      "routing": "Load when the user asks for a private repository interaction insight audit, Codex or Claude Code trace review, agent task profile, tool-call decision audit, collaboration bottleneck analysis, prompt/rule context audit, automation log audit, SOP/script lesson mining, knowledge-cache candidates, executable improvement queue, session-level insight, or concrete improvement recommendations from agent traces; use effective-interact as the visual presentation layer for dense reports, source-post for public external-source posts, and agent-introspection-debugging for single-run failures.",
       "detects": [
         {
           "path": "skills/insight/SKILL.md"
@@ -1417,7 +1423,7 @@
         "standard"
       ],
       "risk": "medium",
-      "recommendation": "Audit recent project-related Codex and Claude Code collaboration traces into ignored private reports with confirmed/candidate evidence separation, sharp bottleneck analysis, optional effective-interact visual report inputs for dense audits, and no default project, memory, schedule, remote, or tracked-doc mutation."
+      "recommendation": "Audit recent project-related Codex and Claude Code collaboration traces, prompt/rule layers, automation logs, stale guidance, SOP lessons, repeated agent mistakes, and cacheable knowledge candidates into ignored private reports plus private improvement queue JSON with confirmed/candidate evidence separation, optional effective-interact visual report inputs for dense audits, and no default project, memory, schedule, remote, or tracked-doc mutation."
     },
     "skill:doc-coauthoring": {
       "kind": "skill",

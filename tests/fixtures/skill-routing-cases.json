@@ -703,7 +703,7 @@
       "kind": "positive",
       "prompt": "Run a private repository interaction insight audit from recent Codex and Claude Code work traces, including agent task profile, tool-call decision audit, and collaboration bottlenecks.",
       "expectedSkill": "insight",
-      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, prompt/rule context audits, automation log audits, SOP/script lessons, knowledge-cache candidates, executable improvement queues, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
     },
     {
       "id": "insight-positive-session-insight-recommendations",
@@ -727,7 +727,7 @@
       "kind": "negative",
       "prompt": "Turn this external OpenAI article into a Chinese source-backed public post, preserve figures and links, add an effective-interact summary, and decide whether the repo should change.",
       "expectedSkill": "source-post",
-      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, prompt/rule context audits, automation log audits, SOP/script lessons, knowledge-cache candidates, executable improvement queues, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
     },
     {
       "id": "insight-forbidden-single-agent-loop",
@@ -735,7 +735,7 @@
       "kind": "forbidden-load",
       "prompt": "The agent is stuck in a repeated tool loop and burning context without progress; capture state and recover.",
       "expectedSkill": "agent-introspection-debugging",
-      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, prompt/rule context audits, automation log audits, SOP/script lessons, knowledge-cache candidates, executable improvement queues, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
     },
     {
       "id": "doc-coauthoring-positive-prd",

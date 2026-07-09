@@ -4,15 +4,19 @@ The v1 host adapters support Codex and Claude Code. They are discovery rules, no
 
 ## Codex Adapter
 
-Collect project-related traces from standard repo-level and user-level Codex work locations. Prefer repo-local host work directories, user-level session roots, and automation memory files. Use explicit cwd, repo path, package, or remote matches to classify evidence as high-confidence confirmed.
+Collect project-related traces from standard repo-level and user-level Codex work locations. Prefer repo-local host work directories, user-level session roots, automation logs, and Codex prompt/rule roots. Use explicit cwd, repo path, package, or remote matches to classify evidence as high-confidence confirmed.
 
 Large Codex JSONL traces should be sampled from the tail by default so recent work is preserved. If older lines matter, rerun collection with a larger `--jsonl-tail-bytes` value.
 
+Codex prompt context includes repository agent instruction files plus repo-local and user-level Codex prompt files when available. Treat it as context, not primary interaction evidence.
+
 ## Claude Code Adapter
 
-Collect project-related traces from standard repo-level and user-level Claude Code work locations. Prefer repo-local host work directories, matching encoded project roots, history exports, and task state. Treat project-name-only matches as candidates; classify as confirmed only when cwd, repo path, package, or remote identity is present.
+Collect project-related traces from standard repo-level and user-level Claude Code work locations. Prefer repo-local host work directories, matching encoded project roots, history exports, task state, and Claude prompt/rule roots. Treat project-name-only matches as candidates; classify as confirmed only when cwd, repo path, package, or remote identity is present.
 
 Large Claude Code JSONL traces follow the same tail-sampling rule as Codex traces.
+
+Claude Code prompt context includes repository Claude instruction files plus repo-local and user-level Claude Code prompt files when available. Treat it as context, not primary interaction evidence.
 
 ## Overrides
 
@@ -24,10 +28,12 @@ node skills/insight/scripts/collect-insight-events.mjs \
   --hosts codex,claude-code \
   --codex-root <path> \
   --claude-root <path> \
+  --prompt-root <path> \
+  --automation-root <path> \
   --jsonl-tail-bytes <bytes>
 ```
 
-Use multiple overrides by repeating the option or by using the operating system path separator inside one value.
+Use multiple overrides by repeating the option or by using the operating system path separator inside one value. Use `--prompt-root` for nonstandard user/project instruction layers and `--automation-root` for scheduled task logs outside the default Codex automation directory.
 
 ## Degraded Mode
 

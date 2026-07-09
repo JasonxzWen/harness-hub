@@ -237,6 +237,7 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   const validationSummaryDelivery = await classify('\u9a8c\u8bc1\u603b\u7ed3\u548c\u5269\u4f59\u98ce\u9669');
   const skillExplainerQuestion = await classify('讲讲 insight 和 effective-interact 的作用，我怀疑这两个 skill 没有起效');
   const insightMaintenance = await classify('修复 insight 没有给出会话洞察和改进建议的问题');
+  const insightEnhancement = await classify('\u5b8c\u5584 insight skill\uff0c\u73b0\u5728\u7684\u529f\u80fd\u6709\u54ea\u4e9b\uff1f');
   const effectiveInteractDesignRefresh = await classify('把 effective-interact 的报告模板改成 DESIGN.md 和组件优先，并复刻 html-effectiveness 的字体、排版、配色和组件间距。');
 
   expect(review.state).toBe('review');
@@ -267,6 +268,8 @@ test('workflow-router executable classifier handles Chinese user intent', async 
   expect(skillExplainerQuestion.owner).toBe('answer-workflow');
   expect(insightMaintenance.state).toBe('harness-hub-maintenance');
   expect(insightMaintenance.owner).toBe('hub-maintenance-workflow');
+  expect(insightEnhancement.state).toBe('harness-hub-maintenance');
+  expect(insightEnhancement.owner).toBe('hub-maintenance-workflow');
   expect(effectiveInteractDesignRefresh.state).toBe('harness-hub-maintenance');
   expect(effectiveInteractDesignRefresh.owner).toBe('hub-maintenance-workflow');
   expect(effectiveInteractDesignRefresh.expectedOutputMode).toBe('html-artifact');

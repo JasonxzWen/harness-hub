@@ -11,11 +11,28 @@ const TEXT_EXTENSIONS = new Set(['.md', '.markdown', '.txt', '.log', '.json', '.
 const CORE_REPO_FILES = new Set([
   'AGENTS.md',
   'CLAUDE.md',
+  'CODEX.md',
+  'GEMINI.md',
   'README.md',
   'README.zh-CN.md',
   'package.json',
   'progress.md',
   'session-handoff.md',
+]);
+const PROMPT_CONTEXT_FILES = new Set([
+  'AGENTS.md',
+  'AGENTS.local.md',
+  'CLAUDE.md',
+  'CLAUDE.local.md',
+  'CODEX.md',
+  'CODEX.local.md',
+  'GEMINI.md',
+  'GEMINI.local.md',
+  'instructions.md',
+  'system-prompt.md',
+  'project-instructions.md',
+  '.cursorrules',
+  '.windsurfrules',
 ]);
 const REPO_STATE_NAMES = new Set([
   'current-task.md',
@@ -63,6 +80,30 @@ const HOST_SKIP_DIRS = new Set([
   'source-cache',
   'plugins',
   'cache',
+  'automations',
+]);
+const PROMPT_SKIP_DIRS = new Set([
+  ...COMMON_SKIP_DIRS,
+  '.tmp',
+  'tmp',
+  'sessions',
+  'automations',
+  'tasks',
+  'projects',
+  'worktrees',
+  'run-worktrees',
+  'plugins',
+  'source-cache',
+  'git-cache',
+  'npm-cache',
+  'logs',
+  'src',
+  'tests',
+  'skills',
+  'site',
+  'vendor',
+  'harness',
+  'reports',
 ]);
 const DEFAULT_MAX_FILES = 1200;
 const MAX_FILE_BYTES = 250_000;
@@ -74,6 +115,97 @@ const AFFINITY_RANK = {
   strong: 3,
   exact: 4,
 };
+const USER_FRICTION_TERMS = [
+  'misunderstood',
+  'misread',
+  'ambiguous',
+  'unclear request',
+  'not what i asked',
+  'i meant',
+  'wasted time',
+  'confusing wording',
+  '\u8bef\u89e3',
+  '\u6ca1\u7406\u89e3',
+  '\u6b67\u4e49',
+  '\u4e0d\u662f\u6211\u8981',
+  '\u6d6a\u8d39\u65f6\u95f4',
+];
+const GUIDANCE_DRIFT_TERMS = [
+  'stale',
+  'outdated',
+  'obsolete',
+  'wrong guidance',
+  'incorrect guidance',
+  'misleading',
+  'docs disagree',
+  'doc/code conflict',
+  'rule drift',
+  'garbage info',
+  '\u8fc7\u65f6',
+  '\u8bef\u5bfc',
+  '\u9519\u8bef\u4fe1\u606f',
+  '\u5783\u573e\u4fe1\u606f',
+];
+const REPEATED_MISTAKE_TERMS = [
+  'same mistake',
+  'repeated mistake',
+  'kept retrying',
+  'keeps retrying',
+  'again and again',
+  'repeat lookup',
+  'low-value lookup',
+  'tool loop',
+  '\u91cd\u590d\u72af\u9519',
+  '\u53cd\u590d',
+  '\u4ece0\u52301',
+];
+const SOP_TERMS = [
+  'sop',
+  'runbook',
+  'script tip',
+  'script trick',
+  'powershell',
+  'encoding',
+  'utf-8',
+  'utf8',
+  'gbk',
+  'cp936',
+  'github',
+  'gh ',
+  'pull request',
+  'check run',
+  'mergeability',
+  '\u4e2d\u6587\u7f16\u7801',
+  '\u4e71\u7801',
+  '\u8c03\u7528\u6280\u5de7',
+];
+const KNOWLEDGE_CACHE_TERMS = [
+  'cache this',
+  'knowledge cache',
+  'remember that',
+  'wiki',
+  'relearn',
+  'learned again',
+  'from scratch',
+  'where is',
+  'where are',
+  'locate',
+  '\u77e5\u8bc6\u7f13\u5b58',
+  '\u7f13\u5b58',
+  '\u6bcf\u6b21\u5bf9\u8bdd',
+  '\u5b9a\u4f4d',
+];
+const AUTOMATION_TERMS = [
+  'automation',
+  'scheduled',
+  'schedule',
+  'cron',
+  'timer',
+  'recurring',
+  'monitor',
+  '\u5b9a\u65f6',
+  '\u81ea\u52a8\u5316',
+];
 
 function usage() {
   return `Usage: node skills/insight/scripts/collect-insight-events.mjs --repo <path> [--since 30d] [--hosts codex,claude-code] [--out <dir>] [--json]
@@ -84,6 +216,8 @@ Options:
   --hosts <list>         Comma-separated hosts: codex, claude-code. Defaults to both.
   --codex-root <path>    Extra Codex trace root. Repeat or use the OS path separator.
   --claude-root <path>   Extra Claude Code trace root. Repeat or use the OS path separator.
+  --prompt-root <path>   Extra prompt/rule context root. Repeat or use the OS path separator.
+  --automation-root <path> Extra automation log root. Repeat or use the OS path separator.
   --out <dir>            Output directory. Defaults to an OS temp directory.
   --max-files <n>        Maximum files scanned across selected roots. Defaults to ${DEFAULT_MAX_FILES}.
   --jsonl-tail-bytes <n> Maximum tail bytes read from each JSONL trace. Defaults to ${DEFAULT_JSONL_TAIL_BYTES}.
@@ -99,6 +233,8 @@ function parseArgs(argv) {
     out: null,
     codexRoots: [],
     claudeRoots: [],
+    promptRoots: [],
+    automationRoots: [],
     maxFiles: DEFAULT_MAX_FILES,
     jsonlTailBytes: DEFAULT_JSONL_TAIL_BYTES,
     json: false,
@@ -119,6 +255,10 @@ function parseArgs(argv) {
       options.codexRoots.push(...splitPathList(readValue(argv, ++index, arg)));
     } else if (arg === '--claude-root') {
       options.claudeRoots.push(...splitPathList(readValue(argv, ++index, arg)));
+    } else if (arg === '--prompt-root') {
+      options.promptRoots.push(...splitPathList(readValue(argv, ++index, arg)));
+    } else if (arg === '--automation-root') {
+      options.automationRoots.push(...splitPathList(readValue(argv, ++index, arg)));
     } else if (arg === '--max-files') {
       options.maxFiles = Number.parseInt(readValue(argv, ++index, arg), 10);
       if (!Number.isFinite(options.maxFiles) || options.maxFiles <= 0) {
@@ -267,6 +407,27 @@ function discoverRoots(options, identity, hosts, warnings) {
   }];
   const home = os.homedir();
 
+  roots.push({
+    root: identity.repo,
+    host: 'repo',
+    sourceType: 'repo-prompt-context',
+    sourceClass: 'prompt-context',
+    scanMode: 'prompt-context',
+    required: true,
+    repoAffinityHint: 'repo-prompt-context',
+  });
+  for (const root of options.promptRoots || []) {
+    roots.push({
+      root: path.resolve(root),
+      host: 'prompt-context',
+      sourceType: 'override-prompt-context',
+      sourceClass: 'prompt-context',
+      scanMode: 'prompt-context',
+      required: false,
+      repoAffinityHint: 'global-prompt-context',
+    });
+  }
+
   if (hosts.includes('codex')) {
     roots.push({
       root: path.join(identity.repo, '.codex'),
@@ -274,6 +435,24 @@ function discoverRoots(options, identity, hosts, warnings) {
       sourceType: 'repo-host-workdir',
       sourceClass: 'host-trace',
       scanMode: 'host-trace',
+      required: false,
+      repoAffinityHint: 'exact',
+    });
+    roots.push({
+      root: path.join(identity.repo, '.codex'),
+      host: 'codex',
+      sourceType: 'repo-prompt-context',
+      sourceClass: 'prompt-context',
+      scanMode: 'prompt-context',
+      required: false,
+      repoAffinityHint: 'repo-prompt-context',
+    });
+    roots.push({
+      root: path.join(identity.repo, '.codex', 'automations'),
+      host: 'codex',
+      sourceType: 'repo-automation-log',
+      sourceClass: 'automation-log',
+      scanMode: 'automation-log',
       required: false,
       repoAffinityHint: 'exact',
     });
@@ -298,10 +477,19 @@ function discoverRoots(options, identity, hosts, warnings) {
     roots.push({
       root: path.join(home, '.codex', 'automations'),
       host: 'codex',
-      sourceType: 'automation-memory',
-      sourceClass: 'automation-memory',
-      scanMode: 'automation-memory',
+      sourceType: 'user-automation-log',
+      sourceClass: 'automation-log',
+      scanMode: 'automation-log',
       required: false,
+    });
+    roots.push({
+      root: path.join(home, '.codex'),
+      host: 'codex',
+      sourceType: 'user-prompt-context',
+      sourceClass: 'prompt-context',
+      scanMode: 'prompt-context',
+      required: false,
+      repoAffinityHint: 'global-prompt-context',
     });
   }
 
@@ -314,6 +502,15 @@ function discoverRoots(options, identity, hosts, warnings) {
       scanMode: 'host-trace',
       required: false,
       repoAffinityHint: 'exact',
+    });
+    roots.push({
+      root: path.join(identity.repo, '.claude'),
+      host: 'claude-code',
+      sourceType: 'repo-prompt-context',
+      sourceClass: 'prompt-context',
+      scanMode: 'prompt-context',
+      required: false,
+      repoAffinityHint: 'repo-prompt-context',
     });
     for (const root of options.claudeRoots) {
       roots.push({
@@ -344,11 +541,36 @@ function discoverRoots(options, identity, hosts, warnings) {
       scanMode: 'host-trace',
       required: false,
     });
+    roots.push({
+      root: claudeHome,
+      host: 'claude-code',
+      sourceType: 'user-prompt-context',
+      sourceClass: 'prompt-context',
+      scanMode: 'prompt-context',
+      required: false,
+      repoAffinityHint: 'global-prompt-context',
+    });
+  }
+
+  for (const root of options.automationRoots || []) {
+    roots.push({
+      root: path.resolve(root),
+      host: 'automation',
+      sourceType: 'override-automation-log',
+      sourceClass: 'automation-log',
+      scanMode: 'automation-log',
+      required: false,
+    });
   }
 
   const seen = new Set();
   return roots.filter((entry) => {
-    const key = path.resolve(entry.root).toLowerCase();
+    const key = [
+      path.resolve(entry.root).toLowerCase(),
+      entry.host,
+      entry.sourceType,
+      entry.scanMode,
+    ].join('|');
     if (seen.has(key)) {
       return false;
     }
@@ -481,8 +703,11 @@ function shouldDescend(rootEntry, name) {
   if (rootEntry.scanMode === 'repo-state') {
     return !REPO_SKIP_DIRS.has(lower);
   }
-  if (rootEntry.scanMode === 'automation-memory') {
+  if (rootEntry.scanMode === 'automation-memory' || rootEntry.scanMode === 'automation-log') {
     return !AUTOMATION_SKIP_DIRS.has(lower);
+  }
+  if (rootEntry.scanMode === 'prompt-context') {
+    return !PROMPT_SKIP_DIRS.has(lower);
   }
   return !HOST_SKIP_DIRS.has(lower);
 }
@@ -490,19 +715,29 @@ function shouldDescend(rootEntry, name) {
 function includeFile(rootEntry, identity, filePath, stat, sinceDate) {
   const name = path.basename(filePath);
   const ext = path.extname(name).toLowerCase();
-  if (!TEXT_EXTENSIONS.has(ext) && !CORE_REPO_FILES.has(name)) {
+  const isPromptContext = rootEntry.scanMode === 'prompt-context' && isPromptContextFile(identity, filePath);
+  if (!TEXT_EXTENSIONS.has(ext) && !CORE_REPO_FILES.has(name) && !isPromptContext) {
     return false;
   }
 
   if (rootEntry.scanMode === 'repo-state' && !isRepoStateFile(identity, filePath)) {
     return false;
   }
+  if (rootEntry.scanMode === 'host-trace' && isPromptContext) {
+    return false;
+  }
   if (rootEntry.scanMode === 'automation-memory' && name.toLowerCase() !== 'memory.md') {
+    return false;
+  }
+  if (rootEntry.scanMode === 'automation-log' && !isAutomationEvidenceFile(filePath)) {
+    return false;
+  }
+  if (rootEntry.scanMode === 'prompt-context' && !isPromptContext) {
     return false;
   }
 
   const alwaysInclude = rootEntry.scanMode === 'repo-state' && isRepoStateFile(identity, filePath);
-  return alwaysInclude || stat.mtime >= sinceDate;
+  return alwaysInclude || isPromptContext || stat.mtime >= sinceDate;
 }
 
 function isRepoStateFile(identity, filePath) {
@@ -520,6 +755,32 @@ function isRepoStateFile(identity, filePath) {
   }
   if (rel.startsWith('docs/')) {
     return /(architecture|roadmap|requirement|workflow|routing|handoff|decision|capability-map|source-projects)/i.test(lowerName);
+  }
+  return false;
+}
+
+function isAutomationEvidenceFile(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  return TEXT_EXTENSIONS.has(ext);
+}
+
+function isPromptContextFile(identity, filePath) {
+  const name = path.basename(filePath);
+  const lowerName = name.toLowerCase();
+  const rel = isInside(filePath, identity.repo)
+    ? path.relative(identity.repo, filePath).replace(/\\/g, '/')
+    : filePath.replace(/\\/g, '/');
+  if (PROMPT_CONTEXT_FILES.has(name)) {
+    return true;
+  }
+  if (PROMPT_CONTEXT_FILES.has(lowerName)) {
+    return true;
+  }
+  if (lowerName.endsWith('.prompt.md') || lowerName.endsWith('.instructions.md')) {
+    return true;
+  }
+  if (rel.startsWith('.harness-hub/context/')) {
+    return TEXT_EXTENSIONS.has(path.extname(filePath).toLowerCase());
   }
   return false;
 }
@@ -576,6 +837,24 @@ function assessRepoAffinity(filePath, content, rootEntry, identity) {
       relevance: 'confirmed',
       confidence: 'medium',
       matchedTerms: ['repo-state'],
+    };
+  }
+
+  if (rootEntry.scanMode === 'prompt-context' && isInside(filePath, identity.repo)) {
+    return {
+      repoAffinity: 'background',
+      relevance: 'confirmed',
+      confidence: 'medium',
+      matchedTerms: ['repo-prompt-context'],
+    };
+  }
+
+  if (rootEntry.repoAffinityHint === 'global-prompt-context') {
+    return {
+      repoAffinity: 'background',
+      relevance: 'confirmed',
+      confidence: 'medium',
+      matchedTerms: ['global-prompt-context'],
     };
   }
 
@@ -668,6 +947,14 @@ function classifySignals(content, eventType = 'file-evidence') {
     blocker: includesAny(text, ['blocked', 'blocker', 'error', 'failed', 'failure', 'timeout', 'conflict', 'stuck', 'iserror', 'createprocesswithlogonw']),
     decision: includesAny(text, ['decision', 'decided', 'accepted', 'rejected', 'tradeoff', 'acceptance']),
     handoff: eventType === 'handoff' || includesAny(text, ['handoff', 'summary', 'next action', 'resume', 'task_complete']),
+    userFriction: includesAny(text, USER_FRICTION_TERMS),
+    guidanceDrift: includesAny(text, GUIDANCE_DRIFT_TERMS),
+    repeatedMistake: includesAny(text, REPEATED_MISTAKE_TERMS),
+    sopLesson: includesAny(text, SOP_TERMS),
+    encodingIssue: includesAny(text, ['encoding', 'utf-8', 'utf8', 'gbk', 'cp936', '\u4e2d\u6587\u7f16\u7801', '\u4e71\u7801']),
+    githubSop: includesAny(text, ['github', 'gh ', 'pull request', 'pr status', 'mergeability', 'check run', 'status check']),
+    knowledgeCache: includesAny(text, KNOWLEDGE_CACHE_TERMS),
+    automation: includesAny(text, AUTOMATION_TERMS),
   };
 }
 
@@ -892,6 +1179,7 @@ function makeEvent(candidate, details, identity) {
   const text = String(details.text || '');
   const mergedSignals = {
     ...classifySignals(text, details.eventType),
+    ...sourceSignalsFor(sourceClass, candidate.rootEntry.sourceType),
     ...(details.signals || {}),
   };
   const relPath = isInside(candidate.path, identity.repo)
@@ -917,6 +1205,15 @@ function makeEvent(candidate, details, identity) {
   };
 }
 
+function sourceSignalsFor(sourceClass, sourceType) {
+  return {
+    promptContext: sourceClass === 'prompt-context',
+    automation: sourceClass === 'automation-log'
+      || sourceClass === 'automation-memory'
+      || String(sourceType || '').includes('automation'),
+  };
+}
+
 function sourceClassFor(candidate) {
   const lowerPath = candidate.path.toLowerCase();
   if (includesAny(lowerPath, ['source-cache', `${path.sep}cache${path.sep}`, `${path.sep}run-worktrees${path.sep}`, `${path.sep}git-cache${path.sep}`])) {
@@ -929,8 +1226,11 @@ function evidenceRoleFor(sourceClass, eventType) {
   if (sourceClass === 'repo-state') {
     return 'context';
   }
-  if (sourceClass === 'automation-memory' || sourceClass === 'host-trace') {
+  if (sourceClass === 'automation-memory' || sourceClass === 'automation-log' || sourceClass === 'host-trace') {
     return ['user-message', 'tool-call', 'tool-result', 'handoff'].includes(eventType) ? 'interaction' : 'context';
+  }
+  if (sourceClass === 'prompt-context') {
+    return 'context';
   }
   if (sourceClass === 'env-state') {
     return 'environment';
