@@ -13,7 +13,7 @@ harness-hub install <target> --target standard --yes
 
 `standard` is the complete target migration path for prompt engineering, context engineering, harness engineering, loop engineering, and target-distributed reusable skills. `init-harness --target standard --yes` installs that standard skill and routing surface, writes the root harness contract, creates local task state, initializes the LLM Wiki context pack under `.harness-hub/context/`, validates the target, and records ownership in `.harness-hub/lock.json`.
 
-Harness Hub source-maintenance resources are not part of the target migration surface. Workflows for this repository's source records, capability metadata, npm lifecycle, release process, and managed update/remove implementation stay local to the Harness Hub source checkout. `insight` remains part of `standard` because it is a portable private repository interaction audit skill.
+Harness Hub source-maintenance resources are not part of the target migration surface. Workflows for this repository's source records, capability metadata, npm lifecycle, release process, and managed update/remove implementation stay local to the Harness Hub source checkout. `agent-interaction-audit` remains part of `standard` because it is a portable private repository interaction audit skill.
 
 `harness:minimal` and `harness/minimal/` are internal component/template identifiers. They are not a second user-facing target, pack, level, or reduced install mode.
 

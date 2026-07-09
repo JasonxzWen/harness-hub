@@ -40,11 +40,14 @@ The arbiter must use evidence, not majority vote. If reviewers disagree, the arb
 | `plan-review` | Before implementation | Main agent plan | Delegated-agent plan reviewer or checklist | Read-only plan arbiter | Proceed, revise plan, or ask a blocking question. |
 | `test-design` | Before implementation | Test matrix draft | Test-strategy reviewer | Acceptance arbiter | Add missing P0/P1/P2 coverage or accept deterministic substitute. |
 | `implementation-review` | After a slice | Implementer | Parallel code-review lenses | Review arbiter | Fix, defer with risk, or continue. |
+| `test-review` | Finish closeout | Changed tests and fixtures | Test-contract reviewer or deterministic test run | Review arbiter | Fix brittle or missing tests, record accepted risk, or deliver. |
+| `workflow-review` | Finish closeout | Workflow, harness, routing, or agent-rule diff | Parallel workflow/routing lenses | Workflow arbiter | Fix drift, accept deterministic downgrade, or deliver. |
+| `security-review` | Finish closeout | Security-sensitive diff | Security reviewer or deterministic security check | Security arbiter | Fix blocker, ask for user decision, or record residual risk. |
 | `frontend-acceptance` | Acceptance | Current app/version | Fresh-context browser verifier | UX/acceptance arbiter | Fix UI, record skip, or deliver. |
 | `diagnosis-regression` | Diagnosis | Fix candidate | Reproducer and regression check | Root-cause arbiter | Continue diagnosis or accept fix. |
 | `docs-consistency` | Finish closeout | Current docs/code/spec diff | Documentation reader and code reader, or deterministic drift check | Docs/code drift arbiter | Fix docs or code, record accepted drift, or deliver. |
 | `pr-closeout` | Delivery | Branch/PR | PR status checker | Release-risk arbiter | Fix in scope, ask user, or hand off. |
-| `insight-retro` | Finish closeout | Session trace | `insight` report | Workflow-learning arbiter | Add rule, eval case, skill follow-up, or no-op. |
+| `agent-interaction-retro` | Finish closeout | Session trace | `agent-interaction-audit` report | Workflow-learning arbiter | Add rule, eval case, skill follow-up, or no-op. |
 
 ## Safety Boundaries
 

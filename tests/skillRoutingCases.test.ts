@@ -45,7 +45,7 @@ const optionalDemoSkills = [
   'mcp-builder',
   'skill-creator',
   'source-post',
-  'insight',
+  'agent-interaction-audit',
   'doc-coauthoring',
   'internal-comms',
   'stop-slop',

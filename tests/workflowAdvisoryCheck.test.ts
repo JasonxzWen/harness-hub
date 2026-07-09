@@ -168,7 +168,7 @@ test('advisory check warns when material delivery lacks an effective-interact ha
     'missing-validation',
     'missing-closeout-review',
     'missing-pr-readiness',
-    'missing-insight-audit',
+    'missing-agent-interaction-audit',
     'missing-acceptance-arbiter',
     'missing-final-review-arbiter',
     'missing-effective-interact-html-handoff',
@@ -192,7 +192,7 @@ test('advisory check requires closeout evidence for delivery even when work is n
   expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
     'missing-closeout-review',
     'missing-pr-readiness',
-    'missing-insight-audit',
+    'missing-agent-interaction-audit',
     'missing-acceptance-arbiter',
     'missing-final-review-arbiter',
   ]);
@@ -209,7 +209,7 @@ test('advisory check passes delivery when validation, closeout evidence, and HTM
     '--has-html-handoff',
     '--has-closeout-review',
     '--has-pr-readiness',
-    '--has-insight',
+    '--has-agent-interaction-audit',
     '--has-acceptance-arbiter',
     '--has-final-review-arbiter',
   ]);
@@ -218,6 +218,71 @@ test('advisory check passes delivery when validation, closeout evidence, and HTM
   expect(result.expectedOutputMode).toBe('html-artifact');
   expect(result.htmlRequired).toBe(true);
   expect(result.warnings).toEqual([]);
+});
+
+test('advisory check keeps legacy insight closeout evidence compatible', () => {
+  const flagAlias = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--has-validation',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-insight',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
+    '--handoff-waiver',
+    'Plain handoff is enough.',
+  ]);
+  const spacedLabelDir = makeTempDir('harness-hub-advisory-agent-interaction-label-');
+  const spacedLabelTask = writeCurrentTask(spacedLabelDir, `${completeCurrentTaskBody()}
+
+## Finish closeout
+
+- Agent interaction audit recommendations: skipped after review; no workflow lesson.
+`);
+  const spacedLabel = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--has-validation',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
+    '--handoff-waiver',
+    'Plain handoff is enough.',
+    '--current-task',
+    spacedLabelTask,
+  ]);
+  const legacyHeadingDir = makeTempDir('harness-hub-advisory-insight-heading-');
+  const legacyHeadingTask = writeCurrentTask(legacyHeadingDir, `${completeCurrentTaskBody()}
+
+## Insight Recommendations
+
+- skipped after review; no workflow lesson.
+`);
+  const legacyHeading = runAdvisory([
+    '--state',
+    'delivery',
+    '--phase',
+    'pre-delivery',
+    '--has-validation',
+    '--has-closeout-review',
+    '--has-pr-readiness',
+    '--has-acceptance-arbiter',
+    '--has-final-review-arbiter',
+    '--handoff-waiver',
+    'Plain handoff is enough.',
+    '--current-task',
+    legacyHeadingTask,
+  ]);
+
+  expect(flagAlias.warnings).toEqual([]);
+  expect(spacedLabel.warnings).toEqual([]);
+  expect(legacyHeading.warnings).toEqual([]);
 });
 
 test('advisory check accepts explicit HTML handoff waiver for material delivery', () => {
@@ -230,7 +295,7 @@ test('advisory check accepts explicit HTML handoff waiver for material delivery'
     '--has-validation',
     '--has-closeout-review',
     '--has-pr-readiness',
-    '--has-insight',
+    '--has-agent-interaction-audit',
     '--has-acceptance-arbiter',
     '--has-final-review-arbiter',
     '--html-handoff-waiver',
@@ -256,7 +321,7 @@ test('advisory check can explicitly require html-artifact output mode', () => {
     '--has-handoff',
     '--has-closeout-review',
     '--has-pr-readiness',
-    '--has-insight',
+    '--has-agent-interaction-audit',
     '--has-acceptance-arbiter',
     '--has-final-review-arbiter',
     '--expected-output-mode',
@@ -436,7 +501,7 @@ test('advisory check does not treat closeout template labels as evidence', () =>
   expect(result.warnings.map((warning: { id: string }) => warning.id)).toEqual([
     'missing-closeout-review',
     'missing-pr-readiness',
-    'missing-insight-audit',
+    'missing-agent-interaction-audit',
     'missing-acceptance-arbiter',
     'missing-final-review-arbiter',
   ]);

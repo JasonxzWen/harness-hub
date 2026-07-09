@@ -126,7 +126,7 @@ When a delegated agent writes files in the current worktree, record a path lease
 
 | Stage | Loop | Iteration | Max iterations | Producer | Verifier | Arbiter | Evidence | Stop condition |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Add stage. | plan-review / test-design / implementation-review / frontend-acceptance / diagnosis-regression / docs-consistency / pr-closeout / process-retro | 1 | 1-3, or leave blank for a single-pass loop | Add owner. | delegated-agent / deterministic-check / browser / CI / explicit skip | delegated-agent arbiter / local read-only arbiter / explicit skip | Add evidence path or summary. | continue / revise / interrupt / deliver / handoff / complete |
+| Add stage. | plan-review / test-design / implementation-review / test-review / workflow-review / security-review / frontend-acceptance / diagnosis-regression / docs-consistency / pr-closeout / agent-interaction-retro | 1 | 1-3, or leave blank for a single-pass loop | Add owner. | delegated-agent / deterministic-check / browser / CI / explicit skip | delegated-agent arbiter / local read-only arbiter / explicit skip | Add evidence path or summary. | continue / revise / interrupt / deliver / handoff / complete |
 
 When a loop may repeat, record `iteration`, `maxIterations`, and a stop condition. Single-pass loops may leave those fields blank in Markdown records; JSON loop records should omit unused fields rather than write `n/a`. Do not continue another loop iteration after the maximum is reached without interrupting for a user-visible decision.
 
@@ -168,9 +168,9 @@ When a loop may repeat, record `iteration`, `maxIterations`, and a stop conditio
 - Review method: subagent / independent local pass / explicit skip.
 - Review focus: technical debt, first-principles implementation fit, project-rule drift, refactor or warning recommendations.
 - Review findings:
-- Insight audit required: yes/no.
-- Insight focus: tool-calling quality, repeated low-value lookup loops, misleading evidence, docs/code conflicts, AI infrastructure lessons, and project process improvements.
-- Insight recommendations:
+- Agent interaction audit required: yes/no.
+- Agent interaction audit focus: tool-calling quality, repeated low-value lookup loops, misleading evidence, docs/code conflicts, AI infrastructure lessons, and project process improvements.
+- Agent interaction audit recommendations:
 - Process improvement candidate: none / project rule / validation case / documentation / automation check / follow-up task.
 - PR or merge readiness:
 - Conflict decisions surfaced to user:
@@ -204,5 +204,5 @@ When a loop may repeat, record `iteration`, `maxIterations`, and a stop conditio
 - Update `quality-document.md` when validation evidence changes the quality snapshot.
 - Fill `evaluator-rubric.md` for material implementation or review work.
 - Record validation command status, passed/failed counts when available, output location or summary, and checkpoint commit state.
-- Record standard startup status, runtime signals, agentic loop records, finish closeout findings, insight recommendations, PR status when a PR was created or updated, and review feedback that should become a rule or follow-up.
+- Record standard startup status, runtime signals, agentic loop records, finish closeout findings, agent interaction audit recommendations, PR status when a PR was created or updated, and review feedback that should become a rule or follow-up.
 - Run `node scripts/harness-validate.mjs`.

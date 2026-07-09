@@ -108,6 +108,39 @@ test('agentic loop check accepts docs-consistency evidence with iteration bounds
   expect(result.json.findings).toEqual([]);
 });
 
+test('agentic loop check accepts required closeout review loop types', () => {
+  const result = runLoopCheck({
+    loops: ['workflow-review', 'test-review', 'security-review'].map((loop) => ({
+      loop,
+      stage: 'finish-closeout',
+      task: `Check ${loop} evidence before handoff.`,
+      acceptanceCriteria: 'Required loop evidence must use a canonical loop type.',
+      producer: {
+        type: 'main-agent',
+        evidence: 'current dirty diff',
+        output: 'required closeout loop evidence',
+      },
+      verifier: {
+        type: 'deterministic-check',
+        evidence: 'harness-hub loop required output',
+      },
+      arbiter: {
+        type: 'delegated-agent',
+        readOnly: true,
+        evidence: 'read-only closeout review',
+      },
+      evidence: 'loop required and verification records',
+      verdict: 'pass',
+      mainAgentDecision: 'deliver',
+    })),
+  });
+
+  expect(result.status).toBe(0);
+  expect(result.json.ok).toBe(true);
+  expect(result.json.recordsChecked).toBe(3);
+  expect(result.json.findings).toEqual([]);
+});
+
 test('agentic loop check rejects missing verifier and non-read-only arbiter evidence', () => {
   const result = runLoopCheck({
     loops: [

@@ -99,6 +99,12 @@ interface ManagedComponentRename {
   reason: string;
 }
 
+interface LegacyRenamedComponentFile {
+  path: string;
+  sha256: string;
+  size: number;
+}
+
 export interface RepoSignals {
   packageJson: boolean;
   tsconfig: boolean;
@@ -1090,6 +1096,53 @@ const MANAGED_COMPONENT_RENAMES: Readonly<Record<string, ManagedComponentRename>
     to: 'skill:effective-interact',
     reason: 'Component was renamed from skill:html-work-reports to skill:effective-interact.',
   },
+  'skill:insight': {
+    to: 'skill:agent-interaction-audit',
+    reason: 'Component was renamed from skill:insight to skill:agent-interaction-audit.',
+  },
+});
+const HOST_SKILL_DIR_RENAMES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  'agent-interaction-audit': ['insight'],
+  'effective-interact': ['html-work-reports'],
+});
+const LEGACY_RENAMED_COMPONENT_FILES: Readonly<Record<string, readonly LegacyRenamedComponentFile[]>> = Object.freeze({
+  'skill:insight': [
+    {
+      path: 'skills/insight/SKILL.md',
+      sha256: '999d03b149ea11ec3d9e39b7af6a0c31561a2523699dc4d75616e02bf7077116',
+      size: 13108,
+    },
+    {
+      path: 'skills/insight/references/analysis-rubric.md',
+      sha256: '2efedf7dbb9323bb929b3610c058fd79bf3b198c2c2501ec508ab67ed7084942',
+      size: 5629,
+    },
+    {
+      path: 'skills/insight/references/data-sources.md',
+      sha256: '0eb2f9bead61294636e559aaaf95fb8e3b1b03afd6f9346d312c51e30511a6b1',
+      size: 3792,
+    },
+    {
+      path: 'skills/insight/references/host-adapters.md',
+      sha256: '1f15b97de939487b9bd6ef0e46b38a7200e692b2a90c0c888aab93ec0ac65c09',
+      size: 2862,
+    },
+    {
+      path: 'skills/insight/references/report-shape.md',
+      sha256: 'c9439469ff1db9a8a4330d65af50953143a91a4cbf5dbcc86e986cbb62797675',
+      size: 4262,
+    },
+    {
+      path: 'skills/insight/scripts/build-insight-report.mjs',
+      sha256: '365a0d63599bd8bf8f1b527d30aac423af4477346984c8d151193be5bce87ffd',
+      size: 65507,
+    },
+    {
+      path: 'skills/insight/scripts/collect-insight-events.mjs',
+      sha256: 'a26546589c94656d0891f1991a44d8def4836eff8a2f49b0ad8622007d52a91a',
+      size: 53025,
+    },
+  ],
 });
 
 const VALID_RISKS = new Set<LifecycleRisk>(['low', 'medium', 'high']);
@@ -2742,7 +2795,7 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents, ['feature_list.json', '.harness-hub/state/progress.md', '.harness-hub/state/decisions.md', '.harness-hub/state/session-handoff.md', '.harness-hub/state/current-task.md', 'quality-document.md', 'evaluator-rubric.md'], 'State artifacts are routed from instructions'),
       assessmentTextCheck(agents + currentTask, ['P0/P1/P2', 'agent-run browser', 'Web browser acceptance'], 'Validation priority and browser acceptance rules are discoverable'),
       assessmentTextCheck(agents + currentTask + definitionOfDone, ['PR status', 'mergeability', 'CI/check-run'], 'PR closeout gate is documented'),
-      assessmentTextCheck(agents + currentTask + definitionOfDone + cleanState, ['finish closeout', 'insight', 'technical debt'], 'Finish closeout gate is documented'),
+      assessmentTextCheck(agents + currentTask + definitionOfDone + cleanState, ['finish closeout', 'agent-interaction-audit', 'technical debt'], 'Finish closeout gate is documented'),
       assessmentFileCheck(files, ['.harness-hub/context/AGENTS.md', '.harness-hub/context/llm-wiki-schema.md'], 'LLM Wiki agent context rules exist'),
       assessmentTextCheck(agents + contextAgents + contextSchema, ['LLM Wiki', 'Raw sources', 'No Redundant Facts', 'human confirmation'], 'Context engineering write boundary is documented'),
     ],
@@ -2766,10 +2819,10 @@ function assessHarness(targetDir: string): HarnessAssessment {
       assessmentTextCheck(agents + currentTask, ['harness-validate.mjs', 'Validation commands'], 'Verification entrypoint is referenced by the harness'),
       assessmentTextCheck(validationScript, ['process.exit', 'set -e', 'failures'], 'Verification entrypoint can fail the run'),
       assessmentTextCheck(progress + handoff + currentTask, ['Validation Evidence', 'Recent Validation', 'Command', 'Status', 'Passed', 'Failed', 'Evidence', 'Commit'], 'Validation evidence has a durable place to be recorded'),
-      assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'P0', 'P1', 'P2', 'Static', 'Runtime', 'User flow', 'Web browser acceptance', 'Runtime Signals', 'Standard startup path', 'PR Status', 'Mergeability', 'CI/check', 'Finish Closeout', 'Insight Recommendations'], 'Static, runtime, startup, user-flow, priority, closeout, and PR tiers are represented'),
+      assessmentTextCheck(currentTask + progress + handoff, ['Validation tiers', 'P0', 'P1', 'P2', 'Static', 'Runtime', 'User flow', 'Web browser acceptance', 'Runtime Signals', 'Standard startup path', 'PR Status', 'Mergeability', 'CI/check', 'Finish Closeout', 'Agent Interaction Audit Recommendations'], 'Static, runtime, startup, user-flow, priority, closeout, and PR tiers are represented'),
       assessmentTextCheck(interruptGoodCases + interruptBadCases + interruptRegressionCases, ['expectedDecision', 'continue', 'interrupt', 'riskSignals'], 'Interrupt policy eval cases are present and machine-readable'),
       assessmentFileCheck(files, ['evaluator-rubric.md'], 'Evaluator rubric exists'),
-      assessmentTextCheck(evaluatorRubric, ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Finish closeout', 'Insight recommendations', 'Handoff readiness', 'Verdict'], 'Evaluator rubric covers correctness, evidence, scope, reliability, browser acceptance, finish closeout, insight, and handoff readiness'),
+      assessmentTextCheck(evaluatorRubric, ['Correctness', 'Verification', 'Scope discipline', 'Runtime reliability', 'Browser acceptance', 'Finish closeout', 'Agent interaction audit recommendations', 'Handoff readiness', 'Verdict'], 'Evaluator rubric covers correctness, evidence, scope, reliability, browser acceptance, finish closeout, agent-interaction-audit, and handoff readiness'),
       assessmentCheck(project.verificationCommands.length > 0, 'Project verification command is detected', project.verificationCommands),
     ],
     scope: [
@@ -3267,7 +3320,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'stale-read gate',
     'Arbiters are read-only',
     'finish closeout',
-    'insight',
+    'agent-interaction-audit',
   ];
   const claudeImportMarkers = [
     '@AGENTS.md',
@@ -3364,7 +3417,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Agentic Loop Records',
     'Main Agent Decision',
     'Finish Closeout',
-    'Insight Recommendations',
+    'Agent Interaction Audit Recommendations',
     'Review Feedback To Rules',
   ]));
   checks.push(validateJsonlFile(targetDir, '.harness-hub/state/loop-runs.jsonl', 'loop-policy'));
@@ -3390,7 +3443,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Main Agent Decision',
     'Finish Closeout',
     'Stale-read result',
-    'Insight Recommendations',
+    'Agent Interaction Audit Recommendations',
     'Review Feedback To Rules',
   ]));
   checks.push(validateFileContains(targetDir, '.harness-hub/state/current-task.md', [
@@ -3421,7 +3474,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Mergeability',
     'CI/check-run status',
     'Finish closeout',
-    'Insight audit',
+    'Agent interaction audit',
     'Checkpoint policy',
     'Spec updates',
     'Decision log',
@@ -3443,7 +3496,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Agentic loop records',
     'main-agent decision',
     'Finish closeout',
-    'insight',
+    'agent-interaction-audit',
     'Review Feedback',
     'evaluator-rubric.md',
     'quality-document.md',
@@ -3465,7 +3518,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'mergeability',
     'CI/check-run',
     'finish closeout',
-    'insight',
+    'agent-interaction-audit',
     'evaluator rubric',
     'quality snapshot',
   ]));
@@ -3477,7 +3530,7 @@ function validateRequiredContent(targetDir: string): HarnessValidationCheck[] {
     'Browser acceptance',
     'Agentic loops',
     'Finish closeout',
-    'Insight recommendations',
+    'Agent interaction audit recommendations',
     'Handoff readiness',
     'Verdict',
   ]));
@@ -8750,15 +8803,16 @@ function hostActivationProbePaths(
   }
   const skillName = parts[1];
   const skillRelative = parts.slice(2).join('/');
-  return AGENT_HOST_SKILL_DIRS.map((host) => {
-    const relativeSkillDir = toPortablePath(path.join(host.relativePath, skillName));
-    const relativeFile = toPortablePath(path.join(relativeSkillDir, skillRelative));
-    return {
-      absoluteFile: assertSafeRelativePath(targetDir, relativeFile),
-      absoluteSkillDir: assertSafeRelativePath(targetDir, relativeSkillDir),
-      relativeFile,
-    };
-  });
+  const skillNames = uniqueStrings([skillName, ...(HOST_SKILL_DIR_RENAMES[skillName] || [])]);
+  return AGENT_HOST_SKILL_DIRS.flatMap((host) => skillNames.map((hostSkillName) => {
+      const relativeSkillDir = toPortablePath(path.join(host.relativePath, hostSkillName));
+      const relativeFile = toPortablePath(path.join(relativeSkillDir, skillRelative));
+      return {
+        absoluteFile: assertSafeRelativePath(targetDir, relativeFile),
+        absoluteSkillDir: assertSafeRelativePath(targetDir, relativeSkillDir),
+        relativeFile,
+      };
+    }));
 }
 
 function legacyAggregationMessage(signal: LegacyAggregationSignal): string {
@@ -8880,7 +8934,8 @@ function buildTargetCheck({
     : hasUpdates
       ? 'update-available'
       : 'current';
-  const agentActivationMissing = state === 'current' && isAgentActivationMissing(resolvedTarget, status);
+  const agentActivationEvidence = state === 'current' ? agentActivationMissingEvidence(resolvedTarget, status) : [];
+  const agentActivationMissing = agentActivationEvidence.length > 0;
   const message = [
     targetCheckMessage({ state, status, updatePlan }),
     agentActivationMissing
@@ -8905,13 +8960,7 @@ function buildTargetCheck({
       : targetRecommendedCommand(state, resolvedTarget),
     message,
     evidence: agentActivationMissing
-      ? [
-        status.lock.path,
-        ...AGENT_HOST_SKILL_DIRS.flatMap((host) => [
-          `${host.relativePath}/workflow-router/SKILL.md`,
-          `${host.relativePath}/package-release-sniffer/SKILL.md`,
-        ]),
-      ]
+      ? [status.lock.path, ...agentActivationEvidence]
       : [status.lock.path],
   };
 }
@@ -8950,19 +8999,26 @@ function targetRecommendedCommand(state: HarnessHubTargetCheck['state'], targetD
   return null;
 }
 
-function isAgentActivationMissing(targetDir: string, status: HarnessHubStatus): boolean {
-  const hasActivationSource = status.rows.some((row) => (
-    row.id === 'skill:workflow-router'
-    || row.id === 'skill:package-release-sniffer'
-  ));
+function agentActivationMissingEvidence(targetDir: string, status: HarnessHubStatus): string[] {
+  const hasActivationSource = status.rows.some((row) => row.id.startsWith('skill:'));
   if (!hasActivationSource) {
-    return false;
+    return [];
   }
 
-  return AGENT_HOST_SKILL_DIRS.flatMap((host) => [
-    path.join(targetDir, host.relativePath, 'workflow-router', 'SKILL.md'),
-    path.join(targetDir, host.relativePath, 'package-release-sniffer', 'SKILL.md'),
-  ]).some((filePath) => !fs.existsSync(filePath));
+  try {
+    const plan = planAgentActivation({ targetDir, dryRun: true });
+    return uniqueStrings(plan.items
+      .filter((item) => (item.action === 'sync' && !item.exists) || item.action === 'remove-stale')
+      .map((item) => {
+        const relativeDest = toPortablePath(path.relative(targetDir, item.dest));
+        return item.action === 'remove-stale'
+          ? `staleHostCache:${relativeDest}`
+          : `${relativeDest}/SKILL.md`;
+      }))
+      .sort();
+  } catch {
+    return [];
+  }
 }
 
 function buildExternalToolSuggestions({
@@ -9792,6 +9848,43 @@ export function migrateLock(
       continue;
     }
 
+    if (latestRef.rename) {
+      const verification = verifyLegacyRenamedComponentFiles(targetDir, component.id);
+      if (!fs.existsSync(dest) || verification.missing.length > 0 || verification.modified.length > 0) {
+        const state = fs.existsSync(dest) && verification.missing.length === 0 ? 'modified' : 'missing';
+        const evidence = [
+          ...verification.missing,
+          ...verification.modified,
+          ...(verification.unknown.length > 0 ? verification.unknown : []),
+        ];
+        blockers.push(makeStatusRow(
+          targetDir,
+          component,
+          latest,
+          state,
+          'Legacy renamed schema version 1 component does not exactly match the recorded pre-rename managed files; migration is blocked.',
+          evidence.length > 0 ? evidence : [component.dest],
+        ));
+        continue;
+      }
+      const files = verification.files;
+      const reason = `${latestRef.rename.reason} Migrated as a schema version 2 legacy record; run update to move it to ${latestRef.id}.`;
+      migratable.push(makeStatusRow(targetDir, component, latest, 'current', reason, files.map((file) => file.path)));
+      nextComponents.push({
+        id: component.id,
+        version: component.version,
+        agent: component.agent,
+        kind: latest.kind,
+        source: normalizePortablePath(component.dest),
+        dest: normalizePortablePath(component.dest),
+        files,
+        installedAt: migratedAt,
+        migratedAt,
+        status: 'installed',
+      });
+      continue;
+    }
+
     const source = componentSourcePath(hubRoot, latest);
     const comparison = compareSourceAndDestination(source, dest);
     if (!comparison.matches) {
@@ -9856,6 +9949,46 @@ export function migrateLock(
     skipped,
     lock: writtenLock,
     reason: `${migrated.length} schema version 1 records migrated.`,
+  };
+}
+
+function verifyLegacyRenamedComponentFiles(
+  targetDir: string,
+  componentId: string,
+): { files: ManagedFileRecord[]; missing: string[]; modified: string[]; unknown: string[] } {
+  const expectedFiles = LEGACY_RENAMED_COMPONENT_FILES[componentId];
+  if (!expectedFiles) {
+    return { files: [], missing: [], modified: [], unknown: [componentId] };
+  }
+
+  const files: ManagedFileRecord[] = [];
+  const missing: string[] = [];
+  const modified: string[] = [];
+  for (const expected of expectedFiles) {
+    const filePath = assertSafeRelativePath(targetDir, expected.path);
+    if (!fs.existsSync(filePath)) {
+      missing.push(expected.path);
+      continue;
+    }
+
+    const digest = fileDigest(filePath);
+    if (digest.sha256 !== expected.sha256 || digest.size !== expected.size) {
+      modified.push(expected.path);
+      continue;
+    }
+
+    files.push({
+      path: expected.path,
+      sha256: expected.sha256,
+      size: expected.size,
+    });
+  }
+
+  return {
+    files: files.sort((left, right) => left.path.localeCompare(right.path)),
+    missing,
+    modified,
+    unknown: [],
   };
 }
 

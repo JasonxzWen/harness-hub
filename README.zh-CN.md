@@ -73,7 +73,7 @@ flowchart TD
 | 维护 Harness Hub 自身 | `workflow-router` 再进入 `hub-maintenance-workflow` | source records、routing、capability metadata、docs、templates、lifecycle safety。 |
 | 创建公开 source-backed post | `source-post generate` | source ledger、Effective Interact adaptation、Pages 输出和发布预检。 |
 
-Harness Hub 只有一个面向用户的目标路径：`standard`。没有 named skill install variants、harness pack levels 或 bundle selectors。`standard` 是 prompt/context/harness/loop engineering 和可迁移 reusable skills 的完整目标迁移面，包含 `insight`；`hub-maintenance-workflow` 这类 Harness Hub 源仓库维护 workflow 只留在本仓库。`harness:minimal` 只是根级 harness 文件的内部组件/模板 ID。确认执行 `install` 会覆盖同名 skill 目录；如果目标仓库可能已有本地 skills，先用 `--dry-run` 检查。
+Harness Hub 只有一个面向用户的目标路径：`standard`。没有 named skill install variants、harness pack levels 或 bundle selectors。`standard` 是 prompt/context/harness/loop engineering 和可迁移 reusable skills 的完整目标迁移面，包含 `agent-interaction-audit`；`hub-maintenance-workflow` 这类 Harness Hub 源仓库维护 workflow 只留在本仓库。`harness:minimal` 只是根级 harness 文件的内部组件/模板 ID。确认执行 `install` 会覆盖同名 skill 目录；如果目标仓库可能已有本地 skills，先用 `--dry-run` 检查。
 
 ## 一步初始化目标仓库
 

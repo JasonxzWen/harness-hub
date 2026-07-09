@@ -28,11 +28,14 @@ When the Harness Hub CLI runtime is available, derive required loops from the wo
 - `plan-review`
 - `test-design`
 - `implementation-review`
+- `test-review`
+- `workflow-review`
+- `security-review`
 - `frontend-acceptance`
 - `diagnosis-regression`
 - `docs-consistency`
 - `pr-closeout`
-- `insight-retro`
+- `agent-interaction-retro`
 
 ## Required Evidence
 

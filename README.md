@@ -19,7 +19,7 @@ Harness Hub does a small set of bounded jobs:
 - the standard harness includes an LLM Wiki context pack under `.harness-hub/context/`.
 - `loop evaluate` and `loop schedule` decide continue vs interrupt and can append local Loop ledgers after `--yes`; `loop required` and `loop verify` derive dirty-path or base/head review gates and block handoff when loop evidence is missing; `loop run-start`, `agent-record`, `lease-check`, `collect-trace`, and `integrate` record local subagent orchestration state under ignored `.harness-hub/state/runs/`.
 - `source-post` creates, builds, validates, and preflights source-backed public posts.
-- the development workflow keeps Loop as a control plane and adds finish closeout before final handoff: final review, PR/merge readiness, and insight learning.
+- the development workflow keeps Loop as a control plane and adds finish closeout before final handoff: final review, PR/merge readiness, and agent interaction audit learning.
 - agentic loops separate Producer, Verifier, Arbiter, and Main Agent Decision for subagent/delegated-agent acceptance, parallel review, PR closeout, and workflow learning.
 
 For a new target repo, start with a dry run:
@@ -74,7 +74,7 @@ flowchart TD
 | Maintain this hub | `workflow-router` then `hub-maintenance-workflow` | Source records, routing, capability metadata, docs, templates, and lifecycle safety. |
 | Create a public source-backed post | `source-post generate` | Source ledger, Effective Interact adaptation, Pages output, and publish preflight. |
 
-Harness Hub has one user-facing target path: `standard`. There are no named skill install variants, harness pack levels, or bundle selectors. `standard` is the complete target migration surface for prompt/context/harness/loop engineering and target-distributed reusable skills, including `insight`; Harness Hub source-maintenance workflows such as `hub-maintenance-workflow` stay local to this repository. `harness:minimal` is only the internal component/template ID for the root harness files. Confirmed `install` overwrites an existing same-name skill directory; use `--dry-run` first when a target may already have local skills.
+Harness Hub has one user-facing target path: `standard`. There are no named skill install variants, harness pack levels, or bundle selectors. `standard` is the complete target migration surface for prompt/context/harness/loop engineering and target-distributed reusable skills, including `agent-interaction-audit`; Harness Hub source-maintenance workflows such as `hub-maintenance-workflow` stay local to this repository. `harness:minimal` is only the internal component/template ID for the root harness files. Confirmed `install` overwrites an existing same-name skill directory; use `--dry-run` first when a target may already have local skills.
 
 ## One-Step Target Bootstrap
 

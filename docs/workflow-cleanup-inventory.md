@@ -11,16 +11,17 @@ Physical deletion was approved by the user on 2026-05-21 after source records we
 | Area | Current count | Notes |
 |---|---:|---|
 | Install bundles | 0 | The CLI no longer supports selectable install bundles. |
-| Installable skill components | 47 | All active default skill components are under `skills/<name>/`. Harness templates are lifecycle components, not skill-install payloads. |
-| Local `skills` directories | 47 | Matches installable skill component directories after later additions such as `insight`, `harness-quality-check`, `package-release-sniffer`, and selected platform atoms. |
-| Packaged `skills` directories | 47 | npm publishes the personal distributed skill source tree. |
+| Installable skill components | 48 | Target-distributed skill components are under `skills/<name>/`; the source-repo-only `hub-maintenance-workflow` is excluded from standard target install. Harness templates are lifecycle components, not skill-install payloads. |
+| Local `skills` directories | 49 | Includes 48 installable skill component directories plus the source-repo-only `hub-maintenance-workflow` owner. |
+| Packaged source `skills` directories | 49 | npm publishes the source skill tree through `package.json` `files`; standard target install still filters `hub-internal` skills such as `hub-maintenance-workflow`. |
 | First-class target path | 1 | `standard` is the only user-facing target path. `install` writes skills only; `init-harness --target standard` writes the root harness contract. Host packaging stays outside skill bodies. |
 
 ## Keep In Standard Install
 
 | Surface | Decision | Reason |
 |---|---|---|
-| Workflow owners | Install | `workflow-router`, SDD, diagnosis, review, delivery, answer, and Harness Hub maintenance are the public lifecycle lanes. |
+| Target workflow owners | Install | `workflow-router`, SDD, diagnosis, review, delivery, and answer are the target-distributed public lifecycle lanes. |
+| Harness Hub maintenance owner | Source repo only | `hub-maintenance-workflow` is packaged with the source tree for this repository but excluded from standard target install as `hub-internal`. |
 | `effective-interact` | Install | High-priority interaction layer that reduces user interpretation cost for material alignment and handoff. |
 | Matt Pocock adapted skills | Install | `grill-me`, `grill-with-docs`, `diagnose`, `prototype`, `handoff`, and `tdd-workflow` are narrow, adapted helpers with stable routing. |
 | Everything Claude Code core helpers | Install | Keep bounded helpers such as `verification-loop`, `security-review`, `coding-standards`, and `agent-introspection-debugging`. |

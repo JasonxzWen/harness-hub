@@ -72,7 +72,7 @@ test('sdd-workflow enforces the canonical lifecycle before implementation', () =
   expect(skill).toContain('grill-with-docs');
   expect(skill).toContain('fastest honest feedback loop');
   expect(skill).toContain('boundary is muddy');
-  expect(skill).toContain('insight');
+  expect(skill).toContain('agent-interaction-audit');
   expect(skill).toContain('goal/story workflows');
   expect(skill).toContain('without approval');
 });
@@ -98,7 +98,7 @@ test('delivery workflow captures PR closeout without remote side effects', () =>
   expect(delivery).toContain('finish closeout');
   expect(delivery).toContain('architecture drift');
   expect(delivery).toContain('deep-module fit');
-  expect(delivery).toContain('insight recommendations');
+  expect(delivery).toContain('agent interaction audit recommendations');
   expect(delivery).toContain('PR URL or number');
   expect(delivery).toContain('Do not mark a PR ready');
   expect(delivery).toContain('resolve review threads');
@@ -123,7 +123,7 @@ test('workflow owners expose agentic loops as stage mechanics', () => {
   expect(delivery).toContain('frontend-acceptance');
   expect(delivery).toContain('pr-closeout');
   expect(delivery).toContain('docs-consistency');
-  expect(delivery).toContain('insight-retro');
+  expect(delivery).toContain('agent-interaction-retro');
   expect(diagnosis).toContain('diagnosis-regression');
   expect(review).toContain('read-only arbiter');
   expect(maintenance).toContain('delegated-agent');

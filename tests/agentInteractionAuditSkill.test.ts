@@ -4,13 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'bun:test';
 
-const skillDir = 'skills/insight';
+const skillDir = 'skills/agent-interaction-audit';
 const skill = fs.readFileSync(`${skillDir}/SKILL.md`, 'utf8');
 const dataSources = fs.readFileSync(`${skillDir}/references/data-sources.md`, 'utf8');
 const analysisRubric = fs.readFileSync(`${skillDir}/references/analysis-rubric.md`, 'utf8');
 const reportShape = fs.readFileSync(`${skillDir}/references/report-shape.md`, 'utf8');
-const collectScript = `${skillDir}/scripts/collect-insight-events.mjs`;
-const reportScript = `${skillDir}/scripts/build-insight-report.mjs`;
+const collectScript = `${skillDir}/scripts/collect-agent-interaction-events.mjs`;
+const reportScript = `${skillDir}/scripts/build-agent-interaction-report.mjs`;
 const createInteractionScript = 'skills/effective-interact/scripts/create-interaction.mjs';
 const validateInteractionScript = 'skills/effective-interact/scripts/validate-interaction.mjs';
 const activationScript = 'skills/workflow-router/scripts/skill-activation-check.mjs';
@@ -26,8 +26,8 @@ function runGit(cwd: string, args: string[]) {
 }
 
 function makeFixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-skill-'));
-  const projectName = `insight-target-${path.basename(root).replace(/[^a-z0-9-]/gi, '').toLowerCase()}`;
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-interaction-audit-skill-'));
+  const projectName = `agent-interaction-target-${path.basename(root).replace(/[^a-z0-9-]/gi, '').toLowerCase()}`;
   const repo = path.join(root, projectName);
   const codexRoot = path.join(root, 'codex-traces');
   const claudeRoot = path.join(root, 'claude-traces');
@@ -97,8 +97,8 @@ function makeFixture() {
   return { root, repo, codexRoot, claudeRoot, out };
 }
 
-test('insight documents private read-only repository interaction audits', () => {
-  expect(skill).toContain('repository interaction insight audit');
+test('agent-interaction-audit documents private read-only repository interaction audits', () => {
+  expect(skill).toContain('private agent interaction audits');
   expect(skill).toContain('automation logs, and layered prompt/rule context');
   expect(skill).toContain('Current executable capabilities');
   expect(skill).toContain('improvement queue JSON');
@@ -133,7 +133,7 @@ test('insight documents private read-only repository interaction audits', () => 
   expect(reportShape).toContain('Improvement Queue JSON');
 });
 
-test('insight capability metadata registers standard install surface and boundaries', () => {
+test('agent-interaction-audit capability metadata registers standard install surface and boundaries', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
     components: Record<string, {
       path?: string;
@@ -143,11 +143,11 @@ test('insight capability metadata registers standard install surface and boundar
       recommendation?: string;
     }>;
   };
-  const component = index.components['skill:insight'];
+  const component = index.components['skill:agent-interaction-audit'];
 
-  expect(component.path).toBe('skills/insight');
-  expect(component.provides).toContain('repository-interaction-insight-audits');
-  expect(component.provides).toContain('private-insight-reports');
+  expect(component.path).toBe('skills/agent-interaction-audit');
+  expect(component.provides).toContain('agent-interaction-audits');
+  expect(component.provides).toContain('private-agent-interaction-audit-reports');
   expect(component.provides).toContain('prompt-rule-context-audits');
   expect(component.provides).toContain('automation-log-audits');
   expect(component.provides).toContain('sop-and-script-lesson-mining');
@@ -157,7 +157,8 @@ test('insight capability metadata registers standard install surface and boundar
   expect(component.provides).toContain('effective-interact-visual-report-inputs');
   expect(component.overlapsWith).toContain('skill:source-post');
   expect(component.overlapsWith).toContain('skill:agent-introspection-debugging');
-  expect(component.routing).toContain('private repository interaction insight audit');
+  expect(component.routing).toContain('private agent interaction audit');
+  expect(component.routing).toContain('legacy insight mentions route here only when paired with agent sessions');
   expect(component.routing).toContain('prompt/rule context audit');
   expect(component.routing).toContain('automation log audit');
   expect(component.routing).toContain('executable improvement queue');
@@ -170,7 +171,7 @@ test('insight capability metadata registers standard install surface and boundar
   expect(component.recommendation).toContain('no default project');
 });
 
-test('insight collection and report scripts produce a private audit from fixture traces', () => {
+test('agent-interaction-audit collection and report scripts produce a private audit from fixture traces', () => {
   const fixture = makeFixture();
 
   const collect = spawnSync(process.execPath, [
@@ -239,8 +240,8 @@ test('insight collection and report scripts produce a private audit from fixture
   expect(ledger.some((event) => event.signals.repeatedMistake)).toBe(true);
   expect(ledger.length).toBeLessThan(20);
 
-  const reportPath = path.join(fixture.out, 'insight-report.md');
-  const effectiveInteractInputPath = path.join(fixture.out, 'insight-visual.input.json');
+  const reportPath = path.join(fixture.out, 'agent-interaction-report.md');
+  const effectiveInteractInputPath = path.join(fixture.out, 'agent-interaction-visual.input.json');
   const report = spawnSync(process.execPath, [
     reportScript,
     '--ledger',
@@ -275,7 +276,7 @@ test('insight collection and report scripts produce a private audit from fixture
   expect(markdown).toContain('## Top Bottlenecks');
   expect(markdown).toContain('## Top Recommendations');
   expect(markdown).toContain('## Improvement Queue Summary');
-  expect(markdown).toContain('insight-improvement-queue.json');
+  expect(markdown).toContain('agent-interaction-improvement-queue.json');
   expect(markdown).toContain('## Task Profile');
   expect(markdown).toContain('Task clusters');
   expect(markdown).toContain('## Trace Audit');
@@ -385,7 +386,7 @@ test('insight collection and report scripts produce a private audit from fixture
   }
 
   const originalIds = improvementQueue.items.map((item) => item.id);
-  const secondReportPath = path.join(fixture.out, 'insight-report-second.md');
+  const secondReportPath = path.join(fixture.out, 'agent-interaction-report-second.md');
   const secondReport = spawnSync(process.execPath, [
     reportScript,
     '--ledger',
@@ -409,7 +410,7 @@ test('insight collection and report scripts produce a private audit from fixture
     nextActions: string[];
   };
   expect(effectiveInteractInput.renderMode).toBe('pre-rendered');
-  expect(effectiveInteractInput.title).toBe('Insight 交互审计可视化汇报');
+  expect(effectiveInteractInput.title).toBe('Agent Interaction Audit 交互审计可视化汇报');
   expect(effectiveInteractInput.intent.primaryQuestion).toContain('哪些交互模式');
   expect(JSON.stringify(effectiveInteractInput)).not.toContain('\uFFFD');
   expect(effectiveInteractInput.intent.artifactKind).toBe('status');
@@ -424,7 +425,7 @@ test('insight collection and report scripts produce a private audit from fixture
     '--out-dir',
     fixture.out,
     '--slug',
-    'insight-visual-report',
+    'agent-interaction-visual-report',
     '--json',
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
   expect(generated.status, generated.stderr || generated.stdout).toBe(0);
@@ -439,8 +440,8 @@ test('insight collection and report scripts produce a private audit from fixture
   expect(JSON.parse(validation.stdout).ok).toBe(true);
 }, 20_000);
 
-test('insight report writes patch draft artifacts only for strong targeted findings', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-patch-draft-'));
+test('agent-interaction-audit report writes patch draft artifacts only for strong targeted findings', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-interaction-audit-patch-draft-'));
   const repo = path.join(root, 'repo');
   const now = '2026-06-20T10:00:00.000Z';
   fs.mkdirSync(repo, { recursive: true });
@@ -452,9 +453,9 @@ test('insight report writes patch draft artifacts only for strong targeted findi
 
   function runReport(events: Array<Record<string, unknown>>, name: string, extraArgs: string[] = []) {
     const outDir = path.join(root, name);
-    const ledgerPath = path.join(outDir, 'insight-events.jsonl');
-    const manifestPath = path.join(outDir, 'insight-manifest.json');
-    const reportPath = path.join(outDir, 'insight-report.md');
+    const ledgerPath = path.join(outDir, 'agent-interaction-events.jsonl');
+    const manifestPath = path.join(outDir, 'agent-interaction-manifest.json');
+    const reportPath = path.join(outDir, 'agent-interaction-report.md');
     writeFile(ledgerPath, `${events.map((event) => JSON.stringify(event)).join('\n')}\n`);
     writeFile(manifestPath, JSON.stringify({
       schemaVersion: 2,
@@ -531,8 +532,8 @@ test('insight report writes patch draft artifacts only for strong targeted findi
   const draftPath = path.join(path.dirname(strong.queuePath), strongRule?.patchDraftPath || '');
   const draft = fs.readFileSync(draftPath, 'utf8');
   expect(draft).toContain('diff --git a/AGENTS.md b/AGENTS.md');
-  expect(draft).toContain('Insight Project Rule Candidate');
-  expect(fs.readFileSync(path.join(repo, 'AGENTS.md'), 'utf8')).not.toContain('Insight Project Rule Candidate');
+  expect(draft).toContain('Agent Interaction Audit Project Rule Candidate');
+  expect(fs.readFileSync(path.join(repo, 'AGENTS.md'), 'utf8')).not.toContain('Agent Interaction Audit Project Rule Candidate');
 
   const noDraft = runReport([
     {
@@ -598,8 +599,8 @@ test('insight report writes patch draft artifacts only for strong targeted findi
   expect(weak.queue.counts.patchDrafts).toBe(0);
 });
 
-test('insight collector keeps host sessions and automations inside the invoking repo scope', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-scope-'));
+test('agent-interaction-audit collector keeps host sessions and automations inside the invoking repo scope', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-interaction-audit-scope-'));
   const repo = path.join(root, 'target-repo');
   const siblingRepo = path.join(root, 'sibling-worktree');
   const otherRepo = path.join(root, 'other-repo');
@@ -644,6 +645,21 @@ test('insight collector keeps host sessions and automations inside the invoking 
       payload: {
         type: 'user_message',
         message: `out-of-scope codex session mentions ${packageName} and target-repo but belongs elsewhere`,
+      },
+    }),
+  ].join('\n'));
+  writeFile(path.join(codexRoot, 'mixed-workspace.jsonl'), [
+    JSON.stringify({
+      timestamp: '2026-06-20T11:30:00.000Z',
+      type: 'session_meta',
+      payload: { cwd: otherRepo, workspace_roots: [repo] },
+    }),
+    JSON.stringify({
+      timestamp: '2026-06-20T11:31:00.000Z',
+      type: 'event_msg',
+      payload: {
+        type: 'user_message',
+        message: `mixed workspace codex session mentions ${packageName} but primary cwd belongs elsewhere`,
       },
     }),
   ].join('\n'));
@@ -718,10 +734,11 @@ test('insight collector keeps host sessions and automations inside the invoking 
   expect(ledgerText).toContain('repo-scoped-git-remote');
   expect(ledgerText).toContain('in-scope automation memory');
   expect(ledgerText).not.toContain('out-of-scope codex session');
+  expect(ledgerText).not.toContain('mixed workspace codex session');
   expect(ledgerText).not.toContain('no-cwd codex session');
   expect(ledgerText).not.toContain('out-of-scope automation memory');
   expect(manifest.scope.includedSameRepoWorktreeSessions).toBeGreaterThanOrEqual(1);
-  expect(manifest.scope.skippedOutOfScopeSessions).toBeGreaterThanOrEqual(2);
+  expect(manifest.scope.skippedOutOfScopeSessions).toBeGreaterThanOrEqual(3);
   expect(manifest.scope.skippedOutOfScopeAutomations).toBeGreaterThanOrEqual(1);
   expect(manifest.scope.skippedOutOfScopeSessionSamples.length).toBeGreaterThanOrEqual(2);
   expect(manifest.scope.skippedOutOfScopeAutomationSamples.length).toBeGreaterThanOrEqual(1);
@@ -729,16 +746,20 @@ test('insight collector keeps host sessions and automations inside the invoking 
   expect(manifest.scope.skippedOutOfScopeSessionSamples.map((sample) => sample.reason)).toContain('missing-cwd-or-workspace');
   expect(manifest.scope.skippedOutOfScopeAutomationSamples.map((sample) => sample.reason)).toContain('automation-cwd-outside-current-repo');
   expect(manifest.scope.skippedOutOfScopeSessionSamples.some((sample) => sample.scopePath?.includes(otherRepo))).toBe(true);
+  expect(manifest.scope.skippedOutOfScopeSessionSamples.some((sample) => (
+    sample.path.endsWith('mixed-workspace.jsonl') && sample.scopePath?.includes(otherRepo)
+  ))).toBe(true);
   expect(manifest.scope.skippedOutOfScopeAutomationSamples.some((sample) => sample.configPath?.endsWith('automation.toml'))).toBe(true);
   expect(JSON.stringify(manifest.scope.skippedOutOfScopeSessionSamples)).not.toContain('out-of-scope codex session mentions');
+  expect(JSON.stringify(manifest.scope.skippedOutOfScopeSessionSamples)).not.toContain('mixed workspace codex session mentions');
   expect(JSON.stringify(manifest.scope.skippedOutOfScopeAutomationSamples)).not.toContain('out-of-scope automation memory mentions');
 }, 20_000);
 
-test('insight report weights bottlenecks toward primary interaction evidence', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-report-weighting-'));
-  const ledgerPath = path.join(root, 'insight-events.jsonl');
-  const manifestPath = path.join(root, 'insight-manifest.json');
-  const reportPath = path.join(root, 'insight-report.md');
+test('agent-interaction-audit report weights bottlenecks toward primary interaction evidence', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-interaction-audit-report-weighting-'));
+  const ledgerPath = path.join(root, 'agent-interaction-events.jsonl');
+  const manifestPath = path.join(root, 'agent-interaction-manifest.json');
+  const reportPath = path.join(root, 'agent-interaction-report.md');
   const now = '2026-06-20T10:00:00.000Z';
   const events = [
     {
@@ -819,11 +840,11 @@ test('insight report weights bottlenecks toward primary interaction evidence', (
   expect(recommendationSection).not.toContain('evt-repo-state');
 });
 
-test('insight report does not treat successful handoffs as bottlenecks or tool branches', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insight-report-handoff-'));
-  const ledgerPath = path.join(root, 'insight-events.jsonl');
-  const manifestPath = path.join(root, 'insight-manifest.json');
-  const reportPath = path.join(root, 'insight-report.md');
+test('agent-interaction-audit report does not treat successful handoffs as bottlenecks or tool branches', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-interaction-audit-report-handoff-'));
+  const ledgerPath = path.join(root, 'agent-interaction-events.jsonl');
+  const manifestPath = path.join(root, 'agent-interaction-manifest.json');
+  const reportPath = path.join(root, 'agent-interaction-report.md');
   const now = '2026-06-20T10:00:00.000Z';
   const events = [
     {
@@ -869,7 +890,7 @@ test('insight report does not treat successful handoffs as bottlenecks or tool b
       repoAffinity: 'exact',
       confidence: 'high',
       signals: { userRequest: true, decision: true },
-      excerpt: 'Continue the accepted insight report scoring fix.',
+      excerpt: 'Continue the accepted agent-interaction-audit report scoring fix.',
     },
   ];
   writeFile(ledgerPath, `${events.map((event) => JSON.stringify(event)).join('\n')}\n`);
@@ -906,7 +927,7 @@ test('insight report does not treat successful handoffs as bottlenecks or tool b
   expect(traceSection).not.toContain('handoff=1');
 });
 
-test('insight collector samples large JSONL tails without losing readable Chinese excerpts', () => {
+test('agent-interaction-audit collector samples large JSONL tails without losing readable Chinese excerpts', () => {
   const fixture = makeFixture();
   const largeJsonl = path.join(fixture.codexRoot, 'large-session.jsonl');
   const oldLine = JSON.stringify({
@@ -967,11 +988,11 @@ test('insight collector samples large JSONL tails without losing readable Chines
   expect(manifest.warnings.some((warning) => warning.includes('Sampled tail of large JSONL file'))).toBe(true);
 });
 
-test('insight activation selects private audits without stealing adjacent source post or agent-debug prompts', () => {
+test('agent-interaction-audit activation selects private audits without stealing adjacent source post or agent-debug prompts', () => {
   const positive = spawnSync(process.execPath, [
     activationScript,
     '--prompt',
-    'Run a repository interaction insight audit from recent Codex and Claude Code work traces, include agent task profile and tool-call decision audit.',
+    'Run an agent-interaction-audit from recent Codex and Claude Code work traces, include agent task profile and tool-call decision audit.',
     '--json',
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
   const effectiveInteractComplaint = spawnSync(process.execPath, [
@@ -986,6 +1007,42 @@ test('insight activation selects private audits without stealing adjacent source
     'Turn this external OpenAI article into a Chinese source-backed public post with media references and repo iteration review.',
     '--json',
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const sourcePostInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Create an insight report for this source-backed public post from the external article and preserve figures and links.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const ordinaryArticleInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Analyze this article and write insight recommendations for readers.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const singleAgentRunInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Review an agent run and provide insight recommendations.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const agentProductImprovementInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Run insight recommendations for an agent product improvement plan.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const legacySessionInsight = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'Run legacy insight recommendations across recent agent sessions and tool-call traces.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  const singleRunInsightFailure = spawnSync(process.execPath, [
+    activationScript,
+    '--prompt',
+    'A single agent run hit a tool loop failure; recover and provide insight recommendations.',
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
   const singleRun = spawnSync(process.execPath, [
     activationScript,
     '--prompt',
@@ -993,8 +1050,14 @@ test('insight activation selects private audits without stealing adjacent source
     '--json',
   ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
 
-  expect(JSON.parse(positive.stdout).selectedSkill).toBe('insight');
+  expect(JSON.parse(positive.stdout).selectedSkill).toBe('agent-interaction-audit');
   expect(JSON.parse(effectiveInteractComplaint.stdout).selectedSkill).toBe('effective-interact');
   expect(JSON.parse(blog.stdout).selectedSkill).toBe('source-post');
+  expect(JSON.parse(sourcePostInsight.stdout).selectedSkill).toBe('source-post');
+  expect(JSON.parse(ordinaryArticleInsight.stdout).selectedSkill).not.toBe('agent-interaction-audit');
+  expect(JSON.parse(singleAgentRunInsight.stdout).selectedSkill).not.toBe('agent-interaction-audit');
+  expect(JSON.parse(agentProductImprovementInsight.stdout).selectedSkill).not.toBe('agent-interaction-audit');
+  expect(JSON.parse(legacySessionInsight.stdout).selectedSkill).toBe('agent-interaction-audit');
+  expect(JSON.parse(singleRunInsightFailure.stdout).selectedSkill).toBe('agent-introspection-debugging');
   expect(JSON.parse(singleRun.stdout).selectedSkill).toBe('agent-introspection-debugging');
 });

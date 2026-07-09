@@ -111,7 +111,7 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
     'docs/agentic-loop-catalog.md',
     'docs/host-adapters/',
   ]);
-  expect(fs.existsSync(path.join(targetDir, 'skills', 'insight', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(targetDir, 'skills', 'agent-interaction-audit', 'SKILL.md'))).toBe(true);
   expect(fs.existsSync(path.join(targetDir, 'skills', 'hub-maintenance-workflow', 'SKILL.md'))).toBe(false);
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', '.gitignore'), 'utf8')).toContain('state/');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', '.gitignore'), 'utf8')).toContain('reports/');
@@ -125,7 +125,7 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('Agentic loops');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('skills/workflow-router/references/agentic-loops.md');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('docs-consistency');
-  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('process-retro');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('agent-interaction-retro');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).toContain('active agent task');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).not.toContain('active Codex goal');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'current-task.md'), 'utf8')).not.toContain('source record / eval case');
@@ -145,7 +145,7 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Stop condition');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Stale-read gate');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Finish Closeout');
-  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Insight Recommendations');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'progress.md'), 'utf8')).toContain('Agent Interaction Audit Recommendations');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Failed');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Web browser acceptance');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('PR Status');
@@ -154,7 +154,7 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Stale-read gate');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Finish Closeout');
   expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Stale-read result');
-  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Insight Recommendations');
+  expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'state', 'session-handoff.md'), 'utf8')).toContain('Agent Interaction Audit Recommendations');
   expect(fs.readFileSync(path.join(targetDir, 'AGENTS.md'), 'utf8')).toContain('Initialization Gate');
   expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toContain('@AGENTS.md');
   expect(fs.readFileSync(path.join(targetDir, 'CLAUDE.md'), 'utf8')).toContain('Claude Code');
@@ -201,7 +201,7 @@ test('confirmed dev bootstrap writes minimal agent harness and managed ownership
   expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Browser acceptance');
   expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Agentic loops');
   expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Finish closeout');
-  expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Insight recommendations');
+  expect(fs.readFileSync(path.join(targetDir, 'evaluator-rubric.md'), 'utf8')).toContain('Agent interaction audit recommendations');
   expect(fs.readFileSync(path.join(targetDir, 'quality-document.md'), 'utf8')).toContain('Quality Snapshot');
 
   const lock = readLock(targetDir);
@@ -321,7 +321,7 @@ test('dev bootstrap preserves existing worktree-local state', () => {
     '| Technical debt / drift review | skipped | Existing state predates material work. | none |',
     '| PR / merge readiness | not applicable | No PR yet. | none |',
     '',
-    '## Insight Recommendations',
+    '## Agent Interaction Audit Recommendations',
     '',
     '| Area | Recommendation | Evidence | Disposition |',
     '| --- | --- | --- | --- |',

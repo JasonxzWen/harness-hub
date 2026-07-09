@@ -74,9 +74,12 @@ test('workflow orchestration policy records agentic loop boundaries', () => {
   for (const phrase of [
     'Producer -> Verifier -> Arbiter -> Main Agent Decision',
     'plan-review',
+    'workflow-review',
+    'test-review',
+    'security-review',
     'frontend-acceptance',
     'pr-closeout',
-    'insight-retro',
+    'agent-interaction-retro',
     'A failing deterministic check outranks a delegated-agent pass',
   ]) {
     expect(catalog).toContain(phrase);

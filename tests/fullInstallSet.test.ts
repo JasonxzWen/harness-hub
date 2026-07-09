@@ -19,7 +19,7 @@ const requiredWorkflowComponents = [
   'skill:diagnosis-workflow',
   'skill:review-workflow',
   'skill:delivery-workflow',
-  'skill:insight',
+  'skill:agent-interaction-audit',
 ] as const;
 
 test('capability index has no alternate install sets', () => {
@@ -78,7 +78,7 @@ test('docs describe the single target migration install set', () => {
   expect(capabilityMap).toContain('`harness:minimal` and `harness/minimal/` are internal component/template identifiers');
   expect(capabilityMap).toContain('No named skill variants');
   expect(capabilityMap).toContain('Components marked `hub-internal` stay local to the Harness Hub source checkout');
-  expect(capabilityMap).toContain('`insight`');
+  expect(capabilityMap).toContain('`agent-interaction-audit`');
   expect(capabilityMap).toContain('`install` never writes root harness files');
   expect(capabilityMap).toContain('harness-hub loop evaluate');
   expect(capabilityMap).toContain('harness-hub loop schedule');
@@ -87,7 +87,7 @@ test('docs describe the single target migration install set', () => {
   expect(capabilityMap).toContain('docs/standard-target-boundary.md');
   expect(standardBoundary).toContain('one user-facing target path: `standard`');
   expect(standardBoundary).toContain('prompt engineering, context engineering, harness engineering, loop engineering');
-  expect(standardBoundary).toContain('`insight` remains part of `standard`');
+  expect(standardBoundary).toContain('`agent-interaction-audit` remains part of `standard`');
   expect(standardBoundary).toContain('No pack promotion checklist');
   expect(fs.existsSync('docs/harness-packs.md')).toBe(false);
 });

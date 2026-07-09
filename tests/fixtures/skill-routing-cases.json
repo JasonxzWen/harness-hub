@@ -754,44 +754,76 @@
       "docsBoundary": "`source-post` loads when turning external articles, blogs, release notes, interviews, or reports into source-backed public posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; it does not load for ordinary summaries, full copyrighted reposts, or production site design."
     },
     {
-      "id": "insight-positive-private-interaction-audit",
-      "skill": "insight",
+      "id": "agent-interaction-audit-positive-private-interaction-audit",
+      "skill": "agent-interaction-audit",
       "kind": "positive",
-      "prompt": "Run a private repository interaction insight audit from recent Codex and Claude Code work traces, including agent task profile, tool-call decision audit, and collaboration bottlenecks.",
-      "expectedSkill": "insight",
-      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, prompt/rule context audits, automation log audits, SOP/script lessons, knowledge-cache candidates, executable improvement queues, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+      "prompt": "Run a private agent-interaction-audit from recent Codex and Claude Code work traces, including agent task profile, tool-call decision audit, closeout retro evidence, and collaboration bottlenecks.",
+      "expectedSkill": "agent-interaction-audit",
+      "docsBoundary": "`agent-interaction-audit` loads for private agent interaction audits, private repository interaction audits from local agent traces, cross-session Codex or Claude Code trace analysis, agent task profiles, tool-call decision audits, collaboration bottlenecks, prompt/rule drift audits, automation log reviews, closeout retrospectives, agent-interaction-retro evidence, SOP/script lessons, knowledge-cache/eval/workflow-change candidates, executable improvement queues, and concrete recommendations from local agent traces; legacy `insight` mentions route here only when paired with agent sessions, local traces, tool-call audits, or Codex/Claude Code work history, and recommendations, improvements, or bottlenecks count only when trace-backed. It does not load for public external-source posts, one failing agent run, advisory harness quality reports, public source-content insight analysis, or ordinary summaries."
     },
     {
-      "id": "insight-positive-session-insight-recommendations",
-      "skill": "insight",
+      "id": "agent-interaction-audit-positive-legacy-insight-recommendations",
+      "skill": "agent-interaction-audit",
       "kind": "positive",
       "prompt": "其他仓库追踪 insight 后仍然没有给出分析会话后的洞察和改进建议。",
-      "expectedSkill": "insight",
-      "docsBoundary": "`insight` loads for session-level insights and concrete improvement recommendations from agent traces, not only private audit wording."
+      "expectedSkill": "agent-interaction-audit",
+      "docsBoundary": "`agent-interaction-audit` loads for session-level insights, trace-backed recommendations, and concrete improvement queues from local agent traces, not only explicit audit wording; legacy `insight` is a compatibility trigger only when scoped by agent sessions, local traces, tool-call audits, Codex/Claude Code context, or trace-backed recommendations."
     },
     {
-      "id": "insight-positive-cross-session-audit-without-name",
-      "skill": "insight",
+      "id": "agent-interaction-audit-positive-cross-session-audit-without-name",
+      "skill": "agent-interaction-audit",
       "kind": "positive",
       "prompt": "给我分析最近几十个 harness-hub 会话，输出哪些地方应该调用但没调用、哪些触发后过程和结果不对，以及改进建议。",
-      "expectedSkill": "insight",
-      "docsBoundary": "`insight` loads for session-level insights and concrete improvement recommendations from agent traces, not only private audit wording."
+      "expectedSkill": "agent-interaction-audit",
+      "docsBoundary": "`agent-interaction-audit` loads for session-level insights, trace-backed recommendations, and concrete improvement queues from local agent traces, not only explicit audit wording; legacy `insight` is a compatibility trigger only when scoped by agent sessions, local traces, tool-call audits, Codex/Claude Code context, or trace-backed recommendations."
     },
     {
-      "id": "insight-negative-public-source-post",
-      "skill": "insight",
+      "id": "agent-interaction-audit-negative-public-source-post",
+      "skill": "agent-interaction-audit",
       "kind": "negative",
       "prompt": "Turn this external OpenAI article into a Chinese source-backed public post, preserve figures and links, add an effective-interact summary, and decide whether the repo should change.",
       "expectedSkill": "source-post",
-      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, prompt/rule context audits, automation log audits, SOP/script lessons, knowledge-cache candidates, executable improvement queues, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+      "docsBoundary": "`agent-interaction-audit` loads for private agent interaction audits, private repository interaction audits from local agent traces, cross-session Codex or Claude Code trace analysis, agent task profiles, tool-call decision audits, collaboration bottlenecks, prompt/rule drift audits, automation log reviews, closeout retrospectives, agent-interaction-retro evidence, SOP/script lessons, knowledge-cache/eval/workflow-change candidates, executable improvement queues, and concrete recommendations from local agent traces; legacy `insight` mentions route here only when paired with agent sessions, local traces, tool-call audits, or Codex/Claude Code work history, and recommendations, improvements, or bottlenecks count only when trace-backed. It does not load for public external-source posts, one failing agent run, advisory harness quality reports, public source-content insight analysis, or ordinary summaries."
     },
     {
-      "id": "insight-forbidden-single-agent-loop",
-      "skill": "insight",
+      "id": "agent-interaction-audit-negative-public-source-insight-report",
+      "skill": "agent-interaction-audit",
+      "kind": "negative",
+      "prompt": "Create an insight report for this source-backed public post from the external article and preserve figures and links.",
+      "expectedSkill": "source-post",
+      "docsBoundary": "`agent-interaction-audit` loads for private agent interaction audits, private repository interaction audits from local agent traces, cross-session Codex or Claude Code trace analysis, agent task profiles, tool-call decision audits, collaboration bottlenecks, prompt/rule drift audits, automation log reviews, closeout retrospectives, agent-interaction-retro evidence, SOP/script lessons, knowledge-cache/eval/workflow-change candidates, executable improvement queues, and concrete recommendations from local agent traces; legacy `insight` mentions route here only when paired with agent sessions, local traces, tool-call audits, or Codex/Claude Code work history, and recommendations, improvements, or bottlenecks count only when trace-backed. It does not load for public external-source posts, one failing agent run, advisory harness quality reports, public source-content insight analysis, or ordinary summaries."
+    },
+    {
+      "id": "agent-interaction-audit-forbidden-ordinary-article-insight",
+      "skill": "agent-interaction-audit",
+      "kind": "forbidden-load",
+      "prompt": "Analyze this article and write insight recommendations for readers.",
+      "expectedSkill": null,
+      "docsBoundary": "`agent-interaction-audit` loads for private agent interaction audits, private repository interaction audits from local agent traces, cross-session Codex or Claude Code trace analysis, agent task profiles, tool-call decision audits, collaboration bottlenecks, prompt/rule drift audits, automation log reviews, closeout retrospectives, agent-interaction-retro evidence, SOP/script lessons, knowledge-cache/eval/workflow-change candidates, executable improvement queues, and concrete recommendations from local agent traces; legacy `insight` mentions route here only when paired with agent sessions, local traces, tool-call audits, or Codex/Claude Code work history, and recommendations, improvements, or bottlenecks count only when trace-backed. It does not load for public external-source posts, one failing agent run, advisory harness quality reports, public source-content insight analysis, or ordinary summaries."
+    },
+    {
+      "id": "agent-interaction-audit-forbidden-single-agent-run-insight",
+      "skill": "agent-interaction-audit",
+      "kind": "forbidden-load",
+      "prompt": "Review an agent run and provide insight recommendations.",
+      "expectedSkill": "agent-introspection-debugging",
+      "docsBoundary": "`agent-interaction-audit` loads for private agent interaction audits, private repository interaction audits from local agent traces, cross-session Codex or Claude Code trace analysis, agent task profiles, tool-call decision audits, collaboration bottlenecks, prompt/rule drift audits, automation log reviews, closeout retrospectives, agent-interaction-retro evidence, SOP/script lessons, knowledge-cache/eval/workflow-change candidates, executable improvement queues, and concrete recommendations from local agent traces; legacy `insight` mentions route here only when paired with agent sessions, local traces, tool-call audits, or Codex/Claude Code work history, and recommendations, improvements, or bottlenecks count only when trace-backed. It does not load for public external-source posts, one failing agent run, advisory harness quality reports, public source-content insight analysis, or ordinary summaries."
+    },
+    {
+      "id": "agent-interaction-audit-forbidden-agent-product-improvement-insight",
+      "skill": "agent-interaction-audit",
+      "kind": "forbidden-load",
+      "prompt": "Run insight recommendations for an agent product improvement plan.",
+      "expectedSkill": null,
+      "docsBoundary": "`agent-interaction-audit` loads for private agent interaction audits, private repository interaction audits from local agent traces, cross-session Codex or Claude Code trace analysis, agent task profiles, tool-call decision audits, collaboration bottlenecks, prompt/rule drift audits, automation log reviews, closeout retrospectives, agent-interaction-retro evidence, SOP/script lessons, knowledge-cache/eval/workflow-change candidates, executable improvement queues, and concrete recommendations from local agent traces; legacy `insight` mentions route here only when paired with agent sessions, local traces, tool-call audits, or Codex/Claude Code work history, and recommendations, improvements, or bottlenecks count only when trace-backed. It does not load for public external-source posts, one failing agent run, advisory harness quality reports, public source-content insight analysis, or ordinary summaries."
+    },
+    {
+      "id": "agent-interaction-audit-forbidden-single-agent-loop",
+      "skill": "agent-interaction-audit",
       "kind": "forbidden-load",
       "prompt": "The agent is stuck in a repeated tool loop and burning context without progress; capture state and recover.",
       "expectedSkill": "agent-introspection-debugging",
-      "docsBoundary": "`insight` loads for private repository interaction insight audits, Codex or Claude Code trace review, agent task profiles, tool-call decision audits, prompt/rule context audits, automation log audits, SOP/script lessons, knowledge-cache candidates, executable improvement queues, and collaboration bottleneck analysis; it does not load for public external-source posts, one failing agent run, advisory harness quality reports, or ordinary summaries."
+      "docsBoundary": "`agent-interaction-audit` loads for private agent interaction audits, private repository interaction audits from local agent traces, cross-session Codex or Claude Code trace analysis, agent task profiles, tool-call decision audits, collaboration bottlenecks, prompt/rule drift audits, automation log reviews, closeout retrospectives, agent-interaction-retro evidence, SOP/script lessons, knowledge-cache/eval/workflow-change candidates, executable improvement queues, and concrete recommendations from local agent traces; legacy `insight` mentions route here only when paired with agent sessions, local traces, tool-call audits, or Codex/Claude Code work history, and recommendations, improvements, or bottlenecks count only when trace-backed. It does not load for public external-source posts, one failing agent run, advisory harness quality reports, public source-content insight analysis, or ordinary summaries."
     },
     {
       "id": "doc-coauthoring-positive-prd",

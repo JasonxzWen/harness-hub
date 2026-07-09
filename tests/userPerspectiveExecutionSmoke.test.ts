@@ -233,7 +233,7 @@ test('installed workflow router routes a user-perspective intent matrix without 
         'missing-validation',
         'missing-closeout-review',
         'missing-pr-readiness',
-        'missing-insight-audit',
+        'missing-agent-interaction-audit',
         'missing-acceptance-arbiter',
         'missing-final-review-arbiter',
         'missing-effective-interact-handoff',
@@ -301,7 +301,7 @@ test('installed workflow check has a passing gate path for every owner state', (
       prompt: 'Finish the accepted work: run validation, clean artifacts, and write the handoff.',
       state: 'delivery',
       owner: 'delivery-workflow',
-      args: ['--has-validation', '--has-html-handoff', '--has-closeout-review', '--has-pr-readiness', '--has-insight', '--has-acceptance-arbiter', '--has-final-review-arbiter', '--material-changes'],
+      args: ['--has-validation', '--has-html-handoff', '--has-closeout-review', '--has-pr-readiness', '--has-agent-interaction-audit', '--has-acceptance-arbiter', '--has-final-review-arbiter', '--material-changes'],
     },
   ];
   const batch = runWorkflowCheckBatch(workflowCheckScript, cases, targetDir);
@@ -392,7 +392,7 @@ test('installed skill metadata selects high-overlap helper skills from user prom
     activationCheckScript,
     '其他仓库追踪 insight 后仍然没有给出分析会话后的洞察和改进建议。',
   );
-  expect(insightRecommendationSmoke.selectedSkill).toBe('insight');
+  expect(insightRecommendationSmoke.selectedSkill).toBe('agent-interaction-audit');
   expect(insightRecommendationSmoke.mutates).toBe(false);
   expect(insightRecommendationSmoke.dispatchesSubagents).toBe(false);
 
@@ -400,7 +400,7 @@ test('installed skill metadata selects high-overlap helper skills from user prom
     activationCheckScript,
     '给我分析最近几十个 harness-hub 会话，输出哪些地方应该调用但没调用、哪些触发后过程和结果不对，以及改进建议。',
   );
-  expect(unnamedInsightAuditSmoke.selectedSkill).toBe('insight');
+  expect(unnamedInsightAuditSmoke.selectedSkill).toBe('agent-interaction-audit');
   expect(unnamedInsightAuditSmoke.mutates).toBe(false);
   expect(unnamedInsightAuditSmoke.dispatchesSubagents).toBe(false);
 

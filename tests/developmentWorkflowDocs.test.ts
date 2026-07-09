@@ -89,7 +89,7 @@ test('standard harness state templates capture planning and handoff memory', () 
   expect(progress).toContain('Agentic Loop Records');
   expect(progress).toContain('Main Agent Decision');
   expect(progress).toContain('Stale-read gate');
-  expect(progress).toContain('Insight Recommendations');
+  expect(progress).toContain('Agent Interaction Audit Recommendations');
   expect(decisions).toContain('Alternatives considered');
   expect(decisions).toContain('State-file impact');
   expect(handoff).toContain('Active Plan Snapshot');
@@ -99,7 +99,7 @@ test('standard harness state templates capture planning and handoff memory', () 
   expect(handoff).toContain('Main Agent Decision');
   expect(handoff).toContain('Stale-read gate');
   expect(handoff).toContain('Stale-read result');
-  expect(handoff).toContain('Insight Recommendations');
+  expect(handoff).toContain('Agent Interaction Audit Recommendations');
 });
 
 test('standard harness state templates expose the full SDD and TDD memory contract', () => {
@@ -150,7 +150,7 @@ test('standard harness state templates expose the full SDD and TDD memory contra
     '## PR Status',
     '## Agentic Loop Records',
     '## Finish Closeout',
-    '## Insight Recommendations',
+    '## Agent Interaction Audit Recommendations',
     '## Review Feedback To Rules',
     '## Blockers',
     '## Next',
@@ -166,7 +166,7 @@ test('standard harness state templates expose the full SDD and TDD memory contra
     '## PR Status',
     '## Agentic Loop Records',
     '## Finish Closeout',
-    '## Insight Recommendations',
+    '## Agent Interaction Audit Recommendations',
     '## Review Feedback To Rules',
     '## Residual Risk',
     '## Blockers',
@@ -199,7 +199,7 @@ test('standard harness state templates expose the full SDD and TDD memory contra
   expect(files.currentTask).toContain('P0');
   expect(files.currentTask).toContain('P1');
   expect(files.currentTask).toContain('P2');
-  expect(files.currentTask).toContain('Insight audit');
+  expect(files.currentTask).toContain('Agent interaction audit');
   expect(files.currentTask).toContain('Autonomy envelope');
   expect(files.currentTask).toContain('Subagent auto-arbiter');
   expect(files.currentTask).toContain('delegated-agent');
@@ -220,8 +220,11 @@ test('agentic loop catalog documents host-neutral arbitration and adapters', () 
     'Producer -> Verifier -> Arbiter -> Main Agent Decision',
     'delegated-agent',
     'frontend-acceptance',
+    'workflow-review',
+    'test-review',
+    'security-review',
     'docs-consistency',
-    'insight-retro',
+    'agent-interaction-retro',
     'maxIterations',
     'autonomy envelope',
     'Subagent interruption questions go first to the main agent',
