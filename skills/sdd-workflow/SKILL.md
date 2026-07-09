@@ -12,7 +12,7 @@ Use this owner for change work. SDD is the spine; TDD is embedded inside the acc
 Do not start implementation until the user-visible gates are aligned.
 
 1. **Align user need**: outcome, actor, pain, constraints, non-goals, and success target.
-2. **Gather required material and explore directions**: repo docs, code paths, source decisions, referenced sources, and 2-3 evidence-backed directions. Recommend one, record rejected alternatives, and use `grill-me`, `prototype`, or `product-capability` only when useful.
+2. **Gather required material and explore directions**: repo docs, code paths, source decisions, referenced sources, and 2-3 evidence-backed directions. Recommend one, record rejected alternatives, and use `grill-me`, `grill-with-docs`, `prototype`, or `product-capability` when useful.
 3. **Write spec and acceptance**: target behavior, boundaries, acceptance criteria, verification strategy, and open questions.
 4. **Write executable plan and align**: file targets, task order, tests, cleanup list, subagent use, hook checks, and validation commands.
 5. **Clean unneeded files**: delete, demote, archive, or retain only after ownership and safety are clear.
@@ -36,9 +36,9 @@ Ask only blocking open questions before implementation: answers that change beha
 
 ## TDD
 
-- Write or identify the failing test before implementation when behavior is testable.
-- If a direct test is not practical, define the deterministic substitute before implementation.
+- Choose the fastest honest feedback loop before implementation: a failing test when behavior is testable, or a deterministic substitute.
 - Keep test scope tied to the accepted spec; do not add speculative coverage.
+- If feedback is awkward because boundary is muddy, record the design finding before shallow tests.
 
 ## Helper Skills
 

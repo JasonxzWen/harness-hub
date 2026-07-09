@@ -480,6 +480,24 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'pressure-test',
     'push back on this plan',
   ]);
+  const explicitGrillWithDocsActionSignal = includesAny(text, [
+    'grill with docs',
+  ]) || matchesAny(text, [
+    /\b(?:run|use|start|invoke|load|apply)\s+(?:the\s+)?grill-with-docs\b/,
+    /\bgrill-with-docs\s+(?:this|my|our|on|the)\b/,
+  ]);
+  const grillWithDocsKnowledgeSignal = includesAny(text, [
+    'architectural decision',
+    'context wiki',
+    'docs as we go',
+    'domain model',
+    'domain-model',
+    'glossary',
+    'llm wiki',
+    'ubiquitous language',
+    'with docs',
+  ]) || matchesAny(text, [/\badr\b/]);
+  const grillWithDocsSignal = explicitGrillWithDocsActionSignal || (grillSignal && grillWithDocsKnowledgeSignal);
   const productCapabilitySignal = includesAny(text, [
     'capability plan',
     'implementation-ready capability',
@@ -831,6 +849,13 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
 
   if (ponytailSignal && canLoad(metadata, 'ponytail', ['coding work', 'yagni'])) {
     return 'ponytail';
+  }
+
+  if (grillWithDocsSignal
+    && (explicitGrillWithDocsActionSignal || !includesAny(text, ['closeout review', 'read-only review', 'skill review']))
+    && !hubMaintenanceSignal
+    && canLoad(metadata, 'grill-with-docs', ['grill-with-docs', 'glossary', 'adr', 'context wiki'])) {
+    return 'grill-with-docs';
   }
 
   if (effectiveInteractSignal && canLoad(metadata, 'effective-interact', ['complex communication', 'handoff'])) {

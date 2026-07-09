@@ -205,7 +205,7 @@ Harness Hub does not create the schedule, webhook, commit, push, tool install, o
 | Area | Included surface |
 |---|---|
 | Routing and lifecycle | `workflow-router`, owner workflow skills, SDD-first change flow, finish closeout, delivery closeout. |
-| Planning and implementation | `grill-me`, `product-capability`, `tdd-workflow`, `karpathy-guidelines`, `ponytail`, `verification-loop`. |
+| Planning and implementation | `grill-me`, `grill-with-docs`, `product-capability`, `tdd-workflow`, `karpathy-guidelines`, `ponytail`, `verification-loop`. |
 | Diagnosis and review | `diagnosis-workflow`, `diagnose`, `review-workflow`, `compound-code-review`, `security-review`. |
 | Communication and handoff | `effective-interact`, `handoff`, `doc-coauthoring`, `internal-comms`, `documentation-lookup`. |
 | Context engineering | LLM Wiki schema, stable Markdown wiki, contradiction register, update log, portable Obsidian profile. |

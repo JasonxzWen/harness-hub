@@ -161,7 +161,7 @@ test('workflow-router docs and source dossier contain required lifecycle evidenc
     expect(docs).toContain(entry.docsBoundary);
   }
 
-  for (const source of ['Matt Pocock skills', 'Superpowers', 'Everything Claude Code', 'OpenSpec', 'Effective Interact']) {
+  for (const source of ['Matt Pocock skills', 'Matt Pocock README process model', 'Superpowers', 'Everything Claude Code', 'OpenSpec', 'Effective Interact']) {
     expect(dossier).toContain(source);
   }
 

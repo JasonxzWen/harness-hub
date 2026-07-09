@@ -4,7 +4,7 @@ description: Load when a workflow-router-selected owner workflow needs to hand o
 license: MIT
 metadata:
   source: "mattpocock/skills skills/productivity/handoff"
-  upstream_commit: "d54c497aa94400a496d3f2c38be10fa5f284c5a9"
+  upstream_commit: "d574778f94cf620fcc8ce741584093bc650a61d3"
 ---
 
 # Handoff

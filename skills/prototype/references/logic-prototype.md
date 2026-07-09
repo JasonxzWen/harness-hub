@@ -20,9 +20,12 @@ Process:
 6. Give the user one command to run.
 7. Capture what the prototype proved.
 
+The terminal shell should redraw a stable one-screen frame when possible: current state first, then available actions or keyboard shortcuts. Keep the logic module free of terminal I/O so the validated reducer, state machine, function set, or state-owning module can be lifted into production later.
+
 Anti-patterns:
 
 - adding tests for the prototype shell
 - wiring to a real production database
 - mixing terminal code into the reusable logic
+- adding a new runtime or package manager just for the prototype
 - leaving the throwaway shell in the repo after the decision is made

@@ -16,7 +16,7 @@ test('handoff has a narrow restart-notes trigger', () => {
   expect(description).toContain('another agent/session');
   expect(description).toContain('do not load for visual HTML repo reports');
   expect(skill).toContain('mattpocock/skills skills/productivity/handoff');
-  expect(skill).toContain('d54c497aa94400a496d3f2c38be10fa5f284c5a9');
+  expect(skill).toContain('d574778f94cf620fcc8ce741584093bc650a61d3');
 });
 
 test('handoff writes temp restart notes with safety boundaries', () => {

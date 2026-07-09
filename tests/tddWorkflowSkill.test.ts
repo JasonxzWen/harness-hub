@@ -16,7 +16,7 @@ test('tdd-workflow is adapted from Matt Pocock TDD and routed narrowly', () => {
   expect(description).toContain('diagnose first');
   expect(description).toContain('prototype for throwaway exploration');
   expect(skill).toContain('mattpocock/skills skills/engineering/tdd');
-  expect(skill).toContain('d54c497aa94400a496d3f2c38be10fa5f284c5a9');
+  expect(skill).toContain('d574778f94cf620fcc8ce741584093bc650a61d3');
 });
 
 test('tdd-workflow enforces vertical behavior slices', () => {
