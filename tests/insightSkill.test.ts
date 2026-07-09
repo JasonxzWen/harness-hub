@@ -33,6 +33,20 @@ function makeFixture() {
   writeFile(path.join(repo, 'AGENTS.md'), [
     '# Agent Rules',
     `The ${projectName} repository values evidence-backed handoffs and validation.`,
+    'Outdated guidance: a stale rule caused misleading agent behavior and should be reviewed.',
+  ].join('\n'));
+  writeFile(path.join(repo, '.codex', 'AGENTS.md'), [
+    '# Local Codex Rules',
+    `For ${projectName}, preserve PowerShell UTF-8 encoding SOP notes and GitHub PR status checks.`,
+  ].join('\n'));
+  writeFile(path.join(repo, '.claude', 'CLAUDE.md'), [
+    '# Local Claude Rules',
+    `For ${projectName}, cache repeatedly rediscovered workflow facts instead of relearning from scratch.`,
+  ].join('\n'));
+  writeFile(path.join(repo, '.codex', 'automations', 'daily.log'), [
+    `scheduled automation for ${projectName}`,
+    'The same mistake appeared again and again: gh check-run status was retried before mergeability settled.',
+    'Script SOP: use utf-8 encoding for Chinese JSONL logs.',
   ].join('\n'));
   writeFile(path.join(codexRoot, 'session.jsonl'), [
     JSON.stringify({
@@ -45,7 +59,7 @@ function makeFixture() {
       type: 'event_msg',
       payload: {
         type: 'user_message',
-        message: 'Audit the project interaction bottlenecks.',
+        message: 'Audit the project interaction bottlenecks. The previous wording was ambiguous and the agent misunderstood the GitHub SOP.',
       },
     }),
     JSON.stringify({
@@ -80,14 +94,24 @@ function makeFixture() {
 
 test('insight documents private read-only repository interaction audits', () => {
   expect(skill).toContain('repository interaction insight audit');
+  expect(skill).toContain('automation logs, and layered prompt/rule context');
+  expect(skill).toContain('Current executable capabilities');
+  expect(skill).toContain('improvement queue JSON');
+  expect(skill).toContain('Prompt and rule audit');
+  expect(skill).toContain('Knowledge cache candidates');
   expect(skill).toContain('Default to read-only analysis');
   expect(skill).toContain('ignored or outside-repo local path');
   expect(skill).toContain('Do not confuse this with `source-post`');
   expect(skill).toContain('Do not confuse this with `agent-introspection-debugging`');
   expect(dataSources).toContain('Read project-related local evidence broadly');
+  expect(dataSources).toContain('Layered prompt and rule context');
+  expect(dataSources).toContain('Automation logs');
   expect(dataSources).toContain('`confirmed`');
   expect(dataSources).toContain('`candidate`');
   expect(analysisRubric).toContain('Tool Decision Audit');
+  expect(analysisRubric).toContain('Prompt And Rule Audit');
+  expect(analysisRubric).toContain('SOP And Knowledge Audit');
+  expect(analysisRubric).toContain('Improvement Queue Bar');
   expect(analysisRubric).toContain('at most three primary recommendations');
   expect(skill).toContain('Use layered evidence and confidence levels');
   expect(skill).toContain('Strong insights require confirmed, non-low-confidence interaction evidence');
@@ -98,6 +122,9 @@ test('insight documents private read-only repository interaction audits', () => 
   expect(skill).toContain('--effective-interact-input <input.json>');
   expect(skill).toContain('Use `effective-interact` for dense final reports');
   expect(reportShape).toContain('also generate an `effective-interact` visual-report input');
+  expect(reportShape).toContain('Prompt And Rule Audit');
+  expect(reportShape).toContain('Knowledge Cache Candidates');
+  expect(reportShape).toContain('Improvement Queue JSON');
 });
 
 test('insight capability metadata registers standard install surface and boundaries', () => {
@@ -115,12 +142,24 @@ test('insight capability metadata registers standard install surface and boundar
   expect(component.path).toBe('skills/insight');
   expect(component.provides).toContain('repository-interaction-insight-audits');
   expect(component.provides).toContain('private-insight-reports');
+  expect(component.provides).toContain('prompt-rule-context-audits');
+  expect(component.provides).toContain('automation-log-audits');
+  expect(component.provides).toContain('sop-and-script-lesson-mining');
+  expect(component.provides).toContain('knowledge-cache-candidate-mining');
+  expect(component.provides).toContain('executable-improvement-queues');
+  expect(component.provides).toContain('private-improvement-queue-json');
   expect(component.provides).toContain('effective-interact-visual-report-inputs');
   expect(component.overlapsWith).toContain('skill:source-post');
   expect(component.overlapsWith).toContain('skill:agent-introspection-debugging');
   expect(component.routing).toContain('private repository interaction insight audit');
+  expect(component.routing).toContain('prompt/rule context audit');
+  expect(component.routing).toContain('automation log audit');
+  expect(component.routing).toContain('executable improvement queue');
   expect(component.routing).toContain('effective-interact as the visual presentation layer');
   expect(component.recommendation).toContain('ignored private reports');
+  expect(component.recommendation).toContain('prompt/rule layers');
+  expect(component.recommendation).toContain('cacheable knowledge candidates');
+  expect(component.recommendation).toContain('private improvement queue JSON');
   expect(component.recommendation).toContain('optional effective-interact visual report inputs');
   expect(component.recommendation).toContain('no default project');
 });
@@ -173,14 +212,26 @@ test('insight collection and report scripts produce a private audit from fixture
       repoAffinity: string;
       eventType: string;
       evidenceRole: string;
+      signals: Record<string, boolean>;
     });
   const normalizedPaths = ledger.map((event) => event.path.replace(/\\/g, '/'));
   expect(normalizedPaths.some((eventPath) => eventPath.includes('skills/noise'))).toBe(false);
   expect(normalizedPaths.some((eventPath) => eventPath.includes('src/noise.md'))).toBe(false);
   expect(ledger.some((event) => event.sourceClass === 'host-trace')).toBe(true);
+  expect(ledger.some((event) => event.sourceClass === 'prompt-context')).toBe(true);
+  expect(ledger.some((event) => event.sourceClass === 'automation-log')).toBe(true);
   expect(ledger.some((event) => event.evidenceRole === 'interaction')).toBe(true);
   expect(ledger.some((event) => event.confidence === 'high' && event.repoAffinity === 'exact')).toBe(true);
-  expect(ledger.length).toBeLessThan(12);
+  expect(ledger.some((event) => event.signals.promptContext)).toBe(true);
+  expect(ledger.some((event) => event.signals.automation)).toBe(true);
+  expect(ledger.some((event) => event.signals.userFriction)).toBe(true);
+  expect(ledger.some((event) => event.signals.guidanceDrift)).toBe(true);
+  expect(ledger.some((event) => event.signals.sopLesson)).toBe(true);
+  expect(ledger.some((event) => event.signals.encodingIssue)).toBe(true);
+  expect(ledger.some((event) => event.signals.githubSop)).toBe(true);
+  expect(ledger.some((event) => event.signals.knowledgeCache)).toBe(true);
+  expect(ledger.some((event) => event.signals.repeatedMistake)).toBe(true);
+  expect(ledger.length).toBeLessThan(20);
 
   const reportPath = path.join(fixture.out, 'insight-report.md');
   const effectiveInteractInputPath = path.join(fixture.out, 'insight-visual.input.json');
@@ -201,36 +252,140 @@ test('insight collection and report scripts produce a private audit from fixture
   const reportPayload = JSON.parse(report.stdout) as {
     ok: boolean;
     reportPath: string;
+    improvementQueuePath: string;
     effectiveInteractInputPath: string;
-    counts: { total: number };
+    counts: { total: number; improvementQueueItems: number };
   };
   const markdown = fs.readFileSync(reportPayload.reportPath, 'utf8');
 
   expect(reportPayload.ok).toBe(true);
+  expect(fs.existsSync(reportPayload.improvementQueuePath)).toBe(true);
   expect(path.resolve(reportPayload.effectiveInteractInputPath)).toBe(path.resolve(effectiveInteractInputPath));
   expect(reportPayload.counts.total).toBeGreaterThanOrEqual(3);
+  expect(reportPayload.counts.improvementQueueItems).toBeGreaterThan(0);
   expect(markdown).toContain('## BLUF');
   expect(markdown).toContain('## Evidence Coverage');
   expect(markdown).toContain('## Top Insights');
   expect(markdown).toContain('## Top Bottlenecks');
   expect(markdown).toContain('## Top Recommendations');
+  expect(markdown).toContain('## Improvement Queue Summary');
+  expect(markdown).toContain('insight-improvement-queue.json');
   expect(markdown).toContain('## Task Profile');
   expect(markdown).toContain('Task clusters');
   expect(markdown).toContain('## Trace Audit');
   expect(markdown).toContain('Tool branch review');
+  expect(markdown).toContain('## Learning Opportunity Map');
+  expect(markdown).toContain('## Prompt And Rule Audit');
+  expect(markdown).toContain('## User Friction Patterns');
+  expect(markdown).toContain('## Project Guidance Garbage And Drift');
+  expect(markdown).toContain('## SOP And Script Lessons');
+  expect(markdown).toContain('## Repeated Agent Mistakes');
+  expect(markdown).toContain('## Knowledge Cache Candidates');
+  expect(markdown).toContain('## Automation Trace Review');
   expect(markdown).toContain('## Core Positioning');
   expect(markdown).toContain('## Unknowns');
   expect(markdown).toContain('Strong confirmed interaction events');
   expect(markdown).toContain('evt-');
   expect(fs.existsSync(effectiveInteractInputPath)).toBe(true);
 
+  const improvementQueue = JSON.parse(fs.readFileSync(reportPayload.improvementQueuePath, 'utf8')) as {
+    schemaVersion: number;
+    policy: { rawExcerptPolicy: string; defaultMutation: string };
+    items: Array<{
+      id: string;
+      category: string;
+      tags: string[];
+      status: string;
+      actionability: string;
+      scope: string;
+      targetDestination: string;
+      summary: string;
+      suggestedChange: string;
+      evidenceIds: string[];
+      evidenceTier: string;
+      sourceClasses: string[];
+      privacy: string;
+      rawExcerptPolicy: string;
+      confirmationPolicy: string;
+      costRationale: Record<string, string>;
+      expectedFutureCostReduction: string;
+      risk: string;
+      priority: string;
+      validationSignal: string;
+      counterEvidence: string[];
+      rejectionReasons: string[];
+    }>;
+  };
+  const queueText = JSON.stringify(improvementQueue);
+  const categories = new Set(improvementQueue.items.map((item) => item.category));
+
+  expect(improvementQueue.schemaVersion).toBe(1);
+  expect(improvementQueue.policy.defaultMutation).toBe('none');
+  expect(improvementQueue.policy.rawExcerptPolicy).toBe('report-only');
+  expect(categories).toContain('project-rule-candidate');
+  expect(categories).toContain('stale-info-removal-candidate');
+  expect(categories).toContain('sop-candidate');
+  expect(categories).toContain('knowledge-cache-candidate');
+  expect(categories).toContain('eval-case-candidate');
+  expect(categories).toContain('workflow-change-candidate');
+  expect(queueText).not.toContain('excerpt');
+  expect(queueText).not.toContain('The previous wording was ambiguous');
+  for (const item of improvementQueue.items) {
+    expect(item.id).toMatch(/^iq-[a-z0-9-]+-[a-f0-9]{10}$/);
+    expect(item.tags.length).toBeGreaterThan(0);
+    expect(['new', 'needs-more-evidence']).toContain(item.status);
+    expect(['actionable', 'needs-more-evidence']).toContain(item.actionability);
+    expect(['project', 'session', 'user']).toContain(item.scope);
+    expect(item.targetDestination.length).toBeGreaterThan(0);
+    expect(item.summary.length).toBeGreaterThan(0);
+    expect(item.suggestedChange.length).toBeGreaterThan(0);
+    expect(item.evidenceIds.length).toBeGreaterThan(0);
+    expect(['strong', 'medium', 'weak']).toContain(item.evidenceTier);
+    expect(item.sourceClasses.length).toBeGreaterThan(0);
+    expect(item.privacy).toBe('private-local');
+    expect(item.rawExcerptPolicy).toBe('report-only');
+    expect(['needs-human-confirmation', 'agent-actionable-after-review']).toContain(item.confirmationPolicy);
+    expect(item.costRationale.frequency).toBeTruthy();
+    expect(item.costRationale.timeLostPerOccurrence).toBeTruthy();
+    expect(item.costRationale.blastRadius).toBeTruthy();
+    expect(item.costRationale.fixEffort).toBeTruthy();
+    expect(item.costRationale.verificationClarity).toBeTruthy();
+    expect(['high', 'medium', 'low']).toContain(item.expectedFutureCostReduction);
+    expect(['high', 'medium', 'low']).toContain(item.risk);
+    expect(['P0', 'P1', 'P2']).toContain(item.priority);
+    expect(item.validationSignal.length).toBeGreaterThan(0);
+    expect(Array.isArray(item.counterEvidence)).toBe(true);
+    expect(Array.isArray(item.rejectionReasons)).toBe(true);
+  }
+
+  const originalIds = improvementQueue.items.map((item) => item.id);
+  const secondReportPath = path.join(fixture.out, 'insight-report-second.md');
+  const secondReport = spawnSync(process.execPath, [
+    reportScript,
+    '--ledger',
+    collectPayload.ledgerPath,
+    '--manifest',
+    collectPayload.manifestPath,
+    '--out',
+    secondReportPath,
+    '--json',
+  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+  expect(secondReport.status, secondReport.stderr || secondReport.stdout).toBe(0);
+  const secondPayload = JSON.parse(secondReport.stdout) as { improvementQueuePath: string };
+  const secondQueue = JSON.parse(fs.readFileSync(secondPayload.improvementQueuePath, 'utf8')) as typeof improvementQueue;
+  expect(secondQueue.items.map((item) => item.id)).toEqual(originalIds);
+
   const effectiveInteractInput = JSON.parse(fs.readFileSync(effectiveInteractInputPath, 'utf8')) as {
+    title: string;
     renderMode: string;
-    intent: { artifactKind: string };
+    intent: { artifactKind: string; primaryQuestion: string };
     sections: Array<{ type: string; title: string }>;
     nextActions: string[];
   };
   expect(effectiveInteractInput.renderMode).toBe('pre-rendered');
+  expect(effectiveInteractInput.title).toBe('Insight 交互审计可视化汇报');
+  expect(effectiveInteractInput.intent.primaryQuestion).toContain('哪些交互模式');
+  expect(JSON.stringify(effectiveInteractInput)).not.toContain('\uFFFD');
   expect(effectiveInteractInput.intent.artifactKind).toBe('status');
   expect(effectiveInteractInput.sections.some((section) => section.type === 'data-table' && section.title === 'Top Insights')).toBe(true);
   expect(effectiveInteractInput.sections.some((section) => section.type === 'data-table' && section.title === 'Evidence Coverage')).toBe(true);
@@ -336,7 +491,7 @@ test('insight report weights bottlenecks toward primary interaction evidence', (
   expect(report.status, report.stderr || report.stdout).toBe(0);
   const markdown = fs.readFileSync(reportPath, 'utf8');
   const bottleneckSection = markdown.split('## Top Bottlenecks')[1].split('## Top Recommendations')[0];
-  const recommendationSection = markdown.split('## Top Recommendations')[1].split('## Task Profile')[0];
+  const recommendationSection = markdown.split('## Top Recommendations')[1].split('## Improvement Queue Summary')[0];
 
   expect(bottleneckSection).toContain('evt-tool-primary');
   expect(bottleneckSection).not.toContain('evt-repo-state');

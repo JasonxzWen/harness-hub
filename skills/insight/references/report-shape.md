@@ -6,14 +6,24 @@ Default to a private Markdown report for the analysis record. For high-volume, m
 
 1. `BLUF`
 2. `Evidence Coverage`
-3. `Top Bottlenecks`
-4. `Top Recommendations`
-5. `Task Profile`
-6. `Trace Audit`
-7. `Core Positioning`
-8. `Unknowns`
-9. `Evidence Appendix`
-10. `Warnings`
+3. `Top Insights`
+4. `Top Bottlenecks`
+5. `Top Recommendations`
+6. `Improvement Queue Summary`
+7. `Task Profile`
+8. `Trace Audit`
+9. `Learning Opportunity Map`
+10. `Prompt And Rule Audit`
+11. `User Friction Patterns`
+12. `Project Guidance Garbage And Drift`
+13. `SOP And Script Lessons`
+14. `Repeated Agent Mistakes`
+15. `Knowledge Cache Candidates`
+16. `Automation Trace Review`
+17. `Core Positioning`
+18. `Unknowns`
+19. `Evidence Appendix`
+20. `Warnings`
 
 ## Evidence IDs
 
@@ -26,6 +36,30 @@ Bottleneck and recommendation evidence should prefer primary interaction events:
 - Task profile should include clustered interaction traces, not only global counts.
 - Trace audit should distinguish parsed tool-call/tool-result events, failed or blocker-linked tool events, repeated failed tools, and environment-linked failures.
 - Successful handoffs and state updates can appear in task clusters, but should not become Top Bottlenecks without explicit friction evidence.
+- Prompt/rule context, automation logs, and ordinary repo state should be visible in the report, but labeled as context unless parsed as interaction events.
+- SOP, repeated-mistake, and knowledge-cache sections can include weak leads; do not silently upgrade them into strong recommendations.
+- The Markdown report should render only a queue summary. `insight-improvement-queue.json` is the authoritative machine-readable queue.
+- Queue items must avoid long raw excerpts. Use evidence IDs, evidence tier, source classes, and short summaries.
+
+## Improvement Queue JSON
+
+The report builder writes `insight-improvement-queue.json` next to `insight-report.md`.
+
+V1 queue items cover `project-rule-candidate`, `stale-info-removal-candidate`, `sop-candidate`, `knowledge-cache-candidate`, `eval-case-candidate`, and `workflow-change-candidate`.
+
+Every actionable item must include:
+
+- stable `id`;
+- `status`, initially `new` or `needs-more-evidence`;
+- `actionability`, `scope`, `targetDestination`, `summary`, and `suggestedChange`;
+- `evidenceIds`, `evidenceTier`, and `sourceClasses`;
+- `privacy: private-local` and `rawExcerptPolicy: report-only`;
+- `confirmationPolicy`;
+- `costRationale`, `expectedFutureCostReduction`, `risk`, and `priority`;
+- `validationSignal`;
+- `counterEvidence` and `rejectionReasons`.
+
+Findings without a validation signal stay in report observations and do not enter the actionable queue.
 
 ## Language
 

@@ -1,8 +1,43 @@
 #!/usr/bin/env node
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+
+const PRIMARY_SIGNALS = ['userRequest', 'toolTrace', 'validation', 'blocker', 'decision', 'handoff'];
+const LEARNING_SIGNALS = [
+  'promptContext',
+  'userFriction',
+  'guidanceDrift',
+  'repeatedMistake',
+  'sopLesson',
+  'encodingIssue',
+  'githubSop',
+  'knowledgeCache',
+  'automation',
+];
+const QUEUE_CATEGORIES = [
+  'project-rule-candidate',
+  'stale-info-removal-candidate',
+  'sop-candidate',
+  'knowledge-cache-candidate',
+  'eval-case-candidate',
+  'workflow-change-candidate',
+];
+const QUEUE_STATUSES = [
+  'new',
+  'seen-before',
+  'accepted',
+  'rejected',
+  'needs-more-evidence',
+  'superseded',
+  'applied-outside-insight',
+];
+const QUEUE_PRIORITY_SCORE = { P0: 3, P1: 2, P2: 1 };
+const COST_REDUCTION_SCORE = { high: 3, medium: 2, low: 1, unknown: 0 };
+const EVIDENCE_TIER_SCORE = { strong: 3, medium: 2, weak: 1, unknown: 0 };
+const RISK_SCORE = { low: 3, medium: 2, high: 1, unknown: 0 };
 
 function usage() {
   return `Usage: node skills/insight/scripts/build-insight-report.mjs --ledger <events.jsonl> [--manifest <manifest.json>] [--out <report.md>] [--effective-interact-input <input.json>] [--json]
@@ -97,6 +132,12 @@ function isInteractionEvent(event) {
 
 function inferEvidenceRole(event) {
   if (event.sourceClass === 'repo-state') {
+    return 'context';
+  }
+  if (event.sourceClass === 'prompt-context') {
+    return 'context';
+  }
+  if (event.sourceClass === 'automation-log' && !['user-message', 'tool-call', 'tool-result', 'handoff'].includes(event.eventType)) {
     return 'context';
   }
   if (['user-message', 'tool-call', 'tool-result', 'handoff'].includes(event.eventType)) {
@@ -292,6 +333,9 @@ function topInsights(events, bottlenecks, manifest) {
   const validation = signalCount(strong, 'validation');
   const decisions = signalCount(strong, 'decision');
   const toolTrace = signalCount(strong, 'toolTrace');
+  const userFriction = signalCount(strong, 'userFriction');
+  const repeatedMistakes = signalCount(strong, 'repeatedMistake');
+  const knowledgeCache = signalCount(events, 'knowledgeCache');
   const missingClaude = manifest?.hosts?.includes('claude-code')
     && !events.some((event) => event.host === 'claude-code' && isInteractionEvent(event));
   const repeatedBottleneck = bottlenecks.find((item) => item.count > 0 && item.key !== 'evidence coverage');
@@ -313,6 +357,36 @@ function topInsights(events, bottlenecks, manifest) {
       text: `${repeatedBottleneck.count} confirmed interaction event(s) point to this pattern before any recommendation is selected.`,
       evidence: repeatedBottleneck.ids.slice(0, 5),
       confidence: repeatedBottleneck.count >= 2 ? 'high' : 'medium',
+    });
+  }
+
+  if (userFriction > 0) {
+    insights.push({
+      tier: 'strong insight',
+      title: 'User wording friction is visible in confirmed interaction traces',
+      text: 'At least one confirmed interaction contains misunderstanding, ambiguity, or correction language that should be reviewed before changing prompts.',
+      evidence: signalEvents(strong, 'userFriction', 5).map((event) => event.id),
+      confidence: userFriction >= 2 ? 'high' : 'medium',
+    });
+  }
+
+  if (repeatedMistakes > 0) {
+    insights.push({
+      tier: 'strong insight',
+      title: 'Recurring agent mistakes should be converted into guardrails or SOP',
+      text: 'Confirmed traces mention repeated mistakes, retries, or low-value lookup loops.',
+      evidence: signalEvents(strong, 'repeatedMistake', 5).map((event) => event.id),
+      confidence: repeatedMistakes >= 2 ? 'high' : 'medium',
+    });
+  }
+
+  if (knowledgeCache > 0) {
+    insights.push({
+      tier: strong.length > 0 ? 'weak lead' : 'unknown',
+      title: 'Some project knowledge may deserve a durable cache',
+      text: 'The ledger contains cache, wiki, relearning, or repeated locating signals; verify them against confirmed interactions before writing durable memory.',
+      evidence: signalEvents(events, 'knowledgeCache', 5).map((event) => event.id),
+      confidence: signalCount(strong, 'knowledgeCache') > 0 ? 'medium' : 'low',
     });
   }
 
@@ -388,6 +462,11 @@ function recommendations(events, bottlenecks, manifest) {
   const toolTrace = signalCount(strong, 'toolTrace');
   const blockers = signalCount(strong, 'blocker');
   const environmentBlockers = strong.filter(isEnvironmentBlocker);
+  const userFriction = signalEvents(strong, 'userFriction', 3);
+  const guidanceDrift = signalEvents(events, 'guidanceDrift', 3);
+  const repeatedMistakes = signalEvents(strong, 'repeatedMistake', 3);
+  const sopLessons = signalEvents(events, 'sopLesson', 3);
+  const knowledgeCache = signalEvents(events, 'knowledgeCache', 3);
   const missingClaude = manifest?.hosts?.includes('claude-code')
     && !events.some((event) => event.host === 'claude-code' && isInteractionEvent(event));
 
@@ -412,6 +491,46 @@ function recommendations(events, bottlenecks, manifest) {
       title: 'Treat environment readiness as a first-class audit category',
       owner: 'diagnosis-workflow or hub-maintenance-workflow',
       evidence: environmentBlockers.slice(0, 3).map((event) => event.id),
+    });
+  }
+
+  if (userFriction.length > 0) {
+    recs.push({
+      title: 'Add a request-friction review before changing prompt or routing rules',
+      owner: 'insight or sdd-workflow',
+      evidence: userFriction.map((event) => event.id),
+    });
+  }
+
+  if (guidanceDrift.length > 0) {
+    recs.push({
+      title: 'Review stale or misleading project guidance before the next agent session',
+      owner: 'hub-maintenance-workflow or the target repo workflow',
+      evidence: guidanceDrift.map((event) => event.id),
+    });
+  }
+
+  if (repeatedMistakes.length > 0) {
+    recs.push({
+      title: 'Convert repeated agent mistakes into a guardrail, eval case, or SOP note',
+      owner: 'insight-retro or hub-maintenance-workflow',
+      evidence: repeatedMistakes.map((event) => event.id),
+    });
+  }
+
+  if (sopLessons.length > 0) {
+    recs.push({
+      title: 'Extract durable tool and script SOP from repeated command evidence',
+      owner: 'delivery-workflow or hub-maintenance-workflow',
+      evidence: sopLessons.map((event) => event.id),
+    });
+  }
+
+  if (knowledgeCache.length > 0) {
+    recs.push({
+      title: 'Promote repeatedly rediscovered project facts into the project knowledge cache',
+      owner: 'quick-learn or the target repo workflow',
+      evidence: knowledgeCache.map((event) => event.id),
     });
   }
 
@@ -573,6 +692,376 @@ function toolName(event) {
   const text = String(event.excerpt || '').trim();
   const match = text.match(/^([A-Za-z0-9_.:-]+)/);
   return match?.[1] || event.eventType || 'unknown-tool';
+}
+
+function evidenceRank(event) {
+  let score = 0;
+  if (event.relevance === 'confirmed') score += 6;
+  if (['exact', 'strong'].includes(event.repoAffinity || '')) score += 4;
+  if ((event.evidenceRole || inferEvidenceRole(event)) === 'interaction') score += 3;
+  if (event.confidence === 'high') score += 2;
+  if (event.confidence === 'medium') score += 1;
+  if (event.relevance === 'candidate') score -= 1;
+  return score;
+}
+
+function signalEvents(events, signal, limit = 8) {
+  return events
+    .filter((event) => event.signals?.[signal])
+    .sort((a, b) => evidenceRank(b) - evidenceRank(a) || String(a.ts || '').localeCompare(String(b.ts || '')))
+    .slice(0, limit);
+}
+
+function signalCountRows(events) {
+  return [...PRIMARY_SIGNALS, ...LEARNING_SIGNALS]
+    .map((signal) => [signal, signalCount(events, signal)])
+    .filter(([, count]) => count > 0);
+}
+
+function formatSignalEvidence(events, signal, emptyText) {
+  const rows = signalEvents(events, signal);
+  if (rows.length === 0) {
+    return `- ${emptyText}\n`;
+  }
+  return rows.map((event) => {
+    const role = event.evidenceRole || inferEvidenceRole(event);
+    const meta = [
+      event.relevance || 'unknown',
+      event.confidence || 'unknown',
+      event.repoAffinity || 'unknown',
+      role,
+      event.sourceClass || event.sourceType || 'unknown',
+    ].join('/');
+    return `- \`${event.id}\` [${meta}] ${event.path}: ${event.excerpt || '(no excerpt)'}`;
+  }).join('\n') + '\n';
+}
+
+function formatLearningMap(events) {
+  const rows = LEARNING_SIGNALS
+    .map((signal) => ({ signal, count: signalCount(events, signal), ids: signalEvents(events, signal, 4).map((event) => event.id) }))
+    .filter((row) => row.count > 0);
+  if (rows.length === 0) {
+    return '- No learning-oriented signals were detected.\n';
+  }
+  return rows.map((row) => `- ${row.signal}: ${row.count} event(s). Evidence: ${formatEvidenceIds(row.ids)}.`).join('\n') + '\n';
+}
+
+function buildImprovementQueue(events, manifest, warnings) {
+  const itemConfigs = [
+    {
+      category: 'project-rule-candidate',
+      signals: ['userFriction', 'guidanceDrift', 'promptContext'],
+      requiredSignals: ['userFriction', 'guidanceDrift'],
+      tags: ['misunderstanding', 'stale-guidance'],
+      scope: 'project',
+      targetDestination: 'project agent instructions or routing docs',
+      summary: 'Clarify project-specific agent instructions where traces or prompt context show misunderstanding or stale guidance.',
+      suggestedChange: 'Review the cited evidence and add, narrow, or correct the project rule that would prevent the same interpretation error.',
+      validationSignal: 'A routing or insight fixture reproduces the phrase/pattern and selects the intended workflow or recommendation category.',
+      expectedFutureCostReduction: 'high',
+      risk: 'medium',
+      costRationale: {
+        frequency: 'medium',
+        timeLostPerOccurrence: 'medium',
+        blastRadius: 'project',
+        fixEffort: 'medium',
+        verificationClarity: 'high',
+      },
+      counterEvidence: ['Project rules may already require some repeated checks; avoid removing required gates without policy evidence.'],
+      rejectionReasons: ['required-by-project-policy', 'already-covered-by-existing-rule', 'high-risk-to-generalize'],
+    },
+    {
+      category: 'stale-info-removal-candidate',
+      signals: ['guidanceDrift'],
+      requiredSignals: ['guidanceDrift'],
+      tags: ['stale-guidance'],
+      scope: 'project',
+      targetDestination: 'stale project guidance, source records, or local task state',
+      summary: 'Review stale, wrong, contradictory, or misleading guidance that may waste future agent time.',
+      suggestedChange: 'Remove or correct the stale statement, then add a validation or search check proving the outdated reference is gone.',
+      validationSignal: 'Repository search no longer finds the stale reference, and the nearest routing or skill validation still passes.',
+      expectedFutureCostReduction: 'medium',
+      risk: 'low',
+      confirmationPolicy: 'agent-actionable-after-review',
+      costRationale: {
+        frequency: 'medium',
+        timeLostPerOccurrence: 'medium',
+        blastRadius: 'project',
+        fixEffort: 'low',
+        verificationClarity: 'high',
+      },
+      counterEvidence: ['A stale-looking rule can be intentionally retained for backward compatibility or host portability.'],
+      rejectionReasons: ['required-by-project-policy', 'too-little-evidence', 'not-worth-fixing'],
+    },
+    {
+      category: 'sop-candidate',
+      signals: ['sopLesson', 'encodingIssue', 'githubSop'],
+      requiredSignals: ['sopLesson', 'encodingIssue', 'githubSop'],
+      tags: ['script-sop', 'encoding', 'github-sop'],
+      scope: 'project',
+      targetDestination: 'project SOP, runbook, validation docs, or agent instructions',
+      summary: 'Extract durable tool, script, encoding, GitHub, PR, or validation handling into a reusable SOP candidate.',
+      suggestedChange: 'Write the smallest SOP note that names the command pattern, failure mode, and validation signal.',
+      validationSignal: 'The next matching workflow can follow the SOP without rediscovering the command or encoding/GitHub handling detail.',
+      expectedFutureCostReduction: 'medium',
+      risk: 'low',
+      confirmationPolicy: 'agent-actionable-after-review',
+      costRationale: {
+        frequency: 'medium',
+        timeLostPerOccurrence: 'medium',
+        blastRadius: 'project',
+        fixEffort: 'low',
+        verificationClarity: 'medium',
+      },
+      counterEvidence: ['Some command repetition is required by freshness, stale-read, or validation gates.'],
+      rejectionReasons: ['required-by-project-policy', 'one-off-incident', 'already-covered-by-existing-rule'],
+    },
+    {
+      category: 'knowledge-cache-candidate',
+      signals: ['knowledgeCache'],
+      requiredSignals: ['knowledgeCache'],
+      tags: ['knowledge-rediscovery'],
+      scope: 'project',
+      targetDestination: 'project knowledge cache, wiki, or restart handoff',
+      summary: 'Promote repeatedly rediscovered project facts, file locations, or workflow decisions into a durable knowledge-cache candidate.',
+      suggestedChange: 'Record the fact only after confirming it is stable, source-backed, and useful across future sessions.',
+      validationSignal: 'A later insight audit shows fewer repeated lookup or relearning events for the same project fact.',
+      expectedFutureCostReduction: 'medium',
+      risk: 'medium',
+      costRationale: {
+        frequency: 'medium',
+        timeLostPerOccurrence: 'medium',
+        blastRadius: 'project',
+        fixEffort: 'medium',
+        verificationClarity: 'medium',
+      },
+      counterEvidence: ['The fact may be session-specific or already discoverable through nearby docs and code search.'],
+      rejectionReasons: ['high-risk-to-generalize', 'already-covered-by-existing-rule', 'not-worth-fixing'],
+    },
+    {
+      category: 'eval-case-candidate',
+      signals: ['repeatedMistake', 'userFriction', 'toolTrace'],
+      requiredSignals: ['repeatedMistake', 'userFriction'],
+      tags: ['repeated-agent-mistake', 'misunderstanding'],
+      scope: 'project',
+      targetDestination: 'routing, skill activation, workflow, or regression fixture',
+      summary: 'Convert repeated agent mistakes or misunderstood user phrasing into a deterministic eval or fixture candidate.',
+      suggestedChange: 'Create the smallest fixture that fails before the fix and passes after the routing, skill, or workflow adjustment.',
+      validationSignal: 'The new fixture fails on the old behavior and passes after the accepted change.',
+      expectedFutureCostReduction: 'high',
+      risk: 'low',
+      costRationale: {
+        frequency: 'medium',
+        timeLostPerOccurrence: 'high',
+        blastRadius: 'project',
+        fixEffort: 'medium',
+        verificationClarity: 'high',
+      },
+      counterEvidence: ['A single misunderstood session may not justify a durable eval without repeated or high-impact evidence.'],
+      rejectionReasons: ['too-little-evidence', 'one-off-incident', 'not-worth-fixing'],
+    },
+    {
+      category: 'workflow-change-candidate',
+      signals: ['repeatedMistake', 'blocker', 'validation', 'decision'],
+      requiredSignals: ['repeatedMistake', 'blocker'],
+      tags: ['workflow-drift', 'validation-gap', 'repeated-tool-failure'],
+      scope: 'project',
+      targetDestination: 'workflow skill contract, delivery gate, or owner workflow',
+      summary: 'Review repeated blockers or validation/decision gaps that may require a workflow contract change.',
+      suggestedChange: 'Change the smallest workflow rule or closeout gate that would prevent the repeated failure without adding broad process overhead.',
+      validationSignal: 'The workflow advisory or owner-contract test captures the new gate and passes after the contract change.',
+      expectedFutureCostReduction: 'high',
+      risk: 'medium',
+      costRationale: {
+        frequency: 'medium',
+        timeLostPerOccurrence: 'high',
+        blastRadius: 'project',
+        fixEffort: 'medium',
+        verificationClarity: 'high',
+      },
+      counterEvidence: ['Workflow gates can add overhead; repeated checks may be intentional project policy rather than waste.'],
+      rejectionReasons: ['required-by-project-policy', 'high-risk-to-generalize', 'too-little-evidence'],
+    },
+  ];
+
+  const items = itemConfigs
+    .map((config) => buildQueueItem(events, config))
+    .filter(Boolean)
+    .sort(compareQueueItems);
+
+  return {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    repo: manifest?.repo || null,
+    window: {
+      since: manifest?.since || null,
+      hosts: manifest?.hosts || [],
+    },
+    policy: {
+      defaultMutation: 'none',
+      artifact: 'private-local',
+      authoritativeSource: 'insight-improvement-queue.json',
+      reportRole: 'human-summary',
+      historyMerge: 'not-in-v1',
+      allowedStatuses: QUEUE_STATUSES,
+      allowedCategories: QUEUE_CATEGORIES,
+      rawExcerptPolicy: 'report-only',
+    },
+    counts: {
+      total: items.length,
+      byCategory: Object.fromEntries(countBy(items, (item) => item.category)),
+      byStatus: Object.fromEntries(countBy(items, (item) => item.status)),
+      byPriority: Object.fromEntries(countBy(items, (item) => item.priority)),
+    },
+    warnings,
+    items,
+  };
+}
+
+function buildQueueItem(events, config) {
+  const matched = uniqueEvents(config.signals.flatMap((signal) => signalEvents(events, signal, 16)));
+  const requiredMatched = uniqueEvents(config.requiredSignals.flatMap((signal) => signalEvents(events, signal, 16)));
+  if (matched.length === 0 || requiredMatched.length === 0) {
+    return null;
+  }
+
+  const strong = strongInteractionEvents(matched);
+  const confirmedContext = matched.filter((event) => (
+    !isInteractionEvent(event)
+    && event.relevance === 'confirmed'
+    && event.confidence !== 'low'
+  ));
+  const supportingTrace = strong.length > 0 ? strong : strongInteractionEvents(events).slice(0, 3);
+  const actionable = strong.length > 0 || (confirmedContext.length > 0 && supportingTrace.length > 0);
+  const evidence = uniqueEvents([
+    ...strong,
+    ...requiredMatched,
+    ...confirmedContext,
+    ...supportingTrace,
+  ]).slice(0, 8);
+  if (evidence.length === 0) {
+    return null;
+  }
+
+  const evidenceTier = evidenceTierFor(evidence, actionable);
+  const status = actionable && evidenceTier !== 'weak' ? 'new' : 'needs-more-evidence';
+  const actionability = status === 'new' ? 'actionable' : 'needs-more-evidence';
+  const evidenceIds = evidence.map((event) => event.id);
+  const sourceClasses = unique(evidence.map((event) => event.sourceClass || event.sourceType || 'unknown'));
+  const targetDestination = config.targetDestination;
+  const summary = config.summary;
+  const priority = derivePriority(config.expectedFutureCostReduction, evidenceTier, config.risk, status);
+
+  return {
+    schemaVersion: 1,
+    id: queueItemId(config.category, targetDestination, summary, evidenceIds),
+    category: config.category,
+    tags: config.tags,
+    status,
+    actionability,
+    scope: config.scope,
+    targetDestination,
+    summary,
+    suggestedChange: config.suggestedChange,
+    executionLevel: 'level-2-actionable-candidate',
+    patchDraftPath: null,
+    evidenceIds,
+    evidenceTier,
+    sourceClasses,
+    privacy: 'private-local',
+    rawExcerptPolicy: 'report-only',
+    confirmationPolicy: config.confirmationPolicy || 'needs-human-confirmation',
+    costRationale: config.costRationale,
+    expectedFutureCostReduction: config.expectedFutureCostReduction,
+    risk: config.risk,
+    priority,
+    validationSignal: config.validationSignal,
+    counterEvidence: config.counterEvidence || [],
+    rejectionReasons: config.rejectionReasons || [],
+  };
+}
+
+function evidenceTierFor(events, actionable) {
+  const strong = strongInteractionEvents(events).length;
+  const confirmed = events.filter((event) => event.relevance === 'confirmed' && event.confidence !== 'low').length;
+  if (strong >= 2 || (strong >= 1 && confirmed >= 2)) {
+    return 'strong';
+  }
+  if (actionable && confirmed > 0) {
+    return 'medium';
+  }
+  return 'weak';
+}
+
+function derivePriority(expectedFutureCostReduction, evidenceTier, risk, status) {
+  if (status !== 'new') {
+    return 'P2';
+  }
+  if (expectedFutureCostReduction === 'high' && evidenceTier === 'strong' && risk !== 'high') {
+    return 'P0';
+  }
+  if (expectedFutureCostReduction !== 'low' && evidenceTier !== 'weak') {
+    return 'P1';
+  }
+  return 'P2';
+}
+
+function compareQueueItems(first, second) {
+  return COST_REDUCTION_SCORE[second.expectedFutureCostReduction] - COST_REDUCTION_SCORE[first.expectedFutureCostReduction]
+    || QUEUE_PRIORITY_SCORE[second.priority] - QUEUE_PRIORITY_SCORE[first.priority]
+    || EVIDENCE_TIER_SCORE[second.evidenceTier] - EVIDENCE_TIER_SCORE[first.evidenceTier]
+    || RISK_SCORE[second.risk] - RISK_SCORE[first.risk]
+    || first.category.localeCompare(second.category);
+}
+
+function queueItemId(category, targetDestination, summary, evidenceIds) {
+  const basis = [
+    category,
+    normalizeForId(targetDestination),
+    normalizeForId(summary),
+    [...evidenceIds].sort().slice(0, 5).join(','),
+  ].join('|');
+  const hash = crypto.createHash('sha1').update(basis).digest('hex').slice(0, 10);
+  const prefix = category.replace(/-candidate$/, '').replace(/[^a-z0-9]+/g, '-');
+  return `iq-${prefix}-${hash}`;
+}
+
+function normalizeForId(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[^a-z0-9\u4e00-\u9fff ]+/g, '')
+    .trim();
+}
+
+function uniqueEvents(events) {
+  const seen = new Set();
+  const result = [];
+  for (const event of events) {
+    if (!event?.id || seen.has(event.id)) {
+      continue;
+    }
+    seen.add(event.id);
+    result.push(event);
+  }
+  return result;
+}
+
+function unique(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function formatQueueSummary(queue) {
+  if (!queue.items || queue.items.length === 0) {
+    return '- No actionable improvement queue items were generated. Weak leads remain in the observation sections.\n';
+  }
+  return queue.items.map((item) => [
+    `- \`${item.id}\` [${item.priority}/${item.status}/${item.evidenceTier}] ${item.category}: ${item.summary}`,
+    `  - Target: ${item.targetDestination}`,
+    `  - Expected future cost reduction: ${item.expectedFutureCostReduction}; risk=${item.risk}; confirmation=${item.confirmationPolicy}`,
+    `  - Evidence: ${formatEvidenceIds(item.evidenceIds)}`,
+    `  - Validation: ${item.validationSignal}`,
+  ].join('\n')).join('\n') + '\n';
 }
 
 function formatEvidenceIds(ids) {
@@ -903,6 +1392,8 @@ export function buildInsightReport(options) {
   const recs = recommendations(events, bottlenecks, manifest);
   const outPath = path.resolve(options.out || path.join(path.dirname(path.resolve(options.ledger)), 'insight-report.md'));
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  const improvementQueue = buildImprovementQueue(events, manifest, warnings);
+  const improvementQueuePath = path.join(path.dirname(outPath), 'insight-improvement-queue.json');
 
   const hostRows = countBy(events, (event) => event.host);
   const relevanceRows = countBy(events, (event) => event.relevance);
@@ -912,9 +1403,7 @@ export function buildInsightReport(options) {
   const repoAffinityRows = countBy(events, (event) => event.repoAffinity);
   const eventTypeRows = countBy(events, (event) => event.eventType);
   const evidenceRoleRows = countBy(events, (event) => event.evidenceRole || inferEvidenceRole(event));
-  const signalRows = ['userRequest', 'toolTrace', 'validation', 'blocker', 'decision', 'handoff']
-    .map((signal) => [signal, signalCount(events, signal)])
-    .filter(([, count]) => count > 0);
+  const signalRows = signalCountRows(events);
   const clusters = taskClusters(events);
 
   const report = `# Insight Interaction Audit
@@ -958,6 +1447,13 @@ ${bottlenecks.map((item, index) => `${index + 1}. **${item.key}**: ${item.text} 
 
 ${recs.map((item, index) => `${index + 1}. **${item.title}**. Suggested owner: ${item.owner}. Evidence: ${formatEvidenceIds(item.evidence)}.`).join('\n')}
 
+## Improvement Queue Summary
+
+Authoritative queue artifact: ${improvementQueuePath}
+
+Queue policy: private local artifact, no automatic mutation, raw excerpts stay report-only.
+
+${formatQueueSummary(improvementQueue)}
 ## Task Profile
 
 By host:
@@ -995,6 +1491,52 @@ ${signalCount(strong, 'validation') === 0 ? '- Validation closure is under-evide
 Tool branch review:
 
 ${toolBranchRows(events)}
+## Learning Opportunity Map
+
+${formatLearningMap(events)}
+## Prompt And Rule Audit
+
+Prompt/rule context is background evidence. It can explain friction, stale instructions, and routing pressure, but it should not become a strong interaction conclusion without trace support.
+
+${formatSignalEvidence(events, 'promptContext', 'No prompt or rule context evidence was collected.')}
+## User Friction Patterns
+
+Misunderstanding, ambiguity, correction, or wasted-time language should be reviewed as a request-shape signal before changing prompts or routing.
+
+${formatSignalEvidence(events, 'userFriction', 'No user-friction signal was detected.')}
+## Project Guidance Garbage And Drift
+
+Use this section to find stale, wrong, contradictory, or misleading rules and docs that may waste agent time.
+
+${formatSignalEvidence(events, 'guidanceDrift', 'No stale or misleading guidance signal was detected.')}
+## SOP And Script Lessons
+
+This section collects tool, script, encoding, GitHub, PR, and validation runbook hints that should become durable SOP only after evidence review.
+
+SOP/script signals:
+
+${formatSignalEvidence(events, 'sopLesson', 'No SOP or script-lesson signal was detected.')}
+Encoding-specific signals:
+
+${formatSignalEvidence(events, 'encodingIssue', 'No encoding-specific signal was detected.')}
+GitHub-specific signals:
+
+${formatSignalEvidence(events, 'githubSop', 'No GitHub-specific SOP signal was detected.')}
+## Repeated Agent Mistakes
+
+Repeated retries, low-value lookup loops, and same-mistake evidence are candidates for guardrails, eval cases, or workflow changes.
+
+${formatSignalEvidence(events, 'repeatedMistake', 'No repeated-mistake signal was detected.')}
+## Knowledge Cache Candidates
+
+Facts repeatedly rediscovered from scratch should become project wiki/cache candidates only after the user or project workflow accepts them.
+
+${formatSignalEvidence(events, 'knowledgeCache', 'No knowledge-cache candidate signal was detected.')}
+## Automation Trace Review
+
+Automation and recurring task logs can reveal silent drift, stale schedules, or repeated background failures.
+
+${formatSignalEvidence(events, 'automation', 'No automation signal was detected.')}
 ## Core Positioning
 
 Project identity: ${manifest?.identity?.packageName || manifest?.identity?.basename || 'unknown'}.
@@ -1018,6 +1560,7 @@ ${warnings.length > 0 ? warnings.map((warning) => `- ${warning}`).join('\n') : '
 `;
 
   fs.writeFileSync(outPath, report);
+  fs.writeFileSync(improvementQueuePath, `${JSON.stringify(improvementQueue, null, 2)}\n`, 'utf8');
   let effectiveInteractInputPath = null;
   if (options.effectiveInteractInput) {
     effectiveInteractInputPath = path.resolve(options.effectiveInteractInput);
@@ -1045,6 +1588,7 @@ ${warnings.length > 0 ? warnings.map((warning) => `- ${warning}`).join('\n') : '
   return {
     ok: true,
     reportPath: outPath,
+    improvementQueuePath,
     effectiveInteractInputPath,
     verdict: verdict.label,
     counts: {
@@ -1052,6 +1596,7 @@ ${warnings.length > 0 ? warnings.map((warning) => `- ${warning}`).join('\n') : '
       confirmed: events.filter((event) => event.relevance === 'confirmed').length,
       candidate: events.filter((event) => event.relevance === 'candidate').length,
       strongInteraction: strong.length,
+      improvementQueueItems: improvementQueue.items.length,
       warnings: warnings.length,
     },
   };
@@ -1059,6 +1604,7 @@ ${warnings.length > 0 ? warnings.map((warning) => `- ${warning}`).join('\n') : '
 
 function printText(result) {
   console.log(`Insight report: ${result.reportPath}`);
+  console.log(`Improvement queue: ${result.improvementQueuePath}`);
   console.log(`Verdict: ${result.verdict}`);
   console.log(`Events: ${result.counts.total}`);
 }
