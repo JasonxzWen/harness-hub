@@ -693,13 +693,15 @@
     "skill:quick-learn": {
       "kind": "skill",
       "path": "skills/quick-learn",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "local-original",
       "provides": [
         "source-backed-learning-projects",
         "custom-learning-syllabus",
         "stage-reviewed-learning-flow",
         "teach-back-assessment",
+        "beginner-calibrated-teaching",
+        "teaching-review-state-separation",
         "quick-learn-project-logging"
       ],
       "overlapsWith": [
@@ -717,7 +719,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Use for explicit source-backed learning projects with confirmed custom syllabus, stage-level review, active assessment, and durable .quick-learn logs."
+      "recommendation": "Use for explicit source-backed learning projects with confirmed custom syllabus, explanation-first beginner teaching, vocabulary and prerequisite gates, stage-level review, active assessment, teaching-quality review separation, and durable .quick-learn logs."
     },
     "skill:coding-standards": {
       "kind": "skill",
