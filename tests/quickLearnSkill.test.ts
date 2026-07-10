@@ -9,6 +9,7 @@ const skill = fs.readFileSync(`${skillDir}/SKILL.md`, 'utf8');
 const sourceStrategy = fs.readFileSync(`${skillDir}/references/source-strategy.md`, 'utf8');
 const lifecycle = fs.readFileSync(`${skillDir}/references/learning-project-lifecycle.md`, 'utf8');
 const review = fs.readFileSync(`${skillDir}/references/review-and-orchestration.md`, 'utf8');
+const teaching = fs.readFileSync(`${skillDir}/references/teaching-and-assessment.md`, 'utf8');
 
 function frontmatterValue(name: string): string {
   const match = skill.match(new RegExp(`^${name}:\\s*(.+)$`, 'm'));
@@ -52,6 +53,19 @@ test('quick-learn captures trace follow-up guardrails', () => {
   expect(sourceStrategy).toContain('For evolving vendor learning hubs, do not stop at the top-level hub page');
   expect(lifecycle).toContain('clear or supersede `pending_user_confirmation`');
   expect(lifecycle).toContain('When teaching begins, update project state to `in_progress`');
+});
+
+test('quick-learn calibrates beginner teaching without replacing instruction with questions', () => {
+  expect(skill).toContain('Questions are evidence, not the delivery mechanism');
+  expect(skill).toContain('log it as `teaching-review`');
+  expect(teaching).toContain('## Beginner And Vocabulary Gate');
+  expect(teaching).toContain('Define unfamiliar vocabulary before using it in a graded check');
+  expect(teaching).toContain('Faster means less repetition and wider coverage, not less explanation');
+  expect(teaching).toContain('separate from the 1-to-5 evidence-quality score');
+  expect(teaching).toContain('separate core judgment, reasoning, decision-relevant caveats, and wording quality');
+  expect(lifecycle).toContain('insert a short prerequisite bridge');
+  expect(sourceStrategy).toContain('Discovery-only coverage');
+  expect(sourceStrategy).toContain('does not count as original-text coverage');
 });
 
 test('quick-learn logger writes project state, sources, reviews, and notes', () => {
@@ -113,7 +127,7 @@ test('quick-learn logger writes project state, sources, reviews, and notes', () 
 
   const project = JSON.parse(fs.readFileSync(path.join(tempDir, 'event-sourcing', 'project.json'), 'utf8'));
   expect(project.current_module).toBe('Foundations');
-  expect(project.concepts['Append-only log'].mastery).toBe(4);
+  expect(project.concepts['Append-only log']).toBeUndefined();
 
   const sources = JSON.parse(fs.readFileSync(path.join(tempDir, 'event-sourcing', 'sources.json'), 'utf8'));
   expect(sources.sources[0].id).toBe('S1');
@@ -205,6 +219,191 @@ test('quick-learn logger advances syllabus and project status after confirmation
   expect(progress.last_event.next_action).toBe('Ask the first transfer question.');
 });
 
+test('quick-learn logger keeps teaching review out of learner mastery state', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quick-learn-teaching-review-'));
+  const script = path.resolve(`${skillDir}/scripts/log_quick_learn_event.py`);
+  const assessment = spawnSync(
+    'python',
+    [
+      script,
+      '--topic',
+      'Investing Basics',
+      '--event',
+      'assessment',
+      '--module',
+      'Fund basics',
+      '--concept',
+      'Question-heavy pacing',
+      '--mastery',
+      '2',
+      '--summary',
+      'The learner needs a clearer explanation.',
+      '--log-root',
+      tempDir,
+    ],
+    { encoding: 'utf8' },
+  );
+  const result = spawnSync(
+    'python',
+    [
+      script,
+      '--topic',
+      'Investing Basics',
+      '--event',
+      'teaching-review',
+      '--module',
+      'Fund basics',
+      '--concept',
+      'Question-heavy pacing',
+      '--mastery',
+      '2',
+      '--review-status',
+      'warn',
+      '--summary',
+      'Learner asked for explanation before terminology checks.',
+      '--log-root',
+      tempDir,
+    ],
+    { encoding: 'utf8' },
+  );
+
+  expect(assessment.status).toBe(0);
+  expect(result.status).toBe(0);
+  const topicDir = path.join(tempDir, 'investing-basics');
+  const project = JSON.parse(fs.readFileSync(path.join(topicDir, 'project.json'), 'utf8'));
+  const progress = JSON.parse(fs.readFileSync(path.join(topicDir, 'progress.json'), 'utf8'));
+  const reviews = fs.readFileSync(path.join(topicDir, 'reviews.jsonl'), 'utf8');
+  const events = fs.readFileSync(path.join(topicDir, 'events.jsonl'), 'utf8');
+  const notes = fs.readFileSync(path.join(topicDir, 'notes.md'), 'utf8');
+  expect(project.concepts['Question-heavy pacing'].mastery).toBe(2);
+  expect(progress.modules['Fund basics'].events).toBe(1);
+  expect(progress.weak_concepts).toContain('Question-heavy pacing');
+  expect(progress.review_queue).toContain('Question-heavy pacing');
+  expect(progress.last_event.event).toBe('teaching-review');
+  expect(progress.last_teaching_review.event).toBe('teaching-review');
+  expect(reviews).toContain('"event": "teaching-review"');
+  expect(events).toContain('"mastery": null');
+  expect(notes.split('- teaching-review')[1]).not.toContain('Mastery: 2/5');
+});
+
+test('quick-learn logger removes a resolved concept from weak and review queues', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quick-learn-remediation-'));
+  const script = path.resolve(`${skillDir}/scripts/log_quick_learn_event.py`);
+  const runAssessment = (mastery: string) =>
+    spawnSync(
+      'python',
+      [
+        script,
+        '--topic',
+        'Investing Basics',
+        '--event',
+        'assessment',
+        '--module',
+        'Risk',
+        '--concept',
+        'Drawdown',
+        '--mastery',
+        mastery,
+        '--summary',
+        `Assessment mastery ${mastery}.`,
+        '--log-root',
+        tempDir,
+      ],
+      { encoding: 'utf8' },
+    );
+
+  expect(runAssessment('2').status).toBe(0);
+  expect(runAssessment('4').status).toBe(0);
+
+  const topicDir = path.join(tempDir, 'investing-basics');
+  const project = JSON.parse(fs.readFileSync(path.join(topicDir, 'project.json'), 'utf8'));
+  const progress = JSON.parse(fs.readFileSync(path.join(topicDir, 'progress.json'), 'utf8'));
+  expect(project.concepts.Drawdown.mastery).toBe(4);
+  expect(progress.weak_concepts).not.toContain('Drawdown');
+  expect(progress.review_queue).not.toContain('Drawdown');
+});
+
+test('quick-learn logger does not resolve learner weakness from source review metadata', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quick-learn-source-review-'));
+  const script = path.resolve(`${skillDir}/scripts/log_quick_learn_event.py`);
+  const runEvent = (event: string, mastery: string) =>
+    spawnSync(
+      'python',
+      [
+        script,
+        '--topic',
+        'Investing Basics',
+        '--event',
+        event,
+        '--module',
+        'Risk',
+        '--concept',
+        'Drawdown',
+        '--mastery',
+        mastery,
+        '--summary',
+        `${event} mastery ${mastery}.`,
+        '--log-root',
+        tempDir,
+      ],
+      { encoding: 'utf8' },
+    );
+
+  expect(runEvent('assessment', '2').status).toBe(0);
+  expect(runEvent('source-review', '4').status).toBe(0);
+
+  const progress = JSON.parse(
+    fs.readFileSync(path.join(tempDir, 'investing-basics', 'progress.json'), 'utf8'),
+  );
+  const project = JSON.parse(
+    fs.readFileSync(path.join(tempDir, 'investing-basics', 'project.json'), 'utf8'),
+  );
+  const events = fs.readFileSync(path.join(tempDir, 'investing-basics', 'events.jsonl'), 'utf8');
+  expect(project.concepts.Drawdown.mastery).toBe(2);
+  expect(progress.modules.Risk.concepts.Drawdown.mastery).toBe(2);
+  expect(progress.weak_concepts).toContain('Drawdown');
+  expect(progress.review_queue).toContain('Drawdown');
+  expect(events.split('\n')[1]).toContain('"mastery": null');
+});
+
+test('quick-learn logger preserves mastery across ungraded learning process events', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quick-learn-ungraded-events-'));
+  const script = path.resolve(`${skillDir}/scripts/log_quick_learn_event.py`);
+  const runEvent = (event: string, mastery?: string) => {
+    const args = [
+      script,
+      '--topic',
+      'Investing Basics',
+      '--event',
+      event,
+      '--module',
+      'Risk',
+      '--concept',
+      'Drawdown',
+      '--summary',
+      `${event} event.`,
+      '--log-root',
+      tempDir,
+    ];
+    if (mastery) args.push('--mastery', mastery);
+    return spawnSync('python', args, { encoding: 'utf8' });
+  };
+
+  expect(runEvent('assessment', '4').status).toBe(0);
+  expect(runEvent('question', '1').status).toBe(0);
+  expect(runEvent('lesson').status).toBe(0);
+
+  const topicDir = path.join(tempDir, 'investing-basics');
+  const project = JSON.parse(fs.readFileSync(path.join(topicDir, 'project.json'), 'utf8'));
+  const progress = JSON.parse(fs.readFileSync(path.join(topicDir, 'progress.json'), 'utf8'));
+  const events = fs.readFileSync(path.join(topicDir, 'events.jsonl'), 'utf8').trim().split('\n');
+  expect(project.concepts.Drawdown.mastery).toBe(4);
+  expect(progress.modules.Risk.concepts.Drawdown.mastery).toBe(4);
+  expect(progress.modules.Risk.concepts.Drawdown.last_event).toBe('lesson');
+  expect(events[1]).toContain('"mastery": null');
+  expect(progress.weak_concepts).not.toContain('Drawdown');
+});
+
 test('quick-learn logger avoids fixed fallback slugs', () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quick-learn-log-slug-'));
   const script = path.resolve(`${skillDir}/scripts/log_quick_learn_event.py`);
@@ -243,4 +442,6 @@ test('quick-learn replaces the retired learning coach in the standard install su
   expect(component?.source).toBe('local-original');
   expect(component?.provides).toContain('source-backed-learning-projects');
   expect(component?.provides).toContain('stage-reviewed-learning-flow');
+  expect(component?.provides).toContain('beginner-calibrated-teaching');
+  expect(component?.provides).toContain('teaching-review-state-separation');
 });

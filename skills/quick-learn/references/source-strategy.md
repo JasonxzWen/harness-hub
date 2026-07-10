@@ -66,6 +66,18 @@ Capture at least:
 
 Use stable source IDs such as `S1`, `S2`, and `M3-S1` in the source index. Broad entry pages can seed discovery, but module teaching needs concrete anchors. If a lesson cites a specific article, documentation page, PDF section, repository example, or course page, record that item with its own source ID, URL or local path, tier, quality, freshness, used-for fields, and gaps before teaching from it.
 
+## Coverage Adequacy
+
+Distinguish source quality from source coverage. An authoritative page may still be too shallow for the intended lesson.
+
+- **Discovery-only coverage**: directory pages, tables of contents, publisher summaries, catalog entries, and short descriptions. Use these to identify themes and editions, not to claim deep reading.
+- **Lesson-ready coverage**: a concrete article, documentation page, repository example, PDF section, lecture, or serious secondary explanation that supports the lesson's facts and examples.
+- **Original-text coverage**: the user-provided or legally accessible primary text needed to attribute a claim to the author or source work.
+
+A directory, table of contents, publisher summary, or third-party interpretation does not count as original-text coverage. If the user asks the agent to read the original and only discovery material is available, record a `warn` or `fail`, state the access gap, and do not describe the work as read. Authoritative supplemental material may keep the course moving, but label it as supplementation rather than the book's words.
+
+Review coverage per use: facts, worked examples, critiques, and assessments may need different sources. A source pack is sufficient only when each near-term module has enough lesson-ready evidence for its claims and the remaining gaps are visible.
+
 ## Book Learning Pattern
 
 For a book:

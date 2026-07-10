@@ -23,7 +23,11 @@ Use this skill when the user explicitly wants to learn a book, paper, codebase, 
 - Promote concrete module sources before teaching from them. Directory or hub pages can be discovery sources, but specific lesson claims should anchor to article, docs, PDF, repo, or course-page source records.
 - Run stage-level review at source pack, syllabus, long module synthesis, and final handoff. Use an independent delegated-agent review when available; otherwise run the deterministic checklist in `references/review-and-orchestration.md` and state the fallback.
 - Keep durable state current. After the user confirms a syllabus or teaching starts, clear stale `pending_user_confirmation` state and record the current phase plus next action.
-- Keep the first teaching unit small. Prefer active recall, teach-back, transfer questions, and zero-hint checks over long passive lectures.
+- For beginners, make explanation and demonstration the majority of each teaching turn. Questions are evidence, not the delivery mechanism.
+- Define unfamiliar vocabulary in plain language before using it in graded checks. A diagnostic may probe vocabulary only when it is explicitly ungraded.
+- Interpret requests to go faster as less repetition, wider coverage, or fewer checks; do not remove prerequisite explanations.
+- Keep teaching-quality feedback separate from learner mastery. When the user critiques pacing, wording, examples, or lesson design, repair the teaching plan and log it as `teaching-review` without learner mastery evidence.
+- Keep the first teaching unit small. Use active recall, teach-back, transfer questions, and zero-hint checks after the learner has enough explanation to answer.
 - Do not build an HTML course artifact in v1 unless the user explicitly asks for that output.
 
 ## Session Start
@@ -32,8 +36,8 @@ Establish the learning contract. Ask only for missing fields that materially cha
 
 - topic or exact material;
 - current level and relevant background;
-- target mastery level: recognize, use, modify/debug, design, or transfer;
-- timebox, pace, preferred examples, and output needs;
+- target outcome level: recognize, use, modify/debug, design, or transfer;
+- timebox, pace, preferred examples, and output needs; distinguish desired breadth, explanation depth, and question cadence;
 - constraints, non-goals, and allowed source scope.
 
 When enough context exists, state assumptions and log the contract with:
@@ -46,7 +50,7 @@ python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Topic Name" 
 
 1. Build a source pack with authority tiers, freshness, local paths or URLs, and open gaps. Use `references/source-strategy.md`.
 2. Review the source pack before teaching. Record pass/warn/fail evidence.
-3. Build a concept map and custom syllabus. Include prerequisites, modules, objectives, source anchors, assessments, and expected artifacts.
+3. Build a concept map and custom syllabus. Include prerequisites, short bridge modules when shared vocabulary or numeracy is missing, objectives, source anchors, assessments, and expected artifacts.
 4. Ask the user to confirm or adjust module boundaries and depth before the first lesson.
 5. Teach one module section at a time: explain, demonstrate, ask, evaluate, repair, teach-back, transfer, assess.
 6. Update project state, weak concepts, review queue, and next action after each meaningful section.
@@ -60,15 +64,15 @@ Default state root:
 
 ## Teaching Loop
 
-For each concept:
+For each meaningful section:
 
-1. Give the smallest useful explanation and one concrete example.
-2. Ask one diagnostic question before assuming understanding.
-3. Evaluate the answer for misconception, missing prerequisite, vague language, or false confidence.
-4. Repair one gap at a time with a contrast, worked example, analogy, or source excerpt summary.
-5. Ask the user to teach it back in their own words.
-6. Ask a transfer question that changes the surface details.
-7. Grade internally against the target mastery level and log the result.
+1. Give the smallest useful plain-language model and define new terms.
+2. Demonstrate one concrete example from a source or the user's context.
+3. Ask one or two checks using only taught concepts; use batches only for stage tests or an explicitly requested broad scan.
+4. Evaluate core judgment, reasoning, decision-relevant caveats, and wording separately.
+5. Repair the highest-impact gap with a contrast, worked example, analogy, or source excerpt summary.
+6. Use teach-back and transfer at a meaningful section boundary rather than after every micro-term.
+7. Grade only learner evidence: the target outcome controls task difficulty, while the 1-to-5 mastery score records evidence quality. Route pedagogy feedback to `teaching-review` instead.
 
 Read `references/teaching-and-assessment.md` before generating quizzes, teach-back checks, stage tests, or remediation plans.
 
@@ -80,6 +84,7 @@ Use durable logs for real learning projects, not trivial chat.
 python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Investment Basics" --event source --source-title "Official book page" --source-url "https://example.com/book" --quality A --summary "Recorded official source."
 python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Investment Basics" --event syllabus --module "Risk basics" --summary "Proposed custom module after source review."
 python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Investment Basics" --event assessment --concept "Risk premium" --mastery 3 --summary "Teach-back correct, transfer example still weak."
+python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Investment Basics" --event teaching-review --module "Risk basics" --review-status warn --metadata issue_owner=teaching --summary "Learner needs plain-language definitions before checks."
 ```
 
 The logger writes `events.jsonl`, `project.json`, `progress.json`, `sources.json`, `reviews.jsonl`, and `notes.md`.

@@ -2,17 +2,41 @@
 
 Use this reference before quizzes, teach-back checks, stage tests, remediation, or lesson design.
 
-## Mastery Ladder
+## Target Outcome Ladder
 
-| Level | User can... | Evidence |
+| Outcome | User can... | Evidence task |
 |---|---|---|
-| 1 Recognize | identify terms and basic purpose | define, choose, classify |
-| 2 Use | apply a standard method | solve familiar example |
-| 3 Modify/Debug | handle variants and errors | fix a flawed explanation, adapt example |
-| 4 Design | choose among approaches | justify tradeoffs and failure modes |
-| 5 Transfer | apply in a new domain | teach, generalize, critique, create |
+| Recognize | identify terms and basic purpose | define, choose, classify |
+| Use | apply a standard method | solve familiar example |
+| Modify/Debug | handle variants and errors | fix a flawed explanation, adapt example |
+| Design | choose among approaches | justify tradeoffs and failure modes |
+| Transfer | apply in a new domain | teach, generalize, critique, create |
 
-The target level comes from the learning contract. Do not require advanced synthesis for a basic orientation session.
+The target outcome comes from the learning contract. It controls task difficulty and is separate from the 1-to-5 evidence-quality score below. A Recognize check can earn high-quality evidence; a Transfer check can earn low-quality evidence. Do not require advanced synthesis for a basic orientation session.
+
+## Beginner And Vocabulary Gate
+
+For a beginner, explanation and demonstration should occupy most of the teaching turn. Questions are evidence of learning, not a substitute for missing instruction.
+
+- Define unfamiliar vocabulary before using it in a graded check. Give the plain-language meaning, then the formal term, one concrete example, and why the term matters.
+- Limit each small section to the few new terms needed for the next decision. Do not use a glossary as assigned memorization before teaching.
+- A diagnostic may intentionally contain an unfamiliar term only when it is clearly ungraded and used to map vocabulary, numeracy, or prerequisites.
+- If several later concepts share a missing prerequisite, stop and insert a short bridge lesson instead of repeatedly repairing the same gap.
+- Use one or two checks per meaningful section. Reserve question batches for stage tests or an explicitly requested broad scan after the material has been taught.
+
+## Pace Calibration
+
+Treat pace as separate controls:
+
+- breadth: how much of the map to cover;
+- explanation depth: how far to unpack each mechanism;
+- repetition: how many near-duplicate examples to use;
+- question cadence: how often to stop for evidence;
+- assessment batch size: how many taught concepts to test together.
+
+Faster means less repetition and wider coverage, not less explanation. When a learner asks to speed up, first reduce repeated examples and micro-checks. Preserve prerequisite models, vocabulary definitions, and one worked example.
+
+When a learner asks to slow down or says the language is too advanced, simplify the model and examples before adding more questions.
 
 ## Explain-Demonstrate-Check-Repair-Practice
 
@@ -24,9 +48,11 @@ The target level comes from the learning contract. Do not require advanced synth
 
 Avoid asking "does that make sense?" as the main check. Ask the user to produce evidence.
 
-## Feynman Teach-Back Rubric
+Do not require teach-back after every new word. Combine related terms into one meaningful section, then use one teach-back or transfer check at the boundary.
 
-Score internally from 1 to 5:
+## Evidence Quality Rubric
+
+Score an answer, teach-back, or assessment internally from 1 to 5:
 
 - 1: repeats terms without meaning;
 - 2: partial explanation with a serious gap;
@@ -34,7 +60,7 @@ Score internally from 1 to 5:
 - 4: clear explanation plus useful example;
 - 5: simple, transferable explanation with caveats and limits.
 
-Below 4, repair one gap and ask for a revised teach-back.
+Below 4, keep the concept in the weak/review queue, repair one gap, and ask for revised evidence when useful. A later answer, teach-back, or assessment at 4 or 5 resolves that current weakness. Reviews of sources, teaching, or workflow never change this learner score.
 
 ## Quiz Rules
 
@@ -44,6 +70,17 @@ Below 4, repair one gap and ask for a revised teach-back.
 - Randomize correct answer position when writing batches.
 - Explain why the selected answer is right or wrong after the user answers, not before.
 - Prefer one question at a time during teaching; use batches only for stage tests.
+- Do not test terminology that has not been explained, except in an explicitly ungraded diagnostic.
+
+## Feedback Calibration
+
+When evaluating an answer, separate core judgment, reasoning, decision-relevant caveats, and wording quality.
+
+- If the core judgment and reason are correct, acknowledge that before adding the formal term.
+- Do not treat informal wording, translation, or an imprecise label as a conceptual failure when the learner can still make the right decision.
+- Correct only the missing condition that could change the decision. Do not keep drilling a concept already demonstrated at the target level.
+- If the learner is exposing a flaw in the lesson, question, source, or pacing, classify it as a teaching-quality issue. Repair the lesson and log a `teaching-review`; do not lower learner mastery.
+- Advance after the target outcome is demonstrated with evidence quality 4 or 5. Use later stage tests for retention instead of repeated same-surface questions.
 
 ## Error Taxonomy
 
@@ -58,6 +95,8 @@ When the user misses a question, classify the cause:
 - calculation/procedure slip;
 - transfer failure;
 - weak expression despite correct intuition.
+
+First decide whether the error belongs to the learner or the instruction. Unexplained vocabulary, ambiguous questions, source gaps, and a mismatch between requested pace and teaching cadence are instructional failures, not learner misconceptions.
 
 Repair the error class, not just the single answer.
 

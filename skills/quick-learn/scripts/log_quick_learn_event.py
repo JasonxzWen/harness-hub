@@ -27,12 +27,15 @@ EVENTS = {
     "teach-back",
     "assessment",
     "stage-review",
+    "teaching-review",
     "review",
     "phase-change",
     "summary",
 }
 
-REVIEW_EVENTS = {"source-review", "syllabus-review", "stage-review", "review"}
+REVIEW_EVENTS = {"source-review", "syllabus-review", "stage-review", "teaching-review", "review"}
+LEARNING_PROCESS_EVENTS = {"diagnosis", "lesson", "question", "answer", "teach-back", "assessment"}
+MASTERY_EVIDENCE_EVENTS = {"answer", "teach-back", "assessment"}
 STATUSES = {"draft", "pending_user_confirmation", "confirmed", "in_progress", "paused", "complete"}
 
 
@@ -118,7 +121,7 @@ def update_project(path: Path, event: dict[str, Any]) -> dict[str, Any]:
     state["last_summary"] = event["summary"]
 
     concept = event.get("concept")
-    if concept:
+    if concept and event["event"] in LEARNING_PROCESS_EVENTS:
         concepts = state.setdefault("concepts", {})
         record = concepts.setdefault(
             concept,
@@ -153,27 +156,35 @@ def update_progress(path: Path, event: dict[str, Any]) -> dict[str, Any]:
         },
     )
 
+    is_learning_process_event = event["event"] in LEARNING_PROCESS_EVENTS
     module = event.get("module")
-    if module:
+    if module and is_learning_process_event:
         module_state = progress.setdefault("modules", {}).setdefault(module, {"events": 0, "concepts": {}})
         module_state["events"] += 1
         if event.get("concept"):
-            module_state.setdefault("concepts", {})[event["concept"]] = {
-                "last_event": event["event"],
-                "mastery": event.get("mastery"),
-            }
+            concept_state = module_state.setdefault("concepts", {}).setdefault(
+                event["concept"],
+                {"last_event": None, "mastery": None},
+            )
+            concept_state["last_event"] = event["event"]
+            if event.get("mastery") is not None:
+                concept_state["mastery"] = event["mastery"]
 
     concept = event.get("concept")
     mastery = event.get("mastery")
-    if concept and mastery is not None and mastery < 4:
-        weak = progress.setdefault("weak_concepts", [])
-        if concept not in weak:
-            weak.append(concept)
-        queue = progress.setdefault("review_queue", [])
-        if concept not in queue:
-            queue.append(concept)
+    if concept and mastery is not None and event["event"] in MASTERY_EVIDENCE_EVENTS:
+        if mastery < 4:
+            weak = progress.setdefault("weak_concepts", [])
+            if concept not in weak:
+                weak.append(concept)
+            queue = progress.setdefault("review_queue", [])
+            if concept not in queue:
+                queue.append(concept)
+        else:
+            progress["weak_concepts"] = [item for item in progress.setdefault("weak_concepts", []) if item != concept]
+            progress["review_queue"] = [item for item in progress.setdefault("review_queue", []) if item != concept]
 
-    progress["last_event"] = {
+    event_summary = {
         "timestamp": event["timestamp"],
         "event": event["event"],
         "summary": event["summary"],
@@ -181,6 +192,9 @@ def update_progress(path: Path, event: dict[str, Any]) -> dict[str, Any]:
         "phase": event.get("phase"),
         "next_action": event.get("next_action"),
     }
+    if event["event"] == "teaching-review":
+        progress["last_teaching_review"] = event_summary
+    progress["last_event"] = event_summary
     write_json(path, progress)
     return progress
 
@@ -317,6 +331,7 @@ def main() -> int:
     topic_slug = slugify(args.topic)
     topic_dir = Path(args.log_root) / topic_slug
     topic_dir.mkdir(parents=True, exist_ok=True)
+    mastery = args.mastery if args.event in MASTERY_EVIDENCE_EVENTS else None
 
     event = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -331,7 +346,7 @@ def main() -> int:
         "next_action": args.next_action,
         "module": args.module,
         "concept": args.concept,
-        "mastery": args.mastery,
+        "mastery": mastery,
         "source_id": args.source_id,
         "source_title": args.source_title,
         "source_url": args.source_url,

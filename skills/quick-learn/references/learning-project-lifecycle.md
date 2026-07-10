@@ -28,7 +28,7 @@ Capture:
 
 - topic/material;
 - current level;
-- target mastery level;
+- target outcome level;
 - user context and intended use;
 - pace/timebox;
 - preferred examples and language;
@@ -62,6 +62,8 @@ Ask a short diagnostic set after the source pack:
 
 Diagnostic answers calibrate the syllabus. They do not count as mastered evidence unless followed by a teach-back or transfer check.
 
+Separate diagnosis results into domain knowledge, vocabulary, numeracy/procedure, and transfer ability. If a later module depends on a shared gap, insert a short prerequisite bridge rather than letting every lesson rediscover it.
+
 ## Phase 4: Custom Syllabus
 
 Create a proposed syllabus with:
@@ -71,9 +73,11 @@ Create a proposed syllabus with:
 - source anchors;
 - key concepts and confusion pairs;
 - exercises/quiz types;
-- target mastery level;
+- target outcome level;
 - estimated effort;
 - acceptance criteria.
+
+Order modules by prerequisites, not only by source chapters or topic breadth. A bridge can be shorter than a normal module, but it must teach the common language or mechanism needed by several later sections.
 
 Ask the user to confirm module boundaries, order, and depth before teaching. If the user changes the goal, revise the syllabus and log the decision.
 
@@ -88,11 +92,11 @@ When the user confirms the syllabus, update durable state before teaching:
 For each confirmed module:
 
 1. Start with retrieval from prior weak concepts.
-2. Teach one small concept or source section.
-3. Ask one diagnostic or prediction question.
+2. For beginners, teach one plain-language model and a worked example before graded questions.
+3. Ask one or two diagnostic, prediction, or application questions using taught vocabulary.
 4. Repair the highest-impact gap.
-5. Require teach-back.
-6. Ask one transfer or application question.
+5. Require teach-back at a meaningful section boundary, not after every micro-term.
+6. Ask one transfer or application question when it adds new evidence.
 7. Log mastery, weak points, next review, and source coverage.
 
 Do not let a session become a passive summary. If the user asks a direct question, answer clearly, then return to active checking.
@@ -100,6 +104,8 @@ Do not let a session become a passive summary. If the user asks a direct questio
 Before the first explanation in a source-heavy module, check that the concrete module sources are recorded. If the module will rely on a specific article, docs page, repository example, PDF section, or course lesson that is not yet in `sources.json` or `source-index.md`, add it first rather than relying only on a broad entry page.
 
 When teaching begins, update project state to `in_progress` and record the current module plus next action. Keep handoff state aligned with the active phase.
+
+If the learner changes the desired pace or critiques wording, examples, questions, or sequencing, treat that as a lesson-design decision. Update the durable teaching plan, record a `teaching-review`, and do not encode the issue as learner mastery.
 
 ## Phase 6: Assessment And Review
 
@@ -114,6 +120,8 @@ Use a mix of:
 - mini project or decision memo when the target is practical mastery.
 
 Update `progress.json`, weak concepts, and review queue after assessment.
+
+When a later answer, teach-back, or assessment reaches mastery 4 or 5, remove the resolved concept from weak and review queues. Source or teaching review metadata is not proof that the learner resolved the weakness. Preserve the event history; do not preserve a stale current weakness.
 
 ## Phase 7: Handoff
 
