@@ -113,7 +113,7 @@ The agent should ask questions only when the answer changes the next action or p
 - Which failure mode is acceptable, and which one must be blocked?
 - Can this change alter data, cost, privacy, compatibility, release, rollback, or external side effects?
 
-Use `grill-me` when the plan needs pressure testing. Use `grill-with-docs` when the same interview should also propose glossary, context wiki, domain-model, ADR, or code/docs contradiction updates. Ask one high-leverage question at a time, give the recommended answer, and explain the tradeoff.
+Use `grill-me` when the plan needs pressure testing. It batches every currently independent high-leverage question with a recommended answer and tradeoff, then asks dependency-bound questions after their prerequisites resolve. Use `grill-with-docs` when the interview should also propose glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; that governed documentation variant keeps its one-question-at-a-time confirmation flow.
 
 ## State File Responsibilities
 

@@ -22,6 +22,9 @@ test('grill-with-docs is adapted from Matt Pocock and routed narrowly', () => {
 });
 
 test('grill-with-docs maps documentation work to Harness Hub state and wiki rules', () => {
+  expect(skill).toContain('independent one-question-at-a-time pressure-test flow');
+  expect(skill).toContain('Ask exactly one high-leverage question at a time');
+  expect(skill).not.toContain('the `grill-me` interview loop');
   expect(skill).toContain('instead of writing root `CONTEXT.md` or `docs/adr/` directly');
   expect(skill).toContain('.harness-hub/context/');
   expect(skill).toContain('.harness-hub/state/');

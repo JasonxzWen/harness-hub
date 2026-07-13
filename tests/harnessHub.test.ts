@@ -36,6 +36,7 @@ import {
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const AGENT_READINESS_FIXTURES = path.join(TEST_DIR, 'fixtures', 'agent-readiness');
 const LEGACY_INSIGHT_FIXTURE_DIR = path.join(TEST_DIR, 'fixtures', 'legacy-insight');
+const LEGACY_GRILL_ME_V1_FIXTURE_DIR = path.join(TEST_DIR, 'fixtures', 'legacy-grill-me-0.1.0');
 const READINESS_CATEGORIES = [...AGENT_READINESS_CATEGORIES];
 const LEGACY_INSIGHT_MANAGED_PATHS = [
   'skills/insight/SKILL.md',
@@ -919,7 +920,7 @@ test('status reads schema version one locks without crashing', () => {
     components: [
       {
         id: 'skill:grill-me',
-        version: '0.1.0',
+        version: readCapabilityIndex().components['skill:grill-me'].version,
         agent: 'standard',
         dest: 'skills/grill-me',
         status: 'installed',
@@ -1304,6 +1305,66 @@ test('migrate-lock converts exact schema version one records and blocks divergen
   expect(blocked.exitCode).toBe(3);
   expect(blocked.blockers.some((row) => row.id === 'skill:grill-me')).toBe(true);
   expect(fs.readFileSync(path.join(divergentTarget, '.harness-hub', 'lock.json'), 'utf8')).toBe(before);
+});
+
+test('migrate-lock preserves an exact grill-me 0.1.0 record so update can install 0.2.0', () => {
+  const targetDir = createLegacyGrillMeV1Target('harness-hub-migrate-v1-grill-me-');
+
+  const migrated = migrateLock(targetDir, { yes: true });
+  const afterMigrate = readLock(targetDir);
+
+  expect(migrated.exitCode).toBe(0);
+  if (!afterMigrate || afterMigrate.data.schemaVersion !== 2) {
+    throw new Error('expected migrated schema version 2 lock');
+  }
+  const migratedGrill = afterMigrate.data.components.find((component) => component.id === 'skill:grill-me');
+  expect(migratedGrill?.version).toBe('0.1.0');
+  expect(getStatus({ targetDir }).updates.some((row) => row.id === 'skill:grill-me')).toBe(true);
+
+  const updated = updateManaged(targetDir, { yes: true, components: ['skill:grill-me'] });
+  const afterUpdate = readLock(targetDir);
+
+  expect(updated.exitCode).toBe(0);
+  expect(afterUpdate?.data.schemaVersion).toBe(2);
+  if (!afterUpdate || afterUpdate.data.schemaVersion !== 2) {
+    throw new Error('expected updated schema version 2 lock');
+  }
+  expect(afterUpdate.data.components.find((component) => component.id === 'skill:grill-me')?.version).toBe('0.2.0');
+  expect(fs.readFileSync(path.join(targetDir, 'skills', 'grill-me', 'SKILL.md'), 'utf8'))
+    .toBe(fs.readFileSync(path.join(process.cwd(), 'skills', 'grill-me', 'SKILL.md'), 'utf8'));
+
+  const modifiedTarget = createLegacyGrillMeV1Target('harness-hub-migrate-v1-grill-me-modified-');
+  fs.appendFileSync(path.join(modifiedTarget, 'skills', 'grill-me', 'SKILL.md'), '\nlocal edit');
+  const blocked = migrateLock(modifiedTarget, { yes: true });
+  expect(blocked.exitCode).toBe(3);
+  expect(blocked.blockers.some((row) => row.id === 'skill:grill-me' && row.state === 'modified')).toBe(true);
+
+  const wrongDestTarget = createLegacyGrillMeV1Target('harness-hub-migrate-v1-grill-me-wrong-dest-');
+  mutateLock(wrongDestTarget, (lock) => {
+    if (lock.schemaVersion !== 1) throw new Error('expected schema version 1 lock');
+    const grill = lock.components.find((component) => component.id === 'skill:grill-me');
+    if (!grill) throw new Error('missing grill-me component');
+    grill.dest = '.';
+  });
+  const wrongDest = migrateLock(wrongDestTarget, { yes: true });
+  expect(wrongDest.exitCode).toBe(3);
+  expect(wrongDest.blockers[0]?.reason).toContain('expected install destination');
+
+  const crlfTarget = createLegacyGrillMeV1Target('harness-hub-migrate-v1-grill-me-crlf-');
+  const crlfSkill = path.join(crlfTarget, 'skills', 'grill-me', 'SKILL.md');
+  const crlfContent = fs.readFileSync(crlfSkill, 'utf8').replaceAll('\n', '\r\n');
+  fs.writeFileSync(crlfSkill, crlfContent);
+  const crlfMigrated = migrateLock(crlfTarget, { yes: true });
+  expect(crlfMigrated.exitCode).toBe(0);
+  const crlfLock = readLock(crlfTarget);
+  if (!crlfLock || crlfLock.data.schemaVersion !== 2) {
+    throw new Error('expected migrated CRLF schema version 2 lock');
+  }
+  const crlfRecord = crlfLock.data.components.find((component) => component.id === 'skill:grill-me');
+  expect(crlfRecord?.files[0]?.sha256).toBe(hashContent(crlfContent));
+  expect(crlfRecord?.files[0]?.size).toBe(Buffer.byteLength(crlfContent));
+  expect(getStatus({ targetDir: crlfTarget }).updates.some((row) => row.id === 'skill:grill-me')).toBe(true);
+  expect(updateManaged(crlfTarget, { yes: true, components: ['skill:grill-me'] }).exitCode).toBe(0);
 });
 
 test('migrate-lock preserves legacy insight schema v1 id until update can rename it', () => {
@@ -4032,6 +4093,28 @@ function createLegacyInsightV1Target(prefix: string): string {
         version: '0.1.0',
         agent: 'standard',
         dest: 'skills/insight',
+        status: 'installed',
+      },
+    ],
+  }, null, 2)}\n`);
+  return targetDir;
+}
+
+function createLegacyGrillMeV1Target(prefix: string): string {
+  const targetDir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  fs.cpSync(LEGACY_GRILL_ME_V1_FIXTURE_DIR, path.join(targetDir, 'skills', 'grill-me'), { recursive: true });
+  fs.mkdirSync(path.join(targetDir, '.harness-hub'), { recursive: true });
+  fs.writeFileSync(path.join(targetDir, '.harness-hub', 'lock.json'), `${JSON.stringify({
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    hubVersion: '0.1.0',
+    agents: ['standard'],
+    components: [
+      {
+        id: 'skill:grill-me',
+        version: '0.1.0',
+        agent: 'standard',
+        dest: 'skills/grill-me',
         status: 'installed',
       },
     ],

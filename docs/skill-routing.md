@@ -21,8 +21,8 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 | Code, plan, release, UI, or security review | `review-workflow` | Findings first; do not implement fixes unless redirected. |
 | Validation closeout, finish closeout, cleanup, release notes, handoff, or post-PR status triage | `delivery-workflow` | Run accepted checks, final review/agent-interaction-audit closeout, inspect PR mergeability/CI/conflicts after PR creation or update, resolve actionable blockers, and report residual risk. |
 | Harness Hub source, routing, capability metadata, npm lifecycle, or managed cleanup work | `hub-maintenance-workflow` | Use source records and CLI dry-runs instead of removed broad helper skills. |
-| Plan/design pressure testing before implementation | `grill-me` | Ask one hard question at a time and surface assumptions. |
-| Plan/design pressure testing that should also capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates | `grill-with-docs` | Use the `grill-me` interview loop plus Harness Hub context rules; wiki writes require human confirmation. |
+| Plan/design pressure testing before implementation | `grill-me` | Batch all currently independent questions with recommended answers; defer dependency-bound questions to later batches. |
+| Plan/design pressure testing that should also capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates | `grill-with-docs` | Use its independent one-question-at-a-time flow plus Harness Hub context rules; wiki writes require human confirmation. |
 | Diagnose runtime bug, failing command, flaky behavior, or performance regression | `diagnose` | `diagnose` owns unknown runtime bugs and performance regressions; use `tdd-workflow` after the behavior is understood. |
 | Implement production feature, confirmed bug fix, or refactor through tests | `tdd-workflow` | One public behavior at a time through red-green-refactor. |
 | Build throwaway prototype to answer one design question | `prototype` | `prototype` owns disposable learning artifacts only; delete or fold findings into production. |
@@ -114,7 +114,7 @@ Harness Hub is a personal workflow distribution set with a routing overlay. Rout
 - `webapp-testing` loads for one-off local web app inspection, screenshots, console logs, UI reproduction, or agent-run Web browser acceptance.
 - `web-design-guidelines` loads for UI, UX, accessibility, or web interface guideline compliance review.
 - `e2e-testing` loads for durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy.
-- `grill-me` loads when the user says "grill me", asks to be challenged, or wants assumptions surfaced one question at a time.
+- `grill-me` loads when the user says "grill me" or explicitly asks to be challenged or pressure-tested before implementation. Once loaded, it surfaces assumptions through dependency-layered batch questions with recommended answers; honor an explicit request for serial questions without making it the default.
 - `grill-with-docs` loads when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants a one-question-at-a-time interview that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; it does not load when the skill name is only background context for implementation, maintenance, or review.
 - `product-capability` loads for implementation-ready capability plans with constraints, invariants, interfaces, and unresolved decisions.
 - `claude-api` loads for Claude API or Anthropic SDK build, debug, migration, or tuning work.

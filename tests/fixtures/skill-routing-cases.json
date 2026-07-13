@@ -653,9 +653,9 @@
       "id": "grill-me-positive-pressure-test",
       "skill": "grill-me",
       "kind": "positive",
-      "prompt": "Grill me one question at a time and pressure-test this rollout plan before implementation.",
+      "prompt": "Grill me by batching every currently independent question with recommended answers before implementation.",
       "expectedSkill": "grill-me",
-      "docsBoundary": "`grill-me` loads when the user says \"grill me\", asks to be challenged, or wants assumptions surfaced one question at a time."
+      "docsBoundary": "`grill-me` loads when the user says \"grill me\" or explicitly asks to be challenged or pressure-tested before implementation. Once loaded, it surfaces assumptions through dependency-layered batch questions with recommended answers; honor an explicit request for serial questions without making it the default."
     },
     {
       "id": "grill-with-docs-positive-context-pressure-test",
@@ -1119,7 +1119,7 @@
       "kind": "forbidden-load",
       "prompt": "Implement the accepted rollout plan one behavior at a time with tests.",
       "expectedSkill": "tdd-workflow",
-      "docsBoundary": "`grill-me` loads when the user says \"grill me\", asks to be challenged, or wants assumptions surfaced one question at a time."
+      "docsBoundary": "`grill-me` loads when the user says \"grill me\" or explicitly asks to be challenged or pressure-tested before implementation. Once loaded, it surfaces assumptions through dependency-layered batch questions with recommended answers; honor an explicit request for serial questions without making it the default."
     },
     {
       "id": "product-capability-forbidden-durable-doc",

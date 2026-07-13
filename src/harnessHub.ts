@@ -99,10 +99,11 @@ interface ManagedComponentRename {
   reason: string;
 }
 
-interface LegacyRenamedComponentFile {
+interface LegacyManagedFileFingerprint {
   path: string;
   sha256: string;
   size: number;
+  alternates?: ReadonlyArray<{ sha256: string; size: number }>;
 }
 
 export interface RepoSignals {
@@ -1105,7 +1106,7 @@ const HOST_SKILL_DIR_RENAMES: Readonly<Record<string, readonly string[]>> = Obje
   'agent-interaction-audit': ['insight'],
   'effective-interact': ['html-work-reports'],
 });
-const LEGACY_RENAMED_COMPONENT_FILES: Readonly<Record<string, readonly LegacyRenamedComponentFile[]>> = Object.freeze({
+const LEGACY_RENAMED_COMPONENT_FILES: Readonly<Record<string, readonly LegacyManagedFileFingerprint[]>> = Object.freeze({
   'skill:insight': [
     {
       path: 'skills/insight/SKILL.md',
@@ -1143,6 +1144,23 @@ const LEGACY_RENAMED_COMPONENT_FILES: Readonly<Record<string, readonly LegacyRen
       size: 53025,
     },
   ],
+});
+const LEGACY_VERSIONED_COMPONENT_FILES: Readonly<Record<string, Readonly<Record<string, readonly LegacyManagedFileFingerprint[]>>>> = Object.freeze({
+  'skill:grill-me': Object.freeze({
+    '0.1.0': [
+      {
+        path: 'skills/grill-me/SKILL.md',
+        sha256: '8bc5e418a5d17a9d6c6a6baad3e661fea76b946313f7815754890eb21084a96a',
+        size: 2866,
+        alternates: [
+          {
+            sha256: '4af066ec5ee8bfa89d488d13afd088a575de656247b68e4f6292abd4a74c400c',
+            size: 2938,
+          },
+        ],
+      },
+    ],
+  }),
 });
 
 const VALID_RISKS = new Set<LifecycleRisk>(['low', 'medium', 'high']);
@@ -9885,6 +9903,52 @@ export function migrateLock(
       continue;
     }
 
+    const legacyVersionFiles = LEGACY_VERSIONED_COMPONENT_FILES[component.id]?.[component.version];
+    if (legacyVersionFiles && component.version !== latest.version) {
+      const expectedDest = resolveComponentDest(latest, component.agent);
+      if (normalizePortablePath(component.dest) !== expectedDest) {
+        blockers.push(makeStatusRow(
+          targetDir,
+          component,
+          latest,
+          'modified',
+          `Legacy schema version 1 component destination does not match its expected install destination '${expectedDest}'; migration is blocked.`,
+          [component.dest, expectedDest],
+        ));
+        continue;
+      }
+      const verification = verifyLegacyManagedFiles(targetDir, legacyVersionFiles);
+      if (!fs.existsSync(dest) || verification.missing.length > 0 || verification.modified.length > 0) {
+        const state = fs.existsSync(dest) && verification.missing.length === 0 ? 'modified' : 'missing';
+        const evidence = [...verification.missing, ...verification.modified];
+        blockers.push(makeStatusRow(
+          targetDir,
+          component,
+          latest,
+          state,
+          'Legacy schema version 1 component does not exactly match the recorded files for its installed version; migration is blocked.',
+          evidence.length > 0 ? evidence : [component.dest],
+        ));
+        continue;
+      }
+      const files = verification.files;
+      const reason = `Recognized ${component.id} ${component.version} from its recorded file fingerprint. Migrated as a schema version 2 legacy record; run update to install ${latest.version}.`;
+      migratable.push(makeStatusRow(targetDir, component, latest, 'current', reason, files.map((file) => file.path)));
+      nextComponents.push({
+        id: component.id,
+        version: component.version,
+        agent: component.agent,
+        kind: latest.kind,
+        source: normalizePortablePath(component.dest),
+        dest: normalizePortablePath(component.dest),
+        files,
+        installedAt: migratedAt,
+        migratedAt,
+        status: 'installed',
+      });
+      continue;
+    }
+
     const source = componentSourcePath(hubRoot, latest);
     const comparison = compareSourceAndDestination(source, dest);
     if (!comparison.matches) {
@@ -9961,6 +10025,14 @@ function verifyLegacyRenamedComponentFiles(
     return { files: [], missing: [], modified: [], unknown: [componentId] };
   }
 
+  return { ...verifyLegacyManagedFiles(targetDir, expectedFiles), unknown: [] };
+}
+
+function verifyLegacyManagedFiles(
+  targetDir: string,
+  expectedFiles: readonly LegacyManagedFileFingerprint[],
+): { files: ManagedFileRecord[]; missing: string[]; modified: string[] } {
+
   const files: ManagedFileRecord[] = [];
   const missing: string[] = [];
   const modified: string[] = [];
@@ -9972,15 +10044,18 @@ function verifyLegacyRenamedComponentFiles(
     }
 
     const digest = fileDigest(filePath);
-    if (digest.sha256 !== expected.sha256 || digest.size !== expected.size) {
+    const acceptedFingerprints = [expected, ...(expected.alternates || [])];
+    if (!acceptedFingerprints.some((fingerprint) => (
+      digest.sha256 === fingerprint.sha256 && digest.size === fingerprint.size
+    ))) {
       modified.push(expected.path);
       continue;
     }
 
     files.push({
       path: expected.path,
-      sha256: expected.sha256,
-      size: expected.size,
+      sha256: digest.sha256,
+      size: digest.size,
     });
   }
 
@@ -9988,7 +10063,6 @@ function verifyLegacyRenamedComponentFiles(
     files: files.sort((left, right) => left.path.localeCompare(right.path)),
     missing,
     modified,
-    unknown: [],
   };
 }
 

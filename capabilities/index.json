@@ -464,18 +464,20 @@
     "skill:grill-me": {
       "kind": "skill",
       "path": "skills/grill-me",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "mattpocock-skills-adapted",
       "provides": [
         "plan-pressure-testing",
         "decision-tree-interview",
-        "assumption-surfacing"
+        "assumption-surfacing",
+        "dependency-layered-batch-grilling",
+        "recommended-answer-tables"
       ],
       "overlapsWith": [
         "skill:grill-with-docs",
         "skill:product-capability"
       ],
-      "routing": "Use when the user asks to be grilled, challenged, pressure-tested, or wants assumptions surfaced before implementation.",
+      "routing": "Use when the user says grill me or explicitly asks to be grilled, challenged, or pressure-tested before implementation; once loaded, batch dependency-independent questions with recommended answers.",
       "detects": [
         {
           "path": "skills/grill-me/SKILL.md"
@@ -485,7 +487,7 @@
         "standard"
       ],
       "risk": "low",
-      "recommendation": "Use when the user asks to be grilled, challenged, pressure-tested, or wants assumptions surfaced before implementation."
+      "recommendation": "Batch every currently independent decision into one recommendation table, defer dependency-bound questions to later batches, and stop before implementation."
     },
     "skill:grill-with-docs": {
       "kind": "skill",
