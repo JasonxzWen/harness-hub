@@ -11,7 +11,7 @@ metadata:
 
 ## Purpose
 
-Use this skill when a plan needs the `grill-me` interview loop and the answers are likely to create durable project language, context, or decisions.
+Use this skill when a plan needs an independent one-question-at-a-time pressure-test flow and the answers are likely to create durable project language, context, or decisions.
 
 This is a Harness Hub adaptation of Matt Pocock's `grill-with-docs`: keep the one-question-at-a-time pressure test, but map durable documentation to the standard Harness Hub context model instead of writing root `CONTEXT.md` or `docs/adr/` directly.
 

@@ -45,7 +45,7 @@ The workflow system must serve this order:
 
 | Source | Useful idea | Reject or constrain | Local decision |
 |---|---|---|---|
-| Matt `grill-me` | One-question-at-a-time pressure testing and recommended answers before implementation. | Do not turn every request into an interview. | Keep as the pressure-test owner; `effective-interact` may present the resulting decisions and handoff, but should not own the questioning logic. |
+| Matt `grill-me` | Pressure testing and recommended answers before implementation. | The upstream serial interview creates too many interaction rounds for independent decisions; do not turn every request into an interview. | Keep as the pressure-test owner, but local `0.2.0` batches the current dependency frontier into recommendation tables and defers prerequisite-bound questions. `effective-interact` may present the resulting handoff but does not own the questioning logic. |
 | Matt `grill-with-docs` | One-question-at-a-time pressure testing plus glossary/domain/ADR capture. | Upstream assumes inline `CONTEXT.md` and `docs/adr/` writes. | Install an adapted wrapper that uses Harness Hub context rules: raw sources first, proposed file-level wiki updates, human confirmation, update log, and `.harness-hub/state` for active task decisions. |
 | `product-capability` | Capability restatement, constraints, invariants, interfaces, and open decisions. | Do not invent product truth. | Make it a helper under `sdd-workflow` for implementation-ready contracts. |
 | OpenSpec explore | Read-only exploration and artifact capture without implementation. | Do not make OpenSpec the default planning lane. | Use only when formal OpenSpec lifecycle is requested or already active. |

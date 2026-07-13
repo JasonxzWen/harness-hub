@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Change `grill-me` from serial-by-default questioning to dependency-layered decision tables that batch all currently independent questions with recommendations and downstream effects; explicit one-question-at-a-time requests remain supported.
+- Preserve the managed upgrade path from `grill-me` `0.1.0` by recognizing its exact schema-v1 file fingerprint during lock migration before updating to `0.2.0`; locally modified copies remain blocked.
+
 ## 0.4.0 - 2026-07-01
 
 - Add host-neutral agentic loop workflow-stage policy, target harness Agentic Loop Records, deterministic loop-evidence validation, finish closeout gates, and Codex/Claude Code adapter docs.
