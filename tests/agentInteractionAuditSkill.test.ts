@@ -136,39 +136,16 @@ test('agent-interaction-audit documents private read-only repository interaction
 test('agent-interaction-audit capability metadata registers standard install surface and boundaries', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
     components: Record<string, {
+      kind?: string;
       path?: string;
-      provides?: string[];
-      overlapsWith?: string[];
-      routing?: string;
-      recommendation?: string;
+      distribution?: string;
     }>;
   };
   const component = index.components['skill:agent-interaction-audit'];
 
+  expect(component.kind).toBe('skill');
   expect(component.path).toBe('skills/agent-interaction-audit');
-  expect(component.provides).toContain('agent-interaction-audits');
-  expect(component.provides).toContain('private-agent-interaction-audit-reports');
-  expect(component.provides).toContain('prompt-rule-context-audits');
-  expect(component.provides).toContain('automation-log-audits');
-  expect(component.provides).toContain('sop-and-script-lesson-mining');
-  expect(component.provides).toContain('knowledge-cache-candidate-mining');
-  expect(component.provides).toContain('executable-improvement-queues');
-  expect(component.provides).toContain('private-improvement-queue-json');
-  expect(component.provides).toContain('effective-interact-visual-report-inputs');
-  expect(component.overlapsWith).toContain('skill:source-post');
-  expect(component.overlapsWith).toContain('skill:agent-introspection-debugging');
-  expect(component.routing).toContain('private agent interaction audit');
-  expect(component.routing).toContain('legacy insight mentions route here only when paired with agent sessions');
-  expect(component.routing).toContain('prompt/rule context audit');
-  expect(component.routing).toContain('automation log audit');
-  expect(component.routing).toContain('executable improvement queue');
-  expect(component.routing).toContain('effective-interact as the visual presentation layer');
-  expect(component.recommendation).toContain('ignored private reports');
-  expect(component.recommendation).toContain('prompt/rule layers');
-  expect(component.recommendation).toContain('cacheable knowledge candidates');
-  expect(component.recommendation).toContain('private improvement queue JSON');
-  expect(component.recommendation).toContain('optional effective-interact visual report inputs');
-  expect(component.recommendation).toContain('no default project');
+  expect(component.distribution).toBe('target-distributed');
 });
 
 test('agent-interaction-audit collection and report scripts produce a private audit from fixture traces', () => {

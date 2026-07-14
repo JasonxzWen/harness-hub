@@ -5,18 +5,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'bun:test';
 
-import { readCapabilityIndex } from '../src/harnessHub';
+const harnessRoot = path.resolve('skills/clone-website/assets/website-cloner');
 
-const harnessRoot = path.resolve('harness/website-cloner');
-
-test('website-cloner harness is registered outside default skill install', () => {
-  const index = readCapabilityIndex();
-  const harness = index.components['harness:website-cloner'];
-
-  expect(harness?.kind).toBe('harness-template');
-  expect(harness?.path).toBe('harness/website-cloner');
-  expect(harness?.risk).toBe('high');
-  expect(harness?.overlapsWith).toContain('skill:clone-website');
+test('website-cloner smoke scaffold is distributed inside its owning skill', () => {
+  expect(fs.existsSync(path.join(harnessRoot, 'scripts', 'validate-site.mjs'))).toBe(true);
+  expect(fs.existsSync(path.join(harnessRoot, 'site', 'index.html'))).toBe(true);
 });
 
 test('website-cloner harness validates its static smoke artifact', () => {

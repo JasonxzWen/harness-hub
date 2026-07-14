@@ -78,11 +78,11 @@ Keep every distributed skill in the standard layout under `skills/<skill-name>/S
 - Edit imported skill content only when the upstream text is unsafe, unusable in this repo, legally unclear, or directly conflicts with the routing overlay.
 - Do not add host-specific tool names, config paths, UI metadata, or runner assumptions to distributed skill bodies.
 - Do not add `agents/openai.yaml`, `.opencode/skills/`, or similar host-local metadata to the source skill tree.
-- Keep project-local host skill mirrors under ignored `.codex/skills/<skill-name>/` and `.claude/skills/<skill-name>/`; each mirror points back to the canonical `skills/<skill-name>/SKILL.md`.
-- Put host packaging outside skills. Claude plugin support belongs in `.claude-plugin/`; the skill content remains standard.
+- Keep project-local host skill mirrors under ignored `.agents/skills/<skill-name>/` and `.claude/skills/<skill-name>/`; each mirror points back to the canonical `skills/<skill-name>/SKILL.md`.
+- Put host configuration outside canonical skill bodies; project-local hook entrypoints may live in the owning skill's `scripts/` directory.
 - If an upstream skill assumes a specific runner, prefer routing notes, source records, or explicit-only status before rewriting its body.
 - If a capability cannot be used safely without rewriting away its core value, keep it as an evaluated source or explicit-only reference.
-- Keep repo harness templates under `harness/<template-name>/`; root harness files in target projects are installed only through explicit harness lifecycle commands, never through default skill installation.
+- Keep only the single target contract and Host hook sources under `harness/`; there are no installable harness variants or partial lifecycle paths.
 
 ## Local Agent Resources
 
@@ -94,12 +94,12 @@ Canonical skill sources live only under `skills/<skill-name>/`. For local dogfoo
 bun run sync:agent-skills
 ```
 
-Use `bun run sync:agent-skills:dry-run` before broad skill maintenance when you need a preview. The generated `.codex/skills/` and `.claude/skills/` trees are local caches, not installable source, not capability metadata, and not checkpoint material.
+Use `bun run sync:agent-skills:dry-run` before broad skill maintenance when you need a preview. The generated `.agents/skills/` and `.claude/skills/` trees are local caches, not installable source, not capability metadata, and not checkpoint material.
 
 When a skill rename, removal, or activation appears stale, diagnose the actual visibility layer before declaring it fixed:
 
 - canonical source: verify `skills/<skill-name>/SKILL.md` in the actual project root or worktree that the host is using;
-- project-local host mirrors: verify `.codex/skills/<skill-name>/SKILL.md` and `.claude/skills/<skill-name>/SKILL.md`; in this source checkout use `bun run sync:agent-skills`, and in target repositories use `harness-hub activate-agents <target> --yes`;
+- project-local host mirrors: verify `.agents/skills/<skill-name>/SKILL.md` and `.claude/skills/<skill-name>/SKILL.md`; in this source checkout use `bun run sync:agent-skills`, while target repositories receive them only through full `migrate`;
 - user-level/global host skills: direct slash-palette invocation may require an explicit install under the host's user skill root, such as `$CODEX_HOME/skills/<skill-name>/SKILL.md`; project-local mirrors do not prove global slash invocation is available;
 - host index cache: if filesystem checks are correct but the UI still shows stale metadata, treat it as an in-process host index cache and ask for a host reload or restart rather than repeating repo sync commands.
 
@@ -165,14 +165,14 @@ Deterministic checks outrank subagent judgment. A failing test, validator, build
 
 Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest matching skill:
 
-- Non-trivial requests: use `workflow-router` first to classify the request into exactly one owner state; when a terminal is available, run or mirror `node skills/workflow-router/scripts/workflow-check.mjs --prompt "<request>" --json` before substantive work.
+- Non-trivial requests: use `workflow-router` first to classify the request into exactly one owner state; its output must be consumed by `node skills/workflow-router/scripts/loop-runtime.mjs route ...`, not returned as advisory text.
 - Questions and evidence lookup: use `answer-workflow`.
 - English prose AI-tell cleanup or draft review: use `stop-slop` only for English prose; do not use it for Chinese output, code explanations, specs, or status reports.
 - SDD change work: use `sdd-workflow`; align core details, target spec, and acceptance criteria before implementation.
 - Runtime bug reports that start from failure evidence: use `diagnosis-workflow`.
 - Code, plan, release, UI, or security review: use `review-workflow`.
 - Delivery, validation closeout, finish closeout, cleanup, or handoff: use `delivery-workflow`.
-- Harness Hub source, routing, capability, npm lifecycle, harness templates, or cleanup work: use `hub-maintenance-workflow`.
+- Harness Hub source, routing, capability, distribution, or cleanup work: use `sdd-workflow` under this root contract and the source-only `knowledge/` facts.
 - Plan/design pressure testing: use `grill-me`.
 - Runtime bugs/performance regressions: use `diagnose`.
 - Agent/tool harness failures: use `agent-introspection-debugging`.
@@ -184,15 +184,15 @@ Use `docs/skill-routing.md` to resolve overlapping skills. Prefer the narrowest 
 
 ## Workflow Router Direction
 
-The target architecture is a thin, executable `workflow-router` that classifies each non-trivial request into exactly one workflow state: question, SDD change, diagnosis, review, delivery, or Harness Hub maintenance. Default development should be SDD-first with TDD embedded. Do not start implementation before the user's core details, target spec, and acceptance criteria are aligned.
+The target architecture is `skill -> executable small loop -> workflow`. The Router classifies each non-trivial request into exactly one workflow state: question, SDD change, diagnosis, review, or delivery, then the runtime executes that Workflow's Loop sequence. Workflows only orchestrate Loops; they do not duplicate Loop implementation.
 
 `effective-interact` is high-priority communication infrastructure. Default-consider it for every non-trivial session, especially after material repo or skill changes. Its job is to reduce human interpretation cost through answer-first structure, visual comparison, evidence, validation, and handoff artifacts; it does not replace production UI, slide, or bundled app skills.
 
-Subagents are an executor mode owned by the active workflow, not a separate workflow owner. Required loops may call them for independent read-only research, review, docs work, verification, or clearly disjoint write scopes; material or multi-scope reviews should split independent read-only lenses unless a fallback is recorded. The main agent keeps final decisions, integration, and user-facing conclusions. Subagents keep private runtime state under ignored `.harness-hub/state/runs/<runId>/`; the main agent is the only writer of root progress and handoff summaries.
+Subagents are an executor mode owned by the active workflow, not a separate workflow owner. Required loops may call them for independent read-only research, review, docs work, verification, or clearly disjoint write scopes; material or multi-scope reviews should split independent read-only lenses unless a fallback is recorded. Delegated CLI Agents never receive remote-write or merge authority; those actions remain with the main Agent under explicit user authorization. The main agent keeps final decisions, integration, and user-facing conclusions. Subagents keep private runtime state under ignored `.harness-hub/state/runs/<runId>/`; the main agent is the only writer of root progress and handoff summaries.
 
 Hooks should start as advisory or deterministic local checks only. Do not introduce blocking hooks, remote actions, credential changes, posting, pushing, publishing, or agent dispatch without explicit user approval and security review.
 
-Agentic loops are workflow-stage mechanics, not a replacement for workflow owners. Use `skills/workflow-router/references/agentic-loops.md` for Producer -> Verifier -> Arbiter -> Main Agent Decision patterns; `docs/agentic-loop-catalog.md` is the source-repo explainer. For mutation work, first derive required loops from changed paths or a base/head diff with `harness-hub loop required`, then verify recorded run/integration evidence with `harness-hub loop verify` before handoff when the runtime is available. Keep generic rules host-neutral with `delegated-agent`; Codex and Claude Code details belong in host adapter docs. Write-capable delegated agents may share the current worktree only after a path lease names non-overlapping owned paths. Arbiters are read-only and do not edit files, resolve conflicts, push, publish, merge, or make final user-facing decisions.
+Use `skills/workflow-router/references/agentic-loops.md` for the executable Producer -> deterministic checks -> Verifier -> optional Arbiter model; `docs/agentic-loop-catalog.md` is the source-repo explainer. Run Loops and Workflows through `skills/workflow-router/scripts/loop-runtime.mjs`. Write-capable delegated agents may share the current worktree only after a path lease names non-overlapping paths. Arbiters are read-only and never edit, resolve conflicts, push, publish, merge, or make final user-facing decisions.
 
 ## Agent Development Workflow
 
@@ -200,19 +200,18 @@ README files are human-facing visual navigation. Keep agent execution rules here
 
 For feature, bug-fix, refactor, product/spec change, or implementation work:
 
-1. Route first with `workflow-router`; use the selected owner and do not let helper skills compete for top-level ownership.
-2. Inspect repo docs, code paths, existing state, tests, source records, and relevant upstream references before proposing a direction.
-3. Treat lightweight brainstorming as part of SDD: compare 2-3 evidence-backed directions, recommend one, and record rejected alternatives.
-4. Write the active task contract before implementation when `.harness-hub/state/` exists:
+1. Route first with `workflow-router`, persist the selected owner, and consume it through the executable Workflow runtime. Do not let helper skills compete for top-level ownership.
+2. Write the active task contract before invoking a mutating Workflow when `.harness-hub/state/` exists:
    - `current-task.md`: goal, assumptions, non-goals, allowed paths, forbidden paths, requirement intake, discovery/brainstorming, target spec, acceptance criteria, P0/P1/P2 test matrix, validation commands, open questions, alignment status, freshness status, autonomy envelope, subagent auto-arbiter, and checkpoint policy.
    - `decisions.md`: accepted direction, rationale, alternatives, and decision-level changes.
    - `progress.md`: current phase, completed work, validation records, runtime signals, stale-read gate result, blockers, PR status, and checkpoint commit state.
    - `session-handoff.md`: restart status, changed files, validation evidence, stale-read result, residual risk, blockers, and next action.
-5. Ask only blocking open questions before implementation. A blocking question changes user-visible behavior, safety, data ownership, compatibility, cost, release or rollback behavior, external side effects, allowed paths, or acceptance criteria.
-6. Implement one public behavior at a time through `tdd-workflow`: RED, GREEN, REFACTOR. If direct tests are impractical, define the deterministic substitute before production edits.
-7. Verify with P0/P1/P2 validation: P0 must pass before handoff, P1 is run or risk-assessed, and P2 hardening is run or explicitly deferred.
-8. Use `effective-interact` for material plans, evidence maps, reviews, and handoffs only when structure lowers human reading cost.
-9. Before handoff, update progress, decisions when needed, session handoff, and validation evidence. Do not claim completion from intent or partial progress.
+3. Invoke the owner Workflow. For SDD changes the runtime sequence is requirements -> spec -> test (RED, implementation, GREEN) -> implementation review -> conditional knowledge maintenance -> delivery -> retro -> report. The Workflow only selects Loops, branches, and compact handoffs.
+   - `implementation-review-loop` reviews one implementation state once. A rejection returns to the main Agent and may be reviewed again only after a real implementation change.
+   - The single-pass `delivery-loop` delegated Producer stays read-only. The same runtime then performs explicitly authorized cleanup, deterministic validation, and an optional local commit of reviewed bytes, in that order. A rejection returns to the main Agent, completed local actions stay visible in the handoff, and any product-content change requires a new implementation review.
+4. Pause only when `requirements-loop` or another Loop returns a genuinely blocking user decision. Never infer an answer or acceptance from silence.
+5. Treat deterministic P0 failures as failures. P1 is run or risk-assessed, and P2 hardening is run or explicitly deferred; Agent verdicts cannot waive them.
+6. Before handoff, update progress, decisions when needed, session handoff, and validation evidence. Do not claim completion from intent, routing output, or partial Loop progress.
 
 ## Skill Quality Governance
 
@@ -225,44 +224,31 @@ Use `docs/skill-quality-guide.md` as the quality bar for authoring, importing, r
 - Before adding an installable skill, verify it fills a bounded gap and does not duplicate global instructions.
 - Keep quality inventory findings report-only unless they map to a real routing, safety, source, or distribution problem.
 
-## CLI Lifecycle
+## Repository Migration CLI
 
-Use these verbs for target-repo lifecycle work:
+There is exactly one target capability and one public command:
 
-- `harness-hub check <target> --json`
-- `harness-hub analyze <target> --json`
-- `harness-hub analyze <target> --agent-readiness --harness --json`
-- `harness-hub init-harness <target> --dry-run --json`
-- `harness-hub init-harness <target> --yes`
-- `harness-hub validate-harness <target> --json`
-- `harness-hub activate-agents <target> --dry-run --json`
-- `harness-hub activate-agents <target> --yes`
-- `harness-hub install <target> --target standard --dry-run`
-- `harness-hub install <target> --target standard --yes`
-- `harness-hub status <target> --json`
-- `harness-hub update <target> --dry-run --json`
-- `harness-hub migrate-lock <target> --dry-run --json`
-- `harness-hub remove <target> --dry-run --json`
+```text
+node bin/harness-hub.mjs migrate <target> --host claude|codex|both --yes [--primary claude|codex] [--force]
+```
 
-`install` remains the standard skill install command and must not create root harness files. `init-harness` owns root harness initialization and must stay dry-run/confirmation guarded.
-`check` is read-only startup guidance: it reports CLI and target managed-component freshness separately and must not auto-update either layer.
+- The Git checkout and its commit are the only distribution/version source. There is no npm publication, package version, partial install, update, remove, status, compatibility, or migration-lock command.
+- `both` requires a primary CLI. The primary owns shared files and first-time OKF initialization; the secondary may write only its own Host surface.
+- The selected CLI must actually execute one exact private `copy-slice` for each migration slice. Deterministic validation rejects missing or extra process activity, a mismatched receipt, incomplete output, wrong source commit/target HEAD/role evidence, path escape, or Agent-only pass claims.
+- Every run removes stale resources still owned by the previous manifest. `force` may replace only managed generic resources; normal and force migration never rewrite target-owned skills, commands, `knowledge/**`, project evals, product files, or other target-owned information.
+- Target `AGENTS.md` must match `harness/target/AGENTS.md`; target `CLAUDE.md` is exactly `@AGENTS.md`; Claude skills/hooks live under `.claude/`, while Codex skills live under `.agents/skills/` and Codex hooks under `.codex/hooks.json`.
+- Codex project hooks run only when Codex trusts the target project. Migration records this prerequisite but never changes trust or user/global configuration.
+- First migration uses the primary CLI to scan the target and generate a source-traceable Google OKF v0.1 wiki. Later migration validates and preserves the complete wiki byte-for-byte.
+- Source and target must be clean Git worktrees with an existing `HEAD`, and distributed source bytes must match the source `HEAD` tree. A failed slice must close the Loop evidence and restore the Git control plane plus managed/explicitly protected paths; if unrelated ignored content changed and exact restoration is impossible, report `rolledBack: false` instead of claiming rollback.
+- Migration never commits, pushes, publishes, merges, changes credentials, or changes user/global configuration.
 
-When another repository's agent receives only this Harness Hub repository link, it must follow [BOOTSTRAP-TARGET.md](BOOTSTRAP-TARGET.md): treat the link as documentation and CLI source, not as a template to copy. Because `npx ...@latest` executes registry-supplied code, use `npx @jasonwen/harness-hub@latest init-harness <target> --target standard --dry-run --json` followed by `--yes` only when the task or user explicitly authorizes that package execution; otherwise ask or use a pinned approved version. A source checkout may be cloned outside the target only to run `node bin/harness-hub.mjs init-harness <target> --target standard ...`. Do not copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `capabilities/`, `harness/`, `package.json`, README files, source files, tests, or other Harness Hub source-repo material into the target. If neither npm nor the source CLI can run, report a bootstrap blocker instead of improvising a manual copy.
+When another repository receives only this repository URL, follow [BOOTSTRAP-TARGET.md](BOOTSTRAP-TARGET.md): clone Harness Hub outside the target and invoke this single command. Do not manually copy source-only `knowledge/`, docs, OpenSpec, tests, capabilities, source records, or fixtures.
 
-Harness initialization is a hard gate for target repositories:
-- Use `init-harness`, not `install`, when root harness files are needed.
-- Do not start implementation in a target repo until `AGENTS.md`, `CLAUDE.md`, `feature_list.json`, `clean-state-checklist.md`, `definition-of-done.md`, `evaluator-rubric.md`, `quality-document.md`, `scripts/harness-validate.mjs`, and `.harness-hub/state/{current-task.md,decisions.md,progress.md,session-handoff.md}` exist.
-- Run `harness-hub check <target> --json` during startup and treat update availability, missing locks, and registry unavailability as non-blocking advisory output unless the task explicitly asks to update.
-- Fill `.harness-hub/state/current-task.md` with goal, non-goals, allowed paths, forbidden paths, target spec, acceptance criteria, validation commands, freshness status, autonomy envelope, subagent auto-arbiter, and checkpoint policy before coding.
-- Run `node scripts/harness-validate.mjs` or `harness-hub validate-harness <target> --json`; fix harness failures before product edits.
-- Record validation command status, passed/failed counts when available, evidence, and checkpoint commit state in progress and handoff state.
-- Use verified checkpoint commits for completed atomic units when the task permits commits; otherwise record the skip reason.
-
-Before release-oriented CLI changes, run `bun run validate`, `git diff --check`, and the relevant smoke flow.
+Before changing this CLI or its distribution boundary, run the focused migration/Loop/OKF tests, `bun run validate`, and `git diff --check`.
 
 ## Third-Party Skill Evaluation
 
-Use `hub-maintenance-workflow` whenever the user asks to evaluate, install, compare, or import a third-party skill repository.
+Use `sdd-workflow` under this root source-governance contract whenever the user asks to evaluate, compare, import, or remove a third-party skill repository.
 
 For every third-party skill evaluation:
 
@@ -271,5 +257,5 @@ For every third-party skill evaluation:
 - Install only when the candidate fills a real gap or provides a materially better bounded workflow.
 - Preserve upstream skill content by default; add local routing/source records instead of rewriting body text for consistency.
 - Prefer reject or explicit-only status when the candidate repeats existing behavior or would create trigger noise.
-- Update `docs/source-projects.md`, `docs/skill-routing.md`, `README.md`, and inventory docs when installation, counts, sources, vendor paths, or runtime state change.
+- Update `docs/source-projects.md`, `docs/skill-routing.md`, and `README.md` when sources, distribution boundaries, or runtime state change.
 - Run `powershell -ExecutionPolicy Bypass -File scripts\validate-skills.ps1 -SkipExternal` before finishing skill maintenance.

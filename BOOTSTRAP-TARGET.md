@@ -1,68 +1,30 @@
-# Bootstrap A Target Repository
+# Bootstrap a target repository
 
-Use this file when you are an agent working in another repository and a user gave you the Harness Hub repository link.
+Harness Hub has one target capability: a complete repository migration. The Git checkout is the only distribution and version source; no npm package, partial installer, update command, or compatibility path exists.
 
-## Rule
-
-Treat this repository as documentation and a CLI source, not as a template. Do not copy this checkout into the target repository.
-
-## Preferred Path
-
-Run the published CLI from the target or from any shell that can reach the target path:
+Clone Harness Hub outside the target repository, then run its single CLI entry:
 
 ```powershell
-npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --dry-run --json
-npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --yes
-npx @jasonwen/harness-hub@latest validate-harness D:\path\to\target --json
+git clone https://github.com/JasonxzWen/harness-hub.git C:\temp\harness-hub
+cd C:\temp\harness-hub
+node bin/harness-hub.mjs migrate C:\path\to\target --host codex --yes
 ```
 
-Use `--dry-run --json` first when the target may already contain harness files.
+Select exactly one mode:
 
-## Source Runner Fallback
-
-If npm is unavailable but the source repository is available, clone Harness Hub outside the target worktree and use it only as a runner:
-
-```powershell
-git clone https://github.com/JasonxzWen/harness-hub.git C:\tmp\harness-hub
-cd C:\tmp\harness-hub
-bun install
-bun run build
-node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --dry-run --json
-node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --yes
-node bin\harness-hub.mjs validate-harness D:\path\to\target --json
+```text
+--host claude
+--host codex
+--host both --primary claude
+--host both --primary codex
 ```
 
-The source checkout stays outside the target and can be deleted after the target is initialized.
+`--force` may replace only Harness Hub-managed generic resources. Normal and force migration both remove resources owned by the previous Harness Hub manifest that no longer belong to the selected Host/full distribution, while preserving target-owned skills, commands, `knowledge/**`, product files, project eval cases, and remote state.
 
-## Never Copy Into The Target
+The target and Harness Hub source must both be clean Git worktrees with an existing `HEAD`, and every distributed source file must match its `HEAD` blob byte-for-byte. Migration invokes the selected Claude Code or Codex CLI directly and validates the complete result. A failed slice restores the Git control plane plus managed and explicitly protected paths; if unrelated ignored content changed and exact restoration is impossible, migration reports `rolledBack: false` instead of claiming rollback. It never commits, pushes, publishes, merges, changes credentials, or changes user/global configuration.
 
-Do not copy these Harness Hub source-repo paths into the target repository:
+Each Host slice keeps durable receipt, trace, integration, and metric evidence for every closed Loop in the transaction. Its path-bearing copy plan and runner are execution-only and are removed when the slice closes; a rollback failure reports both `E_ROLLBACK` and the original failure.
 
-- `.claude-plugin/`
-- `openspec/`
-- `docs/`
-- `config/`
-- `capabilities/`
-- `harness/`
-- `src/`
-- `tests/`
-- `site/`
-- `package.json`
-- `README.md` or `README.zh-CN.md`
-- `CHANGELOG.md`
-- this repository's root `AGENTS.md`
+For Codex, repository skills are installed only under `.agents/skills/`, while hooks remain in `.codex/hooks.json`. Codex runs project hooks only after the target repository is trusted; migration reports this prerequisite and never changes trust automatically.
 
-The target should receive only lock-managed `skills/<name>/` entries, standard target harness root files, `.harness-hub/lock.json`, ignored local state under `.harness-hub/state/`, Loop policy/eval assets under `.harness-hub/loop/`, and the LLM Wiki context pack under `.harness-hub/context/`.
-
-## Stop Conditions
-
-Stop and report a bootstrap blocker instead of manually copying folders when:
-
-- `npx @jasonwen/harness-hub@latest ...` cannot run;
-- the source fallback cannot build or run;
-- the target has local harness files and the dry-run reports conflicts;
-- credentials, network access, or filesystem permissions are required.
-
-## Handoff Evidence
-
-Report the commands run, exit codes, validation status, whether forbidden source-repo paths are absent from the target root, and whether `.harness-hub/context/wiki/index.md` exists.
+First migration asks the primary CLI to inspect the target and create a source-traceable Google OKF v0.1 wiki under `knowledge/`. Later migrations validate and preserve that tree byte-for-byte; daily maintenance belongs to the target project's `knowledge-maintain-loop`.

@@ -13,7 +13,6 @@ const TOP_LEVEL_WORKFLOW_SKILLS = new Set([
   'diagnosis-workflow',
   'review-workflow',
   'delivery-workflow',
-  'hub-maintenance-workflow',
 ]);
 
 function includesAny(text, values) {
@@ -340,19 +339,6 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'tool calls',
     'tool limits',
     'tool loop',
-  ]);
-  const hubMaintenanceSignal = includesAny(text, [
-    'harness hub',
-    'harness-hub',
-  ]) && includesAny(text, [
-    'capability metadata',
-    'install policy',
-    'maintain',
-    'maintaining',
-    'npm',
-    'quality',
-    'routing',
-    'source records',
   ]);
   const prototypeSignal = includesAny(text, [
     'before choosing',
@@ -847,30 +833,6 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'cross-project code quality',
     'layering conventions',
   ]);
-  const harnessQualityCheckSignal = (
-    includesAny(text, [
-      'harness quality audit',
-      'harness quality check',
-      'harness-quality-check',
-      'harness readiness audit',
-      'quality readiness check',
-      'quality/readiness check',
-      'target repo harness quality',
-    ]) || (
-      includesAny(text, ['harness hub', 'harness-hub', 'hub checkout', 'target repo', 'target repository'])
-      && includesAny(text, [
-        'advisory',
-        'agent readiness',
-        'audit',
-        'quality',
-        'readiness',
-        'self-check',
-        'skill-quality',
-        'validate-harness',
-      ])
-      && includesAny(text, ['findings', 'html', 'report'])
-    )
-  ) && !finalGateSignal && !codingStandardsSignal && !skillCreatorSignal;
   const karpathyGuidelinesSignal = includesAny(text, [
     'avoid overcomplication',
     'coding behavior baseline',
@@ -905,17 +867,12 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
     'with tests',
   ]) || matchesAny(text, [/\bimplement(?:ed|ing)?\b/]);
 
-  if (harnessQualityCheckSignal && canLoad(metadata, 'harness-quality-check', ['harness quality', 'advisory HTML'])) {
-    return 'harness-quality-check';
-  }
-
   if (ponytailSignal && canLoad(metadata, 'ponytail', ['coding work', 'yagni'])) {
     return 'ponytail';
   }
 
   if (grillWithDocsSignal
     && (explicitGrillWithDocsActionSignal || !includesAny(text, ['closeout review', 'read-only review', 'skill review']))
-    && !hubMaintenanceSignal
     && canLoad(metadata, 'grill-with-docs', ['grill-with-docs', 'glossary', 'adr', 'context wiki'])) {
     return 'grill-with-docs';
   }
@@ -934,10 +891,6 @@ export function selectSkillForPrompt(prompt, metadata = readSkillMetadata()) {
 
   if (securitySignal && canLoad(metadata, 'security-review', ['security-sensitive', 'injection'])) {
     return 'security-review';
-  }
-
-  if (hubMaintenanceSignal) {
-    return null;
   }
 
   if (agentInteractionAuditSignal && canLoad(metadata, 'agent-interaction-audit', ['agent interaction audits', 'claude code'])) {

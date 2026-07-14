@@ -410,13 +410,8 @@ test('effective-interact codifies output-mode escalation without stealing adjace
   expect(patterns).toContain('incident-report');
   expect(patterns).toContain('disposable-export-editor');
   expect(patterns).toContain('Every editor-like artifact must end with an export path');
-  expect(routingDocs).toContain('complex communication and alignment');
-  expect(routingDocs).toContain('option comparison');
-  expect(routingDocs).toContain('lightweight export editor');
-  expect(routingDocs).toContain('default reporting layer when the agent is about to pause on relatively complex information');
-  expect(routingDocs).toContain('material repo or skill behavior changes, default to a validated HTML handoff');
-  expect(routingDocs).toContain('any output other than `plain-brief` should expose at least one visible visual structure');
-  expect(routingDocs).toContain('frontend-slides` remains the deck lane');
+  expect(routingDocs).toContain('`effective-interact` is the atomic complex-presentation skill');
+  expect(routingDocs).toContain('`report-loop` owns lifecycle activation');
 });
 
 test('effective-interact keeps detailed patterns in references', () => {
@@ -431,8 +426,8 @@ test('effective-interact keeps detailed patterns in references', () => {
   expect(patterns).toContain('Component-First Design Contract');
   expect(patterns).toContain('../DESIGN.md');
   expect(patterns).toContain('Pattern Selection');
-  expect(patterns).toContain('docs/harness-vocabulary.md');
-  expect(patterns).toContain('local-original');
+  expect(patterns).toContain("project's source-traceable `knowledge/` concepts");
+  expect(patterns).toContain('Keep definitions project-owned');
   expect(patterns).toContain('Do not build credential or token tools');
   expect(patterns).toContain('visual-structure gate for HTML reports that still read like linear prose');
   expect(patterns).not.toContain('Current Limits To Correct');
@@ -674,7 +669,6 @@ test('effective-interact ships generator, validator, schema, and fixtures', () =
     `${skillDir}/assets/fixtures/mode-structure-cases.json`,
     `${skillDir}/assets/fixtures/skill-structure-map-report.json`,
     `${skillDir}/assets/fixtures/html-effectiveness-pattern-library-report.json`,
-    `${skillDir}/assets/fixtures/harness-vocabulary-explainer-report.json`,
     `${skillDir}/assets/fixtures/session-ledger-report.json`,
     `${skillDir}/evals/routing-cases.json`,
   ];
@@ -1103,57 +1097,6 @@ test('effective-interact HTML effectiveness fixture renders source-derived patte
   expect(JSON.parse(validation.stdout).ok).toBe(true);
 });
 
-test('effective-interact harness vocabulary fixture renders concept boundaries without copied glossary text', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-harness-vocabulary-'));
-  const result = spawnSync(process.execPath, [
-    createInteractionScript,
-    '--input',
-    `${skillDir}/assets/fixtures/harness-vocabulary-explainer-report.json`,
-    '--out-dir',
-    tmpDir,
-    '--slug',
-    'harness-vocabulary',
-    '--json',
-  ], { encoding: 'utf8' });
-
-  expect(result.status, result.stderr).toBe(0);
-  const payload = JSON.parse(result.stdout);
-  const html = fs.readFileSync(payload.outputPath, 'utf8');
-
-  expect(html).toContain('data-artifact-kind="explainer"');
-  expect(html).toContain('Harness vocabulary explainer');
-  expect(html).toContain('Definition');
-  expect(html).toContain('Adjacent concept');
-  expect(html).toContain('Avoid / use instead');
-  expect(html).toContain('Usage scenario');
-  expect(html).toContain('Acceptance boundary');
-  expect(html).toContain('docs/harness-vocabulary.md');
-  expect(html).toContain('reference-only');
-  expect(html).toContain('local-original definitions');
-  expect(html).toContain('data-section-type="tabs"');
-
-  const fixture = JSON.parse(fs.readFileSync(`${skillDir}/assets/fixtures/harness-vocabulary-explainer-report.json`, 'utf8'));
-  const sourceRegistryRefs = [
-    ...fixture.sections.flatMap((section: any) => section.items || []),
-    ...fixture.evidence,
-  ].filter((item: any) => item.filePath === 'docs/source-projects.md');
-  expect(sourceRegistryRefs.length).toBeGreaterThanOrEqual(2);
-  for (const item of sourceRegistryRefs) {
-    const sourceLine = fs.readFileSync(item.filePath, 'utf8').split(/\r?\n/)[item.line - 1] || '';
-    expect(sourceLine).toContain('mattpocock/dictionary-of-ai-coding');
-    expect(sourceLine).toContain('Reference-only');
-  }
-
-  const validation = spawnSync(process.execPath, [
-    validateInteractionScript,
-    payload.outputPath,
-    '--json',
-    '--skip-browser',
-  ], { encoding: 'utf8' });
-  expect(validation.status, validation.stderr).toBe(0);
-  expect(JSON.parse(validation.stdout).ok).toBe(true);
-});
-
 test('effective-interact session ledger fixture renders preserved task facts', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'effective-interact-session-ledger-'));
   const result = spawnSync(process.execPath, [
@@ -1315,49 +1258,6 @@ test('effective-interact generator renders intent, claims, and accessible charts
     'runtime-audit',
     'safe-sinks',
   ]));
-});
-
-test('effective-interact trigger retrofit report keeps first screen compact and non-redundant', () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'html-work-report-trigger-retro-'));
-  const result = spawnSync(process.execPath, [
-    createInteractionScript,
-    '--input',
-    `${skillDir}/assets/fixtures/trigger-scope-retro-report.json`,
-    '--out-dir',
-    tmpDir,
-    '--slug',
-    'trigger-retro',
-    '--json',
-  ], { encoding: 'utf8' });
-
-  expect(result.status, result.stderr).toBe(0);
-  const html = fs.readFileSync(JSON.parse(result.stdout).outputPath, 'utf8');
-
-  expect(html).toContain('class="hero-brief"');
-  expect(html).toContain('class="hero-decision-grid"');
-  expect(html).not.toContain('class="hero-stat-grid"');
-  expect(html).not.toContain('class="hero-criteria-list"');
-  expect(html).toContain('按决策成本触发');
-  expect(html).toContain('class="report-nav-title">速览</div>');
-  expect(html).not.toContain('class="panel supplemental-panel" id="claims"');
-  expect(html).not.toContain('class="claim-card-header"');
-  expect(html).not.toContain('class="claim-card-title"');
-  expect(html).not.toContain('data-copy-from="#next-action-list"');
-  expect(html).toContain('data-render-mode="runtime-cdn"');
-  expect(html).toContain('data-section-type="mermaid"');
-  expect(html).toContain('data-rich-mermaid-target');
-  expect(html).toContain('data-section-type="code"');
-  expect(html).toContain('data-rich-code');
-  expect(html).toContain('language-yaml');
-  const navHtml = html.match(/<nav[\s\S]*?<\/nav>/)?.[0] || '';
-  const navLabels = [...navHtml.matchAll(/<span>([^<]+)<\/span>/g)].map((match) => match[1]);
-  expect(navLabels).toEqual(['总览', '触发合同修复', '触发决策链路', '触发描述证据', '验收信号', '边界不变']);
-  expect(html).not.toContain('class="lede-grid"');
-  expect(html).not.toContain('<h2>结论</h2>');
-  expect(html).not.toContain('<h2>Claims</h2>');
-  expect(html).not.toContain('<div class="meta">结论</div><strong>结论：');
-  expect(html).not.toContain('<p class="meta">验证</p>\n      <h2>验证</h2>');
-  expect(html).not.toContain('<p class="meta">下一步</p>\n      <h2>下一步</h2>');
 });
 
 test('effective-interact validator rejects navigation order mismatches', async () => {

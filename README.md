@@ -1,273 +1,124 @@
 # Harness Hub
 
-[简体中文](README.zh-CN.md) | English
+Repository-first distribution for a complete, executable Claude Code/Codex project harness.
 
-Harness Hub is a personal repo harness toolkit for making agent work repeatable across projects. It installs the target-distributed standard skill/routing set, initializes the standard target harness when requested, validates the result, and keeps managed files safe through lock-backed lifecycle commands.
+[中文说明](README.zh-CN.md)
 
-Imported skills can keep their upstream style; Harness Hub mainly owns routing, source records, harness templates, and lifecycle safety.
-
-Agent execution rules live in canonical [AGENTS.md](AGENTS.md); [CLAUDE.md](CLAUDE.md) imports it for Claude Code. Human-facing workflow detail lives in [Development Workflow](docs/development-workflow.md), with delegated-agent acceptance and arbitration patterns in [Agentic Loop Catalog](docs/agentic-loop-catalog.md).
-
-## First-Use Summary
-
-Harness Hub does a small set of bounded jobs:
-
-- `check` and `analyze` inspect a target repo and stay read-only.
-- `init-harness --target standard` creates the root harness only when you explicitly approve it.
-- `install` installs the target-distributed standard skill set only; it does not create root harness files.
-- `standard` migrates prompt, context, harness, and loop engineering resources plus reusable skills, while Harness Hub source-maintenance resources stay local to this repository.
-- the standard harness includes an LLM Wiki context pack under `.harness-hub/context/`.
-- `loop evaluate` and `loop schedule` decide continue vs interrupt and can append local Loop ledgers after `--yes`; `loop required` and `loop verify` derive dirty-path or base/head review gates and block handoff when loop evidence is missing; `loop run-start`, `agent-record`, `lease-check`, `collect-trace`, and `integrate` record local subagent orchestration state under ignored `.harness-hub/state/runs/`.
-- `source-post` creates, builds, validates, and preflights source-backed public posts.
-- the development workflow keeps Loop as a control plane and adds finish closeout before final handoff: final review, PR/merge readiness, and agent interaction audit learning.
-- agentic loops separate Producer, Verifier, Arbiter, and Main Agent Decision for subagent/delegated-agent acceptance, parallel review, PR closeout, and workflow learning.
-
-For a new target repo, start with a dry run:
-
-```powershell
-npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
-```
-
-Move to `--yes` only after reviewing the planned files. Harness Hub does not create schedules, webhooks, commits, pushes, global skill installs, or remote service changes unless a command explicitly says so.
-
-## Visual Navigator
-
-```mermaid
-flowchart TD
-  Start["I have a repo"] --> Analyze["Analyze readiness"]
-  Analyze --> Init["Initialize standard target harness"]
-  Init --> Work["Run SDD + TDD work"]
-  Work --> Validate["Validate and hand off"]
-
-  Start --> Skills["Install standard skills only"]
-  Start --> Maintain["Maintain Harness Hub itself"]
-  Start --> Context["Open stable LLM Wiki context"]
-  Start --> Loop["Run Loop runtime decisions"]
-  Start --> SourcePost["Publish source-backed public posts"]
-
-  Analyze --> A1["harness-hub analyze --agent-readiness --harness"]
-  Init --> I1["harness-hub init-harness --target standard"]
-  Skills --> S1["harness-hub install --target standard"]
-  Work --> W1["workflow-router -> sdd-workflow -> tdd-workflow"]
-  Validate --> V1["validate-harness / bun run validate"]
-  Maintain --> M1["hub-maintenance-workflow"]
-  Context --> C1[".harness-hub/context/wiki"]
-  Loop --> L1["loop required -> loop verify"]
-  Loop --> L2["loop evaluate -> loop schedule"]
-  SourcePost --> P1["source-post generate -> source-post build -> source-post validate"]
-```
-
-## Choose A Path
-
-| I want to... | Start here | What it gives you |
-|---|---|---|
-| Prepare another repo for agent-driven work | `init-harness --target standard` | Standard skills, canonical `AGENTS.md` plus importing `CLAUDE.md`, local state templates, validation script, lock ownership. |
-| Install skills without root harness files | `install --target standard` | Full standard skill tree under `skills/<name>/`, no root file changes. |
-| Check a target repo before writing files | `analyze --agent-readiness --harness --json` | Read-only readiness, harness gaps, and recommendations. |
-| Run a routine status self-check | `self-check --json` | Read-only aggregate status, advisory/failure split, and conditional harness validation. |
-| Make installed skills visible to local agents | `activate-agents --yes` | Sync project-local `skills/<name>` into `.codex/skills` and `.claude/skills` without global installation. |
-| Mirror this checkout's skills for local agents | `bun run sync:agent-skills` | Sync source `skills/<name>` into local `.codex/skills` and `.claude/skills` mirrors. |
-| Validate a bootstrapped repo | `validate-harness --json` | Required files, state, QA boundaries, trigger hygiene, and structural scores. |
-| Reuse stable project context | `.harness-hub/context/wiki/index.md` | LLM Wiki schema, source index, contradiction register, update log, and portable Obsidian profile. |
-| Evaluate Loop risk | `loop evaluate --input action.json --json` | Continue/interrupt decision, risk signals, evidence needs, and optional ledger recording with `--yes`. |
-| Check required closeout loops | `loop required --json` or `loop required --base <ref> --head <ref> --json`, then `loop verify --input verify.json --json` | Dirty-path or commit-range review gates, evidence-level requirements, and handoff blocking when run/integration evidence is missing. |
-| Maintain this hub | `workflow-router` then `hub-maintenance-workflow` | Source records, routing, capability metadata, docs, templates, and lifecycle safety. |
-| Create a public source-backed post | `source-post generate` | Source ledger, Effective Interact adaptation, Pages output, and publish preflight. |
-
-Harness Hub has one user-facing target path: `standard`. There are no named skill install variants, harness pack levels, or bundle selectors. `standard` is the complete target migration surface for prompt/context/harness/loop engineering and target-distributed reusable skills, including `agent-interaction-audit`; Harness Hub source-maintenance workflows such as `hub-maintenance-workflow` stay local to this repository. `harness:minimal` is only the internal component/template ID for the root harness files. Confirmed `install` overwrites an existing same-name skill directory; use `--dry-run` first when a target may already have local skills.
-
-## One-Step Target Bootstrap
-
-Run this against a clean target git worktree:
-
-```powershell
-npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
-```
-
-If the target already has root harness files, inspect first:
-
-```powershell
-npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
-```
-
-### Link-only agent bootstrap
-
-If you are an agent working in another repo and received only this Harness Hub repository link, do not copy this checkout into the target. Treat the link as documentation and CLI source.
-
-Use [Bootstrap A Target Repository](BOOTSTRAP-TARGET.md) as the copy-safe contract for this path.
-
-Use the published CLI first:
-
-```powershell
-npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --dry-run --json
-npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --yes
-```
-
-`npx ...@latest` executes registry-supplied code. Agents should run it only when the current task or user explicitly authorizes that package execution, or use a pinned approved version.
-
-If you must run from source, clone this repo outside the target worktree and use it only as a runner:
-
-```powershell
-git clone https://github.com/JasonxzWen/harness-hub.git
-cd harness-hub
-bun install
-bun run build
-node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --dry-run --json
-node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --yes
-```
-
-Never copy `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `capabilities/`, `harness/`, `package.json`, README files, source files, tests, or other Harness Hub source-repo material into the target. If neither the npm CLI nor the source CLI can run, report a bootstrap blocker instead of manually copying folders.
-
-From source:
-
-```powershell
-git clone https://github.com/JasonxzWen/harness-hub.git
-cd harness-hub
-bun install
-bun run build
-node bin\harness-hub.mjs init-harness D:\path\to\target --target standard --yes
-```
-
-## Core Commands
-
-```powershell
-bun install
-bun run validate
-bun run sync:agent-skills
-
-npx @jasonwen/harness-hub analyze D:\path\to\target --agent-readiness --harness --json
-npx @jasonwen/harness-hub check D:\path\to\target --json
-npx @jasonwen/harness-hub self-check D:\path\to\target --json
-npx @jasonwen/harness-hub activate-agents D:\path\to\target --dry-run --json
-npx @jasonwen/harness-hub activate-agents D:\path\to\target --yes
-npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --dry-run --json
-npx @jasonwen/harness-hub init-harness D:\path\to\target --target standard --yes
-npx @jasonwen/harness-hub validate-harness D:\path\to\target --json
-npx @jasonwen/harness-hub loop evaluate D:\path\to\target --input action.json --json
-npx @jasonwen/harness-hub loop schedule D:\path\to\target --input actions.jsonl --yes --json
-npx @jasonwen/harness-hub loop required D:\path\to\target --json
-npx @jasonwen/harness-hub loop required D:\path\to\target --base origin/main --head HEAD --json
-npx @jasonwen/harness-hub loop run-start D:\path\to\target --input run.json --yes --json
-npx @jasonwen/harness-hub loop lease-check D:\path\to\target --input lease.json --yes --json
-npx @jasonwen/harness-hub loop verify D:\path\to\target --input verify.json --json
-npx @jasonwen/harness-hub loop verify D:\path\to\target --input verify.json --base origin/main --head HEAD --json
-npx @jasonwen/harness-hub install D:\path\to\target --target standard --dry-run
-npx @jasonwen/harness-hub install D:\path\to\target --target standard --yes
-npx @jasonwen/harness-hub status D:\path\to\target --json
-npx @jasonwen/harness-hub update D:\path\to\target --dry-run --json
-npx @jasonwen/harness-hub remove D:\path\to\target --dry-run --json
-```
-
-Legacy `.codex` aggregation targets need the managed standard migration, not another aggregation sync. First run `check` or `self-check`; if the target has `.codex/harness-hub-aggregation.json` but no `.harness-hub/lock.json`, the advisory means the repo may have stale host-local distribution without current managed skills, root harness files, `.harness-hub` state, context pack, Loop ledgers, or later standard capability additions. Review the dry-run, then replace the old harness surface explicitly:
-
-```powershell
-npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --dry-run --json
-npx @jasonwen/harness-hub@latest init-harness D:\path\to\target --target standard --yes --force --json
-npx @jasonwen/harness-hub@latest activate-agents D:\path\to\target --yes --json
-npx @jasonwen/harness-hub@latest validate-harness D:\path\to\target --json
-npx @jasonwen/harness-hub@latest check D:\path\to\target --json
-```
-
-For unattended agents, treat the `@latest` examples above as external package execution requiring task authorization or a pinned approved version.
-
-If `activate-agents` is blocked by old unmarked `.codex/skills` or `.claude/skills` caches and those caches are not needed, remove the caches and rerun `activate-agents`. Do not rerun retired `update-harness-hub` aggregation scripts for current standard targets.
-
-Source-post publishing:
-
-```powershell
-npx @jasonwen/harness-hub source-post generate . --input input.json --json
-npx @jasonwen/harness-hub source-post build . --json
-npx @jasonwen/harness-hub source-post validate . --json
-npx @jasonwen/harness-hub source-post publish . --dry-run --json
-```
-
-`check` is a read-only startup check. It reports the released CLI package status from npm registry in `cli`, the target repository's lock-managed component status in `target`, and explicit CodeGraph/Headroom configuration advice in `externalTools`; update availability, registry failures, missing locks, missing project-local agent activation, and external tool suggestions are advisory and do not apply updates, install tools, or block the agent startup path.
-
-`activate-agents` is an explicit local activation step for Codex and Claude Code projects. It copies the already installed `skills/<name>` tree into `.codex/skills/<name>` and `.claude/skills/<name>` so both hosts can index the skill metadata, including helper triggers such as `package-release-sniffer`. It writes only the target repository's local host caches, uses a Harness Hub marker to avoid overwriting unmarked local skills, and does not write global skill directories or `.harness-hub/lock.json`.
-
-If a skill rename or new skill is still not visible, check the layer that is actually stale:
-
-- source of truth: `skills/<name>/SKILL.md` in the project root that Codex is currently using;
-- project-local mirrors: `.codex/skills/<name>/SKILL.md` and `.claude/skills/<name>/SKILL.md`, refreshed by `activate-agents` for target repos or `bun run sync:agent-skills` in this source checkout;
-- global direct slash invocation: the host's user skill root, for example `$CODEX_HOME/skills/<name>/SKILL.md`, which is not written by `activate-agents` or `sync:agent-skills`;
-- UI index cache: if the files are correct but the palette still shows old metadata, reload or restart the host.
-
-`self-check` is the routine health-check aggregate. It wraps `check`, classifies hard failures separately from advisory items, and runs strict `validate-harness` only when the target has an installed `harness:minimal` lock record unless `--validate-harness` is explicitly provided. A local daily 21:30 runner can call:
-
-```powershell
-npx @jasonwen/harness-hub self-check D:\path\to\target --json
-```
-
-Harness Hub does not create the schedule, webhook, commit, push, tool install, or target setup for that command.
-
-## What Is Included
-
-| Area | Included surface |
-|---|---|
-| Routing and lifecycle | `workflow-router`, owner workflow skills, SDD-first change flow, finish closeout, delivery closeout. |
-| Planning and implementation | `grill-me`, `grill-with-docs`, `product-capability`, `tdd-workflow`, `karpathy-guidelines`, `ponytail`, `verification-loop`. |
-| Diagnosis and review | `diagnosis-workflow`, `diagnose`, `review-workflow`, `compound-code-review`, `security-review`. |
-| Communication and handoff | `effective-interact`, `handoff`, `doc-coauthoring`, `internal-comms`, `documentation-lookup`. |
-| Context engineering | LLM Wiki schema, stable Markdown wiki, contradiction register, update log, portable Obsidian profile. |
-| Web and artifacts | `frontend-design`, `design-taste-frontend`, `webapp-testing`, `e2e-testing`, `web-artifacts-builder`, `frontend-slides`, `theme-factory`. |
-| Platform extension | `claude-api`, `mcp-builder`, `skill-creator`, source records, capability metadata. |
-| External tool advice | `check.externalTools` and `analyze --agent-readiness` signals for explicit CodeGraph and Headroom setup. |
-| Harness lifecycle | `check`, `self-check`, `analyze`, `init-harness`, `validate-harness`, `loop evaluate`, `loop schedule`, `loop required`, `loop verify`, loop orchestration state commands, `install`, `status`, `update`, `remove`, `harness-quality-check`. |
-| Source-post publishing | `source-post generate`, `source-post build`, `source-post validate`, `source-post publish`. |
-
-## Source Layout
-
-This is the Harness Hub source checkout layout, not the target initialization output. Target initialization never copies `.claude-plugin/`, root `openspec/`, `docs/`, `config/`, `package.json`, this repo's README files, or this repo's source tree into the target root; it writes only lock-managed `skills/<name>/` entries plus the explicit standard target harness files.
+Harness Hub has one target capability: full migration. The Git repository and selected commit are the only distribution/version source. There is no published package, component version, partial installer, update/remove lifecycle, compatibility layer, or second Loop runtime.
 
 ```text
-skills/
-  <skill-name>/
-    SKILL.md
-    references/   # optional
-    scripts/      # optional
-    assets/       # optional
-harness/
-  minimal/          # internal template for the standard target harness
-  website-cloner/  # explicit authorized website clone smoke scaffold
-.claude-plugin/
-  plugin.json
-  marketplace.json
+skill (optional atomic capability)
+  -> small loop (independently executable; may compose skills)
+  -> workflow (large loop; only orchestrates small loops)
 ```
 
-## Project Map
+## Migrate a repository
 
-| Path | Purpose |
-|---|---|
-| `README.md` / `README.zh-CN.md` | Human-facing entry and visual navigation. |
-| `AGENTS.md` / `CLAUDE.md` | Canonical agent-facing repo rules and Claude Code import entrypoint. |
-| `skills/` | Platform-neutral skill source of truth. |
-| `harness/` | Standard target harness template and explicit-only smoke scaffolds. |
-| `capabilities/index.json` | Skill and harness component metadata. |
-| `docs/development-workflow.md` | SDD+TDD workflow guide and state-file responsibilities. |
-| `docs/skill-routing.md` | Skill overlap and routing rules. |
-| `docs/personal-workflow-distribution.md` | Personal distribution policy. |
-| `docs/standard-target-boundary.md` | Single target/install boundary and source-intake rules. |
-| `docs/source-projects.md` | Upstream source and decision log. |
-| `src/harnessHub.ts` | CLI implementation. |
-| `config/artifact-policy.json` | Git/npm artifact inclusion policy. |
-
-Generated reports, worktree-local harness state, interaction artifacts, and local agent skill mirrors stay local: `reports/`, `.harness-hub/reports/`, `.harness-hub/state/`, `skills/effective-interact/artifacts/`, `.codex/`, and `.claude/` are ignored. `site/` is Git-only Pages output and is intentionally excluded from the npm package.
-
-`standard` target installs exclude Harness Hub source-maintenance resources. Keep repository-specific maintenance rules in this source checkout; target repositories receive the managed prompt/context/harness/loop resources and target-distributed reusable skills only.
-
-## Validation
+Clone this repository outside the target, then invoke the only public command:
 
 ```powershell
-bun run typecheck
-bun test ./tests
-bun run validate:artifact-policy
-bun run validate:skills
+git clone https://github.com/JasonxzWen/harness-hub.git C:\temp\harness-hub
+cd C:\temp\harness-hub
+node bin/harness-hub.mjs migrate C:\path\to\target --host codex --yes
+```
+
+Modes:
+
+```text
+--host claude
+--host codex
+--host both --primary claude
+--host both --primary codex
+```
+
+Use `--force` only to replace Harness Hub-managed generic resources. Every run also removes resources still owned by the previous manifest that no longer belong to the selected Host/full distribution. Target-owned skills, commands, project knowledge, evals, product files, and unrelated local information stay outside that ownership set.
+
+Both source and target must be clean Git worktrees with an existing `HEAD`, and distributed source bytes must match the `HEAD` tree. Migration never commits, pushes, publishes, merges, changes credentials, or modifies user/global configuration.
+
+## What full migration installs
+
+Shared:
+
+- `AGENTS.md`: generic development, iteration, Loop, preference, OKF, eval, authorization, and delivery rules;
+- `CLAUDE.md`: exactly `@AGENTS.md`;
+- `.harness-hub/.gitignore` and a versionless managed-file manifest;
+- first-time target-owned `knowledge/` generated from real target sources by the primary CLI.
+
+Claude Code:
+
+- `.claude/skills/<skill>/**`;
+- `.claude/settings.json` with repository-local hooks.
+
+Codex:
+
+- `.agents/skills/<skill>/**`;
+- `.codex/hooks.json` with repository-local hooks.
+
+Codex discovers repository skills from `.agents/skills/`. Project hooks run only when Codex trusts the target repository; migration never changes trust or user/global configuration.
+
+Canonical source-only files—Harness Hub's own `knowledge/`, source records, tests, docs, OpenSpec, and repository history—are never copied.
+
+## Executable Loops
+
+The single runtime is `skills/workflow-router/scripts/loop-runtime.mjs`. It directly invokes Claude Code or Codex, captures structured process evidence, enforces path leases and control-plane integrity, runs deterministic checks, and stores ignored run evidence under `.harness-hub/state/runs/`.
+
+Built-in small loops:
+
+- `requirements-loop`
+- `spec-loop`
+- `test-loop`
+- `implementation-review-loop`
+- `delivery-loop`
+- `report-loop`
+- `retro-loop`
+- `knowledge-init-loop`
+- `knowledge-maintain-loop`
+
+The internal `repository-migration-loop` makes the Host execute one exact private `copy-slice` command. The runtime accepts the slice only when its process trace, receipt, source commit, target HEAD, role, and distributed bytes agree.
+
+Workflow sequences are intentionally thin:
+
+| Workflow | Small loops |
+| --- | --- |
+| question | report |
+| SDD change | requirements -> spec -> test -> implementation review -> conditional knowledge maintenance -> delivery -> retro -> report |
+| diagnosis | requirements -> test -> implementation review -> conditional knowledge maintenance -> delivery -> retro -> report |
+| review | implementation review -> report |
+| delivery | delivery -> retro -> report |
+
+`report-loop` invokes `effective-interact` from lifecycle context for complex decisions and handoffs even when the user did not request a visualization. Simple reports may remain plain text.
+
+## Project knowledge
+
+First migration asks the primary CLI to inspect the target and create the smallest useful Google OKF v0.1 LLM Wiki:
+
+```text
+knowledge/
+  index.md
+  log.md
+  project.md (or other source-backed concepts)
+```
+
+Concepts require UTF-8 Markdown, parseable frontmatter with non-empty `type`, index links, dated updates, and relative citations to at least one real file from the pre-migration target `HEAD` outside Harness Hub-managed paths. Generated knowledge must not be ignored by Git. Later migration—including `--force`—validates and preserves the complete path-and-byte set. Daily changes belong to `knowledge-maintain-loop`, not migration.
+
+Harness Hub's own OKF wiki lives at root `knowledge/` and is source-only.
+
+## Failure and evaluation boundaries
+
+- Dirty source/target, missing `HEAD`, unmanaged collision, unsafe link, missing CLI trace, wrong role, incomplete output, deterministic failure, or path escape fails closed.
+- Producer failure and Verifier rejection iterate within the Loop's bound; max iterations produce an explicit failed handoff.
+- Real user questions pause and resume the same Loop. Agent output cannot fabricate user acceptance.
+- Failure restores the target transaction boundary; unrelated target data is not a migration resource.
+- Each target repository keeps its own real-task cards, session audits, and eval results. Harness Hub stores no project-specific cases.
+
+Primary metric: real-task first-attempt success rate. Guardrails: human intervention count and total execution cost.
+
+## Source development
+
+```powershell
+bun install --frozen-lockfile
+bun run sync:agent-skills
 bun run validate
-git diff --check
 ```
 
-Release validation:
-
-```powershell
-bun run validate:release
-```
+Project-local `.agents/skills/` and `.claude/skills/` are ignored dogfood mirrors. Canonical skills live only under `skills/<name>/` and every canonical skill is explicitly `target-distributed` in `capabilities/index.json`.

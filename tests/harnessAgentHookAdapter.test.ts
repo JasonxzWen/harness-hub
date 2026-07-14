@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const adapterScript = path.resolve('scripts/harness-agent-hook-adapter.mjs');
+const adapterScript = path.resolve('skills/workflow-router/scripts/harness-agent-hook.mjs');
 
 function makeTempRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'harness-agent-hook-'));
@@ -143,6 +143,54 @@ test('hook adapter keeps read-only text searches silent under enforce', () => {
 
   expect(result.status).toBe(0);
   expect(result.stdout.trim()).toBe('');
+  expect(result.json).toBeNull();
+});
+
+test('user-prompt hook injects the executable Workflow lifecycle into Codex without keyword-dependent helpers', () => {
+  const root = makeTempRoot();
+  const result = runHook(root, ['--host', 'codex', '--event', 'UserPromptSubmit'], {
+    hook_event_name: 'UserPromptSubmit',
+    session_id: 'synthetic-session',
+    turn_id: 'synthetic-turn',
+    prompt: 'Implement a repository CLI change with tests.',
+  });
+
+  expect(result.status).toBe(0);
+  expect(result.json?.hookSpecificOutput.hookEventName).toBe('UserPromptSubmit');
+  const context = result.json?.hookSpecificOutput.additionalContext ?? '';
+  expect(context).toContain('Router selected exactly one owner: sdd-workflow');
+  expect(context).toContain('.agents/skills/workflow-router/scripts/loop-runtime.mjs workflow');
+  expect(context).toContain('--workflow sdd-workflow');
+  expect(context).toContain('--host codex');
+  expect(context).toContain('Router output alone is not execution');
+  expect(context).not.toContain('effective-interact');
+});
+
+test('user-prompt hook uses the Claude repository skill root for the same executable lifecycle', () => {
+  const root = makeTempRoot();
+  const result = runHook(root, ['--host', 'claude', '--event', 'UserPromptSubmit'], {
+    hook_event_name: 'UserPromptSubmit',
+    session_id: 'synthetic-session',
+    prompt: 'Review this implementation for correctness and maintainability.',
+  });
+
+  expect(result.status).toBe(0);
+  const context = result.json?.hookSpecificOutput.additionalContext ?? '';
+  expect(context).toContain('Router selected exactly one owner: review-workflow');
+  expect(context).toContain('.claude/skills/workflow-router/scripts/loop-runtime.mjs workflow');
+  expect(context).toContain('--host claude');
+});
+
+test('user-prompt hook stays silent when Router selects no non-trivial Workflow owner', () => {
+  const root = makeTempRoot();
+  const result = runHook(root, ['--host', 'codex', '--event', 'UserPromptSubmit'], {
+    hook_event_name: 'UserPromptSubmit',
+    session_id: 'synthetic-session',
+    turn_id: 'synthetic-turn',
+    prompt: '谢谢',
+  });
+
+  expect(result.status).toBe(0);
   expect(result.json).toBeNull();
 });
 

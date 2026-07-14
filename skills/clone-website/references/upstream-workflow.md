@@ -20,6 +20,6 @@ Skill Hub keeps this as an explicit side-effect-heavy skill:
 - no default multi-site or parallel builder dispatch;
 - no host-specific platform metadata copied into the distributed skill body;
 - no copying of third-party identity assets by default;
-- local `harness/website-cloner` provides a lightweight smoke scaffold for browser-verifiable artifacts.
+- `assets/website-cloner` provides a lightweight smoke scaffold for browser-verifiable artifacts.
 
 Use the upstream repository directly when the user wants the full Next.js 16 template and has a Node 24+ environment.

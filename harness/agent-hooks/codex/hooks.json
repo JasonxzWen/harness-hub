@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "harness-agent-hook --host codex --event SessionStart",
-            "statusMessage": "Running Harness Hub session gate",
+            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event SessionStart",
+            "statusMessage": "Running project agent session gate",
             "timeout": 30
           }
         ]
@@ -18,8 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "harness-agent-hook --host codex --event UserPromptSubmit",
-            "statusMessage": "Routing prompt through Harness Hub",
+            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event UserPromptSubmit",
+            "statusMessage": "Routing prompt through project workflow",
             "timeout": 30
           }
         ]
@@ -31,8 +31,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "harness-agent-hook --host codex --event PreToolUse",
-            "statusMessage": "Checking Harness Hub tool policy",
+            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event PreToolUse",
+            "statusMessage": "Checking project agent tool policy",
             "timeout": 30
           }
         ]
@@ -44,8 +44,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "harness-agent-hook --host codex --event PostToolUse",
-            "statusMessage": "Recording Harness Hub tool signal",
+            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event PostToolUse",
+            "statusMessage": "Recording project agent tool signal",
             "timeout": 30
           }
         ]
@@ -56,8 +56,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "harness-agent-hook --host codex --event Stop",
-            "statusMessage": "Checking Harness Hub closeout evidence",
+            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event Stop",
+            "statusMessage": "Checking project closeout evidence",
             "timeout": 30
           }
         ]

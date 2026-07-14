@@ -78,7 +78,7 @@
         },
         "source": {
           "label": "Fixture acceptance matrix",
-          "url": "https://harness-hub.local/fixtures/chart-accessibility-stress-report.json",
+          "url": "https://agent-workflow.local/fixtures/chart-accessibility-stress-report.json",
           "accessedAt": "2026-05-18"
         },
         "altText": "Bar chart showing deterministic checks for intent, claims, charts, and trust boundaries.",

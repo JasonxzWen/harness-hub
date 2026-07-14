@@ -1,5 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { expect, test } from 'bun:test';
 
 const skillDir = 'skills/source-post';
@@ -32,24 +34,43 @@ test('source-post checklist catches overbuilt report-shaped posts', () => {
   expect(checklist).toContain('60-second reader test passes');
 });
 
-test('source-post capability records reader-first recommendation', () => {
+test('source-post is explicitly target-distributed', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
     components: Record<string, {
-      version?: string;
-      recommendation?: string;
+      kind?: string;
+      path?: string;
+      distribution?: string;
     }>;
   };
   const component = index.components['skill:source-post'];
 
-  expect(component.version).toBe('0.1.1');
-  expect(component.recommendation).toContain('reader-first article flow');
-  expect(component.recommendation).toContain('source ledgers');
+  expect(component).toEqual({
+    kind: 'skill',
+    path: 'skills/source-post',
+    distribution: 'target-distributed',
+  });
 });
 
 test('source-post validator accepts reader-first generated source-post shape', () => {
+  const postDir = fs.mkdtempSync(path.join(os.tmpdir(), 'source-post-validator-'));
+  fs.writeFileSync(path.join(postDir, 'index.html'), [
+    '<!doctype html><html><head><meta charset="utf-8"></head><body>',
+    '<h1>60-second reading conclusion</h1>',
+    '<h2>source structure</h2><p>A source-backed taxonomy.</p>',
+    '<h2>local iteration</h2><p>The project iteration is explicit.</p>',
+    '<h2>Reflection</h2><p>What was effective, redundant, and the next optimization.</p>',
+    '</body></html>',
+  ].join('\n'));
+  fs.writeFileSync(path.join(postDir, 'post.json'), JSON.stringify({
+    sources: [{ id: 'source-1', url: 'https://example.com/source', excerpt: 'Short attributed excerpt.' }],
+  }, null, 2));
+  fs.writeFileSync(path.join(postDir, 'source-ledger.json'), JSON.stringify({
+    sources: [{ id: 'source-1', url: 'https://example.com/source', excerpt: 'Short attributed excerpt.' }],
+  }, null, 2));
+
   const result = spawnSync(process.execPath, [
     `${skillDir}/scripts/validate-source-post.mjs`,
-    'site/source-posts/posts/2026-06-01-ai-coding-dictionary-harness-vocabulary',
+    postDir,
     '--json',
   ], {
     cwd: process.cwd(),
@@ -57,7 +78,7 @@ test('source-post validator accepts reader-first generated source-post shape', (
     shell: false,
   });
 
-  expect(result.status, result.stderr).toBe(0);
+  expect(result.status, result.stderr || result.stdout).toBe(0);
   const output = JSON.parse(result.stdout) as {
     checks: Array<{ code: string; state: string }>;
     reason: string;

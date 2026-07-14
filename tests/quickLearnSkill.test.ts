@@ -466,10 +466,7 @@ test('quick-learn logger avoids fixed fallback slugs', () => {
 
 test('quick-learn replaces the retired learning coach in the standard install surface', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    components: Record<
-      string,
-      { kind: string; path: string; source: string; version: string; provides?: string[] } | undefined
-    >;
+    components: Record<string, { kind: string; path: string; distribution: string } | undefined>;
   };
   const component = index.components['skill:quick-learn'];
   const retiredSkill = ['skill', ['feynman', 'learning', 'coach'].join('-')].join(':');
@@ -477,10 +474,5 @@ test('quick-learn replaces the retired learning coach in the standard install su
   expect(index.components[retiredSkill]).toBeUndefined();
   expect(component?.kind).toBe('skill');
   expect(component?.path).toBe('skills/quick-learn');
-  expect(component?.source).toBe('local-original');
-  expect(component?.version).toBe('0.2.0');
-  expect(component?.provides).toContain('source-backed-learning-projects');
-  expect(component?.provides).toContain('stage-reviewed-learning-flow');
-  expect(component?.provides).toContain('beginner-calibrated-teaching');
-  expect(component?.provides).toContain('teaching-review-state-separation');
+  expect(component?.distribution).toBe('target-distributed');
 });

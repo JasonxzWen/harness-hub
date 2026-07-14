@@ -7,7 +7,7 @@ const REPO_ROOT = path.resolve(path.dirname(SCRIPT_PATH), '..');
 const MARKER_FILE = '.harness-hub-managed';
 const PRESERVED_LOCAL_DIRS = new Set(['artifacts']);
 const DEFAULT_HOSTS = [
-  { id: 'codex', skillsRoot: path.join('.codex', 'skills') },
+  { id: 'codex', skillsRoot: path.join('.agents', 'skills') },
   { id: 'claude', skillsRoot: path.join('.claude', 'skills') },
 ];
 

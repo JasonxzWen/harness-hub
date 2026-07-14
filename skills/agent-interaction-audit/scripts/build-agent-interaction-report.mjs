@@ -494,7 +494,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (environmentBlockers.length > 0) {
     recs.push({
       title: 'Treat environment readiness as a first-class audit category',
-      owner: 'diagnosis-workflow or hub-maintenance-workflow',
+      owner: 'diagnosis-workflow',
       evidence: environmentBlockers.slice(0, 3).map((event) => event.id),
     });
   }
@@ -510,7 +510,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (guidanceDrift.length > 0) {
     recs.push({
       title: 'Review stale or misleading project guidance before the next agent session',
-      owner: 'hub-maintenance-workflow or the target repo workflow',
+      owner: 'sdd-workflow',
       evidence: guidanceDrift.map((event) => event.id),
     });
   }
@@ -518,7 +518,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (repeatedMistakes.length > 0) {
     recs.push({
       title: 'Convert repeated agent mistakes into a guardrail, eval case, or SOP note',
-      owner: 'agent-interaction-retro or hub-maintenance-workflow',
+      owner: 'retro-loop',
       evidence: repeatedMistakes.map((event) => event.id),
     });
   }
@@ -526,7 +526,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (sopLessons.length > 0) {
     recs.push({
       title: 'Extract durable tool and script SOP from repeated command evidence',
-      owner: 'delivery-workflow or hub-maintenance-workflow',
+      owner: 'delivery-workflow',
       evidence: sopLessons.map((event) => event.id),
     });
   }
@@ -534,7 +534,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (knowledgeCache.length > 0) {
     recs.push({
       title: 'Promote repeatedly rediscovered project facts into the project knowledge cache',
-      owner: 'quick-learn or the target repo workflow',
+      owner: 'knowledge-maintain-loop',
       evidence: knowledgeCache.map((event) => event.id),
     });
   }

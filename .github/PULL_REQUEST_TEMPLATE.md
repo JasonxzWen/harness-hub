@@ -2,26 +2,25 @@
 
 - Describe the change and why it matters.
 
-## Release impact
+## Behavior and boundaries
 
-Select exactly one category and explain the choice.
+- User-visible behavior:
+- Managed paths:
+- Protected project-owned paths:
+- Remote actions requested or performed: none
 
-- [ ] `none` - no install/runtime/package-visible release impact
-- [ ] `patch` - bug fix, shipped-doc update, validation tightening, or non-breaking behavior improvement
-- [ ] `minor` - new non-breaking command, skill, capability, template, or supported workflow
-- [ ] `major` - breaking behavior, removed support, migration requirement, or managed-file ownership change
-- [ ] `prerelease` - needs install testing before `latest`
+## Risk and rollback
 
-Rationale:
+- Failure mode:
+- Rollback evidence:
+- Residual risk:
 
--
+## Migration boundary
 
-## Release readiness
-
-- [ ] `CHANGELOG.md` updated under `Unreleased`, or not required because:
-- [ ] `package.json` version bump is included only because this PR is a release PR, or deferred until release preparation.
-- [ ] This PR does not publish npm `latest`.
-- [ ] If `prerelease` is selected, the intended artifact/dist-tag path is documented.
+- [ ] The repository remains the only distribution and version source.
+- [ ] Only the full `migrate` entry point is public.
+- [ ] Project-owned knowledge, evals, product files, and task state remain byte-for-byte protected.
+- [ ] Claude Code, Codex, or `both` behavior was validated when affected.
 
 ## Validation
 
@@ -35,8 +34,8 @@ Skipped checks or residual risk:
 
 -
 
-## Reviewer release decision
+## Reviewer decision
 
-- [ ] Release impact category is correct.
-- [ ] Required changelog/version work is present or intentionally deferred.
-- [ ] No PR-time publish, tag, merge, or credential mutation is introduced.
+- [ ] Behavior matches the executable Loop and migration contracts.
+- [ ] Deterministic failures cannot be overruled by Agent judgment.
+- [ ] No unauthorized commit, push, PR, merge, credential, or publishing action is introduced.

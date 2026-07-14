@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 const syncScript = path.resolve('scripts/sync-agent-skills.mjs');
-const hostRoots = ['.codex', '.claude'];
+const hostRoots = ['.agents', '.claude'];
 
 function makeTempRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-skills-'));
@@ -31,7 +31,7 @@ test('agent skill sync mirrors standard skills to Codex and Claude while preserv
   const result = spawnSync('node', [syncScript, '--root', root], { encoding: 'utf8' });
 
   expect(result.status).toBe(0);
-  expect(result.stdout).toContain('Synced 1 skills into .codex/skills/');
+  expect(result.stdout).toContain('Synced 1 skills into .agents/skills/');
   expect(result.stdout).toContain('Synced 1 skills into .claude/skills/');
   expect(result.stdout).toContain('Removed 1 stale skill directories from codex.');
   expect(result.stdout).toContain('Removed 1 stale skill directories from claude.');
@@ -43,6 +43,7 @@ test('agent skill sync mirrors standard skills to Codex and Claude while preserv
     expect(fs.existsSync(path.join(root, hostRoot, 'skills', 'alpha', 'artifacts', 'local.html'))).toBe(true);
     expect(fs.existsSync(path.join(root, hostRoot, 'skills', 'stale', 'SKILL.md'))).toBe(false);
   }
+  expect(fs.existsSync(path.join(root, '.codex', 'skills'))).toBe(false);
 });
 
 test('agent skill sync overwrites same-name generated skill directories', () => {
@@ -71,26 +72,19 @@ test('agent skill sync can target one host for troubleshooting', () => {
   const result = spawnSync('node', [syncScript, '--root', root, '--host', 'claude'], { encoding: 'utf8' });
 
   expect(result.status).toBe(0);
-  expect(result.stdout).not.toContain('.codex/skills/');
+  expect(result.stdout).not.toContain('.agents/skills/');
   expect(result.stdout).toContain('Synced 1 skills into .claude/skills/');
   expect(result.stdout).toContain('project-local host mirrors only');
-  expect(fs.existsSync(path.join(root, '.codex'))).toBe(false);
+  expect(fs.existsSync(path.join(root, '.agents'))).toBe(false);
   expect(fs.existsSync(path.join(root, '.claude', 'skills', 'alpha', 'SKILL.md'))).toBe(true);
 });
 
 test('agent skill sync output stays ignored local state', () => {
   const gitignore = fs.readFileSync('.gitignore', 'utf8');
-  const policy = JSON.parse(fs.readFileSync('config/artifact-policy.json', 'utf8')) as {
-    categories: { ignoredLocal: string[] };
-    git: { ignored: string[] };
-    npm: { forbidden: string[] };
-  };
 
+  expect(gitignore).toContain('.agents/skills/');
   for (const hostRoot of hostRoots) {
     expect(gitignore).toContain(`${hostRoot}/`);
-    expect(policy.categories.ignoredLocal).toContain(`${hostRoot}/`);
-    expect(policy.git.ignored).toContain(`${hostRoot}/`);
-    expect(policy.npm.forbidden).toContain(`${hostRoot}/`);
   }
 });
 
@@ -102,8 +96,7 @@ test('agent rules use AGENTS.md as the Codex and Claude Code source', () => {
   const oldPrimaryLabel = ['直', '接', '执', '行'].join('');
   const oldChallengeLabel = ['深', '度', '交', '互'].join('');
 
-  expect(claude).toContain('@AGENTS.md');
-  expect(claude).toContain('Claude Code');
+  expect(claude).toBe('@AGENTS.md\n');
   expect(agents).toContain('## Communication Style');
   expect(agents).toContain('## Modern Agent Operating Model');
   expect(agents).toContain('## Subagent Auto-Arbiter');
@@ -112,13 +105,10 @@ test('agent rules use AGENTS.md as the Codex and Claude Code source', () => {
   expect(agents).not.toContain(oldChallengeLabel);
 });
 
-test('agent skill sync command is packaged and old worktree bootstrap commands are removed', () => {
+test('agent skill sync remains repository-local and old worktree bootstrap commands are removed', () => {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8')) as {
-    files: string[];
     scripts: Record<string, string>;
   };
-  const lifecycleDesign = fs.readFileSync('docs/cli-lifecycle-design.md', 'utf8');
-  const capabilityMap = fs.readFileSync('docs/capability-map.md', 'utf8');
 
   expect(packageJson.scripts['sync:agent-skills']).toBe('node ./scripts/sync-agent-skills.mjs');
   expect(packageJson.scripts['sync:agent-skills:dry-run']).toBe('node ./scripts/sync-agent-skills.mjs --dry-run');
@@ -126,23 +116,8 @@ test('agent skill sync command is packaged and old worktree bootstrap commands a
   expect(packageJson.scripts['codex:worktree-setup']).toBeUndefined();
   expect(packageJson.scripts['codex:worktree-check']).toBeUndefined();
   expect(packageJson.scripts['codex:worktree-hook:install']).toBeUndefined();
-  expect(packageJson.files).toContain('scripts/sync-agent-skills.mjs');
-  expect(packageJson.files).not.toContain('scripts/sync-codex-skills.mjs');
-  expect(packageJson.files).not.toContain('scripts/setup-codex-worktree.mjs');
-  expect(packageJson.files).not.toContain('scripts/check-codex-worktree.mjs');
-  expect(packageJson.files).not.toContain('scripts/install-codex-worktree-hook.mjs');
-  expect(lifecycleDesign).toContain('scripts/sync-agent-skills.mjs');
-  expect(lifecycleDesign).toContain('.codex/skills/');
-  expect(lifecycleDesign).toContain('.claude/skills/');
-  expect(lifecycleDesign).toContain('Skill visibility has three separate layers');
-  expect(lifecycleDesign).toContain('$CODEX_HOME/skills/<name>/SKILL.md');
-  expect(lifecycleDesign).not.toContain('setup-codex-worktree');
-  expect(lifecycleDesign).not.toContain('check-codex-worktree');
-  expect(lifecycleDesign).not.toContain('install-codex-worktree-hook');
-  expect(capabilityMap).toContain('scripts/sync-agent-skills.mjs');
-  expect(capabilityMap).toContain('`.codex/` and `.claude/` stay local');
-  expect(capabilityMap).toContain('Direct user-level slash invocation is a separate host-owned surface');
-  expect(capabilityMap).not.toContain('setup-codex-worktree');
-  expect(capabilityMap).not.toContain('check-codex-worktree');
-  expect(capabilityMap).not.toContain('install-codex-worktree-hook');
+  expect(fs.existsSync('scripts/sync-codex-skills.mjs')).toBe(false);
+  expect(fs.existsSync('scripts/setup-codex-worktree.mjs')).toBe(false);
+  expect(fs.existsSync('scripts/check-codex-worktree.mjs')).toBe(false);
+  expect(fs.existsSync('scripts/install-codex-worktree-hook.mjs')).toBe(false);
 });

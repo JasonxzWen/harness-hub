@@ -1,51 +1,42 @@
 ---
 name: workflow-router
-description: Load when a non-trivial request needs intent recognition before work starts; classify it into exactly one workflow owner, or ask a clarification; do not load for explicit owner-skill invocations, trivial chat, or execution steps already routed.
+description: "Load when handling any non-trivial request to select exactly one executable owner workflow and run its small-loop sequence; do not use it as an advisory-only classifier or duplicate Loop implementation inside a workflow."
+argument-hint: "<request>"
+user-invocable: true
 ---
 
 # Workflow Router
 
-Classify the user's request into exactly one workflow owner before substantive work starts.
+Route a request into exactly one owner:
 
-This skill owns intent recognition and handoff only. It does not implement, test, review, deliver work, or replace the selected owner.
-
-## Owners
-
-| State | Owner |
-|---|---|
+| State | Owner workflow |
+| --- | --- |
 | question | `answer-workflow` |
-| sdd-change | `sdd-workflow` |
+| change | `sdd-workflow` |
 | diagnosis | `diagnosis-workflow` |
 | review | `review-workflow` |
 | delivery | `delivery-workflow` |
-| harness-hub-maintenance | `hub-maintenance-workflow` |
 
-## Workflow
+The Router is executable. Its classification must be consumed by `scripts/loop-runtime.mjs route`; returning an owner name without starting the workflow is incomplete.
 
-1. For a concrete request, run or mirror `scripts/workflow-check.mjs --prompt "<user request>" --json` before substantive work when a terminal is available.
-2. Use `scripts/route-intent.mjs --prompt "<user request>" --json` when only classification is needed.
-3. Use `scripts/skill-activation-check.mjs --prompt "<user request>" --json` for one helper skill trigger audit, or `scripts/skill-activation-check.mjs --cases-file "<cases.json>" --json` for a prompt matrix, positive and boundary helper coverage report, and excluded owner summary from installed `SKILL.md` metadata.
-4. Use `scripts/owner-contract-check.mjs --state "<state>" --json` only when auditing whether the installed owner `SKILL.md` still contains required sections, ordered gates, and boundary phrases.
-5. Use `scripts/helper-contract-check.mjs --json` only when auditing whether high-risk helper skills still carry explicit side-effect boundaries.
-6. Read `references/intent-taxonomy.md` when the state is still not obvious.
-7. Select exactly one owner, or ask one concise clarification.
-8. Use `references/state-handoff.md` to hand off:
-   - selected state
-   - confidence
-   - reason
-   - owner
-   - next gate
-   - allowed helper skills
-   - whether `effective-interact` is required
-9. If subagents or hooks are relevant, point the owner to `references/orchestration-policy.md`.
-10. Stop. The selected owner drives the work.
+## Execution model
 
-## Guardrails
+```text
+skill -> small loop -> workflow
+```
 
-- If the user explicitly names an owner skill, do not re-route unless the request conflicts with that owner.
-- If the request is trivial chat, no owner is needed.
-- If the request is ambiguous between mutation and review/question, ask or choose the safer non-mutating state.
-- The router classifier, workflow check, skill activation check, owner contract check, and helper contract check are side-effect free. They never edit files, dispatch subagents, call tools, or start implementation.
-- `effective-interact` is a reporting layer, not a workflow owner.
-- Atomic skills such as `doc-coauthoring`, `internal-comms`, `claude-api`, `mcp-builder`, `skill-creator`, `design-taste-frontend`, `theme-factory`, and `slack-gif-creator` are helper skills. Include them in the handoff only when they match the selected owner's task.
-- Hooks and subagents stay under `references/orchestration-policy.md`; the router never dispatches them.
+- Skills are optional atomic capabilities.
+- A small loop is independently executable and owns Producer, Verifier, optional Arbiter, deterministic gates, bounded iteration, pause/resume, authorization, and compact handoff.
+- A workflow only sequences small loops and handles branches. It never copies a Loop's prompt, validation, or retry implementation.
+- CLI/delegated Agents are executor modes. The main Agent retains final decisions and reporting.
+
+Run `scripts/loop-runtime.mjs contracts --json` to inspect the canonical Loop contracts. Use `run`, `workflow`, or `route` for direct Loop execution, explicit Workflow execution, or Router-to-Workflow execution.
+
+Read:
+
+- `references/intent-taxonomy.md` for owner boundaries;
+- `references/agentic-loops.md` for the executable contract and evidence model;
+- `references/orchestration-policy.md` for Workflow composition;
+- `references/state-handoff.md` for compact handoff rules.
+
+`effective-interact` remains an atomic presentation skill. `report-loop` invokes it from lifecycle context for complex decisions and handoffs even when the user's prompt contains no visualization keyword.

@@ -41,25 +41,18 @@ test('design-taste-frontend keeps long upstream taste rules in references', () =
   expect(redesign).toContain('Final Pre-Flight');
 });
 
-test('design-taste-frontend is installable with frontend boundary metadata', () => {
+test('design-taste-frontend is target-distributed with source coverage', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    components: Record<string, { path: string; source?: string; overlapsWith?: string[]; routing?: string }>;
+    components: Record<string, { kind: string; path: string; distribution: string }>;
   };
-  const routingDocs = fs.readFileSync('docs/skill-routing.md', 'utf8');
   const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
-  const sourceInventory = fs.readFileSync('docs/source-skill-inventory.md', 'utf8');
   const component = index.components['skill:design-taste-frontend'];
 
+  expect(component.kind).toBe('skill');
   expect(component.path).toBe('skills/design-taste-frontend');
-  expect(component.source).toBe('Leonxlnx/taste-skill');
-  expect(component.overlapsWith).toEqual(expect.arrayContaining([
-    'skill:frontend-design',
-    'skill:frontend-patterns',
-    'skill:effective-interact',
-  ]));
-  expect(component.routing).toContain('landing pages');
-  expect(component.routing).toContain('do not use for dashboards');
-  expect(routingDocs).toContain('`design-taste-frontend` loads for anti-template visual direction');
+  expect(component.distribution).toBe('target-distributed');
+  expect(sourceProjects).toContain('`Leonxlnx/taste-skill`');
+  expect(sourceProjects).toContain('`3c7017d636c3a4aad378433ea6d0cfa6c921da4a`');
+  expect(sourceProjects).toContain('| MIT |');
   expect(sourceProjects).toContain('Installed a narrow `design-taste-frontend` standard skill');
-  expect(sourceInventory).toContain('Installed as `design-taste-frontend`');
 });

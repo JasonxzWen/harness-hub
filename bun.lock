@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "harness-hub",
+      "name": "harness-hub-repository",
       "devDependencies": {
         "@types/bun": "^1.3.3",
         "@types/node": "^24.10.1",

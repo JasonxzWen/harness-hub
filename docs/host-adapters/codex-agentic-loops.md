@@ -1,30 +1,17 @@
-# Codex Agentic Loops
+---
+type: architecture
+title: Codex Loop adapter
+---
+# Codex Loop adapter
 
-This adapter maps the host-neutral agentic loop catalog to Codex.
+The runtime launches Codex non-interactively with `--ask-for-approval never`, `exec`, `--ephemeral --ignore-user-config --ignore-rules --disable hooks --json`, and structured output. This removes interactive approval waits and user/project exec-policy variation without bypassing the sandbox: a write Producer uses `workspace-write`, while Verifier and Arbiter use `read-only`. On Windows, a write Producer also sets the session-local `windows.sandbox=unelevated` backend because `--ignore-user-config` intentionally removes the user's backend setting. The repository-migration Loop must execute one exact internal `copy-slice` command, and the runtime rejects a missing command, an altered command, or any extra tool activity. The runtime still checks the narrower declared paths after execution and blocks any path or Git control-plane violation. Direct process trace, output schema, exit status, usage, and boundary evidence are recorded under the Loop run.
 
-## Mapping
+Migration copy plans and runners are execution-only. The closed run retains the receipt and directly captured evidence, without persisting source-checkout paths in those temporary inputs.
 
-- `delegated-agent`: Codex subagent when the user explicitly asks for subagents or the accepted executable plan names a delegated-agent verification or arbitration pass.
-- `verifier`: read-only `explorer` subagent, deterministic command, browser verification, or CI evidence.
-- `arbiter`: read-only subagent with the original task, acceptance criteria, current diff or artifact summary, and verifier evidence.
-- `main-agent decision`: the parent Codex agent. It owns synthesis, edits, user-facing conclusions, and whether to continue.
+The adapter never uses Codex's approval-and-sandbox bypass. Remote actions remain unavailable unless a separately authorized main-Agent delivery path performs them.
 
-## Recommended Patterns
+Codex is an executor mode. It does not own Workflow decisions, user acceptance, or final reporting.
 
-- Use read-only subagents for independent source review, frontend acceptance evidence, PR risk review, and final closeout arbitration.
-- Use `worker` only when a plan names a disjoint write scope, a path lease has been checked, and the subagent is told it is not alone in the codebase.
-- Keep critical-path blockers local when the next action cannot proceed without the result.
-- Close completed subagents after their result is integrated.
+## Sources
 
-## Prohibited Patterns
-
-- Do not make hooks auto-spawn subagents.
-- Do not let a subagent make final product, safety, release, or merge decisions.
-- Do not ask overlapping workers to write the same files.
-- Do not treat a subagent verdict as stronger than deterministic failing tests.
-
-## Evidence
-
-Record Codex loop runtime evidence under `.harness-hub/state/runs/<runId>/`: subagent id, role, read-only flag, owned paths, trace path, verifier evidence, arbiter verdict, and result. The main agent then summarizes accepted evidence in `.harness-hub/state/progress.md` and `.harness-hub/state/session-handoff.md` under `Agentic Loop Records`.
-
-Codex trace collection can use `.codex/session_index.jsonl` and `.codex/sessions/**/*.jsonl`. A valid subagent trace should show `thread_source:"subagent"` or a matching subagent source, the agent id, parent thread id, role or nickname when available, and a `task_complete` event or equivalent final message.
+- [Runtime adapter](../../skills/workflow-router/scripts/loop-runtime.mjs)

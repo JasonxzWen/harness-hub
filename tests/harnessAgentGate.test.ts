@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const gateScript = path.resolve('scripts/harness-agent-gate.mjs');
+const gateScript = path.resolve('skills/workflow-router/scripts/harness-agent-gate.mjs');
 
 function makeTempRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'harness-agent-gate-'));
@@ -47,7 +47,7 @@ test('user-prompt gate routes prompts without writing host or harness runtime st
   expect(result.json.mutates).toBe(false);
   expect(result.json.dispatchesDelegatedAgents).toBe(false);
   expect(result.json.route.state).toBe('sdd-change');
-  expect(result.json.advisory.blocking).toBe(false);
+  expect(result.json.blocking).toBe(false);
   expect(snapshotLocalHarnessArtifacts(root)).toEqual(before);
 });
 

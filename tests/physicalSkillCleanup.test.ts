@@ -20,7 +20,7 @@ function skillComponentDirs(): string[] {
 function localSkillDirs(): string[] {
   return fs
     .readdirSync('skills', { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
+    .filter((entry) => entry.isDirectory() && fs.existsSync(path.join('skills', entry.name, 'SKILL.md')))
     .map((entry) => entry.name)
     .sort();
 }
@@ -29,44 +29,42 @@ test('active skill root contains only installable skill components', () => {
   expect(localSkillDirs()).toEqual(skillComponentDirs());
 });
 
-test('source records keep external repo lineage after physical cleanup', () => {
+test('source records keep only current lineage and stay source-repository scoped', () => {
   const sourceProjects = read('docs/source-projects.md');
-  const sourceDossier = read('docs/workflow-source-dossier.md');
 
   for (const phrase of [
+    'type: records',
+    'okf_version: "0.1"',
     'mattpocock/skills',
-    'obra/superpowers',
-    'affaan-m/everything-claude-code',
-    'vercel-labs/skills',
-    'vercel-labs/agent-skills',
-    'open-spec/openspec',
+    'multica-ai/andrej-karpathy-skills',
+    'DietrichGebert/ponytail',
+    'Leonxlnx/taste-skill',
+    'JCodesMore/ai-website-cloner-template',
+    'ThariqS/html-effectiveness',
+    'full migration does not copy this file',
+    'Target-project knowledge, task cards, sessions, eval cases, and product facts never belong',
   ]) {
     expect(sourceProjects).toContain(phrase);
   }
 
-  for (const phrase of [
-    'Matt Pocock skills',
-    'Superpowers',
-    'Everything Claude Code',
-    'OpenSpec',
-    'Effective Interact',
-  ]) {
-    expect(sourceDossier).toContain(phrase);
-  }
+  expect(sourceProjects).not.toContain('.harness-hub/context');
+  expect(sourceProjects).not.toContain('harness/website-cloner');
+  expect(sourceProjects).not.toContain('harness-quality-check');
+  expect(fs.existsSync('docs/source-skill-inventory.md')).toBe(false);
 });
 
 test('removed helper skills are not used as active maintenance routes', () => {
   const agents = read('AGENTS.md');
   const routing = read('docs/skill-routing.md');
-  const hubSkill = read('skills/hub-maintenance-workflow/SKILL.md');
   const capabilityIndex = read('capabilities/index.json');
 
   expect(agents).not.toContain('Use `skill-evaluator`');
   expect(routing).not.toContain('Use `update-harness-hub`');
-  expect(hubSkill).not.toContain('`update-harness-hub` for this repository');
   expect(capabilityIndex).not.toContain('"skill:update-harness-hub"');
   expect(capabilityIndex).not.toContain('"skill:skill-evaluator"');
   expect(capabilityIndex).not.toContain('"skill:agent-sort"');
+  expect(capabilityIndex).not.toContain('"skill:hub-maintenance-workflow"');
+  expect(capabilityIndex).not.toContain('"skill:harness-quality-check"');
 });
 
 test('active skill bodies do not recommend physically removed helper skills', () => {

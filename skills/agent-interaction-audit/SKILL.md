@@ -1,6 +1,6 @@
 ---
 name: agent-interaction-audit
-description: "Load when the user asks for private agent interaction audits, private repository interaction audits from local agent traces, cross-session Codex/Claude Code trace analysis, agent task profiles, tool-call decisions, collaboration bottlenecks, prompt/rule or automation-log audits, closeout retrospectives, agent-interaction-retro evidence, or SOP/knowledge/eval/workflow-change queues; legacy insight requires agent/session/trace context."
+description: "Load when the user asks for private agent interaction audits from local Codex/Claude Code traces, task profiles, tool-call decisions, collaboration bottlenecks, prompt/rule or automation-log audits, closeout retrospectives, or evidence-backed SOP/knowledge/eval/workflow improvements."
 license: MIT
 metadata:
   source: "local-original"
@@ -8,7 +8,7 @@ metadata:
 
 # Agent Interaction Audit
 
-Use this skill to audit recent human-agent collaboration for a repository across Codex and Claude Code traces, automation logs, and layered prompt/rule context. Legacy references to `insight` map here only when the request is clearly about agent sessions, traces, audits, retrospectives, recommendations, or bottlenecks.
+Use this skill to audit recent human-agent collaboration for a repository across Codex and Claude Code traces, automation logs, and layered prompt/rule context.
 
 The goal is not a status summary. The goal is a private, evidence-backed interaction audit: what the user has been asking for, how agent work has actually progressed, where the collaboration is getting stuck, whether tool-call decisions were reasonable, which prompt or project rules are stale or misleading, which scripts and tool SOPs should be preserved, which repeated agent mistakes should become guardrails, which project facts are repeatedly rediscovered from scratch, and which few changes would improve the next iterations.
 
@@ -33,7 +33,7 @@ Current executable capabilities:
 - Read current-repo local evidence broadly. Sensitive local evidence may be used in the private report, but default collection must not cross into unrelated sessions or automations just because their text mentions this repository.
 - Write report output to an ignored or outside-repo local path by default. Do not publish, push, post, or place raw evidence in tracked docs unless the user explicitly asks.
 - Support Codex and Claude Code in v1. Treat other hosts as out of scope unless the user provides a trace export.
-- Keep the skill portable. Do not assume Harness Hub files exist in the target repository.
+- Keep the skill portable. Do not assume optional host-specific files exist.
 - Treat prompt/rule files and ordinary repo state as context by default. They can explain friction but should not be the sole basis for a strong bottleneck verdict.
 
 ## Workflow

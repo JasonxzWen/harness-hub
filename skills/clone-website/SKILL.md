@@ -18,7 +18,7 @@ Use this skill for explicit website reconstruction requests where the user has a
 ## Required Gates
 
 1. Confirm the user supplied a URL and a legitimate reproduction purpose. If ownership or permission is unclear, ask before continuing.
-2. Use the repo-local `harness/website-cloner` template or an equivalent isolated app workspace. Do not run this inside an unrelated production app unless the user explicitly asks.
+2. Use `assets/website-cloner` from this skill or an equivalent isolated app workspace. Do not run this inside an unrelated production app unless the user explicitly asks.
 3. Inspect the live page with browser automation before building. If browser automation is unavailable, stop and report that the clone cannot be verified.
 4. Write durable extraction notes before implementation: topology, visual tokens, interaction behavior, and component specs.
 5. Replace third-party brand copy/assets with the user's requested content unless they explicitly own the original material.
