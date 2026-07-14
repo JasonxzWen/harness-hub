@@ -58,6 +58,8 @@ test('quick-learn captures trace follow-up guardrails', () => {
 test('quick-learn calibrates beginner teaching without replacing instruction with questions', () => {
   expect(skill).toContain('Questions are evidence, not the delivery mechanism');
   expect(skill).toContain('log it as `teaching-review`');
+  expect(skill).toContain('current understanding, not durable retention');
+  expect(lifecycle).toContain('--metadata retrieval=delayed');
   expect(teaching).toContain('## Beginner And Vocabulary Gate');
   expect(teaching).toContain('Define unfamiliar vocabulary before using it in a graded check');
   expect(teaching).toContain('Faster means less repetition and wider coverage, not less explanation');
@@ -286,41 +288,74 @@ test('quick-learn logger keeps teaching review out of learner mastery state', ()
   expect(notes.split('- teaching-review')[1]).not.toContain('Mastery: 2/5');
 });
 
-test('quick-learn logger removes a resolved concept from weak and review queues', () => {
+test('quick-learn logger keeps immediate mastery for delayed review', () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quick-learn-remediation-'));
   const script = path.resolve(`${skillDir}/scripts/log_quick_learn_event.py`);
-  const runAssessment = (mastery: string) =>
-    spawnSync(
-      'python',
-      [
-        script,
-        '--topic',
-        'Investing Basics',
-        '--event',
-        'assessment',
-        '--module',
-        'Risk',
-        '--concept',
-        'Drawdown',
-        '--mastery',
-        mastery,
-        '--summary',
-        `Assessment mastery ${mastery}.`,
-        '--log-root',
-        tempDir,
-      ],
-      { encoding: 'utf8' },
-    );
+  const runAssessment = (mastery: string, delayed = false) => {
+    const args = [
+      script,
+      '--topic',
+      'Investing Basics',
+      '--event',
+      'assessment',
+      '--module',
+      'Risk',
+      '--concept',
+      'Drawdown',
+      '--mastery',
+      mastery,
+      '--summary',
+      `Assessment mastery ${mastery}.`,
+      '--log-root',
+      tempDir,
+    ];
+    if (delayed) args.push('--metadata', 'retrieval=delayed');
+    return spawnSync('python', args, { encoding: 'utf8' });
+  };
 
-  expect(runAssessment('2').status).toBe(0);
+  expect(runAssessment('2', true).status).toBe(0);
   expect(runAssessment('4').status).toBe(0);
 
   const topicDir = path.join(tempDir, 'investing-basics');
   const project = JSON.parse(fs.readFileSync(path.join(topicDir, 'project.json'), 'utf8'));
-  const progress = JSON.parse(fs.readFileSync(path.join(topicDir, 'progress.json'), 'utf8'));
+  let progress = JSON.parse(fs.readFileSync(path.join(topicDir, 'progress.json'), 'utf8'));
   expect(project.concepts.Drawdown.mastery).toBe(4);
   expect(progress.weak_concepts).not.toContain('Drawdown');
+  expect(progress.review_queue).toContain('Drawdown');
+
+  expect(runAssessment('4', true).status).toBe(0);
+  progress = JSON.parse(fs.readFileSync(path.join(topicDir, 'progress.json'), 'utf8'));
+  expect(progress.weak_concepts).not.toContain('Drawdown');
   expect(progress.review_queue).not.toContain('Drawdown');
+});
+
+test('quick-learn logger rejects unsupported retrieval metadata', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quick-learn-retrieval-metadata-'));
+  const script = path.resolve(`${skillDir}/scripts/log_quick_learn_event.py`);
+  const result = spawnSync(
+    'python',
+    [
+      script,
+      '--topic',
+      'Investing Basics',
+      '--event',
+      'assessment',
+      '--concept',
+      'Drawdown',
+      '--mastery',
+      '4',
+      '--metadata',
+      'retrieval=delay',
+      '--summary',
+      'Invalid delayed retrieval marker.',
+      '--log-root',
+      tempDir,
+    ],
+    { encoding: 'utf8' },
+  );
+
+  expect(result.status).not.toBe(0);
+  expect(result.stderr).toContain('metadata retrieval must be delayed');
 });
 
 test('quick-learn logger does not resolve learner weakness from source review metadata', () => {
@@ -431,7 +466,10 @@ test('quick-learn logger avoids fixed fallback slugs', () => {
 
 test('quick-learn replaces the retired learning coach in the standard install surface', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    components: Record<string, { kind: string; path: string; source: string; provides?: string[] } | undefined>;
+    components: Record<
+      string,
+      { kind: string; path: string; source: string; version: string; provides?: string[] } | undefined
+    >;
   };
   const component = index.components['skill:quick-learn'];
   const retiredSkill = ['skill', ['feynman', 'learning', 'coach'].join('-')].join(':');
@@ -440,6 +478,7 @@ test('quick-learn replaces the retired learning coach in the standard install su
   expect(component?.kind).toBe('skill');
   expect(component?.path).toBe('skills/quick-learn');
   expect(component?.source).toBe('local-original');
+  expect(component?.version).toBe('0.2.0');
   expect(component?.provides).toContain('source-backed-learning-projects');
   expect(component?.provides).toContain('stage-reviewed-learning-flow');
   expect(component?.provides).toContain('beginner-calibrated-teaching');
