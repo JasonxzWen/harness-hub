@@ -49,34 +49,20 @@ test('ponytail preserves the upstream ladder and safety boundaries', () => {
 test('ponytail is registered as a standard distributed helper with source coverage', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
     components: Record<string, {
-      path?: string;
-      source?: string;
-      provides?: string[];
-      overlapsWith?: string[];
-      distribution?: string;
-      routing?: string;
+      kind: string;
+      path: string;
+      distribution: string;
     }>;
   };
   const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
-  const sourceInventory = fs.readFileSync('docs/source-skill-inventory.md', 'utf8');
-  const routingDocs = fs.readFileSync('docs/skill-routing.md', 'utf8');
   const component = index.components['skill:ponytail'];
 
+  expect(component.kind).toBe('skill');
   expect(component.path).toBe('skills/ponytail');
-  expect(component.distribution || 'target').toBe('target');
-  expect(component.source).toBe('DietrichGebert/ponytail');
-  expect(component.provides).toContain('coding-minimalism');
-  expect(component.provides).toContain('shortest-correct-diff');
-  expect(component.overlapsWith).toEqual(expect.arrayContaining([
-    'skill:coding-standards',
-    'skill:karpathy-guidelines',
-    'skill:tdd-workflow',
-    'skill:effective-interact',
-  ]));
-  expect(component.routing).toContain('coding work should be deliberately minimal');
+  expect(component.distribution).toBe('target-distributed');
+  expect(sourceProjects).toContain('`DietrichGebert/ponytail`');
+  expect(sourceProjects).toContain('`1b2760d384c44e573a9d8c7a729fac616e5c3a76`');
   expect(sourceProjects).toContain('Installed the core `ponytail` standard skill');
-  expect(sourceInventory).toContain('Installed as `ponytail` core standard skill');
-  expect(routingDocs).toContain('`ponytail` loads after a workflow owner has selected coding');
 });
 
 test('ponytail activation covers coding minimalism without stealing reports', () => {

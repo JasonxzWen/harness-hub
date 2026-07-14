@@ -99,9 +99,7 @@ export function buildSkillQualityInventory(rootDir: string): SkillQualityInvento
       const frontmatterSource = hasSourceMetadata(parsed.frontmatter);
       const capabilitySource = capability?.source || null;
       const isImportedOrAdapted =
-        Boolean(capabilitySource && capabilitySource !== 'local') ||
-        frontmatterLicense ||
-        frontmatterSource;
+        Boolean(capabilitySource && capabilitySource !== 'local') || frontmatterSource;
       const hasProgressiveSpokes = Object.values(spokes).some(Boolean);
       const bodyBytes = Buffer.byteLength(parsed.body, 'utf8');
       const isLargeBody = bodyBytes > LARGE_BODY_BYTES;

@@ -1,171 +1,98 @@
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import path from 'node:path';
 import { expect, test } from 'bun:test';
-
-type LifecycleGate =
-  | 'align-user-need'
-  | 'gather-required-material'
-  | 'write-spec-and-acceptance'
-  | 'write-executable-plan-and-align'
-  | 'clean-unneeded-files'
-  | 'implement'
-  | 'test-and-accept'
-  | 'finish-closeout'
-  | 'deliver-report';
-
-type WorkflowState =
-  | 'question'
-  | 'sdd-change'
-  | 'diagnosis'
-  | 'review'
-  | 'delivery'
-  | 'harness-hub-maintenance'
-  | 'clarify'
-  | 'none';
 
 type WorkflowCase = {
   id: string;
-  kind: 'positive' | 'ambiguous' | 'no-mutation' | 'no-owner';
   prompt: string;
-  expectedState: WorkflowState;
+  expectedState: string;
   expectedOwner: string | null;
   mutationAllowed: boolean;
-  requiredGates: LifecycleGate[];
-  docsBoundary: string;
+  expectedLoops: string[];
 };
 
-type WorkflowFixture = {
-  version: number;
-  lifecycleGates: LifecycleGate[];
+const ROUTER = path.resolve('skills/workflow-router/scripts/route-intent.mjs');
+const RUNTIME = 'skills/workflow-router/scripts/loop-runtime.mjs';
+const fixture = JSON.parse(fs.readFileSync('tests/fixtures/workflow-router-cases.json', 'utf8')) as {
+  schemaVersion: number;
   cases: WorkflowCase[];
 };
 
-const lifecycleGates: LifecycleGate[] = [
-  'align-user-need',
-  'gather-required-material',
-  'write-spec-and-acceptance',
-  'write-executable-plan-and-align',
-  'clean-unneeded-files',
-  'implement',
-  'test-and-accept',
-  'finish-closeout',
-  'deliver-report',
-];
-
-const stateOwners: Record<Exclude<WorkflowState, 'clarify' | 'none'>, string> = {
-  question: 'answer-workflow',
-  'sdd-change': 'sdd-workflow',
-  diagnosis: 'diagnosis-workflow',
-  review: 'review-workflow',
-  delivery: 'delivery-workflow',
-  'harness-hub-maintenance': 'hub-maintenance-workflow',
-};
-
-const lifecyclePhrases: Record<LifecycleGate, string> = {
-  'align-user-need': 'Align user need',
-  'gather-required-material': 'Gather required material',
-  'write-spec-and-acceptance': 'Write spec and acceptance',
-  'write-executable-plan-and-align': 'Write executable plan and align',
-  'clean-unneeded-files': 'Clean unneeded files',
-  implement: 'Implement',
-  'test-and-accept': 'Test and accept',
-  'finish-closeout': 'Finish closeout',
-  'deliver-report': 'Deliver report',
-};
-
-function readFixture(): WorkflowFixture {
-  return JSON.parse(fs.readFileSync('tests/fixtures/workflow-router-cases.json', 'utf8'));
+function route(prompt: string): Record<string, unknown> {
+  const result = spawnSync(process.execPath, [ROUTER, '--prompt', prompt, '--json'], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+  });
+  expect(result.status, result.stderr).toBe(0);
+  expect(result.stderr).toBe('');
+  return JSON.parse(result.stdout) as Record<string, unknown>;
 }
 
-test('workflow-router fixture has a strict lifecycle schema', () => {
-  const fixture = readFixture();
-  const ids = new Set<string>();
+function workflowLoops(source: string, owner: string): string[] {
+  const escaped = owner.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = source.match(new RegExp(`'${escaped}': Object\\.freeze\\(\\[([\\s\\S]*?)\\]\\)`));
+  expect(match, `${owner} is missing from the executable workflow map`).not.toBeNull();
+  return [...match![1].matchAll(/'([a-z-]+-loop)'/g)].map((entry) => entry[1]);
+}
 
-  expect(fixture.version).toBe(1);
-  expect(fixture.lifecycleGates).toEqual(lifecycleGates);
-  expect(Array.isArray(fixture.cases)).toBe(true);
+test('router fixture maps every non-trivial intent to one of five generic workflows', () => {
+  expect(fixture.schemaVersion).toBe(1);
+  expect(new Set(fixture.cases.map((entry) => entry.id)).size).toBe(fixture.cases.length);
 
+  const owners = new Set<string>();
   for (const entry of fixture.cases) {
     expect(entry.id).toMatch(/^[a-z0-9-]+$/);
-    expect(ids.has(entry.id)).toBe(false);
-    ids.add(entry.id);
-    expect(['positive', 'ambiguous', 'no-mutation', 'no-owner']).toContain(entry.kind);
-    expect(entry.prompt.trim().length).toBeGreaterThan(12);
-    expect(entry.docsBoundary.trim().length).toBeGreaterThan(12);
+    expect(entry.prompt.trim().length).toBeGreaterThan(5);
 
-    for (const gate of entry.requiredGates) {
-      expect(lifecycleGates).toContain(gate);
-    }
+    const actual = route(entry.prompt);
+    expect(actual).toMatchObject({
+      schemaVersion: 1,
+      state: entry.expectedState,
+      owner: entry.expectedOwner,
+      mutationAllowed: entry.mutationAllowed,
+      mutates: false,
+    });
+    if (entry.expectedOwner) owners.add(entry.expectedOwner);
   }
+
+  expect([...owners].sort()).toEqual([
+    'answer-workflow',
+    'delivery-workflow',
+    'diagnosis-workflow',
+    'review-workflow',
+    'sdd-workflow',
+  ]);
 });
 
-test('workflow-router cases enforce one top-level owner or explicit no-owner outcome', () => {
-  const fixture = readFixture();
-  const coveredStates = new Set<WorkflowState>();
+test('the runtime workflow map exactly matches the fixture loop sequences', () => {
+  const runtime = fs.readFileSync(RUNTIME, 'utf8');
+  const expectedByOwner = new Map<string, string[]>();
 
   for (const entry of fixture.cases) {
-    coveredStates.add(entry.expectedState);
-
-    if (entry.expectedState === 'clarify' || entry.expectedState === 'none') {
-      expect(entry.expectedOwner).toBeNull();
-      expect(entry.mutationAllowed).toBe(false);
-      continue;
+    if (!entry.expectedOwner) continue;
+    const previous = expectedByOwner.get(entry.expectedOwner);
+    if (previous) {
+      expect(entry.expectedLoops).toEqual(previous);
+    } else {
+      expectedByOwner.set(entry.expectedOwner, entry.expectedLoops);
     }
-
-    expect(entry.expectedOwner).toBe(stateOwners[entry.expectedState]);
   }
 
-  for (const state of Object.keys(stateOwners) as Array<keyof typeof stateOwners>) {
-    expect(coveredStates.has(state)).toBe(true);
+  for (const [owner, loops] of expectedByOwner) {
+    expect(workflowLoops(runtime, owner)).toEqual(loops);
   }
-  expect(coveredStates.has('clarify')).toBe(true);
-  expect(coveredStates.has('none')).toBe(true);
+  expect(runtime).not.toContain('hub-maintenance-workflow');
+  expect(runtime).not.toContain('harness-hub-maintenance');
 });
 
-test('workflow-router cases preserve read-only states and SDD lifecycle gates', () => {
-  const fixture = readFixture();
-  const fullLifecycleStates: WorkflowState[] = ['sdd-change', 'harness-hub-maintenance'];
+test('router output is consumed by the sole workflow runtime instead of returned as advisory text', () => {
+  const runtime = fs.readFileSync(RUNTIME, 'utf8');
 
-  for (const entry of fixture.cases) {
-    if (entry.expectedState === 'question' || entry.expectedState === 'review') {
-      expect(entry.mutationAllowed).toBe(false);
-    }
-
-    if (fullLifecycleStates.includes(entry.expectedState)) {
-      expect(entry.requiredGates).toEqual(lifecycleGates);
-    }
-
-    if (entry.expectedState === 'sdd-change') {
-      expect(entry.requiredGates.indexOf('gather-required-material')).toBeLessThan(
-        entry.requiredGates.indexOf('write-spec-and-acceptance'),
-      );
-      expect(entry.requiredGates.indexOf('clean-unneeded-files')).toBeLessThan(
-        entry.requiredGates.indexOf('implement'),
-      );
-    }
-  }
-});
-
-test('workflow-router docs and source dossier contain required lifecycle evidence', () => {
-  const fixture = readFixture();
-  const spec = fs.readFileSync('docs/workflow-router-spec.md', 'utf8');
-  const plan = fs.readFileSync('docs/workflow-router-execution-plan.md', 'utf8');
-  const dossier = fs.readFileSync('docs/workflow-source-dossier.md', 'utf8');
-  const docs = `${spec}\n${plan}\n${dossier}`;
-
-  for (const phrase of Object.values(lifecyclePhrases)) {
-    expect(spec).toContain(phrase);
-    expect(plan).toContain(phrase);
-  }
-
-  for (const entry of fixture.cases) {
-    expect(docs).toContain(entry.docsBoundary);
-  }
-
-  for (const source of ['Matt Pocock skills', 'Matt Pocock README process model', 'Superpowers', 'Everything Claude Code', 'OpenSpec', 'Effective Interact']) {
-    expect(dossier).toContain(source);
-  }
-
-  for (const decision of ['Adopt', 'Adapt', 'Reference-only', 'Reject for default']) {
-    expect(dossier).toContain(decision);
-  }
+  expect(runtime).toContain("import { classifyIntent } from './route-intent.mjs'");
+  expect(runtime).toContain('export function runRoutedWorkflow(options)');
+  expect(runtime).toContain('const route = classifyIntent(prompt)');
+  expect(runtime).toContain('workflow: route.owner');
+  expect(runtime).toContain('router: route');
+  expect(runtime).toContain('runExecutableWorkflow({');
 });

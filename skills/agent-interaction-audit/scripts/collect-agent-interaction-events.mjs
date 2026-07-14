@@ -877,7 +877,7 @@ function isPromptContextFile(identity, filePath) {
   if (lowerName.endsWith('.prompt.md') || lowerName.endsWith('.instructions.md')) {
     return true;
   }
-  if (rel.startsWith('.harness-hub/context/')) {
+  if (rel.startsWith('knowledge/')) {
     return TEXT_EXTENSIONS.has(path.extname(filePath).toLowerCase());
   }
   return false;

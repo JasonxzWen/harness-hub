@@ -6,7 +6,7 @@ upstream_commit: 3c7017d636c3a4aad378433ea6d0cfa6c921da4a
 license: MIT
 metadata:
   source_skill: Leonxlnx/taste-skill skills/taste-skill
-  adaptation: Standard Harness Hub integration with narrow routing; long upstream guidance split into references.
+  adaptation: Standard project-agent integration with narrow routing; long upstream guidance split into references.
 ---
 
 # Design Taste Frontend

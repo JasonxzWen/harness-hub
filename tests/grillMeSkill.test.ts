@@ -63,16 +63,11 @@ test('grill-me stops before implementation', () => {
 
 test('grill-me registers the batch-grilling behavior in the install surface', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    components: Record<string, {
-      version: string;
-      provides: string[];
-      routing: string;
-    }>;
+    components: Record<string, { kind: string; path: string; distribution: string }>;
   };
   const component = index.components['skill:grill-me'];
 
-  expect(component.version).toBe('0.2.0');
-  expect(component.provides).toContain('dependency-layered-batch-grilling');
-  expect(component.provides).toContain('recommended-answer-tables');
-  expect(component.routing).toContain('batch');
+  expect(component.kind).toBe('skill');
+  expect(component.path).toBe('skills/grill-me');
+  expect(component.distribution).toBe('target-distributed');
 });

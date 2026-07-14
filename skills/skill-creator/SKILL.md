@@ -5,7 +5,7 @@ license: Complete terms in LICENSE.txt
 metadata:
   source: "anthropics/skills skills/skill-creator"
   upstream_commit: "690f15cac7f7b4c055c5ab109c79ed9259934081"
-  adaptation: "Platform-neutral Harness Hub version; host-specific eval scripts and UI metadata are excluded."
+  adaptation: "Platform-neutral version; host-specific eval scripts and UI metadata are excluded."
 ---
 
 # Skill Creator
@@ -41,4 +41,4 @@ Before making a skill default-route material, capture at least:
 - one progressive-loading case for each spoke file that matters;
 - one completion check showing the workflow reaches the intended output.
 
-Use `docs/skill-quality-guide.md` when working inside Harness Hub.
+Use the active project's skill-quality rules when they exist.

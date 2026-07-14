@@ -5,7 +5,7 @@ license: Complete terms in LICENSE.txt
 metadata:
   source: "anthropics/skills skills/slack-gif-creator"
   upstream_commit: "690f15cac7f7b4c055c5ab109c79ed9259934081"
-  adaptation: "Python utilities moved under scripts/ for Harness Hub layout."
+  adaptation: "Python utilities moved under scripts/ for the standard skill layout."
 ---
 
 # Slack GIF Creator

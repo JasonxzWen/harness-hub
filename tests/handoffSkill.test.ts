@@ -30,13 +30,11 @@ test('handoff writes temp restart notes with safety boundaries', () => {
 
 test('handoff is part of the standard install surface', () => {
   const index = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    components: Record<string, { kind: string; path: string; source: string; provides?: string[]; overlapsWith?: string[] }>;
+    components: Record<string, { kind: string; path: string; distribution: string }>;
   };
   const component = index.components['skill:handoff'];
 
   expect(component.kind).toBe('skill');
   expect(component.path).toBe('skills/handoff');
-  expect(component.source).toBe('mattpocock-skills-adapted');
-  expect(component.provides).toContain('session-handoff');
-  expect(component.overlapsWith).toContain('skill:effective-interact');
+  expect(component.distribution).toBe('target-distributed');
 });

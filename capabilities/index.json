@@ -1,1610 +1,239 @@
 {
-  "version": "0.1.0",
-  "generatedAt": "2026-07-09",
   "components": {
-    "harness:minimal": {
-      "kind": "harness-template",
-      "path": "harness/minimal",
-      "dest": ".",
-        "version": "0.9.0",
-      "source": "local",
-      "provides": [
-        "repo-harness-initialization",
-        "root-agent-instructions",
-        "progress-and-handoff-files",
-        "decision-log",
-        "harness-validation",
-        "agent-dev-harness-bootstrap",
-        "goal-ready-task-state",
-        "session-handoff-continuity",
-        "worktree-task-isolation",
-        "durable-validation-records",
-        "checkpoint-commit-policy",
-        "feature-state-evidence-policy",
-        "validation-priority-policy",
-        "web-browser-acceptance-policy",
-        "pr-status-closeout-policy",
-        "runtime-signal-capture",
-        "loop-control-plane",
-        "auditable-interrupt-policy",
-        "interrupt-policy-evals",
-        "loop-runtime-ledgers",
-        "capability-invocation-boundary",
-        "llm-wiki-context-pack",
-        "agent-context-schema",
-        "stable-knowledge-layer",
-        "context-update-log",
-        "contradiction-register",
-        "obsidian-portable-profile",
-        "context-pack-validation",
-        "evaluator-rubric",
-        "quality-snapshot",
-        "pr-handoff-policy",
-        "finish-closeout-policy",
-        "final-review-closeout",
-        "agent-interaction-closeout-audit",
-          "workflow-loop-separation",
-          "agentic-loop-policy",
-          "agentic-loop-records",
-          "docs-consistency-loop-policy",
-          "bounded-agentic-loop-iterations",
-          "delegated-agent-arbitration",
-          "aggressive-bounded-subagent-delegation",
-          "main-agent-auto-arbitration",
-          "freshness-gate-policy",
-          "stale-read-gate-policy"
-      ],
-      "overlapsWith": [
-        "skill:workflow-router",
-        "skill:verification-loop",
-        "skill:handoff"
-      ],
-      "routing": "Use only through explicit init-harness or bootstrap-dev commands; default skill install must not write root harness files.",
-      "detects": [
-        {
-          "path": "AGENTS.md"
-        },
-        {
-          "path": "CLAUDE.md"
-        },
-        {
-          "path": "feature_list.json"
-        },
-        {
-          "path": ".harness-hub/.gitignore"
-        },
-        {
-          "path": ".harness-hub/state/current-task.md"
-        },
-        {
-          "path": ".harness-hub/state/decisions.md"
-        },
-        {
-          "path": ".harness-hub/state/progress.md"
-        },
-        {
-          "path": ".harness-hub/state/session-handoff.md"
-        },
-        {
-          "path": ".harness-hub/state/loop-runs.jsonl"
-        },
-        {
-          "path": ".harness-hub/state/interrupt-decisions.jsonl"
-        },
-        {
-          "path": ".harness-hub/state/capability-events.jsonl"
-        },
-        {
-          "path": ".harness-hub/loop/policies/interrupt-policy.md"
-        },
-        {
-          "path": ".harness-hub/loop/policies/action-audit-schema.md"
-        },
-        {
-          "path": ".harness-hub/loop/evals/interrupt-policy/good-cases.jsonl"
-        },
-        {
-          "path": ".harness-hub/loop/evals/interrupt-policy/bad-cases.jsonl"
-        },
-        {
-          "path": ".harness-hub/loop/evals/interrupt-policy/regression-cases.jsonl"
-        },
-        {
-          "path": ".harness-hub/context/AGENTS.md"
-        },
-        {
-          "path": ".harness-hub/context/README.md"
-        },
-        {
-          "path": ".harness-hub/context/llm-wiki-schema.md"
-        },
-        {
-          "path": ".harness-hub/context/wiki/index.md"
-        },
-        {
-          "path": ".harness-hub/context/wiki/contradictions.md"
-        },
-        {
-          "path": ".harness-hub/context/wiki/update-log.md"
-        },
-        {
-          "path": ".harness-hub/context/wiki/.obsidian/app.json"
-        },
-        {
-          "path": ".harness-hub/context/wiki/.obsidian/core-plugins.json"
-        },
-        {
-          "path": ".harness-hub/context/wiki/.obsidian/graph.json"
-        },
-        {
-          "path": "clean-state-checklist.md"
-        },
-        {
-          "path": "definition-of-done.md"
-        },
-        {
-          "path": "evaluator-rubric.md"
-        },
-        {
-          "path": "quality-document.md"
-        },
-        {
-          "path": "scripts/harness-validate.mjs"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "medium",
-      "recommendation": "Initialize the standard target harness with stable tracked rules, ignored worktree-local task state, loop control-plane policy/evals, LLM Wiki context pack, validation, and managed ownership only through an explicit bootstrap command."
-    },
-    "harness:website-cloner": {
-      "kind": "harness-template",
-      "path": "harness/website-cloner",
-      "dest": ".",
-      "version": "0.2.0",
-      "source": "JCodesMore/ai-website-cloner-template",
-      "provides": [
-        "authorized-website-clone-scaffold",
-        "browser-verifiable-report-artifact",
-        "clone-safety-boundaries",
-        "static-site-smoke-validation"
-      ],
-      "overlapsWith": [
-        "skill:clone-website",
-        "skill:frontend-design",
-        "skill:web-artifacts-builder",
-        "skill:webapp-testing",
-        "skill:e2e-testing"
-      ],
-      "routing": "Use only as an explicit template for authorized website clone smoke tests and report artifacts; default skill install must not write website-cloner harness files.",
-      "detects": [
-        {
-          "path": "AGENTS.md"
-        },
-        {
-          "path": "package.json"
-        },
-        {
-          "path": "site/index.html"
-        },
-        {
-          "path": "scripts/validate-site.mjs"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "high",
-      "recommendation": "Keep website cloning behind explicit user intent, safety review, browser evidence, and local validation because it uses external sites, file writes, and potentially protected third-party design assets."
-    },
     "skill:workflow-router": {
       "kind": "skill",
       "path": "skills/workflow-router",
-      "version": "0.14.1",
-      "source": "local",
-      "provides": [
-        "workflow-intent-routing",
-        "single-owner-routing",
-        "workflow-state-handoff",
-        "executable-intent-classifier",
-        "workflow-gate-preflight",
-        "executable-skill-activation-smoke",
-        "skill-activation-case-evaluation",
-        "helper-activation-coverage-report",
-        "helper-activation-boundary-coverage",
-        "owner-helper-activation-separation",
-        "helper-side-effect-contract",
-        "explicit-read-only-mutation-guard",
-        "expected-output-mode-routing",
-        "html-handoff-advisory-gate",
-        "html-handoff-waiver-gate",
-        "visual-language-report-activation",
-        "owner-workflow-structure-contract",
-        "executable-owner-contract-smoke",
-        "finish-closeout-gate-routing",
-        "finish-closeout-advisory-evidence",
-        "agentic-loop-evidence-check",
-        "docs-consistency-loop-check",
-        "bounded-agentic-loop-iteration-check",
-        "agentic-loop-advisory-evidence"
-      ],
-      "overlapsWith": [
-        "skill:openspec-explore",
-        "skill:sdd-workflow",
-        "skill:tdd-workflow",
-        "skill:verification-loop"
-      ],
-      "routing": "Load when a non-trivial request needs intent recognition before work starts; classify it into exactly one workflow owner or ask a clarification.",
-      "detects": [
-        {
-          "path": "skills/workflow-router/SKILL.md"
-        },
-        {
-          "path": "skills/workflow-router/scripts/route-intent.mjs"
-        },
-        {
-          "path": "skills/workflow-router/scripts/workflow-check.mjs"
-        },
-        {
-          "path": "skills/workflow-router/scripts/advisory-check.mjs"
-        },
-        {
-          "path": "skills/workflow-router/scripts/skill-activation-check.mjs"
-        },
-        {
-          "path": "skills/workflow-router/scripts/owner-contract-check.mjs"
-        },
-        {
-          "path": "skills/workflow-router/scripts/helper-contract-check.mjs"
-        },
-        {
-          "path": "skills/workflow-router/scripts/agentic-loop-check.mjs"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Add a thin executable intent router that selects exactly one workflow owner, runs side-effect-free preflight checks, and audits helper activation boundaries before work starts."
+      "distribution": "target-distributed"
     },
     "skill:answer-workflow": {
       "kind": "skill",
       "path": "skills/answer-workflow",
-      "version": "0.1.0",
-      "source": "local",
-      "provides": [
-        "read-only-answer-workflow",
-        "evidence-first-answers"
-      ],
-      "overlapsWith": [
-        "skill:documentation-lookup",
-        "skill:effective-interact"
-      ],
-      "routing": "Use for read-only questions, explanations, evidence lookup, feasibility checks, and comparisons.",
-      "detects": [
-        {
-          "path": "skills/answer-workflow/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Answer read-only questions from evidence without mutating files."
+      "distribution": "target-distributed"
     },
     "skill:sdd-workflow": {
       "kind": "skill",
       "path": "skills/sdd-workflow",
-      "version": "0.1.1",
-      "source": "local",
-      "provides": [
-        "sdd-first-change-workflow",
-        "embedded-tdd",
-        "pre-implementation-alignment",
-        "finish-closeout-lifecycle",
-        "agent-interaction-closeout-audit"
-      ],
-      "overlapsWith": [
-        "skill:product-capability",
-        "skill:tdd-workflow",
-        "skill:verification-loop",
-        "skill:openspec-propose",
-        "skill:openspec-apply-change"
-      ],
-      "routing": "Use for feature, bug fix, refactor, product/spec change, or implementation requests that must align spec and acceptance before coding.",
-      "detects": [
-        {
-          "path": "skills/sdd-workflow/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Run the full SDD lifecycle with source gathering, spec, acceptance, executable plan, cleanup, implementation, tests, and handoff."
+      "distribution": "target-distributed"
     },
     "skill:diagnosis-workflow": {
       "kind": "skill",
       "path": "skills/diagnosis-workflow",
-      "version": "0.1.1",
-      "source": "local",
-      "provides": [
-        "diagnosis-owner-workflow",
-        "failure-reproduction-gate",
-        "diagnosis-finish-closeout"
-      ],
-      "overlapsWith": [
-        "skill:diagnose",
-        "skill:agent-introspection-debugging",
-        "skill:webapp-testing",
-        "skill:verification-loop"
-      ],
-      "routing": "Use when a task starts from a failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure.",
-      "detects": [
-        {
-          "path": "skills/diagnosis-workflow/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Reproduce or bound a failure before applying the smallest confirmed fix."
+      "distribution": "target-distributed"
     },
     "skill:review-workflow": {
       "kind": "skill",
       "path": "skills/review-workflow",
-      "version": "0.1.0",
-      "source": "local",
-      "provides": [
-        "review-owner-workflow",
-        "findings-first-review"
-      ],
-      "overlapsWith": [
-        "skill:compound-code-review",
-        "skill:security-review",
-        "skill:web-design-guidelines",
-        "skill:verification-loop"
-      ],
-      "routing": "Use for code, plan, release, UI, or security review when findings should come before implementation.",
-      "detects": [
-        {
-          "path": "skills/review-workflow/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Review with findings first and avoid implementing fixes unless explicitly redirected."
+      "distribution": "target-distributed"
     },
     "skill:delivery-workflow": {
       "kind": "skill",
       "path": "skills/delivery-workflow",
-      "version": "0.1.2",
-      "source": "local",
-      "provides": [
-        "delivery-owner-workflow",
-        "validation-handoff-cleanup",
-        "post-pr-status-triage",
-        "pr-closeout-handoff",
-        "finish-closeout-delivery",
-        "pr-merge-readiness-closeout",
-        "agent-interaction-closeout-audit"
-      ],
-      "overlapsWith": [
-        "skill:verification-loop",
-        "skill:effective-interact"
-      ],
-      "routing": "Use when accepted work needs validation closeout, PR status triage, cleanup, handoff, release notes, or local environment reset.",
-      "detects": [
-        {
-          "path": "skills/delivery-workflow/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Close accepted work and PR updates with validation, PR mergeability and CI/check-run status, in-scope blocker fixes, cleanup, residual-risk notes, and handoff."
-    },
-    "skill:hub-maintenance-workflow": {
-      "kind": "skill",
-      "path": "skills/hub-maintenance-workflow",
-      "version": "0.1.1",
-      "source": "local",
-      "distribution": "hub-internal",
-      "provides": [
-        "harness-hub-maintenance-workflow",
-        "source-evaluation-workflow",
-        "capability-lifecycle-governance",
-        "maintenance-finish-closeout",
-        "source-evaluation-closeout"
-      ],
-      "overlapsWith": [],
-      "routing": "Use for maintaining Harness Hub sources, routing, capabilities, npm lifecycle, and managed update/remove behavior.",
-      "detects": [
-        {
-          "path": "skills/hub-maintenance-workflow/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Keep Harness Hub source maintenance local to this repository; do not migrate this workflow into target repositories."
+      "distribution": "target-distributed"
     },
     "skill:product-capability": {
       "kind": "skill",
       "path": "skills/product-capability",
-      "version": "0.1.0",
-      "source": "local",
-      "provides": [
-        "implementation-ready-capability-contracts",
-        "product-constraint-planning",
-        "acceptance-boundary-alignment"
-      ],
-      "overlapsWith": [
-        "skill:sdd-workflow",
-        "skill:openspec-propose"
-      ],
-      "routing": "Use under SDD when product intent needs constraints, invariants, interfaces, unresolved decisions, and acceptance boundaries before implementation.",
-      "detects": [
-        {
-          "path": "skills/product-capability/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Create an implementation-ready capability contract before coding product-facing changes."
+      "distribution": "target-distributed"
     },
     "skill:grill-me": {
       "kind": "skill",
       "path": "skills/grill-me",
-      "version": "0.2.0",
-      "source": "mattpocock-skills-adapted",
-      "provides": [
-        "plan-pressure-testing",
-        "decision-tree-interview",
-        "assumption-surfacing",
-        "dependency-layered-batch-grilling",
-        "recommended-answer-tables"
-      ],
-      "overlapsWith": [
-        "skill:grill-with-docs",
-        "skill:product-capability"
-      ],
-      "routing": "Use when the user says grill me or explicitly asks to be grilled, challenged, or pressure-tested before implementation; once loaded, batch dependency-independent questions with recommended answers.",
-      "detects": [
-        {
-          "path": "skills/grill-me/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Batch every currently independent decision into one recommendation table, defer dependency-bound questions to later batches, and stop before implementation."
+      "distribution": "target-distributed"
     },
     "skill:grill-with-docs": {
       "kind": "skill",
       "path": "skills/grill-with-docs",
-      "version": "0.1.0",
-      "source": "mattpocock-skills-adapted",
-      "provides": [
-        "documented-plan-pressure-testing",
-        "domain-model-interview",
-        "context-wiki-update-planning",
-        "adr-candidate-surfacing",
-        "code-doc-contradiction-capture"
-      ],
-      "overlapsWith": [
-        "skill:grill-me",
-        "skill:product-capability",
-        "skill:doc-coauthoring"
-      ],
-      "routing": "Use when the user explicitly asks for grill-with-docs, asks to be grilled with docs, or wants plan pressure testing that can capture glossary, context wiki, domain-model, ADR, or code/docs contradiction updates; do not load when the skill name is only background context for implementation, maintenance, or review; wiki writes require human confirmation.",
-      "detects": [
-        {
-          "path": "skills/grill-with-docs/SKILL.md"
-        },
-        {
-          "path": "skills/grill-with-docs/references/domain-modeling.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "medium",
-      "recommendation": "Use as a Harness Hub-compatible grill-with-docs entrypoint that preserves one-question-at-a-time pressure testing while mapping durable knowledge to confirmed LLM Wiki, contradiction, and task-state updates."
+      "distribution": "target-distributed"
     },
     "skill:diagnose": {
       "kind": "skill",
       "path": "skills/diagnose",
-      "version": "0.1.0",
-      "source": "mattpocock-skills-adapted",
-      "provides": [
-        "runtime-bug-diagnosis",
-        "feedback-loop-debugging",
-        "hypothesis-driven-debugging",
-        "regression-test-capture"
-      ],
-      "overlapsWith": [
-        "skill:tdd-workflow",
-        "skill:verification-loop",
-        "skill:agent-introspection-debugging",
-        "skill:webapp-testing"
-      ],
-      "routing": "Use for product, code, test, and performance failures; use agent-introspection-debugging for agent/tool failures, webapp-testing for one-off browser inspection, and verification-loop after the fix.",
-      "detects": [
-        {
-          "path": "skills/diagnose/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use for product, code, test, and performance failures; use agent-introspection-debugging for agent/tool failures, webapp-testing for one-off browser inspection, and verification-loop after the fix."
+      "distribution": "target-distributed"
     },
     "skill:prototype": {
       "kind": "skill",
       "path": "skills/prototype",
-      "version": "0.1.0",
-      "source": "mattpocock-skills-adapted",
-      "provides": [
-        "throwaway-prototyping",
-        "logic-prototypes",
-        "ui-variant-prototypes",
-        "design-risk-reduction"
-      ],
-      "overlapsWith": [
-        "skill:frontend-design",
-        "skill:web-artifacts-builder",
-        "skill:product-capability",
-        "skill:tdd-workflow"
-      ],
-      "routing": "Use only for clearly marked throwaway prototypes that answer one design question; use frontend-design for production UI, web-artifacts-builder for standalone artifacts, and tdd-workflow for production implementation.",
-      "detects": [
-        {
-          "path": "skills/prototype/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use only for clearly marked throwaway prototypes that answer one design question; use frontend-design for production UI, web-artifacts-builder for standalone artifacts, and tdd-workflow for production implementation."
+      "distribution": "target-distributed"
     },
     "skill:effective-interact": {
       "kind": "skill",
       "path": "skills/effective-interact",
-      "version": "0.2.6",
-      "source": "local",
-      "provides": [
-        "complex-communication-briefs",
-        "communication-density-briefs",
-        "minimum-report-mode-selection",
-        "first-principles-alignment-briefs",
-        "plain-text-handoffs",
-        "structured-markdown-handoffs",
-        "visual-markdown-reports",
-        "completed-task-handoffs",
-        "intermediate-interaction-artifacts",
-        "self-contained-html-interaction-artifacts",
-        "interactive-work-artifacts",
-        "html-change-artifacts",
-        "material-change-html-handoffs",
-        "visual-language-first-handoffs",
-        "html-aesthetic-preflight-validation",
-        "visual-code-evidence-artifacts",
-        "generated-interaction-artifacts",
-        "validated-interaction-artifacts",
-        "long-task-session-ledgers",
-        "option-comparison-artifacts",
-        "vocabulary-boundary-explainers",
-        "explorable-explainers",
-        "disposable-export-editors",
-        "component-first-html-report-design",
-        "html-report-design-contract",
-        "html-effectiveness-scenario-family-routing"
-      ],
-      "overlapsWith": [
-        "skill:grill-me",
-        "skill:ponytail",
-        "skill:web-artifacts-builder",
-        "skill:frontend-slides",
-        "skill:frontend-design"
-      ],
-      "routing": "Load when agent pauses to report relatively complex information needing Chinese-first clear complex communication, communication-density discipline, alignment, multi-option choice, status/incident, long-task fact ledgers, implementation plans, reviews, maps, explainers, evidence, risks, validation, handoff, proactive HTML reports, visibly polished structured text, or trigger-hardening complaints, including broad repo capability/structure/function/implementation maps and html-effectiveness families such as Exploration & Planning, Code Review & Understanding, Design, Reports, and Custom Editors; organize from visual language first and read DESIGN.md for component-first HTML artifacts, then choose plain text/Markdown/visual Markdown/HTML by decision cost, defaulting material repo/skill changes to HTML handoff; use Ponytail for coding minimalism; skip trivial chat/bundled apps.",
-      "detects": [
-        {
-          "path": "skills/effective-interact/SKILL.md"
-        },
-        {
-          "path": "skills/effective-interact/DESIGN.md"
-        },
-        {
-          "path": "skills/effective-interact/references/html-aesthetic-preflight.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Structure Chinese-first complex pause reports when material alignment, handoffs, option comparisons, long-task fact ledgers, reviews, PR writeups, implementation plans, status or incident dashboards, evidence, risks, validation, or continuation notes need first-principles organization; apply communication-density checks before expanding into prose or artifacts, start from useful visual language and the component-first DESIGN.md contract, keep any non-plain-brief output visibly structured instead of linear prose, avoid Markdown-in-HTML, use Ponytail for coding minimization, and default material repo/skill change handoffs to validated self-contained HTML unless explicitly waived."
+      "distribution": "target-distributed"
     },
     "skill:handoff": {
       "kind": "skill",
       "path": "skills/handoff",
-      "version": "0.1.0",
-      "source": "mattpocock-skills-adapted",
-      "provides": [
-        "session-handoff",
-        "restart-notes",
-        "conversation-compaction",
-        "suggested-skills"
-      ],
-      "overlapsWith": [
-        "skill:effective-interact"
-      ],
-      "routing": "Use when the user asks to hand off current work, compact this conversation for another agent/session, or create restart notes; use effective-interact for visual HTML repo reports.",
-      "detects": [
-        {
-          "path": "skills/handoff/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Create concise restart notes in the OS temp directory so another agent or later session can continue from verified facts."
+      "distribution": "target-distributed"
     },
     "skill:compound-code-review": {
       "kind": "skill",
       "path": "skills/compound-code-review",
-      "version": "0.1.0",
-      "source": "compound-engineering-plugin-adapted",
-      "provides": [
-        "structured-code-review",
-        "reviewer-lenses",
-        "anchored-confidence-review",
-        "finding-routing"
-      ],
-      "overlapsWith": [
-        "skill:coding-standards",
-        "skill:security-review",
-        "skill:verification-loop",
-        "skill:web-design-guidelines"
-      ],
-      "routing": "Use for deep pre-PR or CE-style code review. Use security-review for focused security checklists, web-design-guidelines for UI/UX audits, and verification-loop for final command gates.",
-      "detects": [
-        {
-          "path": "skills/compound-code-review/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use for deep pre-PR or CE-style code review. Use security-review for focused security checklists, web-design-guidelines for UI/UX audits, and verification-loop for final command gates."
+      "distribution": "target-distributed"
     },
     "skill:quick-learn": {
       "kind": "skill",
       "path": "skills/quick-learn",
-      "version": "0.2.0",
-      "source": "local-original",
-      "provides": [
-        "source-backed-learning-projects",
-        "custom-learning-syllabus",
-        "stage-reviewed-learning-flow",
-        "teach-back-assessment",
-        "beginner-calibrated-teaching",
-        "teaching-review-state-separation",
-        "quick-learn-project-logging"
-      ],
-      "overlapsWith": [
-        "skill:answer-workflow",
-        "skill:documentation-lookup",
-        "skill:effective-interact"
-      ],
-      "routing": "Load when the user explicitly wants a source-backed learning project, custom study plan, syllabus, book or technical topic coaching, teach-back, quizzes, or staged review; do not route ordinary implementation, one-off factual lookup, or article writing.",
-      "detects": [
-        {
-          "path": "skills/quick-learn/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use for explicit source-backed learning projects with confirmed custom syllabus, explanation-first beginner teaching, vocabulary and prerequisite gates, stage-level review, active assessment, teaching-quality review separation, and durable .quick-learn logs."
+      "distribution": "target-distributed"
     },
     "skill:coding-standards": {
       "kind": "skill",
       "path": "skills/coding-standards",
-      "version": "0.1.0",
-      "source": "everything-claude-code",
-      "provides": [
-        "code-quality-baseline"
-      ],
-      "overlapsWith": [],
-      "routing": "Use when a workflow-router-selected owner workflow needs cross-project code quality conventions after scope is selected; do not use as a top-level owner.",
-      "detects": [
-        {
-          "path": "skills/coding-standards/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "General implementation quality."
+      "distribution": "target-distributed"
     },
     "skill:karpathy-guidelines": {
       "kind": "skill",
       "path": "skills/karpathy-guidelines",
-      "version": "0.1.0",
-      "source": "multica-ai/andrej-karpathy-skills",
-      "provides": [
-        "coding-behavior-baseline",
-        "assumption-surfacing",
-        "surgical-change-discipline",
-        "verifiable-success-criteria"
-      ],
-      "overlapsWith": [
-        "skill:coding-standards",
-        "skill:sdd-workflow",
-        "skill:tdd-workflow",
-        "skill:review-workflow",
-        "skill:grill-me"
-      ],
-      "routing": "Use when a workflow-router-selected owner workflow needs a coding behavior baseline for writing, reviewing, or refactoring code; do not use as a top-level owner, requirements workflow, TDD workflow, or code review workflow.",
-      "detects": [
-        {
-          "path": "skills/karpathy-guidelines/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use as a helper baseline for assumption surfacing, simple implementation, surgical diffs, and verification criteria inside the selected owner workflow."
+      "distribution": "target-distributed"
     },
     "skill:ponytail": {
       "kind": "skill",
       "path": "skills/ponytail",
-      "version": "0.1.0",
-      "source": "DietrichGebert/ponytail",
-      "provides": [
-        "coding-minimalism",
-        "yagni-ladder",
-        "overengineering-avoidance",
-        "stdlib-native-first",
-        "shortest-correct-diff",
-        "unrequested-prose-reduction"
-      ],
-      "overlapsWith": [
-        "skill:coding-standards",
-        "skill:karpathy-guidelines",
-        "skill:tdd-workflow",
-        "skill:review-workflow",
-        "skill:verification-loop",
-        "skill:effective-interact"
-      ],
-      "routing": "Load when coding work should be deliberately minimal: YAGNI, reuse existing code, prefer stdlib/native/already-installed dependencies, shortest correct diff, no unrequested abstractions, or over-engineering review; use effective-interact for non-coding reports and communication artifacts, tdd-workflow for lifecycle, and security-review for focused security.",
-      "detects": [
-        {
-          "path": "skills/ponytail/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "medium",
-      "recommendation": "Use as the standard coding-minimalism helper so implementation and review work default to YAGNI, reuse, stdlib/native/already-installed dependencies, smallest correct diffs, and short code-first explanations without taking over reporting, lifecycle, security, or requested walkthroughs."
+      "distribution": "target-distributed"
     },
     "skill:tdd-workflow": {
       "kind": "skill",
       "path": "skills/tdd-workflow",
-      "version": "0.2.0",
-      "source": "mattpocock-skills-adapted",
-      "provides": [
-        "test-driven-development",
-        "red-green-refactor",
-        "behavior-tests",
-        "tracer-bullet-slices"
-      ],
-      "overlapsWith": [
-        "skill:diagnose",
-        "skill:prototype",
-        "skill:verification-loop",
-        "skill:openspec-apply-change"
-      ],
-      "routing": "Use for production features, confirmed bug fixes, and refactors that should proceed one behavior at a time through red-green-refactor; use diagnose for unknown root causes and prototype for throwaway exploration.",
-      "detects": [
-        {
-          "path": "skills/tdd-workflow/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Drive production changes one behavior at a time through public behavior tests, minimal implementation, and refactor-after-green."
+      "distribution": "target-distributed"
     },
     "skill:verification-loop": {
       "kind": "skill",
       "path": "skills/verification-loop",
-      "version": "0.1.0",
-      "source": "everything-claude-code",
-      "provides": [
-        "completion-verification"
-      ],
-      "overlapsWith": [
-        "skill:openspec-apply-change"
-      ],
-      "routing": "Use for final build, typecheck, lint, test, diff, smoke, and artifact validation gates after work is done; use diagnosis/review owners before root-cause analysis.",
-      "detects": [
-        {
-          "path": "skills/verification-loop/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Default before declaring work complete."
+      "distribution": "target-distributed"
     },
     "skill:security-review": {
       "kind": "skill",
       "path": "skills/security-review",
-      "version": "0.1.0",
-      "source": "everything-claude-code",
-      "provides": [
-        "security-review"
-      ],
-      "overlapsWith": [],
-      "routing": "Use for focused review of security-sensitive code, auth, secrets, injection, unsafe IO, payments, or privacy risk; do not use for general review.",
-      "detects": [
-        {
-          "path": "skills/security-review/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Security-sensitive code, auth, secrets, injection, unsafe IO, or payments."
+      "distribution": "target-distributed"
     },
     "skill:documentation-lookup": {
       "kind": "skill",
       "path": "skills/documentation-lookup",
-      "version": "0.1.0",
-      "source": "everything-claude-code",
-      "provides": [
-        "current-docs-lookup"
-      ],
-      "overlapsWith": [
-        "skill:answer-workflow"
-      ],
-      "routing": "Use when current library, framework, SDK, API, CLI, or cloud-service documentation is needed; use answer-workflow for ordinary repo-local explanation.",
-      "detects": [
-        {
-          "path": "skills/documentation-lookup/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Library, framework, SDK, API, CLI, or cloud-service docs."
+      "distribution": "target-distributed"
     },
     "skill:package-release-sniffer": {
       "kind": "skill",
       "path": "skills/package-release-sniffer",
-      "version": "0.1.0",
-      "source": "local-original",
-      "provides": [
-        "package-release-discovery",
-        "registry-primary-source-triage",
-        "ai-developer-tool-release-sniffing",
-        "package-release-output-shape"
-      ],
-      "overlapsWith": [
-        "skill:documentation-lookup",
-        "skill:source-post",
-        "skill:answer-workflow",
-        "skill:tdd-workflow"
-      ],
-      "routing": "Load when tracking newly published package or model-package releases across package registries and release feeds for AI or developer-tool monitoring; use documentation-lookup for docs on a chosen package and implementation workflows for building registry clients.",
-      "detects": [
-        {
-          "path": "skills/package-release-sniffer/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Add source-first package release sniffing for AI and developer-tool monitoring without installing registry clients, hooks, credentials, or scheduled monitors."
-    },
-    "skill:harness-quality-check": {
-      "kind": "skill",
-      "path": "skills/harness-quality-check",
-      "version": "0.1.0",
-      "source": "local-original",
-      "provides": [
-        "harness-quality-audit",
-        "target-readiness-quality-report",
-        "advisory-html-quality-findings",
-        "existing-check-composition"
-      ],
-      "overlapsWith": [
-        "skill:effective-interact",
-        "skill:verification-loop",
-        "skill:coding-standards",
-        "skill:skill-creator",
-        "skill:hub-maintenance-workflow"
-      ],
-      "routing": "Load when explicitly asked to audit Harness Hub or target repo harness quality/readiness and produce advisory HTML findings; use verification-loop for final gates, coding-standards for code quality conventions, skill-creator for skill authoring, and hub-maintenance-workflow for actual source changes.",
-      "detects": [
-        {
-          "path": "skills/harness-quality-check/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Compose existing Harness Hub self-check, readiness, harness validation, and skill-quality evidence into local advisory HTML reports without remote writes, schedules, hooks, or enforcement changes."
+      "distribution": "target-distributed"
     },
     "skill:agent-introspection-debugging": {
       "kind": "skill",
       "path": "skills/agent-introspection-debugging",
-      "version": "0.1.0",
-      "source": "everything-claude-code",
-      "provides": [
-        "agent-self-debugging"
-      ],
-      "overlapsWith": [
-        "skill:verification-loop"
-      ],
-      "routing": "Use when a workflow-router-selected owner workflow needs agent run, tool loop, context drift, or recoverable harness/tool failure debugging after product bugs are ruled out.",
-      "detects": [
-        {
-          "path": "skills/agent-introspection-debugging/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Repeated agent failures, loops, drift, or recoverable tool failures."
+      "distribution": "target-distributed"
     },
     "skill:frontend-design": {
       "kind": "skill",
       "path": "skills/frontend-design",
-      "version": "0.1.0",
-      "source": "anthropic-builtins-adapted",
-      "provides": [
-        "visual-frontend-creation"
-      ],
-      "overlapsWith": [
-        "skill:effective-interact",
-        "skill:web-artifacts-builder"
-      ],
-      "routing": "Use for polished product UI or web pages, not routine interaction artifacts.",
-      "detects": [
-        {
-          "path": "skills/frontend-design/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use for polished product UI or web pages, not routine interaction artifacts."
+      "distribution": "target-distributed"
     },
     "skill:design-taste-frontend": {
       "kind": "skill",
       "path": "skills/design-taste-frontend",
-      "version": "0.1.0",
-      "source": "Leonxlnx/taste-skill",
-      "provides": [
-        "anti-template-frontend-visual-direction",
-        "landing-redesign-aesthetic-preflight"
-      ],
-      "overlapsWith": [
-        "skill:frontend-design",
-        "skill:frontend-patterns",
-        "skill:web-artifacts-builder",
-        "skill:theme-factory",
-        "skill:effective-interact"
-      ],
-      "routing": "Use for anti-template visual direction, design-read calibration, and pre-flight critique for landing pages, portfolios, marketing pages, and redesigns; use frontend-design for production UI implementation, frontend-patterns for logic, web-artifacts-builder for standalone artifacts, effective-interact for reports, and do not use for dashboards, data tables, or multi-step product UI.",
-      "detects": [
-        {
-          "path": "skills/design-taste-frontend/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use as a narrow anti-slop visual taste layer for landing pages, portfolios, marketing pages, and redesigns."
+      "distribution": "target-distributed"
     },
     "skill:clone-website": {
       "kind": "skill",
       "path": "skills/clone-website",
-      "version": "0.1.0",
-      "source": "JCodesMore/ai-website-cloner-template",
-      "provides": [
-        "authorized-website-reconstruction",
-        "browser-inspection-clone-workflow",
-        "third-party-brand-safety-gates",
-        "component-spec-driven-page-rebuilds"
-      ],
-      "overlapsWith": [
-        "skill:frontend-design",
-        "skill:design-taste-frontend",
-        "skill:web-artifacts-builder",
-        "skill:webapp-testing",
-        "skill:e2e-testing",
-        "skill:security-review"
-      ],
-      "routing": "Load when the user explicitly asks to clone, reverse-engineer, or rebuild an authorized website; do not use for generic redesign, visual inspiration, scraping, phishing, impersonation, or third-party brand copying.",
-      "detects": [
-        {
-          "path": "skills/clone-website/SKILL.md"
-        },
-        {
-          "path": "skills/clone-website/references/safety-and-permissions.md"
-        },
-        {
-          "path": "skills/clone-website/references/extraction-checklist.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "high",
-      "recommendation": "Use as an explicit website-clone workflow only after permission, browser automation, replacement-content, and validation gates are clear."
+      "distribution": "target-distributed"
     },
     "skill:web-artifacts-builder": {
       "kind": "skill",
       "path": "skills/web-artifacts-builder",
-      "version": "0.1.0",
-      "source": "anthropic-builtins-adapted",
-      "provides": [
-        "complex-html-artifacts",
-        "react-bundled-artifacts"
-      ],
-      "overlapsWith": [
-        "skill:effective-interact",
-        "skill:frontend-design"
-      ],
-      "routing": "Use for complex standalone React/Tailwind/shadcn browser artifacts; use frontend-design for production UI and effective-interact for communication reports.",
-      "detects": [
-        {
-          "path": "skills/web-artifacts-builder/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use for complex React/Tailwind/shadcn artifacts."
+      "distribution": "target-distributed"
     },
     "skill:frontend-slides": {
       "kind": "skill",
       "path": "skills/frontend-slides",
-      "version": "0.1.0",
-      "source": "everything-claude-code",
-      "provides": [
-        "html-presentations"
-      ],
-      "overlapsWith": [
-        "skill:effective-interact"
-      ],
-      "routing": "Use for HTML presentations, slide decks, talk or pitch slides, and PPT/PPTX-to-web conversion; use effective-interact only for deck summaries or handoff.",
-      "detects": [
-        {
-          "path": "skills/frontend-slides/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use for slide decks and PPT/PPTX-to-web work."
+      "distribution": "target-distributed"
     },
     "skill:frontend-patterns": {
       "kind": "skill",
       "path": "skills/frontend-patterns",
-      "version": "0.1.0",
-      "source": "everything-claude-code",
-      "provides": [
-        "frontend-engineering-patterns"
-      ],
-      "overlapsWith": [
-        "skill:frontend-design"
-      ],
-      "routing": "Use for React or Next.js frontend logic, state, forms, routing, accessibility, or responsive behavior; use frontend-design for visual production UI.",
-      "detects": [
-        {
-          "path": "skills/frontend-patterns/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Use for React, state, forms, routing, and accessibility patterns."
+      "distribution": "target-distributed"
     },
     "skill:webapp-testing": {
       "kind": "skill",
       "path": "skills/webapp-testing",
-      "version": "0.1.0",
-      "source": "anthropic-builtins-adapted",
-      "provides": [
-        "one-off-browser-debugging",
-        "web-browser-acceptance"
-      ],
-      "overlapsWith": [
-        "skill:e2e-testing"
-      ],
-      "routing": "Use for one-off local web app inspection, screenshots, console logs, UI reproduction, or agent-run Web browser acceptance; use e2e-testing for durable Playwright suites.",
-      "detects": [
-        {
-          "path": "skills/webapp-testing/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "One-off local browser inspection and agent-run Web browser acceptance."
+      "distribution": "target-distributed"
     },
     "skill:web-design-guidelines": {
       "kind": "skill",
       "path": "skills/web-design-guidelines",
-      "version": "0.1.0",
-      "source": "vercel-agent-skills",
-      "provides": [
-        "ui-a11y-audit"
-      ],
-      "overlapsWith": [
-        "skill:frontend-design"
-      ],
-      "routing": "Use for UI, UX, accessibility, or web interface guideline compliance review; use frontend-design when creating or changing production UI.",
-      "detects": [
-        {
-          "path": "skills/web-design-guidelines/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "UI, UX, and accessibility audits."
+      "distribution": "target-distributed"
     },
     "skill:e2e-testing": {
       "kind": "skill",
       "path": "skills/e2e-testing",
-      "version": "0.1.0",
-      "source": "everything-claude-code",
-      "provides": [
-        "durable-playwright-suites"
-      ],
-      "overlapsWith": [
-        "skill:webapp-testing"
-      ],
-      "routing": "Use for durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy; use webapp-testing for one-off inspection.",
-      "detects": [
-        {
-          "path": "skills/e2e-testing/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Durable E2E suites and CI browser tests."
+      "distribution": "target-distributed"
     },
     "skill:openspec-explore": {
       "kind": "skill",
       "path": "skills/openspec-explore",
-      "version": "1.0.0",
-      "source": "openspec",
-      "provides": [
-        "formal-change-exploration"
-      ],
-      "overlapsWith": [
-        "skill:product-capability"
-      ],
-      "routing": "Use only for explicit OpenSpec exploration, discovery, or requirement clarification; ordinary SDD/product planning should use product-capability or sdd-workflow.",
-      "detects": [
-        {
-          "path": "skills/openspec-explore/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Explicit OpenSpec exploration or formal change lifecycle only."
+      "distribution": "target-distributed"
     },
     "skill:openspec-propose": {
       "kind": "skill",
       "path": "skills/openspec-propose",
-      "version": "1.0.0",
-      "source": "openspec",
-      "provides": [
-        "formal-change-proposal"
-      ],
-      "overlapsWith": [
-        "skill:product-capability"
-      ],
-      "routing": "Use only for explicit new OpenSpec proposals with design, spec deltas, and tasks; ordinary capability plans should use product-capability or sdd-workflow.",
-      "detects": [
-        {
-          "path": "skills/openspec-propose/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Explicit OpenSpec proposal generation."
+      "distribution": "target-distributed"
     },
     "skill:openspec-apply-change": {
       "kind": "skill",
       "path": "skills/openspec-apply-change",
-      "version": "1.0.0",
-      "source": "openspec",
-      "provides": [
-        "formal-change-task-implementation"
-      ],
-      "overlapsWith": [
-        "skill:tdd-workflow",
-        "skill:verification-loop"
-      ],
-      "routing": "Use only for implementing or continuing an existing OpenSpec change; use tdd-workflow or verification-loop for non-OpenSpec implementation and checks.",
-      "detects": [
-        {
-          "path": "skills/openspec-apply-change/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Implementing an already-created OpenSpec change."
+      "distribution": "target-distributed"
     },
     "skill:openspec-archive-change": {
       "kind": "skill",
       "path": "skills/openspec-archive-change",
-      "version": "1.0.0",
-      "source": "openspec",
-      "provides": [
-        "formal-change-archiving"
-      ],
-      "overlapsWith": [],
-      "routing": "Use only for finalizing and archiving completed OpenSpec changes after implementation and spec sync decisions are resolved.",
-      "detects": [
-        {
-          "path": "skills/openspec-archive-change/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Archiving completed OpenSpec changes."
+      "distribution": "target-distributed"
     },
     "skill:claude-api": {
       "kind": "skill",
       "path": "skills/claude-api",
-      "version": "0.1.0",
-      "source": "anthropics-skills-adapted",
-      "provides": [
-        "anthropic-sdk-guidance",
-        "claude-api-implementation",
-        "provider-specific-api-migration"
-      ],
-      "overlapsWith": [
-        "skill:documentation-lookup",
-        "skill:security-review"
-      ],
-      "routing": "Use for Claude API or Anthropic SDK implementation, debugging, tuning, and migration; verify live provider docs before code changes.",
-      "detects": [
-        {
-          "path": "skills/claude-api/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "medium",
-      "recommendation": "Add explicit Anthropic API support without loading volatile API tables into default workflows."
+      "distribution": "target-distributed"
     },
     "skill:mcp-builder": {
       "kind": "skill",
       "path": "skills/mcp-builder",
-      "version": "0.1.0",
-      "source": "anthropics-skills-adapted",
-      "provides": [
-        "mcp-server-design",
-        "mcp-tool-schema-patterns",
-        "mcp-evaluation-guidance"
-      ],
-      "overlapsWith": [
-        "skill:documentation-lookup",
-        "skill:security-review",
-        "skill:tdd-workflow"
-      ],
-      "routing": "Use for designing, building, reviewing, or testing MCP servers and tool contracts for external services.",
-      "detects": [
-        {
-          "path": "skills/mcp-builder/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "medium",
-      "recommendation": "Add a bounded MCP server builder atom with reference guides and evaluation scripts."
+      "distribution": "target-distributed"
     },
     "skill:skill-creator": {
       "kind": "skill",
       "path": "skills/skill-creator",
-      "version": "0.1.0",
-      "source": "anthropics-skills-adapted",
-      "provides": [
-        "skill-authoring",
-        "skill-routing-evaluation",
-        "skill-progressive-disclosure"
-      ],
-      "overlapsWith": [
-        "skill:hub-maintenance-workflow",
-        "skill:documentation-lookup"
-      ],
-      "routing": "Use for creating, adapting, updating, or evaluating standard agent skills after the owner workflow has selected the maintenance/change lane.",
-      "detects": [
-        {
-          "path": "skills/skill-creator/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Add a skill authoring atom for local skills and routing evaluation without host-specific eval runners."
+      "distribution": "target-distributed"
     },
     "skill:source-post": {
       "kind": "skill",
       "path": "skills/source-post",
-      "version": "0.1.1",
-      "source": "local-original",
-      "provides": [
-        "source-backed-blog-authoring",
-        "chinese-fidelity-reconstruction",
-        "media-reference-ledgers",
-        "effective-interact-summary-layer",
-        "project-iteration-review"
-      ],
-      "overlapsWith": [
-        "skill:answer-workflow",
-        "skill:effective-interact",
-        "skill:doc-coauthoring",
-        "skill:frontend-design"
-      ],
-      "routing": "Load when turning external articles, blogs, release notes, interviews, or reports into source-backed public posts with Chinese fidelity, media references, effective-interact summary, and project-iteration review; do not use for ordinary summaries, full copyrighted reposts, or production site design.",
-      "detects": [
-        {
-          "path": "skills/source-post/SKILL.md"
-        },
-        {
-          "path": "skills/source-post/scripts/validate-source-post.mjs"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "medium",
-      "recommendation": "Use as a bounded source-to-public-blog workflow that preserves source evidence, media references, and iteration decisions while forcing reader-first article flow; do not turn effective-interact reports, source ledgers, or copyrighted source text into the main post."
+      "distribution": "target-distributed"
     },
     "skill:agent-interaction-audit": {
       "kind": "skill",
       "path": "skills/agent-interaction-audit",
-      "version": "0.2.0",
-      "source": "local-original",
-      "provides": [
-        "agent-interaction-audits",
-        "codex-claude-code-trace-review",
-        "local-agent-event-ledgers",
-        "private-agent-interaction-audit-reports",
-        "tool-call-decision-audits",
-        "prompt-rule-context-audits",
-        "automation-log-audits",
-        "agent-interaction-retro-closeout",
-        "sop-and-script-lesson-mining",
-        "knowledge-cache-candidate-mining",
-        "eval-case-candidate-mining",
-        "workflow-change-candidate-mining",
-        "executable-improvement-queues",
-        "private-improvement-queue-json",
-        "effective-interact-visual-report-inputs"
-      ],
-      "overlapsWith": [
-        "skill:source-post",
-        "skill:agent-introspection-debugging",
-        "skill:effective-interact",
-        "skill:answer-workflow",
-        "skill:harness-quality-check"
-      ],
-      "routing": "Load when the user asks for a private agent interaction audit, private repository interaction audit from local agent traces, cross-session Codex or Claude Code trace analysis, agent task profile, tool-call decision audit, collaboration bottleneck analysis, prompt/rule context audit, prompt/rule drift audit, automation log audit or review, closeout retrospective, agent-interaction-retro evidence, SOP/script lesson mining, knowledge-cache/eval/workflow-change candidates, executable improvement queue, or concrete improvement recommendations from local agent traces; legacy insight mentions route here only when paired with agent sessions, local traces, tool-call audits, or Codex/Claude Code work history, and recommendations, improvements, or bottlenecks count only when trace-backed. Use effective-interact as the visual presentation layer for dense reports, source-post for public external-source posts, agent-introspection-debugging for single-run failures, and harness-quality-check for advisory harness readiness audits.",
-      "detects": [
-        {
-          "path": "skills/agent-interaction-audit/SKILL.md"
-        },
-        {
-          "path": "skills/agent-interaction-audit/scripts/collect-agent-interaction-events.mjs"
-        },
-        {
-          "path": "skills/agent-interaction-audit/scripts/build-agent-interaction-report.mjs"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "medium",
-      "recommendation": "Audit recent project-related Codex and Claude Code collaboration traces, prompt/rule layers, automation logs, stale guidance, closeout retrospectives, SOP lessons, repeated agent mistakes, eval/workflow-change candidates, and cacheable knowledge candidates into ignored private reports plus private improvement queue JSON with confirmed/candidate evidence separation, optional effective-interact visual report inputs for dense audits, and no default project, memory, schedule, remote, or tracked-doc mutation."
+      "distribution": "target-distributed"
     },
     "skill:doc-coauthoring": {
       "kind": "skill",
       "path": "skills/doc-coauthoring",
-      "version": "0.1.0",
-      "source": "local-original",
-      "provides": [
-        "collaborative-document-drafting",
-        "reader-testing",
-        "proposal-and-spec-writing"
-      ],
-      "overlapsWith": [
-        "skill:sdd-workflow",
-        "skill:product-capability",
-        "skill:internal-comms",
-        "skill:answer-workflow"
-      ],
-      "routing": "Use for collaboratively drafting, restructuring, and reader-testing PRDs, RFCs, proposals, specs, and decision records.",
-      "detects": [
-        {
-          "path": "skills/doc-coauthoring/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Fill the durable document coauthoring gap with a local original atom; upstream Anthropic text was not copied due missing per-skill license."
+      "distribution": "target-distributed"
     },
     "skill:internal-comms": {
       "kind": "skill",
       "path": "skills/internal-comms",
-      "version": "0.1.0",
-      "source": "anthropics-skills-adapted",
-      "provides": [
-        "internal-status-updates",
-        "leadership-comms",
-        "incident-and-faq-comms"
-      ],
-      "overlapsWith": [
-        "skill:doc-coauthoring",
-        "skill:effective-interact"
-      ],
-      "routing": "Use for internal status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, and project updates.",
-      "detects": [
-        {
-          "path": "skills/internal-comms/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Add an internal communications atom with reusable reference formats."
+      "distribution": "target-distributed"
     },
     "skill:stop-slop": {
       "kind": "skill",
       "path": "skills/stop-slop",
-      "version": "0.1.0",
-      "source": "hardikpandya/stop-slop",
-      "provides": [
-        "english-prose-ai-tell-cleanup",
-        "draft-prose-style-editing",
-        "strong-style-prose-review"
-      ],
-      "overlapsWith": [
-        "skill:doc-coauthoring",
-        "skill:internal-comms",
-        "skill:answer-workflow"
-      ],
-      "routing": "Load when the user explicitly asks to draft, edit, or review English prose for AI-writing tells; do not use for code explanations, Chinese output, technical specs, or routine status reports.",
-      "detects": [
-        {
-          "path": "skills/stop-slop/SKILL.md"
-        },
-        {
-          "path": "skills/stop-slop/references/phrases.md"
-        },
-        {
-          "path": "skills/stop-slop/references/structures.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "medium",
-      "recommendation": "Install a narrow English prose cleanup skill for AI-writing tells; treat its bans on adverbs, passive voice, Wh- openers, and em dashes as strong style-editing rules, not default documentation policy."
+      "distribution": "target-distributed"
     },
     "skill:theme-factory": {
       "kind": "skill",
       "path": "skills/theme-factory",
-      "version": "0.1.0",
-      "source": "anthropics-skills-adapted",
-      "provides": [
-        "artifact-theme-selection",
-        "visual-theme-application",
-        "theme-showcase-assets"
-      ],
-      "overlapsWith": [
-        "skill:frontend-design",
-        "skill:web-artifacts-builder",
-        "skill:frontend-slides",
-        "skill:web-design-guidelines"
-      ],
-      "routing": "Use when an existing slide, document, report, HTML artifact, or landing page needs a coherent visual theme.",
-      "detects": [
-        {
-          "path": "skills/theme-factory/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Add a bounded visual theming atom that complements, rather than replaces, production UI design."
+      "distribution": "target-distributed"
     },
     "skill:slack-gif-creator": {
       "kind": "skill",
       "path": "skills/slack-gif-creator",
-      "version": "0.1.0",
-      "source": "anthropics-skills-adapted",
-      "provides": [
-        "slack-gif-generation",
-        "gif-size-validation",
-        "animated-emoji-workflow"
-      ],
-      "overlapsWith": [
-        "skill:frontend-design",
-        "skill:theme-factory"
-      ],
-      "routing": "Use for creating, optimizing, or validating animated GIFs for Slack emoji or messages.",
-      "detects": [
-        {
-          "path": "skills/slack-gif-creator/SKILL.md"
-        }
-      ],
-      "agents": [
-        "standard"
-      ],
-      "risk": "low",
-      "recommendation": "Add a narrow creative atom for Slack-ready GIF generation and validation."
+      "distribution": "target-distributed"
     }
   }
 }

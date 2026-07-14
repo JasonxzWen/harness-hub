@@ -84,9 +84,9 @@
       "id": "evidence-design-doc",
       "kind": "file",
       "label": "Decision quality design",
-      "value": "docs/effective-interact-decision-quality.md",
+      "value": "skills/effective-interact/references/interaction-patterns.md",
       "status": "info",
-      "filePath": "docs/effective-interact-decision-quality.md",
+      "filePath": "skills/effective-interact/references/interaction-patterns.md",
       "line": 18,
       "sourceType": "local-doc",
       "trustLevel": "trusted-generated"

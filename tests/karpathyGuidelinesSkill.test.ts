@@ -42,38 +42,17 @@ test('karpathy-guidelines is installable as a helper baseline with source covera
     components: Record<string, {
       kind: string;
       path: string;
-      source: string;
-      provides?: string[];
-      overlapsWith?: string[];
-      routing?: string;
-      recommendation?: string;
-      risk?: string;
+      distribution: string;
     }>;
   };
-  const routingDocs = fs.readFileSync('docs/skill-routing.md', 'utf8');
   const sourceProjects = fs.readFileSync('docs/source-projects.md', 'utf8');
-  const sourceInventory = fs.readFileSync('docs/source-skill-inventory.md', 'utf8');
   const component = index.components['skill:karpathy-guidelines'];
 
   expect(component.kind).toBe('skill');
   expect(component.path).toBe(skillDir);
-  expect(component.source).toBe('multica-ai/andrej-karpathy-skills');
-  expect(component.risk).toBe('low');
-  expect(component.provides).toEqual(expect.arrayContaining([
-    'coding-behavior-baseline',
-    'assumption-surfacing',
-    'surgical-change-discipline',
-    'verifiable-success-criteria',
-  ]));
-  expect(component.overlapsWith).toEqual(expect.arrayContaining([
-    'skill:coding-standards',
-    'skill:sdd-workflow',
-    'skill:tdd-workflow',
-    'skill:review-workflow',
-  ]));
-  expect(component.routing).toContain('do not use as a top-level owner');
-  expect(component.recommendation).toContain('helper baseline');
-  expect(routingDocs).toContain('`karpathy-guidelines` loads after a workflow owner has selected implementation');
+  expect(component.distribution).toBe('target-distributed');
+  expect(sourceProjects).toContain('`multica-ai/andrej-karpathy-skills`');
+  expect(sourceProjects).toContain('`2c606141936f1eeef17fa3043a72095b4765b9c2`');
+  expect(sourceProjects).toContain('MIT stated by upstream README/plugin metadata');
   expect(sourceProjects).toContain('Installed `karpathy-guidelines` as a standard helper skill');
-  expect(sourceInventory).toContain('Installed as `karpathy-guidelines`');
 });

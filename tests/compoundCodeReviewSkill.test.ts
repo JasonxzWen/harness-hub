@@ -35,12 +35,11 @@ test('compound-code-review keeps detailed contracts in references', () => {
 
 test('compound-code-review is part of the standard install surface', () => {
   const index = JSON.parse(read('capabilities/index.json')) as {
-    components: Record<string, { kind: string; path: string; source: string; provides?: string[] }>;
+    components: Record<string, { kind: string; path: string; distribution: string }>;
   };
   const component = index.components['skill:compound-code-review'];
 
   expect(component.kind).toBe('skill');
   expect(component.path).toBe('skills/compound-code-review');
-  expect(component.source).toBe('compound-engineering-plugin-adapted');
-  expect(component.provides).toContain('structured-code-review');
+  expect(component.distribution).toBe('target-distributed');
 });

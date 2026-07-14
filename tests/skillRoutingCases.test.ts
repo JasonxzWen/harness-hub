@@ -1,154 +1,66 @@
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import path from 'node:path';
 import { expect, test } from 'bun:test';
 
-type RoutingCase = {
+type SkillCase = {
   id: string;
   skill: string;
-  kind: 'positive' | 'negative' | 'forbidden-load';
+  kind: 'positive' | 'boundary';
   prompt: string;
-  expectedSkill: string | null;
-  docsBoundary: string;
+  expectedSkill: string;
+  expectedLoop: string;
 };
 
-const requiredHighOverlapSkills = [
-  'diagnose',
-  'agent-introspection-debugging',
-  'prototype',
-  'tdd-workflow',
-  'frontend-design',
-  'effective-interact',
-  'handoff',
-  'compound-code-review',
-  'security-review',
-  'verification-loop',
-];
-const optionalDemoSkills = [
-  'quick-learn',
-  'coding-standards',
-  'karpathy-guidelines',
-  'ponytail',
-  'documentation-lookup',
-  'package-release-sniffer',
-  'harness-quality-check',
-  'design-taste-frontend',
-  'clone-website',
-  'web-artifacts-builder',
-  'frontend-slides',
-  'frontend-patterns',
-  'webapp-testing',
-  'web-design-guidelines',
-  'e2e-testing',
-  'grill-me',
-  'grill-with-docs',
-  'product-capability',
-  'claude-api',
-  'mcp-builder',
-  'skill-creator',
-  'source-post',
-  'agent-interaction-audit',
-  'doc-coauthoring',
-  'internal-comms',
-  'stop-slop',
-  'theme-factory',
-  'slack-gif-creator',
-  'openspec-explore',
-  'openspec-propose',
-  'openspec-apply-change',
-  'openspec-archive-change',
-];
-const allowedFixtureSkills = [...requiredHighOverlapSkills, ...optionalDemoSkills];
-const topLevelWorkflowSkills = new Set([
+const fixture = JSON.parse(fs.readFileSync('tests/fixtures/skill-routing-cases.json', 'utf8')) as {
+  schemaVersion: number;
+  cases: SkillCase[];
+};
+const ownerSkills = new Set([
   'workflow-router',
   'answer-workflow',
   'sdd-workflow',
   'diagnosis-workflow',
   'review-workflow',
   'delivery-workflow',
-  'hub-maintenance-workflow',
 ]);
 
-function readFixture(): { version: number; cases: RoutingCase[] } {
-  return JSON.parse(fs.readFileSync('tests/fixtures/skill-routing-cases.json', 'utf8'));
+function contracts(): Map<string, { skills: string[] }> {
+  const runtime = path.resolve('skills/workflow-router/scripts/loop-runtime.mjs');
+  const result = spawnSync(process.execPath, [runtime, 'contracts', '--json'], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+  });
+  expect(result.status, result.stderr).toBe(0);
+  const report = JSON.parse(result.stdout) as { contracts: Array<{ id: string; skills: string[] }> };
+  return new Map(report.contracts.map((contract) => [contract.id, contract]));
 }
 
-test('routing fixture has a strict schema and unique case ids', () => {
-  const fixture = readFixture();
+test('skill routing fixture describes optional atoms owned by executable small loops', () => {
+  const loopContracts = contracts();
   const ids = new Set<string>();
 
-  expect(fixture.version).toBe(1);
-  expect(Array.isArray(fixture.cases)).toBe(true);
-
+  expect(fixture.schemaVersion).toBe(1);
+  expect(fixture.cases.some((entry) => entry.kind === 'boundary')).toBe(true);
   for (const entry of fixture.cases) {
     expect(entry.id).toMatch(/^[a-z0-9-]+$/);
     expect(ids.has(entry.id)).toBe(false);
     ids.add(entry.id);
-    expect(allowedFixtureSkills).toContain(entry.skill);
-    expect(['positive', 'negative', 'forbidden-load']).toContain(entry.kind);
     expect(entry.prompt.trim().length).toBeGreaterThan(12);
-    expect(entry.docsBoundary.trim().length).toBeGreaterThan(12);
+    expect(ownerSkills.has(entry.expectedSkill)).toBe(false);
+    expect(fs.existsSync(`skills/${entry.skill}/SKILL.md`)).toBe(true);
+    expect(fs.existsSync(`skills/${entry.expectedSkill}/SKILL.md`)).toBe(true);
 
-    if (entry.kind === 'positive') {
-      expect(entry.expectedSkill).toBe(entry.skill);
-    } else {
-      expect(entry.expectedSkill).not.toBe(entry.skill);
-    }
-    expect(topLevelWorkflowSkills.has(entry.expectedSkill || '')).toBe(false);
+    const contract = loopContracts.get(entry.expectedLoop);
+    expect(contract, `${entry.expectedLoop} must be executable`).toBeDefined();
+    expect(contract!.skills, `${entry.expectedSkill} must be composed by ${entry.expectedLoop}`).toContain(entry.expectedSkill);
+    expect(entry.kind === 'positive' ? entry.expectedSkill === entry.skill : entry.expectedSkill !== entry.skill).toBe(true);
   }
 });
 
-test('routing fixture covers each required high-overlap skill with all case kinds', () => {
-  const fixture = readFixture();
-
-  for (const skill of requiredHighOverlapSkills) {
-    const kinds = new Set(fixture.cases.filter((entry) => entry.skill === skill).map((entry) => entry.kind));
-
-    expect(kinds.has('positive')).toBe(true);
-    expect(kinds.has('negative')).toBe(true);
-    expect(kinds.has('forbidden-load')).toBe(true);
-  }
-});
-
-test('routing fixture covers every helper skill with positive and boundary cases', () => {
-  const fixture = readFixture();
-  const capabilityIndex = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    components: Record<string, { kind: string }>;
-  };
-  const helperSkills = Object.entries(capabilityIndex.components)
-    .filter(([id, component]) => component.kind === 'skill' && !topLevelWorkflowSkills.has(id.replace('skill:', '')))
-    .map(([id]) => id.replace('skill:', ''))
-    .sort();
-
-  for (const skill of helperSkills) {
-    const skillCases = fixture.cases.filter((entry) => entry.skill === skill);
-    const kinds = new Set(skillCases.map((entry) => entry.kind));
-
-    expect(kinds.has('positive'), `${skill} missing positive activation case`).toBe(true);
-    expect(
-      kinds.has('negative') || kinds.has('forbidden-load'),
-      `${skill} missing boundary activation case`,
-    ).toBe(true);
-  }
-});
-
-test('routing fixture boundaries are reflected in docs and capability overlaps', () => {
-  const fixture = readFixture();
-  const routingDocs = fs.readFileSync('docs/skill-routing.md', 'utf8');
-  const capabilityIndex = JSON.parse(fs.readFileSync('capabilities/index.json', 'utf8')) as {
-    components: Record<string, { overlapsWith?: string[] }>;
-  };
-
-  for (const entry of fixture.cases) {
-    expect(routingDocs).toContain(entry.docsBoundary);
-
-    if (entry.kind === 'negative' && entry.expectedSkill) {
-      const component = capabilityIndex.components[`skill:${entry.skill}`];
-      const expectedComponent = capabilityIndex.components[`skill:${entry.expectedSkill}`];
-      const outgoing = component?.overlapsWith || [];
-      const incoming = expectedComponent?.overlapsWith || [];
-
-      expect(outgoing.includes(`skill:${entry.expectedSkill}`) || incoming.includes(`skill:${entry.skill}`)).toBe(
-        true,
-      );
-    }
+test('skill routing fixture contains no removed Hub-only or advisory capability', () => {
+  const serialized = JSON.stringify(fixture);
+  for (const removed of ['hub-maintenance-workflow', 'harness-quality-check', 'workflow-check', 'advisory-check']) {
+    expect(serialized).not.toContain(removed);
   }
 });

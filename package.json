@@ -1,9 +1,8 @@
 {
-  "name": "@jasonwen/harness-hub",
-  "version": "0.4.0",
-  "description": "Personal repo harness toolkit with lock-backed lifecycle commands.",
+  "name": "harness-hub-repository",
+  "private": true,
+  "description": "Repository-first full migration and executable agent workflow source.",
   "type": "module",
-  "main": "dist/harnessHub.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JasonxzWen/harness-hub.git"
@@ -13,57 +12,20 @@
     "url": "https://github.com/JasonxzWen/harness-hub/issues"
   },
   "bin": {
-    "harness-hub": "bin/harness-hub.mjs",
-    "harness-agent-hook": "scripts/harness-agent-hook-adapter.mjs"
+    "harness-hub": "bin/harness-hub.mjs"
   },
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
-  "files": [
-    "AGENTS.md",
-    "CLAUDE.md",
-    "BOOTSTRAP-TARGET.md",
-    "CHANGELOG.md",
-    "README.md",
-    "README.zh-CN.md",
-    "bin/",
-    "capabilities/",
-    "config/",
-    "harness/",
-    "dist/",
-    "docs/",
-    "openspec/config.yaml",
-    "openspec/specs/",
-    ".claude-plugin/",
-    "skills/",
-    "scripts/sync-agent-skills.mjs",
-    "scripts/harness-agent-hook-adapter.mjs",
-    "scripts/harness-agent-gate.mjs",
-    "scripts/run-validate-skills.mjs",
-    "scripts/smoke-managed-update.ps1",
-    "scripts/skill-quality-inventory.ts",
-    "scripts/validate-artifact-policy.ts",
-    "scripts/validate-skills.ps1"
-  ],
   "scripts": {
-    "build": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\" && bun build ./src/harnessHub.ts --target=node --outdir=dist",
-    "prepack": "bun run build",
     "test": "bun test ./tests",
     "skill:quality-inventory": "bun ./scripts/skill-quality-inventory.ts",
     "sync:agent-skills": "node ./scripts/sync-agent-skills.mjs",
     "sync:agent-skills:dry-run": "node ./scripts/sync-agent-skills.mjs --dry-run",
-    "smoke:managed-update": "powershell -ExecutionPolicy Bypass -File ./scripts/smoke-managed-update.ps1",
     "typecheck": "tsc --noEmit",
-    "validate:artifact-policy": "bun ./scripts/validate-artifact-policy.ts",
     "validate:skills": "node ./scripts/run-validate-skills.mjs -SkipExternal",
-    "validate": "bun run typecheck && bun test ./tests && bun run validate:artifact-policy && bun run validate:skills",
-    "validate:release": "bun run validate && bun run build && node bin/harness-hub.mjs --help && node bin/harness-hub.mjs check . --json && npm pack --dry-run"
+    "validate": "bun run typecheck && bun test ./tests && bun run validate:skills"
   },
   "keywords": [
     "agent-harness",
     "agent-skills",
-    "claude-plugin",
     "harness-hub",
     "ai-agents",
     "skills"

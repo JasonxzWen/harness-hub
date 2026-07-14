@@ -12,7 +12,7 @@ This skill is the shared floor, not the detailed framework playbook.
 
 - Use `frontend-patterns` for React, state, forms, rendering, and UI architecture.
 - Use `sdd-workflow` for accepted implementation scope and `product-capability` for API or service behavior contracts before coding.
-- Use `rules/common/coding-style.md` when you need the shortest reusable rule layer instead of a full skill walkthrough.
+- Use `references/review-checklist.md` when you need the shortest reusable rule layer instead of a full skill walkthrough.
 
 ## When to Activate
 

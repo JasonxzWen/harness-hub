@@ -49,34 +49,12 @@ test('stop-slop is installable with explicit prose-only boundaries', () => {
     components: Record<string, {
       kind: string;
       path: string;
-      source: string;
-      provides?: string[];
-      overlapsWith?: string[];
-      routing?: string;
-      recommendation?: string;
-      risk?: string;
+      distribution: string;
     }>;
   };
   const component = index.components['skill:stop-slop'];
-  const routingDocs = fs.readFileSync('docs/skill-routing.md', 'utf8');
 
   expect(component.kind).toBe('skill');
   expect(component.path).toBe('skills/stop-slop');
-  expect(component.source).toBe('hardikpandya/stop-slop');
-  expect(component.risk).toBe('medium');
-  expect(component.provides).toEqual(expect.arrayContaining([
-    'english-prose-ai-tell-cleanup',
-    'draft-prose-style-editing',
-    'strong-style-prose-review',
-  ]));
-  expect(component.overlapsWith).toEqual(expect.arrayContaining([
-    'skill:doc-coauthoring',
-    'skill:internal-comms',
-    'skill:answer-workflow',
-  ]));
-  expect(component.routing).toContain('English prose');
-  expect(component.routing).toContain('do not use for code explanations');
-  expect(component.recommendation).toContain('strong style-editing rules');
-  expect(routingDocs).toContain('`stop-slop` loads only for English prose AI-tell cleanup');
-  expect(routingDocs).toContain('not a default rule for code explanations, Chinese output, technical specs, status reports, or ordinary documentation');
+  expect(component.distribution).toBe('target-distributed');
 });

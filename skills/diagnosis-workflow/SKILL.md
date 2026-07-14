@@ -1,35 +1,18 @@
 ---
 name: diagnosis-workflow
-description: Load when workflow-router selects the diagnosis state for a failing command, runtime bug, flaky behavior, performance regression, or agent/tool failure; reproduce or bound the symptom before fixing.
+description: "Load when workflow-router selects a request that starts from failure evidence; this Workflow only orchestrates executable small loops."
 ---
 
 # Diagnosis Workflow
 
-Use this owner when the task starts from a failure or regression.
+Run, in order:
 
-## Workflow
+1. `requirements-loop`
+2. `test-loop`
+3. `implementation-review-loop`
+4. `knowledge-maintain-loop` only when the fix changes durable project facts
+5. `delivery-loop`
+6. `retro-loop`
+7. `report-loop`
 
-1. Align the reported symptom and expected behavior.
-2. Gather required material: command output, logs, recent diffs, relevant code paths, docs, and source constraints.
-3. Reproduce or bound the symptom before fixing.
-4. Rank hypotheses and choose the smallest useful probe.
-5. Write the regression test or deterministic check when possible.
-6. Fix only the confirmed cause.
-7. Test and accept against the symptom and regression scope.
-8. Finish closeout when the diagnosis changed files: run the required closeout loop, inspect PR/merge readiness when relevant, and run or explicitly skip `agent-interaction-audit` for tool-calling and workflow-learning signals.
-9. Deliver report with `effective-interact` when evidence, timeline, closeout findings, or validation is non-trivial.
-
-## Helpers
-
-- Use `diagnose` for product/runtime failures.
-- Use `claude-api` for Anthropic API or SDK failures after confirming the target is provider-specific.
-- Use `mcp-builder` for MCP server/tool-contract failures.
-- Use `agent-introspection-debugging` for agent, context, or tool-loop failures.
-- Use `webapp-testing` for one-off browser reproduction only when that helper is relevant and available.
-- Use `verification-loop` after the fix.
-
-For parallel probes, follow `workflow-router/references/orchestration-policy.md`: use subagents only for independent evidence or verification, keep critical-path reproduction local, and never rely on hooks to dispatch agents.
-
-Use the `diagnosis-regression` agentic loop from `workflow-router/references/agentic-loops.md` when useful, and as part of closeout for diagnosis fixes that changed files: producer proposes the fix, verifier reruns reproduction/regression evidence, arbiter checks whether the confirmed root cause was actually fixed, and the main agent decides whether to continue diagnosis or accept the fix.
-
-Do not apply broad refactors while diagnosing unless the accepted fix requires them.
+The `test-loop` must reproduce or deterministically bound the symptom before accepting a fix. Pass only the immediately preceding compact handoff, stop on deterministic failure, take an explicit no-maintenance branch when facts did not change, and do not duplicate diagnosis, delivery, knowledge, or retry behavior in this Workflow.

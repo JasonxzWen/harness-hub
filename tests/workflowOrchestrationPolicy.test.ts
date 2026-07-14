@@ -1,147 +1,67 @@
 import fs from 'node:fs';
 import { expect, test } from 'bun:test';
 
-function read(path: string): string {
-  return fs.readFileSync(path, 'utf8');
+function read(file: string): string {
+  return fs.readFileSync(file, 'utf8');
 }
 
-test('workflow orchestration policy keeps subagents parent-controlled and bounded', () => {
-  const policyPath = 'skills/workflow-router/references/orchestration-policy.md';
-
-  expect(fs.existsSync(policyPath)).toBe(true);
-
-  const policy = read(policyPath);
-  for (const phrase of [
-    'parent workflow owner controls orchestration',
-    'actively look for subagent splits',
-    'critical-path blockers stay local',
-    'disjoint write scopes only',
-    'main agent owns synthesis',
-    'final user-facing conclusions',
-  ]) {
-    expect(policy).toContain(phrase);
-  }
-});
-
-test('workflow orchestration policy records autonomy envelope and subagent auto-arbitration', () => {
+test('orchestration policy limits workflows to ordering, branching, and compact handoffs', () => {
   const policy = read('skills/workflow-router/references/orchestration-policy.md');
 
-  for (const phrase of [
-    'Autonomy Envelope',
-    'allowed paths and forbidden paths',
-    'path leases',
-    'Subagent Interrupt Triage',
-    'Subagent interruption questions go first to the main agent',
-    'auto-arbitrate',
-    'maxIterations',
-    'remote writes, publishing, PR/merge state',
-    'Deterministic checks outrank subagent judgment',
+  for (const requirement of [
+    'choose and order small loops',
+    "pass the previous Loop's compact handoff",
+    'branch on `completed`, `paused`, or `failed` status',
+    'return the final compact handoff to the main Agent',
+    'must not duplicate Producer prompts, Verifier criteria, retry logic, deterministic checks, path boundaries, or state persistence',
+    'Never fabricate user acceptance',
+    'Delegated CLI Agents never perform remote actions or merge',
+    'only the main Agent may perform an explicitly authorized remote action',
   ]) {
-    expect(policy).toContain(phrase);
+    expect(policy).toContain(requirement);
   }
 });
 
-test('workflow orchestration policy keeps hooks advisory before security review', () => {
-  const policy = read('skills/workflow-router/references/orchestration-policy.md');
+test('the executable Loop reference defines one complete runtime contract', () => {
+  const contract = read('skills/workflow-router/references/agentic-loops.md');
+  const handoff = read('skills/workflow-router/references/state-handoff.md');
 
-  for (const phrase of [
-    'advisory by default',
-    'No hook dispatches subagents',
-    'No hook performs remote writes',
-    'No hook bypasses SDD alignment',
-    'blocking hook requires security review',
-    'diagnosis without reproduction/evidence',
-    'delivery without validation or handoff',
+  for (const requirement of [
+    'id, objective, input schema, and structured output',
+    'optional skills',
+    'Producer, independent Verifier, and optional read-only Arbiter',
+    'maximum iterations and stop conditions',
+    'user-question pause/resume state',
+    'local and remote side-effect boundaries',
+    'compact handoff to the main Agent',
+    'Missing evidence never passes',
   ]) {
-    expect(policy).toContain(phrase);
+    expect(contract).toContain(requirement);
   }
+
+  for (const field of ['status', 'summary', 'output', 'findings', 'openQuestions', 'nextAction']) {
+    expect(handoff).toContain(field);
+  }
+  expect(handoff).toContain('`source: user` answers are the sole basis');
 });
 
-test('workflow orchestration policy records agentic loop boundaries', () => {
-  const policy = read('skills/workflow-router/references/orchestration-policy.md');
-  const catalog = read('skills/workflow-router/references/agentic-loops.md');
-
-  for (const phrase of [
-    'workflow-stage mechanics',
-    'workflow-router/references/agentic-loops.md',
-    'delegated-agent',
-    'read-only arbiters',
-    'No hook dispatches delegated agents',
-  ]) {
-    expect(policy).toContain(phrase);
+test('there is no parallel passive Loop or Workflow implementation', () => {
+  const scriptsDir = 'skills/workflow-router/scripts';
+  const removed = [
+    'agentic-loop-check.mjs',
+    'advisory-check.mjs',
+    'helper-contract-check.mjs',
+    'owner-contract-check.mjs',
+    'workflow-check.mjs',
+  ];
+  for (const name of removed) {
+    expect(fs.existsSync(`${scriptsDir}/${name}`)).toBe(false);
   }
 
-  for (const phrase of [
-    'Producer -> Verifier -> Arbiter -> Main Agent Decision',
-    'plan-review',
-    'workflow-review',
-    'test-review',
-    'security-review',
-    'frontend-acceptance',
-    'pr-closeout',
-    'agent-interaction-retro',
-    'A failing deterministic check outranks a delegated-agent pass',
-  ]) {
-    expect(catalog).toContain(phrase);
-  }
-});
-
-test('workflow owner skills point to the shared orchestration policy', () => {
-  for (const name of [
-    'workflow-router',
-    'sdd-workflow',
-    'diagnosis-workflow',
-    'review-workflow',
-    'delivery-workflow',
-    'hub-maintenance-workflow',
-  ]) {
-    expect(read(`skills/${name}/SKILL.md`)).toContain('references/orchestration-policy.md');
-  }
-});
-
-test('active skill bodies do not invoke host-specific subagent tools', () => {
-  for (const name of fs.readdirSync('skills')) {
-    const skillPath = `skills/${name}/SKILL.md`;
-    if (!fs.existsSync(skillPath)) {
-      continue;
-    }
-
-    const skill = read(skillPath);
-    expect(skill, `${name} must not invoke spawn_agent directly`).not.toContain('spawn_agent');
-    expect(skill, `${name} must not hard-code subagent_type payloads`).not.toContain('subagent_type');
-  }
-});
-
-test('active skill references do not keep upstream unconditional subagent instructions', () => {
-  const reference = read('skills/mcp-builder/references/evaluation.md');
-
-  for (const phrase of [
-    'Parallelize this step AS MUCH AS POSSIBLE',
-    'individual sub-agents',
-    'Remember to parallelize solving tasks',
-  ]) {
-    expect(reference).not.toContain(phrase);
-  }
-
-  expect(reference).toContain('workflow-router/references/orchestration-policy.md');
-  expect(reference).toContain('active workflow plan explicitly permits independent read-only scopes');
-  expect(reference).toContain('main agent keeps synthesis');
-});
-
-test('workflow docs record hook and subagent source decisions', () => {
-  const docs = [
-    'docs/workflow-router-spec.md',
-    'docs/workflow-router-execution-plan.md',
-    'docs/workflow-source-dossier.md',
-    'docs/skill-routing.md',
-  ].map(read).join('\n');
-
-  for (const phrase of [
-    'Advisory hooks only',
-    'Subagents are parent-workflow controlled',
-    'No automatic subagent dispatch',
-    'No remote writes from hooks',
-  ]) {
-    expect(docs).toContain(phrase);
+  for (const name of fs.readdirSync(scriptsDir).filter((entry) => entry.endsWith('.mjs'))) {
+    if (name === 'loop-runtime.mjs') continue;
+    const source = read(`${scriptsDir}/${name}`);
+    expect(source, `${name} contains a second workflow registry`).not.toContain('EXECUTABLE_WORKFLOWS');
+    expect(source, `${name} contains a second Loop runner`).not.toContain('function runExecutableLoop');
   }
 });

@@ -167,7 +167,7 @@ Use `../DESIGN.md` and `component-contracts.md`, then choose the smallest compon
 
 Shared components live in `assets/components/interaction-ui.css`, `assets/components/interaction-ui.js`, `assets/components/rich-render-runtime.css`, and `assets/components/rich-render-runtime.js`.
 
-For Harness Hub vocabulary explainers, use `docs/harness-vocabulary.md` as the local term source. Keep definitions local-original, show adjacent-concept contrasts, and cite glossary-like upstream repositories only as structure inspiration.
+For project vocabulary explainers, use the project's source-traceable `knowledge/` concepts as the local term source. Keep definitions project-owned, show adjacent-concept contrasts, and cite upstream glossaries only as structure inspiration.
 
 ## Static Component Boundary
 
@@ -220,7 +220,7 @@ Supported section types: `summary-cards`, `data-table`, `markdown`, `mermaid`, `
 
 ### Handoff Durability
 
-Generated HTML under `skills/effective-interact/artifacts/` is a disposable inspection output. It can disappear when a fresh Codex worktree is created, ignored files are cleaned, or local state is reset. For any report the user is expected to reopen later, keep the JSON input in a durable source location such as `skills/effective-interact/assets/fixtures/` when the content is safe to track, or another approved tracked path owned by the task. If the content is private or unsuitable for tracking, record the regeneration command in `.harness-hub/state/session-handoff.md` and the final response.
+Generated HTML under `skills/effective-interact/artifacts/` is a disposable inspection output. It can disappear when a fresh worktree is created, ignored files are cleaned, or local state is reset. For any report the user is expected to reopen later, keep the JSON input in a durable source location such as `skills/effective-interact/assets/fixtures/` when the content is safe to track, or another approved tracked path owned by the task. If the content is private or unsuitable for tracking, record the regeneration command in `.harness-hub/state/session-handoff.md` and the final response.
 
 Before final handoff:
 
