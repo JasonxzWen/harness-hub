@@ -91,7 +91,7 @@ When the user confirms the syllabus, update durable state before teaching:
 
 For each confirmed module:
 
-1. Start with retrieval from prior weak concepts.
+1. Start with a small retrieval from `review_queue`, prioritizing concepts also present in `weak_concepts`.
 2. For beginners, teach one plain-language model and a worked example before graded questions.
 3. Ask one or two diagnostic, prediction, or application questions using taught vocabulary.
 4. Repair the highest-impact gap.
@@ -121,7 +121,7 @@ Use a mix of:
 
 Update `progress.json`, weak concepts, and review queue after assessment.
 
-When a later answer, teach-back, or assessment reaches mastery 4 or 5, remove the resolved concept from weak and review queues. Source or teaching review metadata is not proof that the learner resolved the weakness. Preserve the event history; do not preserve a stale current weakness.
+When an answer, teach-back, or assessment reaches mastery 4 or 5, remove the concept from the weak queue but keep it in the review queue. Remove it from the review queue only after another 4 or 5 result follows intervening material, a later session, or a meaningful delay and is logged with `--metadata retrieval=delayed`. An immediate retry is repair evidence, not delayed retrieval. Source or teaching review metadata is never learner evidence. Preserve event history without preserving stale weakness. Apply this queue behavior to new mastery evidence; do not infer or backfill delayed-review state from historical logs.
 
 ## Phase 7: Handoff
 

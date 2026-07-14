@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Keep newly mastered `quick-learn` concepts in the existing review queue until a successful delayed retrieval confirms durable retention.
 - Change `grill-me` from serial-by-default questioning to dependency-layered decision tables that batch all currently independent questions with recommendations and downstream effects; explicit one-question-at-a-time requests remain supported.
 - Preserve the managed upgrade path from `grill-me` `0.1.0` by recognizing its exact schema-v1 file fingerprint during lock migration before updating to `0.2.0`; locally modified copies remain blocked.
 

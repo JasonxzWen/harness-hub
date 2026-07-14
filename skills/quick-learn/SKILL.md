@@ -27,6 +27,7 @@ Use this skill when the user explicitly wants to learn a book, paper, codebase, 
 - Define unfamiliar vocabulary in plain language before using it in graded checks. A diagnostic may probe vocabulary only when it is explicitly ungraded.
 - Interpret requests to go faster as less repetition, wider coverage, or fewer checks; do not remove prerequisite explanations.
 - Keep teaching-quality feedback separate from learner mastery. When the user critiques pacing, wording, examples, or lesson design, repair the teaching plan and log it as `teaching-review` without learner mastery evidence.
+- Treat immediate mastery as current understanding, not durable retention. Keep it in the existing review queue until a successful retrieval after intervening material, a later session, or a meaningful delay is logged with `retrieval=delayed`.
 - Keep the first teaching unit small. Use active recall, teach-back, transfer questions, and zero-hint checks after the learner has enough explanation to answer.
 - Do not build an HTML course artifact in v1 unless the user explicitly asks for that output.
 
@@ -84,6 +85,7 @@ Use durable logs for real learning projects, not trivial chat.
 python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Investment Basics" --event source --source-title "Official book page" --source-url "https://example.com/book" --quality A --summary "Recorded official source."
 python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Investment Basics" --event syllabus --module "Risk basics" --summary "Proposed custom module after source review."
 python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Investment Basics" --event assessment --concept "Risk premium" --mastery 3 --summary "Teach-back correct, transfer example still weak."
+python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Investment Basics" --event assessment --concept "Risk premium" --mastery 4 --metadata retrieval=delayed --summary "Delayed retrieval remained correct."
 python skills/quick-learn/scripts/log_quick_learn_event.py --topic "Investment Basics" --event teaching-review --module "Risk basics" --review-status warn --metadata issue_owner=teaching --summary "Learner needs plain-language definitions before checks."
 ```
 

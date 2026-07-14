@@ -56,7 +56,10 @@ def parse_metadata(values: list[str]) -> dict[str, str]:
         key = key.strip()
         if not key:
             raise SystemExit(f"metadata key cannot be empty: {value}")
-        metadata[key] = raw.strip()
+        raw = raw.strip()
+        if key == "retrieval" and raw != "delayed":
+            raise SystemExit("metadata retrieval must be delayed")
+        metadata[key] = raw
     return metadata
 
 
@@ -173,16 +176,19 @@ def update_progress(path: Path, event: dict[str, Any]) -> dict[str, Any]:
     concept = event.get("concept")
     mastery = event.get("mastery")
     if concept and mastery is not None and event["event"] in MASTERY_EVIDENCE_EVENTS:
+        weak = progress.setdefault("weak_concepts", [])
+        queue = progress.setdefault("review_queue", [])
         if mastery < 4:
-            weak = progress.setdefault("weak_concepts", [])
             if concept not in weak:
                 weak.append(concept)
-            queue = progress.setdefault("review_queue", [])
             if concept not in queue:
                 queue.append(concept)
         else:
-            progress["weak_concepts"] = [item for item in progress.setdefault("weak_concepts", []) if item != concept]
-            progress["review_queue"] = [item for item in progress.setdefault("review_queue", []) if item != concept]
+            progress["weak_concepts"] = [item for item in weak if item != concept]
+            if event.get("metadata", {}).get("retrieval") == "delayed":
+                progress["review_queue"] = [item for item in queue if item != concept]
+            elif concept not in queue:
+                queue.append(concept)
 
     event_summary = {
         "timestamp": event["timestamp"],
