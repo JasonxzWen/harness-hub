@@ -162,6 +162,74 @@ test('a repository URL clone can run the one public migrate command from its ind
   }
 }, 30_000);
 
+test('official source URL variants keep installed updates canonical and clean', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-source-url-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  const canonicalUrl = 'https://github.com/JasonxzWen/harness-hub';
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir, { knowledge: true });
+    execFileSync('git', ['remote', 'set-url', 'origin', canonicalUrl], { cwd: sourceDir });
+    expect(runMigration(sourceDir, targetDir, 'codex').status).toBe(0);
+    commitAll(targetDir, 'accept canonical migration');
+    const sourceHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: sourceDir, encoding: 'utf8' }).trim();
+
+    for (const remoteUrl of [
+      canonicalUrl,
+      `${canonicalUrl}.git`,
+      'git@github.com:JasonxzWen/harness-hub.git',
+      'ssh://git@github.com/JasonxzWen/harness-hub.git',
+    ]) {
+      execFileSync('git', ['remote', 'set-url', 'origin', remoteUrl], { cwd: sourceDir });
+
+      const result = runMigration(sourceDir, targetDir);
+
+      expect(result.status, `${remoteUrl}: ${result.stderr}`).toBe(0);
+      const manifest = JSON.parse(fs.readFileSync(path.join(targetDir, '.harness-hub', 'manifest.json'), 'utf8'));
+      expect(manifest.source.url, remoteUrl).toBe(canonicalUrl);
+      expect(manifest.source.commit, remoteUrl).toBe(sourceHead);
+      expect(execFileSync('git', ['config', '--get', 'remote.origin.url'], {
+        cwd: sourceDir, encoding: 'utf8',
+      }).trim(), remoteUrl).toBe(remoteUrl);
+      expect(gitStatus(sourceDir), remoteUrl).toBe('');
+      expect(gitStatus(targetDir), remoteUrl).toBe('');
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}, 30_000);
+
+test('migration preserves ignored target paths when their Git listing exceeds 1 MiB', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-ignored-buffer-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  const ignoredRoot = path.join(targetDir, 'ignored-cache', 'x'.repeat(140));
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir, { ignore: ['ignored-cache/'], knowledge: true });
+    fs.mkdirSync(ignoredRoot, { recursive: true });
+    for (let index = 0; index < 7_000; index += 1) {
+      const fileName = `${index.toString().padStart(4, '0')}.tmp`;
+      fs.writeFileSync(path.join(ignoredRoot, fileName), index === 0 ? 'target owned\n' : '');
+    }
+    const ignoredListing = execFileSync(
+      'git',
+      ['ls-files', '--others', '--ignored', '--exclude-standard', '-z'],
+      { cwd: targetDir, maxBuffer: 4 * 1024 * 1024 },
+    );
+    expect(ignoredListing.byteLength).toBeGreaterThan(1024 * 1024);
+
+    const result = runMigration(sourceDir, targetDir, 'codex');
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(fs.readFileSync(path.join(ignoredRoot, '0000.tmp'), 'utf8'))
+      .toBe('target owned\n');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);
+
 test('installed claude, codex, and both targets inherit manifest Hosts and primary when update omits them', () => {
   for (const entry of [
     { host: 'claude', hosts: ['claude'], primary: 'claude' },
@@ -464,6 +532,39 @@ test('an existing manifest with missing knowledge fails before any CLI call', ()
     expect(readCalls(callLog)).toEqual([]);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
+  }
+}, 30_000);
+
+test('linked source and target worktrees fail closed with standalone-clone recovery guidance', () => {
+  for (const linked of ['source', 'target'] as const) {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), `harness-linked-${linked}-`));
+    const sourceRoot = path.join(root, 'source');
+    const targetRoot = path.join(root, 'target');
+    const linkedRoot = path.join(root, `linked-${linked}`);
+    try {
+      initMinimalSource(sourceRoot);
+      initTarget(targetRoot, { knowledge: true });
+      const worktreeOwner = linked === 'source' ? sourceRoot : targetRoot;
+      execFileSync('git', ['worktree', 'add', '-b', `linked-${linked}`, linkedRoot], {
+        cwd: worktreeOwner,
+        stdio: 'ignore',
+      });
+      const sourceDir = linked === 'source' ? linkedRoot : sourceRoot;
+      const targetDir = linked === 'target' ? linkedRoot : targetRoot;
+      const before = snapshotFiles(targetDir);
+
+      const result = runMigration(sourceDir, targetDir, 'codex');
+
+      expect(result.status, linked).toBe(3);
+      const error = JSON.parse(result.stderr) as { code: string; message: string; phase: string };
+      expect(error, linked).toMatchObject({ code: 'E_LINKED_WORKTREE', phase: 'preflight' });
+      expect(error.message, linked).toContain('clean standalone clone');
+      expect(error.message, linked).toContain('Do not copy or transplant Git metadata');
+      expect(snapshotFiles(targetDir), linked).toEqual(before);
+      expect(gitStatus(targetDir), linked).toBe('');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   }
 }, 30_000);
 
