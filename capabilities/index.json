@@ -111,6 +111,21 @@
       "path": "skills/frontend-design",
       "distribution": "target-distributed"
     },
+    "skill:apple-design": {
+      "kind": "skill",
+      "path": "skills/apple-design",
+      "distribution": "target-distributed"
+    },
+    "skill:animation-vocabulary": {
+      "kind": "skill",
+      "path": "skills/animation-vocabulary",
+      "distribution": "target-distributed"
+    },
+    "skill:review-animations": {
+      "kind": "skill",
+      "path": "skills/review-animations",
+      "distribution": "target-distributed"
+    },
     "skill:design-taste-frontend": {
       "kind": "skill",
       "path": "skills/design-taste-frontend",

@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: Load when a task needs a throwaway prototype, state-model sanity check, UI variant, mock interaction, or playable design; do not use for production feature work.
+description: Load when a task needs a throwaway prototype, state-model sanity check, UI variant, image-assisted visual mockup, mock interaction, or playable design; do not use for production feature work.
 license: MIT
 metadata:
   source: "mattpocock/skills skills/engineering/prototype"
@@ -56,6 +56,8 @@ Show the current state after every action. Keep the UI on one screen when possib
 ## UI Prototype
 
 Build several structurally different UI variants when the question is visual or interaction-heavy.
+
+Use Host-native image generation only when a bitmap mockup or reference materially reduces visual uncertainty. Use only public or generated material, or assets the user supplied or explicitly approved for this generation. Reduce private context to de-identified visual descriptors; never send source code, secrets, internal routes, customer or account data, private screenshots, or private copy. Do not add a provider SDK, API key, model adapter, or model-specific runtime to the project. Treat generated images as prototype evidence rather than production UI; if the Host has no native image capability or safe context is unavailable, provide a visual brief and continue without a fallback runtime.
 
 Prefer mounting variants inside an existing route or page, controlled by a query parameter such as `?variant=A`. Use a new prototype route only when no existing host page fits.
 
