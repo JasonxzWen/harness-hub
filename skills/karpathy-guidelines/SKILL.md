@@ -1,6 +1,6 @@
 ---
 name: karpathy-guidelines
-description: Load when a workflow-router-selected owner workflow needs a coding behavior baseline for writing, reviewing, or refactoring code: surface assumptions, avoid overcomplication, keep changes surgical, and define verifiable success criteria; do not use as the top-level owner or for trivial one-line edits.
+description: Load when a task needs a coding behavior baseline for writing, reviewing, or refactoring code: surface assumptions, avoid overcomplication, keep changes surgical, and define verifiable success criteria; do not use as the top-level owner or for trivial one-line edits.
 source: https://github.com/multica-ai/andrej-karpathy-skills
 upstream_commit: 2c606141936f1eeef17fa3043a72095b4765b9c2
 license: MIT

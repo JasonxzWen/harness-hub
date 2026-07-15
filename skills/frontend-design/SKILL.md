@@ -1,6 +1,6 @@
 ---
 name: frontend-design
-description: Load when a workflow-router-selected owner workflow needs polished product UI, web pages, landing pages, dashboards, React components, HTML/CSS layouts, or styling; skip routine frontend logic and reports.
+description: Load when a task needs polished product UI, web pages, landing pages, dashboards, React components, HTML/CSS layouts, or styling; skip routine frontend logic and reports.
 license: Complete terms in LICENSE.txt
 ---
 

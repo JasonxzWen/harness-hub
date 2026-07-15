@@ -1,33 +1,14 @@
 {
   "components": {
-    "skill:workflow-router": {
+    "skill:decision-ui": {
       "kind": "skill",
-      "path": "skills/workflow-router",
-      "distribution": "target-distributed"
+      "path": "skills/decision-ui",
+      "distribution": "target-distributed",
+      "host": "codex"
     },
-    "skill:answer-workflow": {
+    "skill:agent-reach": {
       "kind": "skill",
-      "path": "skills/answer-workflow",
-      "distribution": "target-distributed"
-    },
-    "skill:sdd-workflow": {
-      "kind": "skill",
-      "path": "skills/sdd-workflow",
-      "distribution": "target-distributed"
-    },
-    "skill:diagnosis-workflow": {
-      "kind": "skill",
-      "path": "skills/diagnosis-workflow",
-      "distribution": "target-distributed"
-    },
-    "skill:review-workflow": {
-      "kind": "skill",
-      "path": "skills/review-workflow",
-      "distribution": "target-distributed"
-    },
-    "skill:delivery-workflow": {
-      "kind": "skill",
-      "path": "skills/delivery-workflow",
+      "path": "skills/agent-reach",
       "distribution": "target-distributed"
     },
     "skill:product-capability": {

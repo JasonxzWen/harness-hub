@@ -1,6 +1,6 @@
 ---
 name: e2e-testing
-description: Load when a workflow-router-selected owner workflow needs durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy; use webapp-testing for one-off local inspection.
+description: Load when a task needs durable Playwright E2E suites, Page Object Models, fixtures, CI browser tests, or flaky-test strategy; use webapp-testing for one-off local inspection.
 license: MIT
 ---
 

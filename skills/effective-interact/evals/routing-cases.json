@@ -33,6 +33,16 @@
       "rationale": "One diagram plus concise risks is enough; browser navigation is not needed."
     },
     {
+      "id": "positive-material-change-compact-markdown-default",
+      "kind": "positive",
+      "prompt": "Summarize this completed repository refactor with the conclusion, changed contract, validation, risks, and next action. A compact table is enough.",
+      "shouldLoad": true,
+      "expectedMode": "structured-markdown",
+      "expectedSkill": "effective-interact",
+      "htmlEscalation": false,
+      "rationale": "A material change does not justify HTML when one compact Markdown structure preserves the complete handoff."
+    },
+    {
       "id": "positive-multi-option-approval-html",
       "kind": "positive",
       "prompt": "把 6 个技术方案做成审批页，支持按风险、成本、迁移难度筛选，并给推荐路径。",

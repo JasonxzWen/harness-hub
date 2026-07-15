@@ -11,10 +11,27 @@ function makeTempRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-agent-skills-'));
 }
 
-function writeSkill(root: string, name: string, body = '---\nname: test\n---\n\n# Test\n'): void {
+function writeSkill(
+  root: string,
+  name: string,
+  body = '---\nname: test\n---\n\n# Test\n',
+  host?: 'claude' | 'codex',
+): void {
   const skillDir = path.join(root, 'skills', name);
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), body);
+  const indexPath = path.join(root, 'capabilities', 'index.json');
+  fs.mkdirSync(path.dirname(indexPath), { recursive: true });
+  const index = fs.existsSync(indexPath)
+    ? JSON.parse(fs.readFileSync(indexPath, 'utf8'))
+    : { components: {} };
+  index.components[`skill:${name}`] = {
+    kind: 'skill',
+    path: `skills/${name}`,
+    distribution: 'target-distributed',
+    ...(host ? { host } : {}),
+  };
+  fs.writeFileSync(indexPath, `${JSON.stringify(index, null, 2)}\n`);
 }
 
 test('agent skill sync mirrors standard skills to Codex and Claude while preserving local artifacts', () => {
@@ -79,6 +96,20 @@ test('agent skill sync can target one host for troubleshooting', () => {
   expect(fs.existsSync(path.join(root, '.claude', 'skills', 'alpha', 'SKILL.md'))).toBe(true);
 });
 
+test('agent skill sync mirrors Codex-only skills only to the Codex surface', () => {
+  const root = makeTempRoot();
+  writeSkill(root, 'alpha');
+  writeSkill(root, 'decision-ui', '---\nname: decision-ui\n---\n\n# Decision UI\n', 'codex');
+
+  const result = spawnSync('node', [syncScript, '--root', root], { encoding: 'utf8' });
+
+  expect(result.status, result.stderr).toBe(0);
+  expect(result.stdout).toContain('Synced 2 skills into .agents/skills/');
+  expect(result.stdout).toContain('Synced 1 skills into .claude/skills/');
+  expect(fs.existsSync(path.join(root, '.agents', 'skills', 'decision-ui', 'SKILL.md'))).toBe(true);
+  expect(fs.existsSync(path.join(root, '.claude', 'skills', 'decision-ui'))).toBe(false);
+});
+
 test('agent skill sync output stays ignored local state', () => {
   const gitignore = fs.readFileSync('.gitignore', 'utf8');
 
@@ -97,9 +128,13 @@ test('agent rules use AGENTS.md as the Codex and Claude Code source', () => {
   const oldChallengeLabel = ['深', '度', '交', '互'].join('');
 
   expect(claude).toBe('@AGENTS.md\n');
-  expect(agents).toContain('## Communication Style');
-  expect(agents).toContain('## Modern Agent Operating Model');
-  expect(agents).toContain('## Subagent Auto-Arbiter');
+  expect(agents).toContain('## Core rules');
+  expect(agents).toContain('## Native Agent operating model');
+  expect(agents).toContain('Claude Code or Codex is the only main-Agent runtime');
+  expect(agents).toContain('Use Subagents for bounded independent read-only exploration');
+  expect(agents).not.toContain('## Subagent Auto-Arbiter');
+  expect(agents).toContain('Do not create `.harness-hub/state/runs/`, leases, integration records, or a second execution control plane');
+  expect(agents).not.toContain('workflow-router');
   expect(agents).not.toContain(oldSectionTitle);
   expect(agents).not.toContain(oldPrimaryLabel);
   expect(agents).not.toContain(oldChallengeLabel);

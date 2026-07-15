@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: Load when a workflow-router-selected owner workflow needs a throwaway prototype, state-model sanity check, UI variant, mock interaction, or playable design; do not use for production feature work.
+description: Load when a task needs a throwaway prototype, state-model sanity check, UI variant, mock interaction, or playable design; do not use for production feature work.
 license: MIT
 metadata:
   source: "mattpocock/skills skills/engineering/prototype"

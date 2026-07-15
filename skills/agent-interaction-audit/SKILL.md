@@ -1,6 +1,6 @@
 ---
 name: agent-interaction-audit
-description: "Load when the user asks for private agent interaction audits from local Codex/Claude Code traces, task profiles, tool-call decisions, collaboration bottlenecks, prompt/rule or automation-log audits, closeout retrospectives, or evidence-backed SOP/knowledge/eval/workflow improvements."
+description: "Load when the user asks for private agent interaction audits from local Codex/Claude Code traces, task profiles, tool-call decisions, collaboration bottlenecks, prompt/rule or automation-log audits, closeout retrospectives, or evidence-backed Skill/project-rule/Eval/SOP/OKF improvements."
 license: MIT
 metadata:
   source: "local-original"
@@ -12,7 +12,7 @@ Use this skill to audit recent human-agent collaboration for a repository across
 
 The goal is not a status summary. The goal is a private, evidence-backed interaction audit: what the user has been asking for, how agent work has actually progressed, where the collaboration is getting stuck, whether tool-call decisions were reasonable, which prompt or project rules are stale or misleading, which scripts and tool SOPs should be preserved, which repeated agent mistakes should become guardrails, which project facts are repeatedly rediscovered from scratch, and which few changes would improve the next iterations.
 
-If this skill is loaded, the answer must contain actual insights and recommendations, not just a timeline. A compliant report explains "so what": repeated request patterns, mismatch between user expectations and agent behavior, tool or routing decisions that created friction, and the highest-leverage changes for the next session.
+If this skill is loaded, the answer must contain actual insights and recommendations, not just a timeline. A compliant report explains "so what": repeated request patterns, mismatch between user expectations and agent behavior, tool or Skill-selection decisions that created friction, and the highest-leverage changes for the next session.
 
 Use layered evidence and confidence levels. Strong insights require confirmed, non-low-confidence interaction evidence with exact or strong repository affinity. Candidate traces, ordinary repo state, low-confidence evidence, or sparse samples can support only weak leads, unknowns, or next-instrumentation recommendations. Do not fabricate patterns to fill the report shape.
 
@@ -109,7 +109,7 @@ The report must include:
 11. Project guidance garbage and drift: obsolete docs, contradictory instructions, misleading comments, stale local state, or noise that wasted agent time.
 12. SOP and script lessons: shell, encoding, GitHub/PR/check-run, validation, and tool usage patterns worth preserving.
 13. Repeated agent mistakes and guardrail candidates.
-14. Knowledge cache candidates: project facts, code locations, workflows, or decisions repeatedly rediscovered from scratch.
+14. Knowledge cache candidates: project facts, code locations, procedures, or decisions repeatedly rediscovered from scratch.
 15. Automation trace review: scheduled task logs, monitors, and recurring background failures.
 16. Core positioning and drift risk, only when evidence supports it.
 17. Unknowns: user preferences or expectations that cannot be inferred.
@@ -125,7 +125,6 @@ V1 categories:
 - `sop-candidate`
 - `knowledge-cache-candidate`
 - `eval-case-candidate`
-- `workflow-change-candidate`
 
 Each item must include stable `id`, `status`, `actionability`, `scope`, `targetDestination`, `summary`, `suggestedChange`, `executionLevel`, `patchDraftPath`, `evidenceIds`, `evidenceTier`, `sourceClasses`, `privacy`, `rawExcerptPolicy`, `confirmationPolicy`, `costRationale`, `expectedFutureCostReduction`, `risk`, `priority`, `validationSignal`, `counterEvidence`, and `rejectionReasons`.
 
@@ -137,8 +136,8 @@ Patch drafts are optional level-2-plus artifacts, not applied changes. Generate 
 
 - Bad: "The collaboration had some issues; improve communication."
 - Good: "The repeated gap is not task execution but handoff visibility: three sessions ended with validation facts in logs but no durable report, so the user had to infer status. Add a mandatory handoff checkpoint after material repo changes and verify it with the next session's trace."
-- Recommendations should be operational: add a routing case, change a skill contract, record a state file, run a validation command, ask a narrower intake question, or change a handoff shape.
-- SOP recommendations should name the durable target: project rule, validation script, runbook, eval case, wiki/cache entry, or workflow change.
+- Recommendations should be operational: change an existing Skill or project rule, add an Eval case, update an SOP or OKF page, run a validation command, ask a narrower intake question, or improve the native Host handoff.
+- SOP recommendations should name one durable target: an existing Skill, project rule, validation script, SOP/runbook, Eval case, or OKF page.
 - Knowledge-cache recommendations should cite repeated rediscovery evidence and should not write memory by default.
 - Improvement queue items should be actionable enough for a later human-confirmed patch, eval case, SOP, or knowledge-cache update, but `agent-interaction-audit` must not apply them automatically. Patch drafts are review artifacts only.
 - It is acceptable to return fewer than three strong insights or recommendations when evidence is thin. Label weak findings by evidence tier instead of padding the report.

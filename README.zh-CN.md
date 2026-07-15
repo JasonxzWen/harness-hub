@@ -1,14 +1,10 @@
 # Harness Hub
 
-Harness Hub 通过仓库 URL 为 Claude Code / Codex 项目分发完整、可执行的 Agent 工作流。
+Harness Hub 通过仓库 URL 为 Claude Code / Codex 项目提供确定性的全量 Harness 迁移。
 
-它只有一个面向目标项目的能力：全量迁移。Git 仓库及其 commit 是唯一分发和版本来源；不发布 npm 包，不提供分步安装、独立更新/删除、兼容入口或第二套 Loop runtime。
+它只有一个面向目标项目的能力：`migrate`。Git 仓库及其 commit 是唯一分发和版本来源；不发布 npm 包，不提供分步安装、独立更新/删除、兼容入口、通用 Agent Runtime 或第二套 registry。
 
-```text
-skill（可选原子能力）
-  -> small loop（可独立执行，可编排 skill）
-  -> workflow（大 loop，只编排 small loop）
-```
+Claude Code 和 Codex 是唯一主 Agent 执行层，负责需求对齐、Subagent 派发、并行执行、结果汇总和用户汇报。Harness Hub 只分发项目契约、Host 资源、原子 Skills 和 OKF，不重复实现 Host 已有的编排能力。
 
 ## 一键全量迁移
 
@@ -29,42 +25,64 @@ node bin/harness-hub.mjs migrate C:\path\to\target --host codex --yes
 --host both --primary codex
 ```
 
-`both` 的 primary CLI 负责通用资源和首次 OKF 初始化，secondary 只负责自己的 Host 目录。每次迁移都会删除旧 manifest 仍归 Harness Hub 所有、但已不属于当前 Host/全量分发的资源；`--force` 也只能接管 Harness Hub 管理的通用资源，不能改写目标项目自有的 skill、command、`knowledge/**`、Eval、产品文件或其他信息。
+`both` 的 primary 只决定首次 OKF 初始化使用哪个 CLI；通用资源和两个 Host surface 都由 Node 迁移器确定性复制。
 
-源仓库和目标仓库都必须是具有 `HEAD` 的干净 Git worktree，且所有分发源文件必须与 `HEAD` tree 逐字节一致。迁移不会提交、推送、发布、合并、修改凭据或修改用户/全局配置。
+`--force` 也只能替换 Harness Hub manifest 已管理的通用资源。每次迁移都会清理旧 manifest 仍拥有、但已不属于当前分发的 stale resource；目标项目自有 Skills、`knowledge/**`、Evals、产品文件、凭据、浏览器状态和其他信息始终受保护。
+
+源仓库和目标仓库都必须是具有 `HEAD` 的干净、独立 Git worktree，所有分发源文件必须与 source `HEAD` tree 逐字节一致。迁移拒绝 collision、路径逃逸、符号链接、junction、不安全 Git 状态和不完整输出；不会提交、推送、发布、合并、修改凭据、修改 Host trust 或修改用户/全局配置。
 
 ## 迁移结果
 
 通用资源：
 
-- `AGENTS.md`：开发规范、迭代规范、Loop Engineering Workflow、通用偏好、OKF、Eval、授权和交付边界；
+- `AGENTS.md`：原生主 Agent、开发交付、原子 Skill、OKF、Eval、授权和安全边界；
 - `CLAUDE.md`：严格等于 `@AGENTS.md`；
-- `.harness-hub/.gitignore` 和无版本号的受管文件 manifest；
+- `.harness-hub/manifest.json`：无版本号的受管文件所有权；
+- `.harness-hub/okf-validate.mjs`：独立、确定性的 Google OKF v0.1 validator；
+- `.harness-hub/safety-hook.mjs`：只在 PreTool 阶段执行的确定性安全 Hook，不路由、不写状态、不派发 Agent；
 - 首次迁移时由 primary CLI 扫描目标仓库并生成的项目自有 `knowledge/`。
 
-Claude Code：`.claude/skills/**` 和 `.claude/settings.json`。
+Claude Code 获得 `.claude/skills/**` 和 `.claude/settings.json`。
 
-Codex：`.agents/skills/**` 和 `.codex/hooks.json`。
+Codex 获得 `.agents/skills/**`、Codex-only 的 `decision-ui` 和 `.codex/hooks.json`。
 
-Codex 只从 `.agents/skills/` 发现仓库级 skills；项目 hooks 仅在 Codex 已信任目标仓库时运行，迁移不会修改信任状态或用户/全局配置。
+Codex 项目 Hook 只有在用户已信任目标仓库时运行，迁移器不会改变 trust。
 
-Harness Hub 自身的 `knowledge/`、来源记录、测试、文档、OpenSpec 和历史信息永不迁移。
+Harness Hub 自身的 `knowledge/`、来源记录、文档、测试、任务状态和仓库历史永不迁移。
 
-## 真正可执行的 Loop
+## 原子 Skills 与 Report / Retro
 
-唯一 runtime 位于 `skills/workflow-router/scripts/loop-runtime.mjs`。它会真实调用 Claude Code 或 Codex CLI，捕获结构化进程证据，执行 Producer / Verifier / 必要时的只读 Arbiter，处理有界重试、用户问答暂停恢复、路径租约、确定性验证和精简 handoff。迁移 Loop 中 Host 只能执行一次精确的内部 `copy-slice`；运行时联合核验进程 trace、回执、source commit、target HEAD、角色和分发字节。
+原生主 Agent直接选择有独立领域价值的 Skills，例如 Ponytail、effective-interact、grill-me、quick-learn、source-post、Agent Reach、Decision UI、验证、安全审查和 Agent interaction audit。
 
-首批 Loop：requirements、spec、test、implementation-review、delivery、report、retro、knowledge-init、knowledge-maintain。Workflow 只定义这些 Loop 的顺序和分支，不复制内部实现。
-
-复杂决策、方案比较和 handoff 由 `report-loop` 确定性调用 `effective-interact`，不依赖用户是否说出“可视化”关键词。
+- 复杂交付、方案比较和重要 handoff 使用 `effective-interact`；简单结果直接返回纯文本。
+- 失败、长任务、高成本、工具异常或显式复盘使用 `agent-interaction-audit`；缺少耗时、token 或 cost 证据时显示 `unknown`，不估算。
+- `decision-ui` 只分发到 Codex；原生结构化输入不可用时诚实回退文本。
+- Agent Reach 只作为安全的提示词能力分发。它先检查用户是否已安装 CLI，不自动安装依赖、不配置账号、不写 `~/.agent-reach`、不复制 Cookie 或凭据。
 
 ## OKF / LLM-Wiki
 
-首次迁移生成最小、真实、可追溯的 Google OKF v0.1 项目知识库：`knowledge/index.md`、`knowledge/log.md` 和至少一个引用迁移前目标 `HEAD` 中、且不属于 Harness Hub 托管路径的真实项目文件的概念页。生成的知识文件不得被 Git 忽略。后续迁移和 `--force` 都只验证并逐字节保护它；日常维护由项目自己的 `knowledge-maintain-loop` 完成。
+首次迁移只有在目标既没有旧 manifest、也没有 `knowledge/` 时，才调用 primary CLI 一次，基于真实目标源码生成来源可追溯的 Google OKF v0.1 Wiki。
 
-## 评估指标
+该 CLI 进程使用一次性隔离的用户/配置目录，只接收所选 Host 的 API Key 环境变量（Codex 使用 `OPENAI_API_KEY`，Claude Code 使用 `ANTHROPIC_API_KEY`）以及网络/TLS 进程配置。它不复用日常 Host profile、钥匙串、浏览器状态、无关凭据或用户配置；进程退出后临时目录即删除。
 
-真实任务 Eval 和会话材料只保存在各目标项目中。主指标是真实任务一次成功率；人工介入次数和总成本是次级护栏。不得通过弱化确定性门禁、隐藏重试或把工作转嫁给用户来优化主指标。
+后续 normal 和 force：
+
+- 不调用 Host CLI 维护知识；
+- 只运行独立 validator；
+- 逐路径、逐字节保护完整项目知识；
+- 如果已有 manifest 但知识库缺失，直接失败。
+
+日常知识维护由目标项目的原生主 Agent按项目契约完成：优先更新已有 canonical owner，保持来源、index、log 和相关链接同步；没有稳定新事实时保持 no-op。
+
+## 失败与 Eval 边界
+
+迁移器保留确定性 ownership、stale cleanup、Git control snapshot、受保护路径验证和 rollback。若无关 ignored 内容或源仓库在迁移期间发生变化导致无法精确恢复，迁移器保留不属于它的修改并返回 `rolledBack: false`，不得伪造回滚成功。
+
+真实任务卡、会话、审计、知识和 Eval 结果只保存在各目标项目中，Harness Hub 不保存其他项目案例。
+
+主指标：真实任务一次成功率。
+
+护栏：人工介入、Agent/CLI 调用次数、耗时、token、成本、迁移安全和项目知识保护。
 
 ## 本仓库开发
 
@@ -74,4 +92,4 @@ bun run sync:agent-skills
 bun run validate
 ```
 
-`.agents/skills/` 与 `.claude/skills/` 只是本地 ignored dogfood 缓存；唯一 canonical skill 源是 `skills/<name>/`。
+`.agents/skills/` 与 `.claude/skills/` 只是 ignored dogfood 缓存；唯一 canonical Skill 源是 `skills/<name>/`，`capabilities/index.json` 是单一无版本分发清单。

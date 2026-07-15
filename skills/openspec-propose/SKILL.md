@@ -1,6 +1,6 @@
 ---
 name: openspec-propose
-description: Load when a workflow-router-selected owner workflow needs an explicit OpenSpec proposal with design, spec deltas, and tasks; use product-capability for ordinary implementation contracts.
+description: Load when a task needs an explicit OpenSpec proposal with design, spec deltas, and tasks; use product-capability for ordinary implementation contracts.
 license: MIT
 metadata:
   author: openspec

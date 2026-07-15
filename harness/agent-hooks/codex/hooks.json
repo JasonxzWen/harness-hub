@@ -1,63 +1,13 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event SessionStart",
-            "statusMessage": "Running project agent session gate",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event UserPromptSubmit",
-            "statusMessage": "Routing prompt through project workflow",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Bash|apply_patch|Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event PreToolUse",
-            "statusMessage": "Checking project agent tool policy",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash|apply_patch|Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event PostToolUse",
-            "statusMessage": "Recording project agent tool signal",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex --event Stop",
-            "statusMessage": "Checking project closeout evidence",
+            "command": "node .harness-hub/safety-hook.mjs",
+            "statusMessage": "Checking deterministic project safety policy",
             "timeout": 30
           }
         ]

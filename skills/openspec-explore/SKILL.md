@@ -1,6 +1,6 @@
 ---
 name: openspec-explore
-description: Load when a workflow-router-selected owner workflow needs explicit OpenSpec exploration, discovery, or requirement clarification; use sdd-workflow for default change alignment.
+description: Load when a task needs explicit OpenSpec exploration, discovery, or requirement clarification; use the repository's normal development contract for default change alignment.
 license: MIT
 metadata:
   author: openspec

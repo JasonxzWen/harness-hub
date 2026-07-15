@@ -1,6 +1,6 @@
 ---
 name: frontend-patterns
-description: Load when a workflow-router-selected owner workflow needs React or Next.js frontend logic, component patterns, state, forms, routing, accessibility, or responsive behavior; use frontend-design for visual direction.
+description: Load when a task needs React or Next.js frontend logic, component patterns, state, forms, routing, accessibility, or responsive behavior; use frontend-design for visual direction.
 license: MIT
 ---
 

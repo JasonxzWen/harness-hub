@@ -1,6 +1,6 @@
 ---
 name: internal-comms
-description: Load when a workflow-router-selected owner workflow needs internal communications such as status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, or project updates; skip public marketing copy.
+description: Load when a task needs internal communications such as status reports, leadership updates, 3P updates, newsletters, FAQs, incident reports, or project updates; skip public marketing copy.
 license: Complete terms in LICENSE.txt
 metadata:
   source: "anthropics/skills skills/internal-comms"

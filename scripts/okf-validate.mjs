@@ -50,6 +50,24 @@ export function validateOkf(options) {
     const basename = path.posix.basename(relativePath.replaceAll('\\', '/')).toLowerCase();
     return basename !== 'index.md' && basename !== 'log.md';
   });
+  const conceptsByBody = new Map();
+  for (const conceptPath of conceptPaths) {
+    const body = normalizeKnowledgeBody(documents.get(conceptPath)?.content || '');
+    if (!body) continue;
+    const duplicates = conceptsByBody.get(body) || [];
+    duplicates.push(conceptPath);
+    conceptsByBody.set(body, duplicates);
+  }
+  for (const duplicatePaths of conceptsByBody.values()) {
+    if (duplicatePaths.length < 2) continue;
+    for (const duplicatePath of duplicatePaths) {
+      findings.push(finding(
+        'duplicate-concept-content',
+        duplicatePath,
+        `Concept content duplicates ${duplicatePaths.filter((item) => item !== duplicatePath).join(', ')}; keep one canonical owner page.`,
+      ));
+    }
+  }
   const sourcePaths = new Set();
   const indexTargets = new Set();
   let linkCount = 0;

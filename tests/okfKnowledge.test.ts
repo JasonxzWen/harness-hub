@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'bun:test';
 
-const OKF_VALIDATOR = path.resolve('skills/workflow-router/scripts/okf-validate.mjs');
+const OKF_VALIDATOR = path.resolve('scripts/okf-validate.mjs');
 
 function markdownFiles(root: string): string[] {
   return fs.readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
@@ -99,6 +99,7 @@ test('current rule and knowledge documents contain no retired lifecycle or Hub-o
 });
 
 test('Harness Hub keeps an independent source-traceable OKF wiki in the source repository', () => {
+  const conceptCount = knowledgeDocs.filter((filePath) => !['index.md', 'log.md'].includes(path.basename(filePath))).length;
   const result = spawnSync(process.execPath, [OKF_VALIDATOR, process.cwd(), '--json'], {
     cwd: process.cwd(),
     encoding: 'utf8',
@@ -109,7 +110,7 @@ test('Harness Hub keeps an independent source-traceable OKF wiki in the source r
     ok: true,
     status: 'pass',
     knowledgeRoot: path.resolve('knowledge'),
-    conceptCount: 6,
+    conceptCount,
     findings: [],
   });
 });
@@ -169,6 +170,34 @@ This repository is a deterministic test fixture.
       sourceCount: 1,
       findings: [],
     });
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('OKF validator rejects duplicate canonical concept content', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-okf-duplicate-'));
+  const knowledgeDir = path.join(root, 'knowledge');
+
+  try {
+    fs.mkdirSync(knowledgeDir);
+    fs.writeFileSync(path.join(root, 'README.md'), '# Synthetic project\n');
+    fs.writeFileSync(path.join(knowledgeDir, 'index.md'), '---\ntype: index\nokf_version: "0.1"\n---\n# Knowledge\n\n- [Project](project.md)\n- [Duplicate](duplicate.md)\n- [Log](log.md)\n');
+    fs.writeFileSync(path.join(knowledgeDir, 'log.md'), '---\ntype: log\n---\n# Log\n\n## 2026-07-14\n\n- Initialized.\n');
+    const duplicatedBody = 'This stable project fact must have one canonical owner page.';
+    fs.writeFileSync(path.join(knowledgeDir, 'project.md'), `---\ntype: project\n---\n# Project\n\n${duplicatedBody}\n\n## Sources\n\n- [README](../README.md)\n`);
+    fs.writeFileSync(path.join(knowledgeDir, 'duplicate.md'), `---\ntype: concept\n---\n# Duplicate\n\n${duplicatedBody}\n\n## Sources\n\n- [README](../README.md)\n`);
+
+    const result = spawnSync(process.execPath, [OKF_VALIDATOR, root, '--json'], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+    });
+
+    expect(result.status).toBe(3);
+    expect(JSON.parse(result.stdout).findings).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'duplicate-concept-content', path: 'project.md' }),
+      expect.objectContaining({ id: 'duplicate-concept-content', path: 'duplicate.md' }),
+    ]));
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

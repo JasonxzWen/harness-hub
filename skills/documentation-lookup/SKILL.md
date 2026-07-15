@@ -1,6 +1,6 @@
 ---
 name: documentation-lookup
-description: Load when a workflow-router-selected owner workflow needs current library, framework, SDK, API, CLI, or cloud-service documentation; fetch docs instead of relying on training data or ordinary repo evidence.
+description: Load when a task needs current library, framework, SDK, API, CLI, or cloud-service documentation; fetch docs instead of relying on training data or ordinary repo evidence.
 license: MIT
 ---
 

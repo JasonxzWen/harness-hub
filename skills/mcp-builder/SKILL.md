@@ -1,6 +1,6 @@
 ---
 name: mcp-builder
-description: Load when a workflow-router-selected owner workflow needs MCP server design, build, review, testing, tool schema, resource, or prompt work; skip ordinary REST clients and non-MCP integrations.
+description: Load when a task needs MCP server design, build, review, testing, tool schema, resource, or prompt work; skip ordinary REST clients and non-MCP integrations.
 license: Complete terms in LICENSE.txt
 metadata:
   source: "anthropics/skills skills/mcp-builder"

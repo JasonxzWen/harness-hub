@@ -4,7 +4,7 @@ title: Skill quality
 ---
 # Skill quality
 
-1. Add a skill only for a bounded capability gap; prefer an existing skill/Loop/Workflow/OKF change.
+1. Add a skill only for a bounded capability gap; prefer an existing Skill, project rule, Eval, SOP, or OKF change.
 2. Treat frontmatter `description` as routing logic and test positive and negative boundaries.
 3. Preserve imported upstream bodies by default; local source and routing policy belongs in project governance.
 4. Keep heavy conditional material in `references/`, executable helpers in `scripts/`, and reusable files in `assets/`.

@@ -1,6 +1,6 @@
 ---
 name: coding-standards
-description: Load when a workflow-router-selected owner workflow needs cross-project code quality conventions; use frontend-patterns or security-review for narrower framework or risk guidance.
+description: Load when a task needs cross-project code quality conventions; use frontend-patterns or security-review for narrower framework or risk guidance.
 license: MIT
 ---
 
@@ -11,7 +11,7 @@ Baseline coding conventions applicable across projects.
 This skill is the shared floor, not the detailed framework playbook.
 
 - Use `frontend-patterns` for React, state, forms, rendering, and UI architecture.
-- Use `sdd-workflow` for accepted implementation scope and `product-capability` for API or service behavior contracts before coding.
+- Use `product-capability` for API or service behavior contracts before coding.
 - Use `references/review-checklist.md` when you need the shortest reusable rule layer instead of a full skill walkthrough.
 
 ## When to Activate

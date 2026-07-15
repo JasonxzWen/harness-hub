@@ -1,6 +1,6 @@
 ---
 name: web-artifacts-builder
-description: Load when a workflow-router-selected owner workflow needs complex standalone React/Tailwind/shadcn browser artifacts with state, routing, or bundled components; use effective-interact for reports and frontend-design for production UI.
+description: Load when a task needs complex standalone React/Tailwind/shadcn browser artifacts with state, routing, or bundled components; use effective-interact for reports and frontend-design for production UI.
 license: Complete terms in LICENSE.txt
 ---
 

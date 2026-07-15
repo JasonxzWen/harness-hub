@@ -27,7 +27,7 @@ Look for:
 - context drift: agent optimizes a subtask after losing the user's actual goal;
 - knowledge-cache gaps: project facts, file locations, invariants, and decisions repeatedly rediscovered from scratch;
 - automation drift: scheduled task logs, monitors, or recurring jobs hiding repeated failures or stale assumptions;
-- project drift: work moves away from the repository's stated purpose or accepted workflow.
+- project drift: work moves away from the repository's stated purpose or accepted project procedure.
 
 Successful handoff or state-update activity is not a bottleneck by itself. Treat it as a context-continuity bottleneck only when there is blocker, missing-context, stale-context, resume, compaction, or drift evidence.
 
@@ -53,7 +53,7 @@ Judge prompt/rule files as context evidence:
 - Is the rule host-specific when the distributed skill should remain portable?
 - Did a trace show the agent following stale or misleading guidance?
 - Is the instruction too broad, causing trigger noise or repeated unnecessary work?
-- Would a narrower routing note, source record, eval case, or state file reduce future cost?
+- Would a narrower existing Skill, project rule, Eval case, SOP, or OKF entry reduce future cost?
 
 ## SOP And Knowledge Audit
 
@@ -77,7 +77,6 @@ Queue items should use the intended destination as the primary category and prob
 - `sop-candidate`
 - `knowledge-cache-candidate`
 - `eval-case-candidate`
-- `workflow-change-candidate`
 
 Actionable queue items require a concrete `validationSignal`. Findings without a validation signal stay in report observations.
 
@@ -93,7 +92,7 @@ Recommendations should be few and sharp:
 
 - at most three primary recommendations;
 - each recommendation maps to a bottleneck and evidence IDs;
-- each recommendation names the likely owner workflow for implementation;
+- each recommendation names the likely main-Agent or atomic-Skill owner for implementation;
 - avoid broad style advice unless it would change future agent behavior.
 
 ## User Preference Boundary

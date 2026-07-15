@@ -1,6 +1,6 @@
 ---
 name: doc-coauthoring
-description: Load when a workflow-router-selected owner workflow needs to collaboratively draft, restructure, or reader-test docs, PRDs, RFCs, proposals, specs, or decision records; skip implementation itself.
+description: Load when a task needs to collaboratively draft, restructure, or reader-test docs, PRDs, RFCs, proposals, specs, or decision records; skip implementation itself.
 license: MIT
 metadata:
   source: "local-original; Anthropic doc-coauthoring was reviewed but not copied because the refreshed upstream directory had no per-skill license file."
@@ -22,7 +22,7 @@ Use this skill to help a user turn rough context into a document that works for 
 
 ## Boundaries
 
-- Use `sdd-workflow` or `product-capability` when the doc is an implementation spec that must drive code changes.
+- Use `product-capability` when the doc is an implementation spec that must drive code changes.
 - Use `internal-comms` for status reports, newsletters, incident updates, FAQs, or leadership updates.
-- Use `answer-workflow` for read-only explanations that do not need a durable document.
+- Answer directly for read-only explanations that do not need a durable document.
 - Do not invent facts, metrics, commitments, dates, owners, or approvals.

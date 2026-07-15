@@ -1,6 +1,6 @@
 ---
 name: frontend-slides
-description: Load when a workflow-router-selected owner workflow needs an HTML presentation, slide deck, talk/pitch slides, or PPT/PPTX-to-web conversion; use effective-interact for findings or handoff reports.
+description: Load when a task needs an HTML presentation, slide deck, talk/pitch slides, or PPT/PPTX-to-web conversion; use effective-interact for findings or handoff reports.
 license: MIT
 ---
 

@@ -3,12 +3,17 @@
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { runExecutableLoop } from '../skills/workflow-router/scripts/loop-runtime.mjs';
-import { validateOkf } from '../skills/workflow-router/scripts/okf-validate.mjs';
+import { fileURLToPath } from 'node:url';
+import { validateOkf } from './okf-validate.mjs';
 
 const SOURCE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const SHARED_MANAGED_FILES = [
+  '.harness-hub/.gitignore',
+  '.harness-hub/okf-validate.mjs',
+  '.harness-hub/safety-hook.mjs',
+];
 
 export function preflightTarget(targetDir, hosts = [], knownRoot = null) {
   const resolvedTarget = path.resolve(targetDir);
@@ -109,7 +114,7 @@ export function parseMigrationArgs(argv) {
 export function runMigration(argv) {
   const request = parseMigrationArgs(argv);
   const hosts = request.host === 'both'
-    ? [request.primaryHost, request.primaryHost === 'claude' ? 'codex' : 'claude']
+    ? ['claude', 'codex']
     : [request.host];
   const targetRoot = fs.realpathSync.native(runGit(path.resolve(request.target), ['rev-parse', '--show-toplevel'], 'E_TARGET_GIT'));
   const sourceRoot = fs.realpathSync.native(runGit(SOURCE_ROOT, ['rev-parse', '--show-toplevel'], 'E_SOURCE_GIT'));
@@ -120,6 +125,13 @@ export function runMigration(argv) {
   const source = preflightSource(sourceRoot, sourceRoot);
   const skillDistribution = readSkillDistribution(source.root);
   const previousManifest = readMigrationManifest(target.root);
+  if (previousManifest && target.knowledgeSnapshot === null) {
+    throw migrationError(
+      'E_KNOWLEDGE_MISSING',
+      'An existing Harness Hub migration manifest requires the target-owned knowledge tree to remain present.',
+      'preflight',
+    );
+  }
   const currentManagedPaths = takeoverManagedPaths(hosts, skillDistribution.distributedSkills);
   target.projectSourceFiles = projectSourceFilesAtHead(
     target.root,
@@ -138,16 +150,28 @@ export function runMigration(argv) {
     previousManifest,
   );
   const rollbackPaths = rollbackManagedPaths(hosts);
+  const staleRollbackPaths = staleManagedPaths.filter((managedPath) => !rollbackPaths.some((rollbackPath) => (
+    managedPath === rollbackPath || managedPath.startsWith(`${rollbackPath}/`)
+  )));
   const managedSnapshot = snapshotRestorablePaths(
     target.root,
-    [
-      ...rollbackPaths,
-      ...staleManagedPaths.filter((managedPath) => !rollbackPaths.some((rollbackPath) => (
-        managedPath === rollbackPath || managedPath.startsWith(`${rollbackPath}/`)
-      ))),
-    ],
+    [...rollbackPaths, ...staleRollbackPaths],
   );
-  const loopRuns = [];
+  const trackedFileSnapshot = snapshotRestorablePaths(
+    target.root,
+    projectSourceFilesAtHead(
+      target.root,
+      target.head,
+      [...rollbackPaths, ...staleRollbackPaths],
+    )
+      .filter((relativePath) => {
+        const stat = fs.lstatSync(path.join(target.root, relativePath), { throwIfNoEntry: false });
+        if (!stat?.isFile() && !stat?.isSymbolicLink()) return false;
+        assertPathHasNoLinks(target.root, relativePath);
+        return stat.isFile();
+      }),
+  );
+  let knowledgeInitialized = false;
 
   try {
     prepareManagedPaths(
@@ -158,88 +182,46 @@ export function runMigration(argv) {
       previousManifest,
       staleManagedPaths,
     );
-    loopRuns.push(runMigrationSlice({
-      host: hosts[0],
-      role: 'primary',
+    copyManagedDistribution({
       source,
       target,
+      hosts,
       distributedSkills: skillDistribution.distributedSkills,
-      validatedHosts: [hosts[0]],
-      validateKnowledge: target.knowledgeSnapshot !== null,
-    }));
+    });
     if (target.knowledgeSnapshot === null) {
-      loopRuns.push(runKnowledgeInitSlice({
-        host: hosts[0],
+      runKnowledgeInit({
+        host: request.primaryHost,
         source,
         target,
-        validatedHosts: [hosts[0]],
-      }));
-    }
-    if (hosts.length === 2) {
-      const protectedSnapshot = snapshotPaths(target.root, protectedFromSecondary(request.primaryHost));
-      loopRuns.push(runMigrationSlice({
-        host: hosts[1],
-        role: 'secondary',
-        source,
-        target,
-        distributedSkills: skillDistribution.distributedSkills,
         validatedHosts: hosts,
-        validateKnowledge: true,
-        protectedSnapshot,
-      }));
+      });
+      knowledgeInitialized = true;
     }
     writeManifest(source, target.root, hosts, request.primaryHost, skillDistribution.distributedSkills);
+    validateMigrationOutput(source.root, target, hosts, { validateKnowledge: true });
+    if (!restorablePathsMatch(target.root, trackedFileSnapshot)) {
+      throw validationError('Target-owned tracked files must remain byte-for-byte unchanged.');
+    }
+    assertSourceUnchanged(source);
   } catch (error) {
-    const failedRunId = error && typeof error === 'object' ? error.runId : null;
-    const closedRuns = [...new Set([
-      ...loopRuns.map((run) => run.runId),
-      failedRunId,
-    ].filter((runId) => typeof runId === 'string'))]
-      .map((runId) => captureClosedRun(target.root, runId))
-      .filter(Boolean);
-    const runtimeIgnoreWasMissing = managedSnapshot.some((item) => item.path === '.harness-hub/.gitignore'
-      && item.entries.length === 1 && item.entries[0].type === 'missing');
-    const restoreClosedRunEvidence = () => {
-      for (const closedRun of closedRuns) {
-        restoreRestorablePaths(target.root, closedRun.snapshot);
-      }
-      if (closedRuns.length > 0 && runtimeIgnoreWasMissing) {
-        fs.mkdirSync(path.join(target.root, '.harness-hub'), { recursive: true });
-        fs.writeFileSync(path.join(target.root, '.harness-hub', '.gitignore'), 'state/\n.gitignore\n');
-      }
-    };
     try {
-      rollbackTarget(target, managedSnapshot);
-      rollbackSource(source);
-      restoreClosedRunEvidence();
+      rollbackTarget(target, managedSnapshot, trackedFileSnapshot);
+      assertSourceUnchanged(source);
     } catch {
-      let evidenceRestored = false;
-      try {
-        restoreClosedRunEvidence();
-        evidenceRestored = true;
-      } catch {
-        // The rollback failure remains authoritative; report whether evidence also survived.
-      }
       const rollbackError = Object.assign(
-        migrationError('E_ROLLBACK', 'Git could not restore the target after migration failed.', 'rollback'),
+        migrationError('E_ROLLBACK', 'Migration could not restore and verify the complete transaction boundary.', 'rollback'),
         {
           rolledBack: false,
-          evidenceRestored,
           originalError: {
             code: error && typeof error === 'object' && typeof error.code === 'string' ? error.code : 'E_INTERNAL',
             message: error instanceof Error ? error.message : String(error),
-            ...(typeof failedRunId === 'string' ? { runId: failedRunId } : {}),
           },
-          ...(evidenceRestored && closedRuns.length > 0
-            ? { runIds: closedRuns.map((closedRun) => closedRun.runId) }
-            : {}),
         },
       );
       throw rollbackError;
     }
     if (error && typeof error === 'object') {
       error.rolledBack = true;
-      if (closedRuns.length > 0) error.runIds = closedRuns.map((closedRun) => closedRun.runId);
     }
     throw error;
   }
@@ -250,7 +232,7 @@ export function runMigration(argv) {
     primaryHost: request.primaryHost,
     sourceCommit: source.head,
     targetHead: target.head,
-    loopRuns,
+    knowledgeInitialized,
   };
 }
 
@@ -290,6 +272,9 @@ function readSkillDistribution(sourceRoot) {
     if (!['target-distributed', 'hub-internal'].includes(component.distribution)) {
       throw validationError(`Skill '${component.path}' has no distribution classification.`);
     }
+    if (component.host !== undefined && !['claude', 'codex'].includes(component.host)) {
+      throw validationError(`Skill '${component.path}' has unsupported Host scope '${component.host}'.`);
+    }
     if (indexedNames.includes(name)) {
       throw validationError(`Capability skill index contains duplicate skill '${name}'.`);
     }
@@ -309,7 +294,7 @@ function readSkillDistribution(sourceRoot) {
     assertTrackedFilesNoLinks(sourceRoot, skillRoot, files);
     indexedNames.push(name);
     if (component.distribution === 'target-distributed') {
-      distributedSkills.push({ name, path: componentPath, files });
+      distributedSkills.push({ name, path: componentPath, files, ...(component.host ? { host: component.host } : {}) });
     }
   }
   const sortedIndexedNames = indexedNames.sort();
@@ -325,17 +310,23 @@ function readSkillDistribution(sourceRoot) {
   return { distributedSkills: sortedDistribution };
 }
 
+function skillsForHost(distributedSkills, host) {
+  return distributedSkills.filter((skill) => skill.host === undefined || skill.host === host);
+}
+
 function assertDistributionBytesMatchHead(sourceRoot, distributedSkills) {
   const relativePaths = [
     'capabilities/index.json',
     ...distributedSkills.flatMap((skill) => skill.files.map((file) => `${skill.path}/${file}`)),
     'harness/agent-hooks/claude/settings.json',
     'harness/agent-hooks/codex/hooks.json',
+    'harness/agent-hooks/safety-hook.mjs',
     'harness/target/AGENTS.md',
+    'scripts/okf-validate.mjs',
   ].sort();
   const treeOutput = runGit(
     sourceRoot,
-    ['ls-tree', '-r', '-z', 'HEAD', '--', 'capabilities/index.json', 'skills', 'harness/agent-hooks', 'harness/target/AGENTS.md'],
+    ['ls-tree', '-r', '-z', 'HEAD', '--', 'capabilities/index.json', 'skills', 'harness/agent-hooks', 'harness/target/AGENTS.md', 'scripts/okf-validate.mjs'],
     'E_VALIDATE',
   );
   const blobIds = new Map();
@@ -404,8 +395,8 @@ function assertTrackedFilesNoLinks(sourceRoot, skillRoot, files) {
 }
 
 function snapshotHostSkillExtras(targetRoot, hosts, distributedSkills, previousManifest) {
-  const current = distributedSkills.map((skill) => skill.name);
   return Object.fromEntries(hosts.map((host) => {
+    const current = skillsForHost(distributedSkills, host).map((skill) => skill.name);
     const expected = new Set([...current, ...manifestOwnedSkillNames(previousManifest, host)]);
     const skillRoot = host === 'claude' ? '.claude/skills' : '.agents/skills';
     const absoluteRoot = path.join(targetRoot, skillRoot);
@@ -444,7 +435,15 @@ function validateMigrationOutput(sourceRoot, target, hosts, options = {}) {
     throw validationError('AGENTS.md must match the repository target contract byte-for-byte.');
   }
   if (requireFile(path.join(targetRoot, '.harness-hub', '.gitignore')) !== 'state/\n.gitignore\n') {
-    throw validationError('.harness-hub/.gitignore must ignore only runtime state and itself.');
+    throw validationError('.harness-hub/.gitignore must ignore only project-local task state and itself.');
+  }
+  for (const [targetPath, sourcePath] of [
+    ['.harness-hub/okf-validate.mjs', 'scripts/okf-validate.mjs'],
+    ['.harness-hub/safety-hook.mjs', 'harness/agent-hooks/safety-hook.mjs'],
+  ]) {
+    if (!fs.readFileSync(path.join(targetRoot, targetPath)).equals(fs.readFileSync(path.join(sourceRoot, sourcePath)))) {
+      throw validationError("Managed support file '" + targetPath + "' must match the repository source byte-for-byte.");
+    }
   }
   const claudeEntry = requireFile(path.join(targetRoot, 'CLAUDE.md'));
   if (claudeEntry !== '@AGENTS.md\n') {
@@ -466,10 +465,11 @@ function validateMigrationOutput(sourceRoot, target, hosts, options = {}) {
   }
   const { distributedSkills } = readSkillDistribution(sourceRoot);
 
-  const expectedSkillNames = distributedSkills.map((skill) => skill.name).sort();
   for (const host of hosts) {
+    const hostSkills = skillsForHost(distributedSkills, host);
+    const expectedSkillNames = hostSkills.map((skill) => skill.name).sort();
     const skillRoot = path.join(targetRoot, host === 'claude' ? '.claude/skills' : '.agents/skills');
-    for (const skill of distributedSkills) {
+    for (const skill of hostSkills) {
       compareDirectories(path.join(sourceRoot, skill.path), path.join(skillRoot, skill.name), skill.files);
     }
     const extraSnapshot = target.hostSkillExtras?.[host];
@@ -511,7 +511,7 @@ function validateChangedPaths(targetRoot, hosts, staleManagedPaths = []) {
     'AGENTS.md',
     'CLAUDE.md',
     'knowledge',
-    '.harness-hub/.gitignore',
+    ...SHARED_MANAGED_FILES,
     '.harness-hub/manifest.json',
     ...hosts.flatMap(hostManagedPaths),
     ...staleManagedPaths,
@@ -537,7 +537,8 @@ function readMigrationManifest(targetRoot) {
       if (!relativePath
         || relativePath.includes('\\')
         || path.posix.isAbsolute(relativePath)
-        || relativePath.split('/').includes('..')
+        || path.posix.normalize(relativePath) !== relativePath
+        || relativePath.split('/').some((segment) => !segment || segment === '.' || segment === '..')
         || !/^[a-f0-9]{64}$/.test(file?.sha256 || '')
         || !manifestManagedRootForFile(relativePath)
         || seen.has(relativePath)) {
@@ -552,7 +553,7 @@ function readMigrationManifest(targetRoot) {
 }
 
 function manifestManagedRootForFile(relativePath) {
-  if (['AGENTS.md', 'CLAUDE.md', '.harness-hub/.gitignore', '.claude/settings.json', '.codex/hooks.json'].includes(relativePath)) {
+  if (['AGENTS.md', 'CLAUDE.md', ...SHARED_MANAGED_FILES, '.claude/settings.json', '.codex/hooks.json'].includes(relativePath)) {
     return relativePath;
   }
   const skill = relativePath.match(/^(\.claude\/skills|\.agents\/skills)\/([^/]+)\/.+$/);
@@ -580,6 +581,19 @@ function prepareManagedPaths(targetRoot, hosts, force, distributedSkills, previo
   const manifestPath = path.join(targetRoot, '.harness-hub', 'manifest.json');
   const ownedFiles = new Map((previousManifest?.files ?? []).map((file) => [file.path, file.sha256]));
   if (previousManifest) ownedFiles.set('.harness-hub/manifest.json', fileHash(manifestPath));
+
+  const previouslyManagedRoots = new Set(manifestManagedRoots(previousManifest));
+  for (const managedPath of takeoverManagedPaths(hosts, distributedSkills)) {
+    if (/^(\.claude\/skills|\.agents\/skills)\/[^/]+$/.test(managedPath)
+      && fs.existsSync(path.join(targetRoot, managedPath))
+      && !previouslyManagedRoots.has(managedPath)) {
+      throw migrationError(
+        'E_COLLISION',
+        `Target-owned Host skill '${managedPath}' is not owned by the existing migration manifest.`,
+        'preflight',
+      );
+    }
+  }
 
   const collisions = [];
   for (const managedPath of managedPaths) {
@@ -626,12 +640,12 @@ function takeoverManagedPaths(hosts, distributedSkills) {
   return [
     'AGENTS.md',
     'CLAUDE.md',
-    '.harness-hub/.gitignore',
+    ...SHARED_MANAGED_FILES,
     '.harness-hub/manifest.json',
     ...hosts.flatMap((host) => {
       const skillRoot = host === 'claude' ? '.claude/skills' : '.agents/skills';
       const hookConfig = host === 'claude' ? '.claude/settings.json' : '.codex/hooks.json';
-      return [...distributedSkills.map((skill) => `${skillRoot}/${skill.name}`), hookConfig];
+      return [...skillsForHost(distributedSkills, host).map((skill) => `${skillRoot}/${skill.name}`), hookConfig];
     }),
   ];
 }
@@ -650,7 +664,7 @@ function rollbackManagedPaths(hosts) {
   return [
     'AGENTS.md',
     'CLAUDE.md',
-    '.harness-hub/.gitignore',
+    ...SHARED_MANAGED_FILES,
     '.harness-hub/manifest.json',
     ...hosts.flatMap(hostManagedPaths),
     'knowledge',
@@ -737,7 +751,7 @@ function snapshotRestorableTree(root) {
       throw migrationError('E_SYMLINK', `Cannot snapshot linked path '${absolutePath}'.`, 'preflight');
     }
     if (stat.isDirectory()) {
-      entries.push({ path: relativePath, type: 'directory' });
+      entries.push({ path: relativePath, type: 'directory', mode: stat.mode & 0o777 });
       for (const entry of fs.readdirSync(absolutePath).sort()) {
         visit(path.join(absolutePath, entry), relativePath ? `${relativePath}/${entry}` : entry);
       }
@@ -749,6 +763,7 @@ function snapshotRestorableTree(root) {
     entries.push({
       path: relativePath,
       type: 'file',
+      mode: stat.mode & 0o777,
       bytes: fs.readFileSync(absolutePath).toString('base64'),
     });
   };
@@ -774,6 +789,16 @@ function restoreRestorablePaths(root, snapshot) {
         fs.writeFileSync(absolutePath, Buffer.from(entry.bytes, 'base64'));
       }
     }
+    restoreSnapshotModes(absoluteRoot, item.entries);
+  }
+}
+
+function restoreSnapshotModes(root, entries) {
+  for (const entry of [...entries]
+    .filter((candidate) => candidate.type !== 'missing' && Number.isInteger(candidate.mode))
+    .sort((left, right) => right.path.split('/').length - left.path.split('/').length)) {
+    const absolutePath = entry.path ? path.join(root, ...entry.path.split('/')) : root;
+    fs.chmodSync(absolutePath, entry.mode);
   }
 }
 
@@ -783,46 +808,6 @@ function restorablePathsMatch(root, snapshot) {
       === JSON.stringify(snapshot);
   } catch {
     return false;
-  }
-}
-
-function captureClosedRun(root, runId) {
-  if (typeof runId !== 'string' || !/^[a-z0-9][a-z0-9._-]{0,95}$/.test(runId)) return null;
-  const relativePath = `.harness-hub/state/runs/${runId}`;
-  const runPath = path.join(root, relativePath, 'run.json');
-  const integrationPath = path.join(root, relativePath, 'integration.json');
-  try {
-    const run = JSON.parse(fs.readFileSync(runPath, 'utf8'));
-    const integration = JSON.parse(fs.readFileSync(integrationPath, 'utf8'));
-    if (run.runId !== runId || integration.runId !== runId
-      || !['completed', 'blocked', 'failed'].includes(run.status)
-      || integration.status !== run.status) {
-      return null;
-    }
-    const agentIds = Array.isArray(integration.agentEvidence)
-      ? integration.agentEvidence.map((item) => item?.agentId)
-      : [];
-    if (agentIds.some((agentId) => typeof agentId !== 'string'
-      || !/^[a-z0-9][a-z0-9._-]{0,95}$/.test(agentId))) {
-      return null;
-    }
-    const evidencePaths = [
-      `${relativePath}/run.json`,
-      `${relativePath}/integration.json`,
-      `${relativePath}/migration-copy-receipt.json`,
-      ...agentIds.flatMap((agentId) => [
-        `${relativePath}/agents/${agentId}/state.json`,
-        `${relativePath}/agents/${agentId}/output.json`,
-        `${relativePath}/agents/${agentId}/trace.jsonl`,
-        `${relativePath}/agents/${agentId}/stderr.log`,
-      ]),
-    ];
-    return {
-      runId,
-      snapshot: snapshotRestorablePaths(root, evidencePaths),
-    };
-  } catch {
-    return null;
   }
 }
 
@@ -972,6 +957,7 @@ function restoreGitControlPlane(snapshot) {
         fs.writeFileSync(absolutePath, Buffer.from(entry.bytes, 'base64'));
       }
     }
+    restoreSnapshotModes(item.path, item.entries);
   }
 }
 
@@ -1014,17 +1000,6 @@ function ignoredPathsMatch(root, snapshot, exclusions = []) {
   } catch {
     return false;
   }
-}
-
-function protectedFromSecondary(primaryHost) {
-  return [
-    'AGENTS.md',
-    'CLAUDE.md',
-    'knowledge',
-    '.harness-hub/.gitignore',
-    '.harness-hub/manifest.json',
-    ...hostManagedPaths(primaryHost),
-  ];
 }
 
 function snapshotPaths(root, relativePaths) {
@@ -1076,273 +1051,54 @@ function validationError(message) {
   return migrationError('E_VALIDATE', message, 'validation');
 }
 
-function attachRunId(error, runId) {
-  return Object.assign(error, { runId });
-}
+function copyManagedDistribution(options) {
+  const harnessRoot = path.join(options.target.root, '.harness-hub');
+  fs.mkdirSync(harnessRoot, { recursive: true });
+  fs.writeFileSync(path.join(harnessRoot, '.gitignore'), 'state/\n.gitignore\n');
+  fs.copyFileSync(
+    path.join(options.source.root, 'scripts', 'okf-validate.mjs'),
+    path.join(harnessRoot, 'okf-validate.mjs'),
+  );
+  fs.copyFileSync(
+    path.join(options.source.root, 'harness', 'agent-hooks', 'safety-hook.mjs'),
+    path.join(harnessRoot, 'safety-hook.mjs'),
+  );
+  fs.copyFileSync(
+    path.join(options.source.root, 'harness', 'target', 'AGENTS.md'),
+    path.join(options.target.root, 'AGENTS.md'),
+  );
+  fs.writeFileSync(path.join(options.target.root, 'CLAUDE.md'), '@AGENTS.md\n');
 
-function runMigrationSlice(options) {
-  const runId = `migration-${options.role}-${options.host}-${crypto.randomBytes(6).toString('hex')}`;
-  const allowedPaths = migrationAllowedPaths(options.host, options.role);
-  const forbiddenPaths = migrationForbiddenPaths(options.host, options.role);
-  let result;
-  let migrationCopy;
-  try {
-    migrationCopy = createMigrationCopyPlan(options, runId);
-    result = runExecutableLoop({
-      targetDir: options.target.root,
-      loop: 'repository-migration-loop',
-      runId,
-      host: options.host,
-      input: {
-        schemaVersion: 1,
-        task: `Perform the ${options.role} slice of one full Harness Hub repository migration for ${options.host}.`,
-        targetSpec: options.role === 'primary'
-          ? 'Run lifecycleContext.migrationCopy.command exactly once; it installs the Git-tracked Host surface and shared contract byte-for-byte without touching project knowledge.'
-          : 'Run lifecycleContext.migrationCopy.command exactly once; it installs only the Git-tracked secondary Host surface without changing shared, primary-host, or project-owned content.',
-        acceptanceCriteria: [
-          'Complete the declared slice in one host CLI process.',
-          'Do not commit, push, publish, deploy, change credentials, or change user/global configuration.',
-          'Return structured migration evidence for deterministic verification.',
-        ],
-        allowedPaths,
-        forbiddenPaths,
-        validationCommands: [],
-        context: {
-          host: options.host,
-          role: options.role,
-          migrationCopy: { command: migrationCopy.command, tool: migrationCopy.tool },
-        },
-      },
-      deterministicVerifier: (runtimeEvidence) => verifyMigrationSlice({
-        ...options,
-        migrationCopy,
-      }, runtimeEvidence),
-    });
-  } catch (error) {
-    if (error && typeof error === 'object'
-      && ['E_HOST_MISSING', 'E_HOST_LAUNCHER', 'E_HOST_FAILED', 'E_HOST_OUTPUT', 'E_TRACE_MISSING'].includes(error.code)) {
-      throw attachRunId(migrationError('E_HOST', error.message, 'host'), runId);
-    }
-    throw attachRunId(validationError(error instanceof Error ? error.message : String(error)), runId);
-  } finally {
-    if (migrationCopy) {
-      fs.rmSync(migrationCopy.planPath, { force: true });
-      fs.rmSync(migrationCopy.runnerPath, { force: true });
-    }
-  }
-
-  if (result.status !== 'completed') {
-    const findings = Array.isArray(result.handoff?.findings) ? result.handoff.findings : [];
-    const message = findings.join(' ') || result.handoff?.summary || `Migration Loop '${runId}' did not complete.`;
-    if (result.status === 'failed') {
-      if (result.error && ['E_HOST_MISSING', 'E_HOST_LAUNCHER', 'E_HOST_FAILED', 'E_HOST_OUTPUT', 'E_TRACE_MISSING'].includes(result.error.code)) {
-        throw attachRunId(migrationError('E_HOST', result.error.message || message, 'host'), runId);
+  for (const host of options.hosts) {
+    const hostSkills = skillsForHost(options.distributedSkills, host);
+    const hostSkillRoot = host === 'claude' ? '.claude/skills' : '.agents/skills';
+    for (const skill of hostSkills) {
+      const targetSkillRoot = path.join(options.target.root, hostSkillRoot, skill.name);
+      assertPathHasNoLinks(options.target.root, hostSkillRoot + '/' + skill.name);
+      for (const relativePath of skill.files) {
+        const targetPath = path.join(targetSkillRoot, relativePath);
+        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+        fs.copyFileSync(path.join(options.source.root, skill.path, relativePath), targetPath);
       }
-      if (result.error) throw attachRunId(validationError(message), runId);
-      throw attachRunId(migrationError('E_HOST', message, 'host'), runId);
     }
-    throw attachRunId(validationError(message), runId);
+    const hookSource = path.join(
+      options.source.root,
+      'harness',
+      'agent-hooks',
+      host === 'claude' ? 'claude/settings.json' : 'codex/hooks.json',
+    );
+    const hookTarget = path.join(
+      options.target.root,
+      host === 'claude' ? '.claude/settings.json' : '.codex/hooks.json',
+    );
+    fs.mkdirSync(path.dirname(hookTarget), { recursive: true });
+    fs.copyFileSync(hookSource, hookTarget);
   }
-  return {
-    runId,
-    host: options.host,
-    role: options.role,
-    status: result.status,
-    iteration: result.iteration,
-    handoff: result.handoff,
-    metrics: result.metrics,
-  };
 }
 
-function createMigrationCopyPlan(options, runId) {
-  const runDir = path.join(
-    options.target.root,
-    '.harness-hub',
-    'state',
-    'runs',
-    runId,
-  );
-  fs.mkdirSync(runDir, { recursive: true });
-  const planPath = path.join(runDir, 'migration-copy-plan.json');
-  const runnerPath = path.join(runDir, 'migration-copy-runner.mjs');
-  const receiptPath = path.join(runDir, 'migration-copy-receipt.json');
-  const plan = {
-    schemaVersion: 1,
-    runId,
-    host: options.host,
-    role: options.role,
-    sourceRoot: options.source.root,
-    sourceCommit: options.source.head,
-    targetRoot: options.target.root,
-    targetHead: options.target.head,
-    receiptPath,
-  };
-  fs.writeFileSync(planPath, `${JSON.stringify(plan, null, 2)}\n`);
-  fs.writeFileSync(
-    runnerPath,
-    `import { runInternalMigrationCopy } from ${JSON.stringify(pathToFileURL(fileURLToPath(import.meta.url)).href)};\nrunInternalMigrationCopy(process.argv[2], process.argv[3]);\n`,
-  );
-  const planSha256 = fileHash(planPath);
-  const tool = process.platform === 'win32' ? 'PowerShell' : 'Bash';
-  const command = [
-    ...(tool === 'PowerShell' ? ['&'] : []),
-    quoteCommandArgument(process.execPath, tool),
-    quoteCommandArgument(runnerPath, tool),
-    runId,
-    planSha256,
-  ].join(' ');
-  return { command, tool, planPath, planSha256, receiptPath, runId, runnerPath };
-}
-
-function quoteCommandArgument(value, tool) {
-  const normalized = String(value).replaceAll('\\', '/');
-  if (/[\r\n]/.test(normalized)) {
-    throw validationError('Internal migration command path contains unsupported characters.');
-  }
-  if (tool === 'PowerShell') {
-    return `'${normalized.replaceAll("'", "''")}'`;
-  }
-  return `'${normalized.replaceAll("'", `'"'"'`)}'`;
-}
-
-export function runInternalMigrationCopy(runId, planSha256) {
-  if (!/^[a-z0-9][a-z0-9._-]{0,95}$/.test(runId) || !/^[a-f0-9]{64}$/.test(planSha256)) {
-    throw validationError('Internal migration copy arguments are invalid.');
-  }
-  const targetRoot = fs.realpathSync.native(process.cwd());
-  const planPath = path.join(
-    targetRoot,
-    '.harness-hub',
-    'state',
-    'runs',
-    runId,
-    'migration-copy-plan.json',
-  );
-  const planStat = fs.lstatSync(planPath, { throwIfNoEntry: false });
-  if (!planStat?.isFile() || planStat.isSymbolicLink() || fileHash(planPath) !== planSha256) {
-    throw validationError('Internal migration copy plan is missing, linked, or does not match its approved hash.');
-  }
-  const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
-  const sourceRoot = fs.realpathSync.native(SOURCE_ROOT);
-  const receiptPath = path.join(path.dirname(planPath), 'migration-copy-receipt.json');
-  if (plan.schemaVersion !== 1
-    || plan.runId !== runId
-    || !['claude', 'codex'].includes(plan.host)
-    || !['primary', 'secondary'].includes(plan.role)
-    || fs.realpathSync.native(plan.sourceRoot) !== sourceRoot
-    || fs.realpathSync.native(plan.targetRoot) !== targetRoot
-    || path.resolve(plan.receiptPath) !== receiptPath
-    || runGit(sourceRoot, ['rev-parse', 'HEAD'], 'E_VALIDATE') !== plan.sourceCommit
-    || runGit(sourceRoot, ['status', '--porcelain=v1', '--untracked-files=all'], 'E_VALIDATE') !== ''
-    || runGit(targetRoot, ['rev-parse', 'HEAD'], 'E_VALIDATE') !== plan.targetHead) {
-    throw validationError('Internal migration copy plan does not match the current source, target, or Git state.');
-  }
-  if (fs.existsSync(receiptPath)) {
-    throw validationError('Internal migration copy command may run only once.');
-  }
-
-  const { distributedSkills } = readSkillDistribution(sourceRoot);
-  const hostSkillRoot = plan.host === 'claude' ? '.claude/skills' : '.agents/skills';
-  for (const skill of distributedSkills) {
-    const targetSkillRoot = path.join(targetRoot, hostSkillRoot, skill.name);
-    assertPathHasNoLinks(targetRoot, `${hostSkillRoot}/${skill.name}`);
-    for (const relativePath of skill.files) {
-      const targetPath = path.join(targetSkillRoot, relativePath);
-      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-      fs.copyFileSync(path.join(sourceRoot, skill.path, relativePath), targetPath);
-    }
-  }
-  const hookSource = path.join(
-    sourceRoot,
-    'harness',
-    'agent-hooks',
-    plan.host === 'claude' ? 'claude/settings.json' : 'codex/hooks.json',
-  );
-  const hookTarget = path.join(targetRoot, plan.host === 'claude' ? '.claude/settings.json' : '.codex/hooks.json');
-  assertPathHasNoLinks(targetRoot, path.relative(targetRoot, hookTarget).replaceAll('\\', '/'));
-  fs.mkdirSync(path.dirname(hookTarget), { recursive: true });
-  fs.copyFileSync(hookSource, hookTarget);
-  if (plan.role === 'primary') {
-    assertPathHasNoLinks(targetRoot, 'AGENTS.md');
-    assertPathHasNoLinks(targetRoot, 'CLAUDE.md');
-    fs.copyFileSync(path.join(sourceRoot, 'harness', 'target', 'AGENTS.md'), path.join(targetRoot, 'AGENTS.md'));
-    fs.writeFileSync(path.join(targetRoot, 'CLAUDE.md'), '@AGENTS.md\n');
-  }
-
-  const fileCount = distributedSkills.reduce((count, skill) => count + skill.files.length, 0)
-    + 1
-    + (plan.role === 'primary' ? 2 : 0);
-  fs.writeFileSync(receiptPath, `${JSON.stringify({
-    schemaVersion: 1,
-    runId,
-    host: plan.host,
-    role: plan.role,
-    planSha256,
-    sourceCommit: plan.sourceCommit,
-    targetHead: plan.targetHead,
-    fileCount,
-  }, null, 2)}\n`);
-}
-
-function runKnowledgeInitSlice(options) {
-  const runId = `knowledge-init-${options.host}-${crypto.randomBytes(6).toString('hex')}`;
+function runKnowledgeInit(options) {
   const protectedSnapshot = snapshotPaths(options.target.root, protectedFromKnowledgeInit(options.validatedHosts));
-  let result;
-  try {
-    result = runExecutableLoop({
-      targetDir: options.target.root,
-      loop: 'knowledge-init-loop',
-      runId,
-      host: options.host,
-      forbidKnowledgeTree: path.join(options.source.root, 'knowledge'),
-      input: {
-        schemaVersion: 1,
-        task: 'Initialize this target repository\'s project-owned LLM-Wiki from its own source files.',
-        targetSpec: 'Create the smallest useful source-traceable Google OKF v0.1 knowledge tree without copying Harness Hub knowledge.',
-        acceptanceCriteria: [
-          'The knowledge-init-loop deterministic Google OKF v0.1 gate passes.',
-          'At least one real target-repository source is cited.',
-          'Shared contracts, host resources, product files, evals, Git state, and Harness Hub source remain unchanged.',
-        ],
-        allowedPaths: ['knowledge'],
-        forbiddenPaths: [
-          '.git',
-          '.agents',
-          '.claude',
-          '.codex',
-          '.harness-hub/.gitignore',
-          '.harness-hub/manifest.json',
-          'AGENTS.md',
-          'CLAUDE.md',
-        ],
-        validationCommands: [],
-        context: {
-          host: options.host,
-          knowledgeMode: 'init',
-          targetRoot: options.target.root,
-        },
-      },
-    });
-  } catch (error) {
-    if (error && typeof error === 'object'
-      && ['E_HOST_MISSING', 'E_HOST_LAUNCHER', 'E_HOST_FAILED', 'E_HOST_OUTPUT', 'E_TRACE_MISSING'].includes(error.code)) {
-      throw attachRunId(migrationError('E_HOST', error.message, 'host'), runId);
-    }
-    throw attachRunId(validationError(error instanceof Error ? error.message : String(error)), runId);
-  }
-
-  if (result.status !== 'completed') {
-    const findings = Array.isArray(result.handoff?.findings) ? result.handoff.findings : [];
-    const message = findings.join(' ') || result.handoff?.summary || `Knowledge initialization Loop '${runId}' did not complete.`;
-    if (result.status === 'failed') {
-      if (result.error && ['E_HOST_MISSING', 'E_HOST_LAUNCHER', 'E_HOST_FAILED', 'E_HOST_OUTPUT', 'E_TRACE_MISSING'].includes(result.error.code)) {
-        throw attachRunId(migrationError('E_HOST', result.error.message || message, 'host'), runId);
-      }
-      if (result.error) throw attachRunId(validationError(message), runId);
-      throw attachRunId(migrationError('E_HOST', message, 'host'), runId);
-    }
-    throw attachRunId(validationError(message), runId);
-  }
+  invokeKnowledgeCli(options.host, options.target.root);
 
   const findings = [];
   let managedPathsSafe = true;
@@ -1361,7 +1117,7 @@ function runKnowledgeInitSlice(options) {
     options.target.ignoredSnapshot,
     options.target.ignoredExclusions,
   )) {
-    findings.push('Knowledge initialization changed an ignored target path outside knowledge and managed runtime state.');
+    findings.push('Knowledge initialization changed an ignored target path outside knowledge and managed files.');
   }
   if (!gitControlPlaneMatches(options.source.gitControlSnapshot)
     || !ignoredPathsMatch(options.source.root, options.source.ignoredSnapshot)
@@ -1372,7 +1128,7 @@ function runKnowledgeInitSlice(options) {
   if (managedPathsSafe
     && JSON.stringify(snapshotPaths(options.target.root, protectedFromKnowledgeInit(options.validatedHosts)))
     !== JSON.stringify(protectedSnapshot)) {
-    findings.push('Knowledge initialization changed shared, host, or product-owned protected paths.');
+    findings.push('Knowledge initialization changed shared, Host, or product-owned protected paths.');
   }
   if (managedPathsSafe) {
     try {
@@ -1387,29 +1143,186 @@ function runKnowledgeInitSlice(options) {
         findings.push('Project knowledge must cite at least one pre-migration target HEAD file outside Harness Hub-managed paths.');
       }
       const knowledgeFiles = snapshotDirectory(path.join(options.target.root, 'knowledge'))
-        .map((entry) => `knowledge/${entry.path}`);
+        .map((entry) => 'knowledge/' + entry.path);
       const ignoredKnowledge = gitIgnoredPaths(options.target.root, knowledgeFiles);
       if (ignoredKnowledge.length > 0) {
-        findings.push(`Project knowledge must not be ignored by Git: ${ignoredKnowledge.join(', ')}`);
+        findings.push('Project knowledge must not be ignored by Git: ' + ignoredKnowledge.join(', '));
       }
     } catch (error) {
       findings.push(error instanceof Error ? error.message : String(error));
     }
   }
-  if (findings.length > 0) {
-    throw attachRunId(validationError(findings.join(' ')), runId);
-  }
+  if (findings.length > 0) throw validationError(findings.join(' '));
+}
 
-  return {
-    runId,
-    loop: 'knowledge-init-loop',
-    host: options.host,
-    role: 'knowledge-init',
-    status: result.status,
-    iteration: result.iteration,
-    handoff: result.handoff,
-    metrics: result.metrics,
-  };
+function invokeKnowledgeCli(host, targetRoot) {
+  const args = host === 'codex'
+    ? [
+      '--ask-for-approval',
+      'never',
+      ...(process.platform === 'win32' ? ['-c', 'windows.sandbox=unelevated'] : []),
+      'exec',
+      '--sandbox',
+      'workspace-write',
+      '--ephemeral',
+      '--ignore-user-config',
+      '--disable',
+      'hooks',
+      '-C',
+      targetRoot,
+      '-',
+    ]
+    : [
+      '-p',
+      '--bare',
+      '--setting-sources=',
+      '--strict-mcp-config',
+      '--mcp-config',
+      '{"mcpServers":{}}',
+      '--permission-mode',
+      'acceptEdits',
+      '--tools',
+      'Read,Glob,Grep,Edit,Write',
+      '--no-session-persistence',
+      '--output-format',
+      'json',
+    ];
+  const launcher = resolveHostLauncher(host);
+  const isolation = createHostIsolation(host, launcher.environment || {});
+  const prompt = [
+    "Initialize this repository's project-owned Google OKF v0.1 LLM-Wiki.",
+    'Inspect the real Git-tracked project sources. Write only under knowledge/.',
+    'Create the smallest useful source-traceable wiki: knowledge/index.md must declare OKF 0.1 and link every concept; knowledge/log.md must record this initialization; every Markdown file needs YAML frontmatter with a non-empty type.',
+    'Each concept must cite at least one real project source through a relative Markdown link. Do not copy Harness Hub knowledge or invent project facts.',
+    'Do not change product files, AGENTS.md, CLAUDE.md, Host configuration, .harness-hub, Git state, credentials, user/global configuration, or remote state.',
+    'Finish after writing the knowledge tree; deterministic validation will run separately.',
+  ].join('\n');
+  let result;
+  try {
+    result = spawnSync(
+      launcher.command,
+      launcher.passArgs ? [...launcher.prefixArgs, ...args] : launcher.prefixArgs,
+      {
+        cwd: targetRoot,
+        encoding: 'utf8',
+        input: prompt,
+        maxBuffer: 10 * 1024 * 1024,
+        timeout: 15 * 60 * 1000,
+        env: {
+          ...isolation.environment,
+          ...(!launcher.passArgs ? { HARNESS_HUB_HOST_ARGS_JSON: JSON.stringify(args) } : {}),
+        },
+      },
+    );
+  } finally {
+    fs.rmSync(isolation.root, { recursive: true, force: true });
+  }
+  let message = result.stderr?.trim() || result.stdout?.trim() || "Host command '" + host + "' failed.";
+  if (host === 'claude' && result.status === 0) {
+    try {
+      const output = JSON.parse(result.stdout || '{}');
+      if (output.is_error === true) {
+        message = typeof output.result === 'string' && output.result.trim()
+          ? output.result.trim()
+          : 'Claude Code reported an execution error.';
+        throw migrationError('E_HOST', message, 'host');
+      }
+    } catch (error) {
+      if (error && typeof error === 'object' && error.code === 'E_HOST') throw error;
+    }
+  }
+  if (result.error || result.status !== 0) {
+    throw migrationError('E_HOST', result.error?.message || message.slice(0, 1000), 'host');
+  }
+}
+
+function createHostIsolation(host, launcherEnvironment) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-hub-host-'));
+  const home = path.join(root, 'home');
+  const environment = {};
+  const commonNames = new Set([
+    'PATH', 'PATHEXT', 'SYSTEMROOT', 'WINDIR', 'COMSPEC',
+    'LANG', 'LC_ALL', 'LC_CTYPE', 'TERM', 'NO_COLOR',
+    'HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY',
+    'SSL_CERT_FILE', 'SSL_CERT_DIR', 'NODE_EXTRA_CA_CERTS',
+  ]);
+  const hostNames = new Set(host === 'codex'
+    ? ['OPENAI_API_KEY', 'OPENAI_BASE_URL']
+    : ['ANTHROPIC_API_KEY', 'ANTHROPIC_BASE_URL']);
+  for (const [name, value] of Object.entries(process.env)) {
+    const canonicalName = name.toUpperCase();
+    if (value !== undefined && (commonNames.has(canonicalName) || hostNames.has(canonicalName))) {
+      environment[name] = value;
+    }
+  }
+  Object.assign(environment, launcherEnvironment, {
+    HOME: home,
+    USERPROFILE: home,
+    APPDATA: path.join(root, 'appdata'),
+    LOCALAPPDATA: path.join(root, 'localappdata'),
+    XDG_CONFIG_HOME: path.join(root, 'xdg-config'),
+    XDG_CACHE_HOME: path.join(root, 'xdg-cache'),
+    XDG_DATA_HOME: path.join(root, 'xdg-data'),
+    CODEX_HOME: path.join(home, '.codex'),
+    CLAUDE_CONFIG_DIR: path.join(home, '.claude'),
+    TEMP: path.join(root, 'tmp'),
+    TMP: path.join(root, 'tmp'),
+    TMPDIR: path.join(root, 'tmp'),
+  });
+  for (const directory of [
+    home,
+    environment.APPDATA,
+    environment.LOCALAPPDATA,
+    environment.XDG_CONFIG_HOME,
+    environment.XDG_CACHE_HOME,
+    environment.XDG_DATA_HOME,
+    environment.CODEX_HOME,
+    environment.CLAUDE_CONFIG_DIR,
+    environment.TEMP,
+  ]) fs.mkdirSync(directory, { recursive: true });
+  return { root, environment };
+}
+
+function resolveHostLauncher(command) {
+  if (process.platform !== 'win32') {
+    return { command, prefixArgs: [], executable: command, passArgs: true };
+  }
+  const pathEntries = (process.env.PATH || '').split(path.delimiter).filter(Boolean);
+  const extensions = ['.exe', '.com', '.ps1', '.cmd', '.bat'];
+  for (const directory of pathEntries) {
+    for (const extension of extensions) {
+      const candidate = path.join(directory.replace(/^"|"$/g, ''), command + extension);
+      if (!fs.statSync(candidate, { throwIfNoEntry: false })?.isFile()) continue;
+      if (extension === '.ps1') {
+        return {
+          command: 'powershell.exe',
+          prefixArgs: [
+            '-NoProfile',
+            '-NonInteractive',
+            '-ExecutionPolicy',
+            'Bypass',
+            '-Command',
+            '$cliArgs = @((ConvertFrom-Json -InputObject $env:HARNESS_HUB_HOST_ARGS_JSON)); & $env:HARNESS_HUB_HOST_EXECUTABLE @cliArgs; exit $LASTEXITCODE',
+          ],
+          executable: candidate,
+          passArgs: false,
+          environment: {
+            HARNESS_HUB_HOST_EXECUTABLE: candidate,
+            HARNESS_HUB_HOST_ARGS_JSON: JSON.stringify([]),
+          },
+        };
+      }
+      if (extension === '.cmd' || extension === '.bat') {
+        throw migrationError(
+          'E_HOST',
+          'Refusing shell-string execution for ' + candidate + '; install an .exe or .ps1 launcher.',
+          'host',
+        );
+      }
+      return { command: candidate, prefixArgs: [], executable: candidate, passArgs: true };
+    }
+  }
+  throw migrationError('E_HOST', "Host command '" + command + "' is not available on PATH.", 'host');
 }
 
 function gitIgnoredPaths(targetRoot, relativePaths) {
@@ -1428,115 +1341,19 @@ function protectedFromKnowledgeInit(hosts) {
   return [
     'AGENTS.md',
     'CLAUDE.md',
-    '.harness-hub/.gitignore',
+    ...SHARED_MANAGED_FILES,
     '.harness-hub/manifest.json',
+    '.harness-hub/state',
+    'evals',
     ...hosts.flatMap(hostManagedPaths),
   ];
 }
 
-function verifyMigrationSlice(options, runtimeEvidence) {
-  const findings = [];
-  try {
-    const receipt = JSON.parse(requireFile(options.migrationCopy.receiptPath));
-    const expectedFileCount = options.distributedSkills.reduce(
-      (count, skill) => count + skill.files.length,
-      0,
-    ) + 1 + (options.role === 'primary' ? 2 : 0);
-    if (receipt.schemaVersion !== 1
-      || receipt.runId !== options.migrationCopy.runId
-      || receipt.host !== options.host
-      || receipt.role !== options.role
-      || receipt.planSha256 !== options.migrationCopy.planSha256
-      || receipt.sourceCommit !== options.source.head
-      || receipt.targetHead !== options.target.head
-      || receipt.fileCount !== expectedFileCount) {
-      findings.push('Migration copy receipt does not match the approved Host slice and tracked file set.');
-    }
-  } catch {
-    findings.push('Migration Host did not invoke the approved deterministic copy command.');
-  }
-  let managedPathsSafe = true;
-  try {
-    assertManagedPathsSafe(options.target.root, options.validatedHosts, options.target.staleManagedPaths);
-  } catch (error) {
-    managedPathsSafe = false;
-    findings.push(error instanceof Error ? error.message : String(error));
-  }
-  if (runtimeEvidence?.producerOutput?.host !== options.host
-    || runtimeEvidence?.producerOutput?.role !== options.role) {
-    findings.push(`Producer evidence must identify host '${options.host}' and role '${options.role}'.`);
-  }
-  if (!gitControlPlaneMatches(options.target.gitControlSnapshot)) {
-    findings.push('Host CLI must not modify target Git config, refs, index, HEAD, or info/exclude.');
-  }
-  if (!ignoredPathsMatch(
-    options.target.root,
-    options.target.ignoredSnapshot,
-    options.target.ignoredExclusions,
-  )) {
-    findings.push('Host CLI changed an ignored target path outside its exact managed boundary.');
-  }
-  if (runGit(options.target.root, ['rev-parse', 'HEAD'], 'E_VALIDATE') !== options.target.head) {
-    findings.push('Host CLI must not move the target HEAD.');
-  }
-  if (!gitControlPlaneMatches(options.source.gitControlSnapshot)
-    || !ignoredPathsMatch(options.source.root, options.source.ignoredSnapshot)
-    || runGit(options.source.root, ['rev-parse', 'HEAD'], 'E_VALIDATE') !== options.source.head
-    || runGit(options.source.root, ['status', '--porcelain=v1', '--untracked-files=all'], 'E_VALIDATE') !== ''
-    || runGit(options.source.root, ['config', '--get', 'remote.origin.url'], 'E_VALIDATE') !== options.source.url) {
-    findings.push('Host CLI must not modify the Harness Hub source worktree or Git control plane.');
-  }
-  if (managedPathsSafe && options.protectedSnapshot
-    && JSON.stringify(snapshotPaths(options.target.root, protectedFromSecondary(options.validatedHosts[0])))
-      !== JSON.stringify(options.protectedSnapshot)) {
-    findings.push('Secondary host must not modify shared or primary-host files.');
-  }
-  if (managedPathsSafe) {
-    try {
-      validateMigrationOutput(options.source.root, options.target, options.validatedHosts, {
-        validateKnowledge: options.validateKnowledge,
-      });
-    } catch (error) {
-      findings.push(error instanceof Error ? error.message : String(error));
-    }
-  }
-  return {
-    status: 'completed',
-    verdict: findings.length === 0 ? 'pass' : 'blocked',
-    findings,
-    handoff: {
-      summary: findings.length === 0
-        ? `${options.host} ${options.role} migration slice passed deterministic validation.`
-        : `${options.host} ${options.role} migration slice failed deterministic validation.`,
-    },
-  };
-}
-
-function migrationAllowedPaths(host, role) {
-  const hostPaths = hostManagedPaths(host);
-  if (role === 'secondary') {
-    return hostPaths;
-  }
-  return [
-    'AGENTS.md',
-    'CLAUDE.md',
-    ...hostPaths,
-  ];
-}
-
-function migrationForbiddenPaths(host, role) {
-  const paths = ['.git', 'knowledge'];
-  if (role === 'secondary') {
-    paths.push('AGENTS.md', 'CLAUDE.md', '.harness-hub/manifest.json');
-    paths.push(...(host === 'claude' ? ['.agents', '.codex'] : ['.claude']));
-  }
-  return paths;
-}
-
-function rollbackTarget(target, managedSnapshot) {
+function rollbackTarget(target, managedSnapshot, trackedFileSnapshot) {
   restoreGitControlPlane(target.gitControlSnapshot);
   runGit(target.root, ['reset', '--hard', target.head], 'E_ROLLBACK');
   runGit(target.root, ['clean', '-fd'], 'E_ROLLBACK');
+  restoreRestorablePaths(target.root, trackedFileSnapshot);
   restoreRestorablePaths(target.root, managedSnapshot);
   restoreGitControlPlane(target.gitControlSnapshot);
   if (runGit(target.root, ['rev-parse', 'HEAD'], 'E_ROLLBACK') !== target.head
@@ -1545,26 +1362,24 @@ function rollbackTarget(target, managedSnapshot) {
   }
   restoreGitControlPlane(target.gitControlSnapshot);
   if (!gitControlPlaneMatches(target.gitControlSnapshot)
+    || !restorablePathsMatch(target.root, trackedFileSnapshot)
     || !restorablePathsMatch(target.root, managedSnapshot)
     || !ignoredPathsMatch(target.root, target.ignoredSnapshot, target.ignoredExclusions)) {
     throw migrationError('E_ROLLBACK', 'Rollback did not restore managed, ignored, and Git control state exactly.', 'rollback');
   }
 }
 
-function rollbackSource(source) {
-  restoreGitControlPlane(source.gitControlSnapshot);
-  runGit(source.root, ['reset', '--hard', source.head], 'E_ROLLBACK');
-  runGit(source.root, ['clean', '-fd'], 'E_ROLLBACK');
-  restoreGitControlPlane(source.gitControlSnapshot);
+function assertSourceUnchanged(source) {
   if (runGit(source.root, ['rev-parse', 'HEAD'], 'E_ROLLBACK') !== source.head
     || runGit(source.root, ['status', '--porcelain=v1', '--untracked-files=all'], 'E_ROLLBACK') !== ''
-    || runGit(source.root, ['config', '--get', 'remote.origin.url'], 'E_ROLLBACK') !== source.url) {
-    throw migrationError('E_ROLLBACK', 'Git rollback did not restore the source.', 'rollback');
-  }
-  restoreGitControlPlane(source.gitControlSnapshot);
-  if (!gitControlPlaneMatches(source.gitControlSnapshot)
+    || runGit(source.root, ['config', '--get', 'remote.origin.url'], 'E_ROLLBACK') !== source.url
+    || !gitControlPlaneMatches(source.gitControlSnapshot)
     || !ignoredPathsMatch(source.root, source.ignoredSnapshot)) {
-    throw migrationError('E_ROLLBACK', 'Rollback did not restore the source ignored and Git control state exactly.', 'rollback');
+    throw migrationError(
+      'E_ROLLBACK',
+      'Harness Hub source changed during migration; the unowned change was preserved for inspection.',
+      'rollback',
+    );
   }
 }
 
@@ -1572,7 +1387,9 @@ function preflightSource(sourceDir, knownRoot = null) {
   const root = knownRoot ?? runGit(sourceDir, ['rev-parse', '--show-toplevel'], 'E_SOURCE_GIT');
   assertStandaloneGitCheckout(root, 'Harness Hub source');
   const head = runGit(sourceDir, ['rev-parse', '--verify', 'HEAD'], 'E_SOURCE_HEAD');
-  const url = runGit(sourceDir, ['config', '--get', 'remote.origin.url'], 'E_SOURCE_GIT');
+  const url = safeManifestSourceUrl(
+    runGit(sourceDir, ['config', '--get', 'remote.origin.url'], 'E_SOURCE_GIT'),
+  );
   const status = runGit(sourceDir, ['status', '--porcelain=v1', '--untracked-files=all'], 'E_SOURCE_GIT');
   if (status !== '') {
     throw migrationError('E_SOURCE_DIRTY', 'Harness Hub source must be a clean Git worktree.');
@@ -1586,11 +1403,37 @@ function preflightSource(sourceDir, knownRoot = null) {
   };
 }
 
+function safeManifestSourceUrl(value) {
+  if (!value || /[\r\n\0]/.test(value)) {
+    throw migrationError('E_SOURCE_URL', 'Harness Hub source remote URL is missing or invalid.', 'preflight');
+  }
+  let parsed = null;
+  try {
+    parsed = new URL(value);
+  } catch {
+    // Git also accepts local paths and SCP-style SSH remotes.
+  }
+  const credentialBearing = parsed
+    ? Boolean(parsed.password
+      || parsed.search
+      || parsed.hash
+      || (['http:', 'https:'].includes(parsed.protocol) && parsed.username))
+    : /[?#]/.test(value);
+  if (credentialBearing) {
+    throw migrationError(
+      'E_SOURCE_CREDENTIAL_URL',
+      'Harness Hub source remote URL must not contain credentials, query parameters, or fragments.',
+      'preflight',
+    );
+  }
+  return value;
+}
+
 function writeManifest(source, targetRoot, hosts, primaryHost, distributedSkills) {
-  const managedPaths = ['.harness-hub/.gitignore', 'AGENTS.md', 'CLAUDE.md'];
+  const managedPaths = [...SHARED_MANAGED_FILES, 'AGENTS.md', 'CLAUDE.md'];
   for (const host of hosts) {
     const skillRoot = host === 'claude' ? '.claude/skills' : '.agents/skills';
-    for (const skill of distributedSkills) {
+    for (const skill of skillsForHost(distributedSkills, host)) {
       const relativeRoot = `${skillRoot}/${skill.name}`;
       managedPaths.push(...skill.files.map((file) => `${relativeRoot}/${file}`));
     }
@@ -1622,17 +1465,4 @@ function runGit(cwd, args, code) {
 
 function migrationError(code, message, phase = 'preflight', exitCode = 3) {
   return Object.assign(new Error(message), { code, phase, exitCode });
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
-  && process.argv[2] === 'copy-slice') {
-  try {
-    if (process.argv.length !== 5) {
-      throw validationError('Internal migration copy accepts only runId and plan hash.');
-    }
-    runInternalMigrationCopy(process.argv[3], process.argv[4]);
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 3;
-  }
 }

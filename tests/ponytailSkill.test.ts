@@ -1,5 +1,4 @@
 import { expect, test } from 'bun:test';
-import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 
 const skillPath = 'skills/ponytail/SKILL.md';
@@ -8,16 +7,6 @@ const skill = fs.readFileSync(skillPath, 'utf8');
 function frontmatterValue(name: string): string {
   const match = skill.match(new RegExp(`^${name}:\\s*(.+)$`, 'm'));
   return (match?.[1] || '').replace(/^"|"$/g, '');
-}
-
-function activation(prompt: string): string | null {
-  const result = spawnSync(
-    process.execPath,
-    ['skills/workflow-router/scripts/skill-activation-check.mjs', '--prompt', prompt, '--json'],
-    { encoding: 'utf8' },
-  );
-  expect(result.status).toBe(0);
-  return JSON.parse(result.stdout).selectedSkill;
 }
 
 test('ponytail imports the core coding-minimalism skill with local routing metadata', () => {
@@ -65,9 +54,11 @@ test('ponytail is registered as a standard distributed helper with source covera
   expect(sourceProjects).toContain('Installed the core `ponytail` standard skill');
 });
 
-test('ponytail activation covers coding minimalism without stealing reports', () => {
-  expect(activation('Use the simplest solution: fix this parser with the smallest correct diff and no unrequested abstractions.')).toBe('ponytail');
-  expect(activation('Review this diff for over-engineering and unnecessary dependencies.')).toBe('ponytail');
-  expect(activation('Create a concise visual handoff report with validation evidence and risks.')).toBe('effective-interact');
-  expect(activation('Before declaring this task done, run the final build, typecheck, lint, tests, smoke checks, and artifact validation.')).toBe('verification-loop');
+test('ponytail stays an atomic Host-selected coding skill without a Router dependency', () => {
+  const routing = fs.readFileSync('docs/skill-routing.md', 'utf8');
+
+  expect(routing).toContain('Claude Code or Codex is the only main-Agent runtime');
+  expect(routing).toContain('| YAGNI, minimum change, entity-count, subtraction review | `ponytail` |');
+  expect(skill).not.toContain('workflow-router');
+  expect(routing).not.toContain('skill-activation-check.mjs');
 });

@@ -9,7 +9,6 @@ This source-repository Wiki records Harness Hub's own architecture and governanc
 
 - [Architecture](architecture.md)
 - [Distribution](distribution.md)
-- [Workflows and Loops](workflows.md)
 - [Skill governance](skill-governance.md)
 - [Source governance](source-governance.md)
 - [Vocabulary](vocabulary.md)

@@ -46,7 +46,7 @@ Bottleneck and recommendation evidence should prefer primary interaction events:
 
 The report builder writes `agent-interaction-improvement-queue.json` next to `agent-interaction-report.md`.
 
-V1 queue items cover `project-rule-candidate`, `stale-info-removal-candidate`, `sop-candidate`, `knowledge-cache-candidate`, `eval-case-candidate`, and `workflow-change-candidate`.
+V1 queue items cover `project-rule-candidate`, `stale-info-removal-candidate`, `sop-candidate`, `knowledge-cache-candidate`, and `eval-case-candidate`.
 
 Every actionable item must include:
 

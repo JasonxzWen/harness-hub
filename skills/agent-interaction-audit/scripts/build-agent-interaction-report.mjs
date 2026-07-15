@@ -23,7 +23,6 @@ const QUEUE_CATEGORIES = [
   'sop-candidate',
   'knowledge-cache-candidate',
   'eval-case-candidate',
-  'workflow-change-candidate',
 ];
 const QUEUE_STATUSES = [
   'new',
@@ -478,7 +477,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (strong.length < 2 && candidate > 0) {
     recs.push({
       title: 'Make project identity explicit in handoffs and host traces',
-      owner: 'delivery-workflow or the target repo workflow',
+      owner: 'native Host main Agent',
       evidence: events.filter((event) => event.relevance === 'candidate').slice(0, 3).map((event) => event.id),
     });
   }
@@ -494,15 +493,15 @@ function recommendations(events, bottlenecks, manifest) {
   if (environmentBlockers.length > 0) {
     recs.push({
       title: 'Treat environment readiness as a first-class audit category',
-      owner: 'diagnosis-workflow',
+      owner: 'native Host main Agent or diagnose',
       evidence: environmentBlockers.slice(0, 3).map((event) => event.id),
     });
   }
 
   if (userFriction.length > 0) {
     recs.push({
-      title: 'Add a request-friction review before changing prompt or routing rules',
-      owner: 'agent-interaction-audit or sdd-workflow',
+      title: 'Add a request-friction review before changing project rules or Skills',
+      owner: 'native Host main Agent or agent-interaction-audit',
       evidence: userFriction.map((event) => event.id),
     });
   }
@@ -510,7 +509,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (guidanceDrift.length > 0) {
     recs.push({
       title: 'Review stale or misleading project guidance before the next agent session',
-      owner: 'sdd-workflow',
+      owner: 'native Host main Agent',
       evidence: guidanceDrift.map((event) => event.id),
     });
   }
@@ -518,7 +517,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (repeatedMistakes.length > 0) {
     recs.push({
       title: 'Convert repeated agent mistakes into a guardrail, eval case, or SOP note',
-      owner: 'retro-loop',
+      owner: 'agent-interaction-audit',
       evidence: repeatedMistakes.map((event) => event.id),
     });
   }
@@ -526,7 +525,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (sopLessons.length > 0) {
     recs.push({
       title: 'Extract durable tool and script SOP from repeated command evidence',
-      owner: 'delivery-workflow',
+      owner: 'native Host main Agent',
       evidence: sopLessons.map((event) => event.id),
     });
   }
@@ -534,7 +533,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (knowledgeCache.length > 0) {
     recs.push({
       title: 'Promote repeatedly rediscovered project facts into the project knowledge cache',
-      owner: 'knowledge-maintain-loop',
+      owner: 'native Host main Agent under the OKF contract',
       evidence: knowledgeCache.map((event) => event.id),
     });
   }
@@ -542,7 +541,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (blockers > 0 && toolTrace > 0) {
     recs.push({
       title: 'Review failed tool-call branches before retrying the same action',
-      owner: 'diagnosis-workflow or agent-introspection-debugging',
+      owner: 'diagnose or agent-introspection-debugging',
       evidence: strong.filter((event) => event.signals?.blocker || event.signals?.toolTrace).slice(0, 3).map((event) => event.id),
     });
   }
@@ -550,7 +549,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (validation === 0 && strong.length > 0) {
     recs.push({
       title: 'Record validation gates in session handoffs before claiming progress',
-      owner: 'verification-loop or delivery-workflow',
+      owner: 'verification-loop or native Host main Agent',
       evidence: strong.slice(0, 3).map((event) => event.id),
     });
   }
@@ -558,14 +557,14 @@ function recommendations(events, bottlenecks, manifest) {
   if (bottlenecks.some((item) => item.key === 'requirement alignment')) {
     recs.push({
       title: 'Force acceptance criteria alignment before implementation resumes',
-      owner: 'sdd-workflow',
+      owner: 'native Host main Agent',
       evidence: bottlenecks.find((item) => item.key === 'requirement alignment')?.ids.slice(0, 3) || [],
     });
   }
 
   if (recs.length === 0) {
     recs.push({
-      title: 'Keep the current workflow and rerun this audit after more trace evidence accumulates',
+      title: 'Keep the current project rules and rerun this audit after more trace evidence accumulates',
       owner: 'agent-interaction-audit',
       evidence: strong.slice(0, 3).map((event) => event.id),
     });
@@ -590,6 +589,56 @@ function tableRows(rows) {
     return '- None.\n';
   }
   return rows.map(([key, count]) => `- ${key}: ${count}`).join('\n') + '\n';
+}
+
+function resourceEvidence(events) {
+  const toolCalls = events.filter((event) => event.eventType === 'tool-call').length;
+  const groups = new Map();
+  for (const event of events.filter((entry) => entry.resourceUsage)) {
+    const key = `${event.host || 'unknown'}\0${event.path || event.id}`;
+    const group = groups.get(key) || [];
+    group.push(event);
+    groups.set(key, group);
+  }
+  const callCount = [...groups.values()].reduce((total, group) => total + group.reduce((sum, event) => {
+    const value = event.resourceUsage?.callCount;
+    return sum + (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+  }, 0), 0);
+  const sumMetricWhenComplete = (metric) => {
+    if (callCount === 0) return 'unknown';
+    let total = 0;
+    for (const group of groups.values()) {
+      const groupCallCount = group.reduce((sum, event) => {
+        const value = event.resourceUsage?.callCount;
+        return sum + (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+      }, 0);
+      if (groupCallCount === 0) continue;
+      const cumulative = group
+        .filter((event) => event.resourceUsage?.mode === 'cumulative'
+          && typeof event.resourceUsage?.[metric] === 'number'
+          && Number.isFinite(event.resourceUsage[metric]))
+        .sort((left, right) => String(left.ts).localeCompare(String(right.ts)))
+        .at(-1);
+      if (cumulative) {
+        total += cumulative.resourceUsage[metric];
+        continue;
+      }
+      const incremental = group.filter((event) => event.resourceUsage?.mode === 'incremental'
+        && typeof event.resourceUsage?.[metric] === 'number'
+        && Number.isFinite(event.resourceUsage[metric]));
+      if (incremental.length < groupCallCount) return 'unknown';
+      total += incremental.reduce((sum, event) => sum + event.resourceUsage[metric], 0);
+    }
+    return Number(total.toFixed(6));
+  };
+  return {
+    toolCalls,
+    agentOrCliCalls: callCount > 0 ? callCount : 'unknown',
+    durationMs: sumMetricWhenComplete('durationMs'),
+    inputTokens: sumMetricWhenComplete('inputTokens'),
+    outputTokens: sumMetricWhenComplete('outputTokens'),
+    costUsd: sumMetricWhenComplete('costUsd'),
+  };
 }
 
 function hostCoverageRows(manifest, events) {
@@ -755,14 +804,14 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
   const itemConfigs = [
     {
       category: 'project-rule-candidate',
-      signals: ['userFriction', 'guidanceDrift', 'promptContext'],
-      requiredSignals: ['userFriction', 'guidanceDrift'],
-      tags: ['misunderstanding', 'stale-guidance'],
+      signals: ['userFriction', 'guidanceDrift', 'promptContext', 'repeatedMistake', 'blocker', 'validation', 'decision'],
+      requiredSignals: ['userFriction', 'guidanceDrift', 'repeatedMistake', 'blocker'],
+      tags: ['misunderstanding', 'stale-guidance', 'validation-gap', 'repeated-tool-failure'],
       scope: 'project',
-      targetDestination: 'project agent instructions or routing docs',
+      targetDestination: 'project agent instructions or an existing atomic Skill',
       summary: 'Clarify project-specific agent instructions where traces or prompt context show misunderstanding or stale guidance.',
       suggestedChange: 'Review the cited evidence and add, narrow, or correct the project rule that would prevent the same interpretation error.',
-      validationSignal: 'A routing or agent-interaction-audit fixture reproduces the phrase/pattern and selects the intended workflow or recommendation category.',
+      validationSignal: 'An agent-interaction-audit Eval fixture reproduces the phrase/pattern and selects the intended Skill, rule, or recommendation category.',
       expectedFutureCostReduction: 'high',
       risk: 'medium',
       patchDraft: {
@@ -789,7 +838,7 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
       targetDestination: 'stale project guidance, source records, or local task state',
       summary: 'Review stale, wrong, contradictory, or misleading guidance that may waste future agent time.',
       suggestedChange: 'Remove or correct the stale statement, then add a validation or search check proving the outdated reference is gone.',
-      validationSignal: 'Repository search no longer finds the stale reference, and the nearest routing or skill validation still passes.',
+      validationSignal: 'Repository search no longer finds the stale reference, and the nearest Skill or project-rule validation still passes.',
       expectedFutureCostReduction: 'medium',
       risk: 'low',
       confirmationPolicy: 'agent-actionable-after-review',
@@ -812,7 +861,7 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
       targetDestination: 'project SOP, runbook, validation docs, or agent instructions',
       summary: 'Extract durable tool, script, encoding, GitHub, PR, or validation handling into a reusable SOP candidate.',
       suggestedChange: 'Write the smallest SOP note that names the command pattern, failure mode, and validation signal.',
-      validationSignal: 'The next matching workflow can follow the SOP without rediscovering the command or encoding/GitHub handling detail.',
+      validationSignal: 'The native Host main Agent can follow the SOP without rediscovering the command or encoding/GitHub handling detail.',
       expectedFutureCostReduction: 'medium',
       risk: 'low',
       confirmationPolicy: 'agent-actionable-after-review',
@@ -838,7 +887,7 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
       tags: ['knowledge-rediscovery'],
       scope: 'project',
       targetDestination: 'project knowledge cache, wiki, or restart handoff',
-      summary: 'Promote repeatedly rediscovered project facts, file locations, or workflow decisions into a durable knowledge-cache candidate.',
+      summary: 'Promote repeatedly rediscovered project facts, file locations, or accepted decisions into a durable knowledge-cache candidate.',
       suggestedChange: 'Record the fact only after confirming it is stable, source-backed, and useful across future sessions.',
       validationSignal: 'A later agent interaction audit shows fewer repeated lookup or relearning events for the same project fact.',
       expectedFutureCostReduction: 'medium',
@@ -859,9 +908,9 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
       requiredSignals: ['repeatedMistake', 'userFriction'],
       tags: ['repeated-agent-mistake', 'misunderstanding'],
       scope: 'project',
-      targetDestination: 'routing, skill activation, workflow, or regression fixture',
+      targetDestination: 'an existing Skill, project rule, Eval, SOP, OKF entry, or native Host instruction',
       summary: 'Convert repeated agent mistakes or misunderstood user phrasing into a deterministic eval or fixture candidate.',
-      suggestedChange: 'Create the smallest fixture that fails before the fix and passes after the routing, skill, or workflow adjustment.',
+      suggestedChange: 'Create the smallest fixture that fails before the fix and passes after the accepted Skill, project-rule, SOP, OKF, or native Host adjustment.',
       validationSignal: 'The new fixture fails on the old behavior and passes after the accepted change.',
       expectedFutureCostReduction: 'high',
       risk: 'low',
@@ -875,33 +924,7 @@ function buildImprovementQueue(events, manifest, warnings, outputDir = null, opt
       counterEvidence: ['A single misunderstood session may not justify a durable eval without repeated or high-impact evidence.'],
       rejectionReasons: ['too-little-evidence', 'one-off-incident', 'not-worth-fixing'],
     },
-    {
-      category: 'workflow-change-candidate',
-      signals: ['repeatedMistake', 'blocker', 'validation', 'decision'],
-      requiredSignals: ['repeatedMistake', 'blocker'],
-      tags: ['workflow-drift', 'validation-gap', 'repeated-tool-failure'],
-      scope: 'project',
-      targetDestination: 'workflow skill contract, delivery gate, or owner workflow',
-      summary: 'Review repeated blockers or validation/decision gaps that may require a workflow contract change.',
-      suggestedChange: 'Change the smallest workflow rule or closeout gate that would prevent the repeated failure without adding broad process overhead.',
-      validationSignal: 'The workflow advisory or owner-contract test captures the new gate and passes after the contract change.',
-      expectedFutureCostReduction: 'high',
-      risk: 'medium',
-      patchDraft: {
-        targetPath: 'skills/workflow-router/SKILL.md',
-        kind: 'markdown-append',
-        heading: 'Agent Interaction Audit Workflow Contract Candidate',
-      },
-      costRationale: {
-        frequency: 'medium',
-        timeLostPerOccurrence: 'high',
-        blastRadius: 'project',
-        fixEffort: 'medium',
-        verificationClarity: 'high',
-      },
-      counterEvidence: ['Workflow gates can add overhead; repeated checks may be intentional project policy rather than waste.'],
-      rejectionReasons: ['required-by-project-policy', 'high-risk-to-generalize', 'too-little-evidence'],
-    },
+
   ];
 
   const items = itemConfigs
@@ -1558,6 +1581,7 @@ export function buildAgentInteractionReport(options) {
   const evidenceRoleRows = countBy(events, (event) => event.evidenceRole || inferEvidenceRole(event));
   const signalRows = signalCountRows(events);
   const clusters = taskClusters(events);
+  const resources = resourceEvidence(events);
 
   const report = `# Agent Interaction Audit
 
@@ -1588,6 +1612,17 @@ ${tableRows(evidenceRoleRows)}
 Host roots:
 
 ${hostCoverageRows(manifest, events)}
+## Resource Evidence
+
+- Host-visible tool calls: ${resources.toolCalls}.
+- Agent/CLI calls: ${resources.agentOrCliCalls}.
+- Elapsed milliseconds: ${resources.durationMs}.
+- Input tokens: ${resources.inputTokens}.
+- Output tokens: ${resources.outputTokens}.
+- Cost USD: ${resources.costUsd}.
+
+Only explicit Host evidence is aggregated. Missing or incomplete evidence remains unknown; the audit never estimates usage or cost.
+
 ## Top Insights
 
 ${insights.map((item, index) => `${index + 1}. **${item.title}** (${item.tier}, confidence=${item.confidence}): ${item.text} Evidence: ${formatEvidenceIds(item.evidence)}.`).join('\n')}
@@ -1639,7 +1674,7 @@ ${formatTaskClusters(clusters)}
 - Decision events: ${signalCount(events, 'decision')}.
 - Handoff events: ${signalCount(events, 'handoff')}.
 
-${signalCount(strong, 'toolTrace') === 0 ? '- Tool-call traces are absent or not recognized in confirmed interaction evidence; avoid judging branch quality strongly.\n' : '- Confirmed tool-call traces exist; inspect blocker-linked events before changing workflow rules.\n'}
+${signalCount(strong, 'toolTrace') === 0 ? '- Tool-call traces are absent or not recognized in confirmed interaction evidence; avoid judging branch quality strongly.\n' : '- Confirmed tool-call traces exist; inspect blocker-linked events before changing project rules or Skills.\n'}
 ${signalCount(strong, 'validation') === 0 ? '- Validation closure is under-evidenced in confirmed interaction traces.\n' : '- Validation evidence exists in confirmed interaction traces.\n'}
 Tool branch review:
 
@@ -1649,12 +1684,12 @@ ${toolBranchRows(events)}
 ${formatLearningMap(events)}
 ## Prompt And Rule Audit
 
-Prompt/rule context is background evidence. It can explain friction, stale instructions, and routing pressure, but it should not become a strong interaction conclusion without trace support.
+Prompt/rule context is background evidence. It can explain friction, stale instructions, and Skill-selection pressure, but it should not become a strong interaction conclusion without trace support.
 
 ${formatSignalEvidence(events, 'promptContext', 'No prompt or rule context evidence was collected.')}
 ## User Friction Patterns
 
-Misunderstanding, ambiguity, correction, or wasted-time language should be reviewed as a request-shape signal before changing prompts or routing.
+Misunderstanding, ambiguity, correction, or wasted-time language should be reviewed as a request-shape signal before changing prompts, project rules, or Skills.
 
 ${formatSignalEvidence(events, 'userFriction', 'No user-friction signal was detected.')}
 ## Project Guidance Garbage And Drift
@@ -1677,12 +1712,12 @@ GitHub-specific signals:
 ${formatSignalEvidence(events, 'githubSop', 'No GitHub-specific SOP signal was detected.')}
 ## Repeated Agent Mistakes
 
-Repeated retries, low-value lookup loops, and same-mistake evidence are candidates for guardrails, eval cases, or workflow changes.
+Repeated retries, low-value lookup patterns, and same-mistake evidence are candidates for changes to an existing Skill, project rule, Eval, SOP, or OKF entry.
 
 ${formatSignalEvidence(events, 'repeatedMistake', 'No repeated-mistake signal was detected.')}
 ## Knowledge Cache Candidates
 
-Facts repeatedly rediscovered from scratch should become project wiki/cache candidates only after the user or project workflow accepts them.
+Facts repeatedly rediscovered from scratch should become project OKF candidates only after the user or native Host main Agent accepts them.
 
 ${formatSignalEvidence(events, 'knowledgeCache', 'No knowledge-cache candidate signal was detected.')}
 ## Automation Trace Review
@@ -1752,6 +1787,7 @@ ${warnings.length > 0 ? warnings.map((warning) => `- ${warning}`).join('\n') : '
       improvementQueueItems: improvementQueue.items.length,
       warnings: warnings.length,
     },
+    resources,
   };
 }
 
