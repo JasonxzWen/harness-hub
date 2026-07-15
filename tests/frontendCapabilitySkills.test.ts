@@ -251,3 +251,28 @@ test('frontend sources are usable through narrow distributed capabilities', () =
   expect(routing).toContain('| Physical or gesture-driven interaction design | `apple-design` |');
   expect(routing).toContain('| Existing motion code review | `review-animations` |');
 });
+
+test('UI prototypes use the minimum evidence instead of a fixed variant workflow', () => {
+  const prototype = read('skills/prototype/SKILL.md');
+  const uiPrototype = read('skills/prototype/references/ui-prototype.md');
+  const guidance = `${prototype}\n${uiPrototype}`;
+
+  expect(prototype).toContain('A prototype is disposable evidence');
+  expect(prototype).toContain('When the evidence is runnable code');
+  expect(guidance).toContain('Choose the cheapest evidence that can answer the current question');
+  expect(guidance).toContain('Generate only enough alternatives to distinguish unresolved choices');
+  expect(guidance).toContain('Static images do not verify interaction, responsiveness, or accessibility');
+  expect(guidance).toContain('Change only the affected direction while preserving accepted constraints');
+  expect(guidance).toContain('temporary switcher only when comparing multiple runnable variants');
+
+  expect(guidance).not.toContain('Default to 3 variants');
+  expect(guidance).not.toContain('default to 3 variants');
+  expect(guidance).not.toContain('cap at 5 variants');
+  expect(guidance).not.toContain('Add a small switcher');
+  expect(guidance).not.toContain('fixed bottom bar');
+  expect(guidance).not.toContain('controlled by a query parameter');
+  expect(prototype).not.toContain('A prototype is throwaway code');
+  expect(prototype).not.toContain("Use the project's existing runtime and task runner.");
+  expect(prototype).not.toContain('Add one command or URL that starts the prototype.');
+  expect(guidance).toContain('Do not add an SDK, API key, provider adapter, or pinned model name');
+});
