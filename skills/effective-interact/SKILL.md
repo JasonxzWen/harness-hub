@@ -5,19 +5,19 @@ description: Load when agent pauses to report relatively complex information nee
 
 # Effective Interact
 
-When loaded, think in visual language first; map/table/timeline/flow/evidence shapes reduce interaction time and information loss. HTML is an escalation path, not the default goal; material repo or skill behavior changes are the default HTML handoff exception. Make activation observable: conclusion, structure, evidence/risk/validation/next action, no generic linear prose. Adapt `ThariqS/html-effectiveness` as pattern families, not templates to copy.
+When loaded, think in visual language first; map/table/timeline/flow/evidence shapes reduce interaction time and information loss. HTML is an escalation path, never a reward for task size or importance. Make activation observable: conclusion, structure, evidence/risk/validation/next action, no generic linear prose. Adapt `ThariqS/html-effectiveness` as pattern families, not templates to copy.
 
 Read `DESIGN.md` before composing an HTML artifact, then relevant split references: `references/report-ia.md`, `references/visual-language.md`, `references/component-contracts.md`, and `references/generator-validation-contract.md`. Components and information architecture come first; old template inputs are not supported.
 
 ## Default Load And Communication Gate
 
-Default: load this skill whenever the agent is about to pause and report relatively complex information if structure lowers cost; it does not have to wait for an owner workflow to select it and does not replace the owner workflow or decide substantive scope. Do not load merely because the answer may exceed roughly 200 Chinese characters; 200 Chinese characters and 3 or more independent points are auxiliary signals. The primary trigger is the user decision need. Run communication-worthiness check and visual-language check.
+Default: the native Host main Agent loads this skill whenever it is about to pause and report relatively complex information if structure lowers cost. This skill does not decide substantive scope. Do not load merely because the answer may exceed roughly 200 Chinese characters; 200 Chinese characters and 3 or more independent points are auxiliary signals. The primary trigger is the user decision need. Run communication-worthiness check and visual-language check.
 
 Use only when linear reply raises decision cost: material repo/skill implementation or validation facts need evidence; 2 or more comparable options have tradeoffs; flow, state, timeline, map, call path, or architecture needs spatial structure; repo/module/skill explainers need capability; user must choose, tune, sort, filter, copy, export, or inspect source anchors, code, diff, citations, evidence, or validation; or plain text would hide the main point.
 
 If no strong signal and no handoff obligation is present, answer in chat or Markdown. Length is never sufficient by itself; long routine answers, translations, simple explanations, summaries, and one-command status stay outside.
 
-Use this skill before, during, or after implementation for planning options, PR writeups, status or incident dashboards, prompt/config tuners, material-change reports, and handoffs; it is for interaction points, not only final handoffs. The user does not need to say "HTML". When repo or skill behavior materially changes, create a validated `html-artifact` handoff by default unless waived or tiny.
+Use this skill before, during, or after implementation for planning options, PR writeups, status or incident dashboards, prompt/config tuners, material-change reports, and handoffs; it is for interaction points, not only final handoffs. The user does not need to say "HTML". Material changes still default to the lightest mode that keeps conclusion, evidence, validation, risks, and next action clear.
 
 ## Output Mode Ladder
 
@@ -37,10 +37,10 @@ Do not load for a long but routine answer.
 - Use `plain-brief` for one conclusion, Top 3 support, and one next action.
 - Use `structured-markdown` for grouped evidence, risks, status, options, or compact tables.
 - Use `visual-markdown` when one Mermaid diagram, decision matrix, command block, or short source-anchor list is enough.
-- Use `html-artifact` only when a hard HTML condition is true: material repo/skill behavior changed and handoff evidence matters; more than 5 source anchors; user must filter, sort, compare, copy, or export; architecture, dependency, milestone, module, repo capability/function/implementation map, or skill structure is too wide for one Mermaid diagram; visual style, component variant, design-system, illustration, prototype, or multi-option approval needs a browsable gallery; or status/incident/editor surface needs drilldown or visible export.
+- Use `html-artifact` only when a hard HTML condition is true: more than 5 source anchors need local navigation; user must filter, sort, compare, copy, or export; architecture, dependency, milestone, module, repo capability/function/implementation map, or skill structure is too wide for one Mermaid diagram; visual style, component variant, design-system, illustration, prototype, or multi-option approval needs a browsable gallery; or status/incident/editor surface needs drilldown or visible export.
 - Any mode other than `plain-brief` must show at least one visible visual structure before handoff.
 
-HTML escalation is forbidden when one compact Markdown table, one Mermaid diagram, or one short file list is enough, except for material repo/skill handoffs where the workflow/advisory layer expects `html-artifact`.
+HTML escalation is forbidden when one compact Markdown table, one Mermaid diagram, or one short file list is enough, including material repo or skill handoffs.
 
 ## Trigger Examples
 

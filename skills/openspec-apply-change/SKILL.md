@@ -1,6 +1,6 @@
 ---
 name: openspec-apply-change
-description: Load when a workflow-router-selected owner workflow needs to implement or continue an existing OpenSpec change; use sdd-workflow for default non-OpenSpec implementation.
+description: Load when a task needs to implement or continue an existing OpenSpec change; use the repository's normal development contract for non-OpenSpec implementation.
 license: MIT
 metadata:
   author: openspec

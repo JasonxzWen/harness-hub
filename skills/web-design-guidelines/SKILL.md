@@ -1,6 +1,6 @@
 ---
 name: web-design-guidelines
-description: Load when a workflow-router-selected owner workflow needs UI, UX, accessibility, or web interface guideline compliance review; use frontend-design when creating or changing production UI.
+description: Load when a task needs UI, UX, accessibility, or web interface guideline compliance review; use frontend-design when creating or changing production UI.
 license: MIT
 metadata:
   author: vercel

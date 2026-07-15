@@ -1,6 +1,6 @@
 ---
 name: agent-introspection-debugging
-description: Load when a workflow-router-selected owner workflow needs agent run, tool loop, context drift, or recoverable harness/tool failure debugging; use diagnose for product/runtime bugs.
+description: Load when a task needs agent run, tool loop, context drift, or recoverable harness/tool failure debugging; use diagnose for product/runtime bugs.
 license: MIT
 ---
 

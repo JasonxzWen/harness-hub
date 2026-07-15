@@ -6,7 +6,7 @@ const HELP = `Usage:
   node bin/harness-hub.mjs migrate <target> --host claude|codex|both --yes [--primary claude|codex] [--force]
 
 Runs the repository's only target initialization capability: one complete migration.
-In both mode, --primary selects the CLI that owns shared files and first-time OKF initialization.`;
+In both mode, --primary selects only the CLI used for first-time OKF initialization.`;
 
 const args = process.argv.slice(2);
 if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
@@ -30,8 +30,6 @@ if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
       code: known ? error.code : 'E_INTERNAL',
       message: error instanceof Error ? error.message : String(error),
       ...(known && 'rolledBack' in error ? { rolledBack: error.rolledBack } : {}),
-      ...(known && Array.isArray(error.runIds) ? { runIds: error.runIds } : {}),
-      ...(known && 'evidenceRestored' in error ? { evidenceRestored: error.evidenceRestored } : {}),
       ...(known && error.originalError ? { originalError: error.originalError } : {}),
     }));
     process.exitCode = known && Number.isInteger(error.exitCode) ? error.exitCode : 1;

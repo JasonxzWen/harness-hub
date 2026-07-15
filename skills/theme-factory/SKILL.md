@@ -1,6 +1,6 @@
 ---
 name: theme-factory
-description: Load when a workflow-router-selected owner workflow needs a coherent visual theme for slides, docs, reports, HTML artifacts, or landing pages; skip product UI implementation and accessibility review.
+description: Load when a task needs a coherent visual theme for slides, docs, reports, HTML artifacts, or landing pages; skip product UI implementation and accessibility review.
 license: Complete terms in LICENSE.txt
 metadata:
   source: "anthropics/skills skills/theme-factory"

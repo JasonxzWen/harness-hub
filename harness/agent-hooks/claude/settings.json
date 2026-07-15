@@ -1,58 +1,12 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/skills/workflow-router/scripts/harness-agent-hook.mjs --host claude --event SessionStart",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/skills/workflow-router/scripts/harness-agent-hook.mjs --host claude --event UserPromptSubmit",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Bash|Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/skills/workflow-router/scripts/harness-agent-hook.mjs --host claude --event PreToolUse",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash|Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/skills/workflow-router/scripts/harness-agent-hook.mjs --host claude --event PostToolUse",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/skills/workflow-router/scripts/harness-agent-hook.mjs --host claude --event Stop",
+            "command": "node .harness-hub/safety-hook.mjs",
             "timeout": 30
           }
         ]

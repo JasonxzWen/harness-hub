@@ -1,6 +1,6 @@
 ---
 name: tdd-workflow
-description: Load when a workflow-router-selected owner workflow needs implementing features, fixing confirmed bugs, or refactoring production code with tests through red-green-refactor; diagnose first for unknown root causes and prototype for throwaway exploration.
+description: Load when a task needs implementing features, fixing confirmed bugs, or refactoring production code with tests through red-green-refactor; diagnose first for unknown root causes and prototype for throwaway exploration.
 license: MIT
 metadata:
   source: "mattpocock/skills skills/engineering/tdd"
@@ -45,7 +45,7 @@ Read `references/tests.md` and `references/mocking.md` when choosing seams or mo
 Before editing production code:
 
 - identify the public interface or user flow being changed
-- name the seam under test and confirm it when the owner workflow or user has not already accepted it
+- name the seam under test and confirm it when the project contract or user has not already accepted it
 - list the first behavior to prove
 - inspect nearby tests and project conventions
 - name any design uncertainty that should be prototyped first

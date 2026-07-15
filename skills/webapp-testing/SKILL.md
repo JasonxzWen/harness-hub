@@ -1,6 +1,6 @@
 ---
 name: webapp-testing
-description: Load when a workflow-router-selected owner workflow needs one-off local web app inspection with Playwright, screenshots, console logs, or UI issue reproduction against a dev server; use e2e-testing for durable suites.
+description: Load when a task needs one-off local web app inspection with Playwright, screenshots, console logs, or UI issue reproduction against a dev server; use e2e-testing for durable suites.
 license: Complete terms in LICENSE.txt
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: claude-api
-description: Load when a workflow-router-selected owner workflow needs Claude API or Anthropic SDK build, debug, migration, or tuning work; skip provider-neutral, OpenAI, or non-Anthropic model work.
+description: Load when a task needs Claude API or Anthropic SDK build, debug, migration, or tuning work; skip provider-neutral, OpenAI, or non-Anthropic model work.
 license: Complete terms in LICENSE.txt
 metadata:
   source: "anthropics/skills skills/claude-api"

@@ -6,4 +6,4 @@
 - Every factual concept cites real repository files with relative links; inference is labeled.
 - Contradictions belong in the relevant concept or a linked contradiction concept, not a hidden chat-only list.
 - Create no empty taxonomy, placeholder folders, or duplicate glossary when a single sourced concept is sufficient.
-- Use `knowledge-maintain-loop` for writes and the deterministic OKF validator before accepting them.
+- Let the main Agent perform writes under the project contract and run the deterministic OKF validator before accepting them.

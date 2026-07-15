@@ -4,9 +4,12 @@ title: Execution architecture
 ---
 # Execution architecture
 
-Harness Hub uses one execution hierarchy: skills are optional atomic capabilities, executable small loops own role execution and iteration, and workflows only orchestrate loops and branches. The source repository reuses one run-state, lease, audit, and integration model.
+Claude Code and Codex are the only main-Agent runtimes. Harness Hub owns deterministic migration, project contracts, Host resources, atomic Skills, source records, validators, and a source-only OKF wiki. It does not implement a generic Agent Runtime or duplicate native orchestration.
+
+The native Host main Agent owns requirements alignment, planning, Subagent delegation, parallel execution, conflict resolution, integration, validation, and user reporting. Harness Hub contributes atomic Skills and deterministic validators without a Router, fixed lifecycle, scheduler, or internal run state.
 
 ## Sources
 
-- [Executable Loop runtime](../skills/workflow-router/scripts/loop-runtime.mjs)
-- [Agentic Loop catalog](../docs/agentic-loop-catalog.md)
+- [Repository migration](../scripts/migrate.mjs)
+- [Repository agent contract](../AGENTS.md)
+- [Atomic Skill routing](../docs/skill-routing.md)

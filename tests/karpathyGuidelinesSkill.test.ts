@@ -18,9 +18,9 @@ test('karpathy-guidelines keeps upstream standard skill body with local routing 
   expect(frontmatterValue('name')).toBe('karpathy-guidelines');
   const description = frontmatterValue('description');
   expect(description.startsWith('Load when')).toBe(true);
-  expect(description).toContain('workflow-router-selected owner workflow');
   expect(description).toContain('coding behavior baseline');
   expect(description).toContain('do not use as the top-level owner');
+  expect(description).not.toContain('workflow-router');
   expect(frontmatterValue('source')).toBe('https://github.com/multica-ai/andrej-karpathy-skills');
   expect(frontmatterValue('upstream_commit')).toBe('2c606141936f1eeef17fa3043a72095b4765b9c2');
   expect(frontmatterValue('license')).toBe('MIT');

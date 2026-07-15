@@ -1296,6 +1296,7 @@ function extractJsonlEvents(candidate, content, identity, warnings, scopeStats, 
       text: extracted.text,
       affinity: recordAffinity,
       signals: extracted.signals,
+      resourceUsage: extracted.resourceUsage,
       index: baseIndex + record.lineIndex,
     }, identity));
   }
@@ -1376,12 +1377,44 @@ function extractCodexRecord(record) {
         signals: { userRequest: true },
       };
     }
+    if (payload.type === 'task_started') {
+      return {
+        ts: timestamp,
+        eventType: 'agent-call',
+        text: 'Codex task started',
+        resourceUsage: { mode: 'incremental', callCount: 1 },
+      };
+    }
     if (payload.type === 'task_complete') {
       return {
         ts: timestamp,
         eventType: 'handoff',
         text: payload.last_agent_message || '',
         signals: { handoff: true },
+        resourceUsage: compactResourceUsage('incremental', {
+          durationMs: payload.duration_ms,
+        }),
+      };
+    }
+    if (payload.type === 'token_count') {
+      const usage = payload.info?.total_token_usage;
+      const resourceUsage = compactResourceUsage('cumulative', {
+        inputTokens: usage?.input_tokens,
+        outputTokens: usage?.output_tokens,
+      });
+      return resourceUsage ? {
+        ts: timestamp,
+        eventType: 'resource-usage',
+        text: 'Codex cumulative token usage',
+        resourceUsage,
+      } : null;
+    }
+    if (payload.type === 'sub_agent_activity' && payload.kind === 'started') {
+      return {
+        ts: timestamp,
+        eventType: 'agent-call',
+        text: 'Codex subagent started',
+        resourceUsage: { mode: 'incremental', callCount: 1 },
       };
     }
     if (payload.type === 'mcp_tool_call_end') {
@@ -1428,16 +1461,62 @@ function extractClaudeRecord(record) {
     const toolUses = Array.isArray(message.content)
       ? message.content.filter((item) => item?.type === 'tool_use')
       : [];
-    if (toolUses.length > 0) {
-      return {
-        ts: timestamp,
-        eventType: 'tool-call',
-        text: toolUses.map((item) => `${item.name || 'tool'} ${compactJson(item.input || {})}`).join(' '),
-        signals: { toolTrace: true },
-      };
-    }
+    return {
+      ts: timestamp,
+      eventType: toolUses.length > 0 ? 'tool-call' : 'agent-call',
+      text: toolUses.length > 0
+        ? toolUses.map((item) => `${item.name || 'tool'} ${compactJson(item.input || {})}`).join(' ')
+        : 'Claude assistant response',
+      signals: toolUses.length > 0 ? { toolTrace: true } : {},
+      resourceUsage: compactResourceUsage('incremental', {
+        callCount: 1,
+        inputTokens: claudeInputTokens(message.usage),
+        outputTokens: message.usage?.output_tokens,
+      }),
+    };
+  }
+
+  if (record.type === 'result') {
+    return {
+      ts: timestamp,
+      eventType: 'cli-call',
+      text: `Claude CLI result ${record.subtype || ''}`.trim(),
+      resourceUsage: compactResourceUsage('cumulative', {
+        callCount: 1,
+        durationMs: record.duration_ms,
+        inputTokens: claudeInputTokens(record.usage),
+        outputTokens: record.usage?.output_tokens,
+        costUsd: record.total_cost_usd,
+      }),
+    };
   }
   return null;
+}
+
+function finiteNonNegative(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? value
+    : undefined;
+}
+
+function compactResourceUsage(mode, values) {
+  const resourceUsage = { mode };
+  for (const [key, value] of Object.entries(values)) {
+    const numericValue = finiteNonNegative(value);
+    if (numericValue !== undefined) {
+      resourceUsage[key] = numericValue;
+    }
+  }
+  return Object.keys(resourceUsage).length > 1 ? resourceUsage : undefined;
+}
+
+function claudeInputTokens(usage) {
+  const values = [
+    usage?.input_tokens,
+    usage?.cache_creation_input_tokens,
+    usage?.cache_read_input_tokens,
+  ].map(finiteNonNegative).filter((value) => value !== undefined);
+  return values.length > 0 ? values.reduce((sum, value) => sum + value, 0) : undefined;
 }
 
 function contentToText(content) {
@@ -1495,6 +1574,7 @@ function makeEvent(candidate, details, identity) {
     matchedTerms,
     signals: mergedSignals,
     excerpt: buildExcerpt(text, matchedTerms),
+    ...(details.resourceUsage ? { resourceUsage: details.resourceUsage } : {}),
   };
 }
 

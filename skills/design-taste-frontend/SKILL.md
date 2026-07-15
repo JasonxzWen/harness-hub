@@ -1,6 +1,6 @@
 ---
 name: design-taste-frontend
-description: Load when a workflow-router-selected owner workflow needs anti-template frontend visual direction, design-read calibration, or pre-flight critique for landing pages, portfolios, marketing pages, or redesigns; do not load for dashboards, data tables, multi-step product UI, routine frontend logic, HTML reports, slide decks, or generic code explanation.
+description: Load when a task needs anti-template frontend visual direction, design-read calibration, or pre-flight critique for landing pages, portfolios, marketing pages, or redesigns; do not load for dashboards, data tables, multi-step product UI, routine frontend logic, HTML reports, slide decks, or generic code explanation.
 source: https://github.com/Leonxlnx/taste-skill
 upstream_commit: 3c7017d636c3a4aad378433ea6d0cfa6c921da4a
 license: MIT

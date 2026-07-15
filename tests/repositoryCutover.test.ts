@@ -6,14 +6,24 @@ import path from 'node:path';
 const removedLegacyPaths = [
   '.claude-plugin',
   '.github/workflows/publish-npm.yml',
+  '.github/workflows/publish-source-posts.yml',
+  'site',
   'src',
   'harness/minimal',
   'scripts/harness-agent-gate.mjs',
   'scripts/harness-agent-hook-adapter.mjs',
   'scripts/smoke-managed-update.ps1',
+  'docs/agentic-loop-catalog.md',
+  'docs/host-adapters/claude-code-agentic-loops.md',
+  'docs/host-adapters/codex-agentic-loops.md',
+  'skills/answer-workflow',
+  'skills/delivery-workflow',
+  'skills/diagnosis-workflow',
   'skills/harness-quality-check',
   'skills/hub-maintenance-workflow',
-  'skills/workflow-router/scripts/agentic-loop-check.mjs',
+  'skills/review-workflow',
+  'skills/sdd-workflow',
+  'skills/workflow-router',
 ] as const;
 
 function containsFile(targetPath: string): boolean {
@@ -67,9 +77,9 @@ test('the repository exposes one full-migration CLI and no lifecycle subcommands
   const bootstrap = fs.readFileSync('BOOTSTRAP-TARGET.md', 'utf8');
   expect(bootstrap).toContain('git clone');
   expect(bootstrap).toContain('node bin/harness-hub.mjs migrate');
-  expect(bootstrap).toContain('repository skills are installed only under `.agents/skills/`');
+  expect(bootstrap).toContain('repository Skills are installed under `.agents/skills/`');
   expect(bootstrap).toContain('hooks remain in `.codex/hooks.json`');
-  expect(bootstrap).toContain('only after the target repository is trusted');
+  expect(bootstrap).toContain('only when the user already trusts the target');
   expect(bootstrap).not.toContain('.codex/skills');
   expect(bootstrap).not.toMatch(/\bnpx\b|npm (?:install|publish|pack)(?:\s|$)/);
 
@@ -132,36 +142,42 @@ test('every canonical skill has an explicit versionless distribution decision', 
   expect(index.components['skill:harness-quality-check']).toBeUndefined();
 });
 
-test('host hooks execute the repository-local workflow runtime without an npm binary', () => {
-  const claude = fs.readFileSync('harness/agent-hooks/claude/settings.json', 'utf8');
-  const codex = fs.readFileSync('harness/agent-hooks/codex/hooks.json', 'utf8');
+test('host hooks use only the standalone deterministic safety hook', () => {
+  const claude = JSON.parse(fs.readFileSync('harness/agent-hooks/claude/settings.json', 'utf8'));
+  const codex = JSON.parse(fs.readFileSync('harness/agent-hooks/codex/hooks.json', 'utf8'));
   const hookDocs = fs.readFileSync('harness/agent-hooks/README.md', 'utf8');
   const targetContract = fs.readFileSync('harness/target/AGENTS.md', 'utf8');
-  const hookRuntime = fs.readFileSync('skills/workflow-router/scripts/harness-agent-hook.mjs', 'utf8');
+  const safetyHook = fs.readFileSync('harness/agent-hooks/safety-hook.mjs', 'utf8');
 
-  expect(claude).toContain('node .claude/skills/workflow-router/scripts/harness-agent-hook.mjs --host claude');
-  expect(codex).toContain('node .agents/skills/workflow-router/scripts/harness-agent-hook.mjs --host codex');
-  expect(codex).not.toContain('.codex/skills');
-  expect(claude).not.toContain('harness-agent-hook --host');
-  expect(codex).not.toContain('harness-agent-hook --host');
+  expect(Object.keys(claude.hooks)).toEqual(['PreToolUse']);
+  expect(Object.keys(codex.hooks)).toEqual(['PreToolUse']);
+  expect(JSON.stringify(claude)).toContain('node .harness-hub/safety-hook.mjs');
+  expect(JSON.stringify(codex)).toContain('node .harness-hub/safety-hook.mjs');
+  expect(JSON.stringify(claude)).not.toMatch(/workflow-router|loop-runtime|Task|Agent/);
+  expect(JSON.stringify(codex)).not.toMatch(/workflow-router|loop-runtime|Task|Agent/);
   expect(hookDocs).toContain('skills live under `.agents/skills/`');
   expect(hookDocs).toContain('hook configuration remains `.codex/hooks.json`');
   expect(hookDocs).toContain('only for a trusted project');
-  expect(targetContract).toContain('Codex repository skills are discovered only from `.agents/skills/`');
-  expect(targetContract).toContain('hooks remain in `.codex/hooks.json`');
-  expect(targetContract).toContain('run only after Codex trusts this project');
-  expect(targetContract).toContain('batch the current dependency frontier with recommended defaults');
-  expect(targetContract).toContain('never infer acceptance for unanswered rows');
-  expect(hookRuntime).toContain('HARNESS_HUB_CHILD_RUN');
+  expect(targetContract).toContain('Codex discovers skills from `.agents/skills/`');
+  expect(targetContract).toContain('reads hooks from `.codex/hooks.json`');
+  expect(targetContract).toContain('Codex project hooks run only when the user already trusts the project');
+  expect(safetyHook).toContain('dispatchesAgents: false');
+  expect(safetyHook).toContain('mutates: false');
+  expect(safetyHook).not.toMatch(/node:child_process|spawnSync|execFile|\.harness-hub\/state|workflow-router|loop-runtime/);
+  expect(safetyHook).not.toMatch(/writeFileSync|appendFileSync|mkdirSync|rmSync|renameSync/);
 });
 
-test('distributed skills contain the executable Loop layer without source-repository fixtures', () => {
-  const routerScripts = fs.readdirSync('skills/workflow-router/scripts').sort();
+test('distribution keeps standalone validators without a generic Agent runtime', () => {
+  const executableSources = [
+    'bin/harness-hub.mjs',
+    'scripts/migrate.mjs',
+    'harness/agent-hooks/safety-hook.mjs',
+  ].map((filePath) => fs.readFileSync(filePath, 'utf8')).join('\n');
 
-  expect(routerScripts).toContain('loop-runtime.mjs');
-  expect(routerScripts).toContain('okf-validate.mjs');
-  expect(routerScripts).toContain('harness-agent-hook.mjs');
-  expect(routerScripts).not.toContain('agentic-loop-check.mjs');
+  expect(fs.existsSync('scripts/okf-validate.mjs')).toBe(true);
+  expect(fs.existsSync('harness/agent-hooks/safety-hook.mjs')).toBe(true);
+  expect(containsFile('skills/workflow-router')).toBe(false);
+  expect(executableSources).not.toMatch(/runExecutable(?:Loop|Workflow)|repository-migration-loop|copy-slice|migration-copy-receipt|state\/runs|leases|integration\.json/);
   expect(fs.existsSync('skills/clone-website/assets/website-cloner/scripts/validate-site.mjs')).toBe(true);
   for (const fixture of [
     'decision-brief-self-check-report.json',

@@ -178,7 +178,7 @@ Create 10 human-readable questions requiring ONLY READ-ONLY, INDEPENDENT, NON-DE
 Read the documentation of the target API to understand:
 - Available endpoints and functionality
 - If ambiguity exists, fetch additional information from the web
-- Use parallel source gathering only when the active workflow plan explicitly permits independent read-only scopes under `workflow-router/references/orchestration-policy.md`.
+- Use parallel source gathering only when the native Host main Agent records independent read-only scopes under the project contract.
 - Without that approved orchestration line, inspect documentation sequentially.
 
 ### Step 2: Tool Inspection

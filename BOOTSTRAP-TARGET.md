@@ -1,6 +1,6 @@
 # Bootstrap a target repository
 
-Harness Hub has one target capability: a complete repository migration. The Git checkout is the only distribution and version source; no npm package, partial installer, update command, or compatibility path exists.
+Harness Hub has one target capability: complete repository migration. The Git checkout and commit are the only distribution/version source; no npm package, partial installer, update command, compatibility path, or generic Agent runtime exists.
 
 Clone Harness Hub outside the target repository, then run its single CLI entry:
 
@@ -19,12 +19,16 @@ Select exactly one mode:
 --host both --primary codex
 ```
 
-`--force` may replace only Harness Hub-managed generic resources. Normal and force migration both remove resources owned by the previous Harness Hub manifest that no longer belong to the selected Host/full distribution, while preserving target-owned skills, commands, `knowledge/**`, product files, project eval cases, and remote state.
+In `both` mode, primary only selects the CLI used for first-time OKF initialization. Node directly and deterministically copies shared and Host-specific files.
 
-The target and Harness Hub source must both be clean Git worktrees with an existing `HEAD`, and every distributed source file must match its `HEAD` blob byte-for-byte. Migration invokes the selected Claude Code or Codex CLI directly and validates the complete result. A failed slice restores the Git control plane plus managed and explicitly protected paths; if unrelated ignored content changed and exact restoration is impossible, migration reports `rolledBack: false` instead of claiming rollback. It never commits, pushes, publishes, merges, changes credentials, or changes user/global configuration.
+`--force` may replace only Harness Hub-managed generic resources. Normal and force migrations remove stale resources owned by the previous manifest while preserving target-owned Skills, commands, `knowledge/**`, product files, project Evals, credentials, browser state, and remote state.
 
-Each Host slice keeps durable receipt, trace, integration, and metric evidence for every closed Loop in the transaction. Its path-bearing copy plan and runner are execution-only and are removed when the slice closes; a rollback failure reports both `E_ROLLBACK` and the original failure.
+The target and Harness Hub source must both be clean standalone Git worktrees with an existing `HEAD`. Every distributed source file must match its source-`HEAD` blob byte-for-byte. Migration validates ownership, links, path boundaries, Git control state, rollback, and final output. If exact restoration is impossible, it preserves unowned changes and reports `rolledBack: false`. It never commits, pushes, publishes, merges, changes credentials, changes Host trust, or modifies user/global configuration.
 
-For Codex, repository skills are installed only under `.agents/skills/`, while hooks remain in `.codex/hooks.json`. Codex runs project hooks only after the target repository is trusted; migration reports this prerequisite and never changes trust automatically.
+For Codex, repository Skills are installed under `.agents/skills/`, while hooks remain in `.codex/hooks.json`. Codex project hooks run only when the user already trusts the target; migration records no trust changes.
 
-First migration asks the primary CLI to inspect the target and create a source-traceable Google OKF v0.1 wiki under `knowledge/`. Later migrations validate and preserve that tree byte-for-byte; daily maintenance belongs to the target project's `knowledge-maintain-loop`.
+On the first migration, only when neither a prior manifest nor `knowledge/` exists, the primary CLI is called once to inspect the target and create a source-traceable Google OKF v0.1 wiki. Later migrations invoke no Host CLI for knowledge maintenance: they validate and preserve the complete wiki byte-for-byte.
+
+Before that first migration, expose the selected Host API key to the process (`OPENAI_API_KEY` for Codex or `ANTHROPIC_API_KEY` for Claude Code). The CLI runs with an isolated temporary user/config directory and cannot consume normal Host profiles, keychains, browser state, unrelated credentials, or user configuration. The temporary directory is deleted after the call.
+
+The migrated `.harness-hub/safety-hook.mjs` is a deterministic local PreTool guard with no Agent dispatch or lifecycle state. The migrated `.harness-hub/okf-validate.mjs` validates project knowledge independently of Claude Code or Codex.

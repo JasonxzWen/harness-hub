@@ -10,30 +10,6 @@ type ScriptSmoke = {
 
 const smokes: ScriptSmoke[] = [
   {
-    name: 'workflow route intent',
-    command: process.execPath,
-    args: ['skills/workflow-router/scripts/route-intent.mjs', '--help'],
-    expected: 'Usage: route-intent.mjs',
-  },
-  {
-    name: 'workflow deterministic gate',
-    command: process.execPath,
-    args: ['skills/workflow-router/scripts/harness-agent-gate.mjs', '--help'],
-    expected: 'hook-event adapter',
-  },
-  {
-    name: 'workflow host hook adapter',
-    command: process.execPath,
-    args: ['skills/workflow-router/scripts/harness-agent-hook.mjs', '--help'],
-    expected: 'host-compatible JSON',
-  },
-  {
-    name: 'workflow skill activation check',
-    command: process.execPath,
-    args: ['skills/workflow-router/scripts/skill-activation-check.mjs', '--help'],
-    expected: 'Checks helper skill activation',
-  },
-  {
     name: 'effective-interact create',
     command: process.execPath,
     args: ['skills/effective-interact/scripts/create-interaction.mjs', '--help'],

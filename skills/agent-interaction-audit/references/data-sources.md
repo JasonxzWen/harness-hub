@@ -4,7 +4,7 @@ Read current-repository local evidence broadly. Use the widest read-only evidenc
 
 ## Include
 
-- Current repository files that explain identity, workflow, state, decisions, validation, and handoff.
+- Current repository files that explain identity, project procedures, state, decisions, validation, and handoff.
 - Layered prompt and rule context: user-level, repository-level, host-local, and project-local `AGENTS.md`, `CLAUDE.md`, host instruction files, and harness context packs when present.
 - Repo-local host work directories for supported agent hosts.
 - User-level host work directories only for sessions whose cwd, workspace, or explicit repo metadata resolves inside the current repository, or to another checkout of the same logical repository by Git remote, Git root, or package identity.

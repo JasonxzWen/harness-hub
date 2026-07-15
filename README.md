@@ -1,16 +1,12 @@
 # Harness Hub
 
-Repository-first distribution for a complete, executable Claude Code/Codex project harness.
+Repository-first deterministic distribution for Claude Code and Codex project harnesses.
 
 [中文说明](README.zh-CN.md)
 
-Harness Hub has one target capability: full migration. The Git repository and selected commit are the only distribution/version source. There is no published package, component version, partial installer, update/remove lifecycle, compatibility layer, or second Loop runtime.
+Harness Hub has one target capability: full migration. The Git repository and selected commit are the only distribution/version source. There is no npm package, component version, partial installer, update/remove lifecycle, compatibility layer, generic Agent runtime, or second registry.
 
-```text
-skill (optional atomic capability)
-  -> small loop (independently executable; may compose skills)
-  -> workflow (large loop; only orchestrates small loops)
-```
+Claude Code and Codex remain the only main-Agent runtimes. Harness Hub distributes project rules, Host resources, atomic Skills, and an OKF contract; it does not duplicate native orchestration, Subagent dispatch, retries, pause/resume, or result aggregation.
 
 ## Migrate a repository
 
@@ -31,87 +27,71 @@ Modes:
 --host both --primary codex
 ```
 
-Use `--force` only to replace Harness Hub-managed generic resources. Every run also removes resources still owned by the previous manifest that no longer belong to the selected Host/full distribution. Target-owned skills, commands, project knowledge, evals, product files, and unrelated local information stay outside that ownership set.
+In `both` mode, primary selects only the CLI used for first-time OKF initialization. Node performs all shared and Host-specific copying deterministically.
 
-Both source and target must be clean Git worktrees with an existing `HEAD`, and distributed source bytes must match the `HEAD` tree. Migration never commits, pushes, publishes, merges, changes credentials, or modifies user/global configuration.
+Use `--force` only to replace Harness Hub-managed generic resources. Every run also removes resources still owned by the previous manifest that no longer belong to the selected Host surface. Target-owned Skills, project knowledge, Evals, product files, credentials, browser state, and unrelated local information remain outside that ownership set.
 
-## What full migration installs
+Both source and target must be clean standalone Git worktrees with an existing `HEAD`. Every distributed source byte must match the source `HEAD` tree. Migration rejects collisions, path escape, symlinks, junctions, unsafe Git state, and incomplete output. It never commits, pushes, publishes, merges, changes credentials, changes Host trust, or modifies user/global configuration.
+
+## What migration installs
 
 Shared:
 
-- `AGENTS.md`: generic development, iteration, Loop, preference, OKF, eval, authorization, and delivery rules;
+- `AGENTS.md`: native main-Agent rules, development and delivery boundaries, atomic Skill routing, OKF, Eval, authorization, and safety;
 - `CLAUDE.md`: exactly `@AGENTS.md`;
-- `.harness-hub/.gitignore` and a versionless managed-file manifest;
-- first-time target-owned `knowledge/` generated from real target sources by the primary CLI.
+- `.harness-hub/manifest.json`: versionless managed-file ownership;
+- `.harness-hub/okf-validate.mjs`: standalone deterministic Google OKF v0.1 validator;
+- `.harness-hub/safety-hook.mjs`: deterministic PreTool safety hook with no Agent dispatch or state machine;
+- first-time target-owned `knowledge/`, generated from real target sources by the selected primary CLI.
 
 Claude Code:
 
 - `.claude/skills/<skill>/**`;
-- `.claude/settings.json` with repository-local hooks.
+- `.claude/settings.json`.
 
 Codex:
 
 - `.agents/skills/<skill>/**`;
-- `.codex/hooks.json` with repository-local hooks.
+- Codex-only atomic Skills such as `decision-ui`;
+- `.codex/hooks.json`.
 
-Codex discovers repository skills from `.agents/skills/`. Project hooks run only when Codex trusts the target repository; migration never changes trust or user/global configuration.
+Codex project hooks run only when the user already trusts the target repository. Migration never changes trust.
 
-Canonical source-only files—Harness Hub's own `knowledge/`, source records, tests, docs, OpenSpec, and repository history—are never copied.
+Harness Hub's root `knowledge/`, source records, docs, tests, task state, and repository history are source-only and never copied.
 
-## Executable Loops
+## Atomic Skills and native orchestration
 
-The single runtime is `skills/workflow-router/scripts/loop-runtime.mjs`. It directly invokes Claude Code or Codex, captures structured process evidence, enforces path leases and control-plane integrity, runs deterministic checks, and stores ignored run evidence under `.harness-hub/state/runs/`.
+The Host main Agent selects atomic Skills directly. Examples include Ponytail, effective-interact, grill-me, quick-learn, source-post, Agent Reach, Decision UI, validation, security review, and Agent interaction audit.
 
-Built-in small loops:
-
-- `requirements-loop`
-- `spec-loop`
-- `test-loop`
-- `implementation-review-loop`
-- `delivery-loop`
-- `report-loop`
-- `retro-loop`
-- `knowledge-init-loop`
-- `knowledge-maintain-loop`
-
-The internal `repository-migration-loop` makes the Host execute one exact private `copy-slice` command. The runtime accepts the slice only when its process trace, receipt, source commit, target HEAD, role, and distributed bytes agree.
-
-Workflow sequences are intentionally thin:
-
-| Workflow | Small loops |
-| --- | --- |
-| question | report |
-| SDD change | requirements -> spec -> test -> implementation review -> conditional knowledge maintenance -> delivery -> retro -> report |
-| diagnosis | requirements -> test -> implementation review -> conditional knowledge maintenance -> delivery -> retro -> report |
-| review | implementation review -> report |
-| delivery | delivery -> retro -> report |
-
-`report-loop` invokes `effective-interact` from lifecycle context for complex decisions and handoffs even when the user did not request a visualization. Simple reports may remain plain text.
+- Complex delivery, approach comparisons, and important handoffs use `effective-interact`; simple results remain plain text.
+- Failed, long-running, high-cost, tool-abnormal, or explicitly requested retrospectives use `agent-interaction-audit`. Missing duration, token, or cost evidence is `unknown`, never estimated.
+- `decision-ui` is installed only for Codex and falls back honestly to text when native structured input is unavailable.
+- Agent Reach is distributed as a safe prompt capability only. It first checks an already installed user-level CLI and never installs dependencies, configures accounts, writes `~/.agent-reach`, or copies cookies and credentials.
 
 ## Project knowledge
 
-First migration asks the primary CLI to inspect the target and create the smallest useful Google OKF v0.1 LLM Wiki:
+On a first migration with no prior manifest and no `knowledge/`, the primary CLI is invoked once to inspect the target and create the smallest source-traceable Google OKF v0.1 wiki.
 
-```text
-knowledge/
-  index.md
-  log.md
-  project.md (or other source-backed concepts)
-```
+That one CLI process receives an isolated temporary user/config directory and only the selected Host's API-key environment (`OPENAI_API_KEY` for Codex or `ANTHROPIC_API_KEY` for Claude Code), plus network/TLS process settings. It does not reuse normal Host profiles, keychains, browser state, unrelated credentials, or user configuration; the temporary directory is removed when the process exits.
 
-Concepts require UTF-8 Markdown, parseable frontmatter with non-empty `type`, index links, dated updates, and relative citations to at least one real file from the pre-migration target `HEAD` outside Harness Hub-managed paths. Generated knowledge must not be ignored by Git. Later migration—including `--force`—validates and preserves the complete path-and-byte set. Daily changes belong to `knowledge-maintain-loop`, not migration.
+Later normal and force migrations:
 
-Harness Hub's own OKF wiki lives at root `knowledge/` and is source-only.
+- invoke no Host CLI for knowledge maintenance;
+- run the standalone validator;
+- preserve the complete knowledge path-and-byte set;
+- fail closed if a prior manifest exists but the project knowledge tree is missing.
+
+Daily knowledge maintenance belongs to the native Host main Agent under the target project's contract. Update an existing canonical owner page before adding another, keep sources/index/log/links synchronized, and make no change when no durable project fact changed.
 
 ## Failure and evaluation boundaries
 
-- Dirty source/target, missing `HEAD`, unmanaged collision, unsafe link, missing CLI trace, wrong role, incomplete output, deterministic failure, or path escape fails closed.
-- Producer failure and Verifier rejection iterate within the Loop's bound; max iterations produce an explicit failed handoff.
-- Real user questions pause and resume the same Loop. Agent output cannot fabricate user acceptance.
-- Failure restores the target transaction boundary; unrelated target data is not a migration resource.
-- Each target repository keeps its own real-task cards, session audits, and eval results. Harness Hub stores no project-specific cases.
+Migration keeps deterministic ownership, stale-resource cleanup, Git-control snapshots, protected-path checks, and rollback. If exact restoration is impossible because unrelated ignored content or the source checkout changed, it preserves the unowned change and reports `rolledBack: false` instead of claiming success.
 
-Primary metric: real-task first-attempt success rate. Guardrails: human intervention count and total execution cost.
+Each target repository keeps its own task cards, sessions, audits, knowledge, and real-task Eval results. Harness Hub stores no project-specific cases.
+
+Primary metric: real-task first-attempt success rate.
+
+Guardrails: human intervention, Agent/CLI calls, elapsed time, token usage, cost, migration safety, and project-knowledge protection.
 
 ## Source development
 
@@ -121,4 +101,4 @@ bun run sync:agent-skills
 bun run validate
 ```
 
-Project-local `.agents/skills/` and `.claude/skills/` are ignored dogfood mirrors. Canonical skills live only under `skills/<name>/` and every canonical skill is explicitly `target-distributed` in `capabilities/index.json`.
+Project-local `.agents/skills/` and `.claude/skills/` are ignored dogfood mirrors. Canonical Skills live only under `skills/<name>/`; `capabilities/index.json` is the single versionless distribution inventory.

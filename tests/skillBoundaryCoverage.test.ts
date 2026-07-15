@@ -23,12 +23,17 @@ test('capability index is versionless classification, not a second routing regis
 
   for (const [id, component] of Object.entries(index.components)) {
     expect(id).toMatch(/^skill:[a-z0-9][a-z0-9-]*$/);
-    expect(Object.keys(component).sort()).toEqual(['distribution', 'kind', 'path']);
-    expect(component).toEqual({
+    expect(Object.keys(component).sort()).toEqual(
+      id === 'skill:decision-ui'
+        ? ['distribution', 'host', 'kind', 'path']
+        : ['distribution', 'kind', 'path'],
+    );
+    expect(component).toMatchObject({
       kind: 'skill',
       path: `skills/${id.slice('skill:'.length)}`,
       distribution: 'target-distributed',
     });
+    expect(component.host).toBe(id === 'skill:decision-ui' ? 'codex' : undefined);
   }
 });
 

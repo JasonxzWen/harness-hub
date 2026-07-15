@@ -1,6 +1,6 @@
 ---
 name: openspec-archive-change
-description: Load when a workflow-router-selected owner workflow needs to archive a completed OpenSpec change after implementation and spec sync decisions are resolved.
+description: Load when a task needs to archive a completed OpenSpec change after implementation and spec sync decisions are resolved.
 license: MIT
 metadata:
   author: openspec

@@ -4,23 +4,20 @@ import { expect, test } from 'bun:test';
 const routing = fs.readFileSync('docs/skill-routing.md', 'utf8');
 const capabilityMap = fs.readFileSync('docs/capability-map.md', 'utf8');
 
-test('routing docs expose only five generic workflow owners', () => {
-  const expected = [
-    ['Read-only evidence or explanation', 'answer-workflow'],
-    ['Feature/fix/refactor/policy/docs/test mutation', 'sdd-workflow'],
-    ['Failure, regression, flaky behavior, performance symptom', 'diagnosis-workflow'],
-    ['Report-only code/security/UI/test/risk review', 'review-workflow'],
-    ['Accepted-scope validation, cleanup, PR/CI closure, handoff', 'delivery-workflow'],
-  ];
-  for (const [intent, owner] of expected) {
-    expect(routing).toContain(intent);
-    expect(routing).toContain(`\`${owner}\``);
-  }
-
-  expect(routing).toContain('Owner workflows only orchestrate small Loops');
-  expect(routing).toContain('`report-loop` owns lifecycle activation');
-  expect(routing).toContain('batches every independently answerable decision in the current dependency layer');
-  expect(routing).toContain('serializes only when the user explicitly requests one question at a time');
+test('routing docs delegate orchestration to the native Host and expose atomic skills', () => {
+  expect(routing).toContain('Claude Code or Codex is the only main-Agent runtime');
+  expect(routing).toContain('Select the narrowest atomic Skill that adds domain value');
+  expect(routing).toContain('no Router or owner Workflow runs first');
+  expect(routing).toContain('| YAGNI, minimum change, entity-count, subtraction review | `ponytail` |');
+  expect(routing).toContain('| Complex communication and important handoff | `effective-interact` |');
+  expect(routing).toContain('| Failed, long, high-cost, tool-abnormal, or explicit retrospective | `agent-interaction-audit` |');
+  expect(routing).toContain('| Read-only internet retrieval through an existing Agent Reach install | `agent-reach` |');
+  expect(routing).toContain('| Blocking/high-impact structured decision on Codex | `decision-ui` |');
+  expect(routing).toContain('The native main Agent triggers it for complex delivery, comparisons, and important handoffs');
+  expect(routing).toContain('reports missing duration/token/cost evidence as `unknown`');
+  expect(routing).not.toContain('report-loop');
+  expect(routing).not.toContain('requirements-loop');
+  expect(routing).not.toContain('workflow-router');
   expect(routing).not.toContain('hub-maintenance-workflow');
   expect(routing).not.toContain('harness-quality-check');
 });

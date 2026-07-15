@@ -21,7 +21,7 @@
       "mode": "structured-markdown",
       "shouldWarn": false,
       "expectedStructures": ["grouped-list"],
-      "content": "# Conclusion\n- **Evidence:** `skill-activation-check.mjs` now selects `effective-interact` for wide repo explainers.\n- **Risk:** Broad but simple summaries may still need fixture tuning.\n- **Next:** Watch false-positive warnings before upgrading any case to fail."
+      "content": "# Conclusion\n- **Evidence:** the native Host main Agent now loads `effective-interact` for wide repo explainers.\n- **Risk:** Broad but simple summaries may still need fixture tuning.\n- **Next:** Watch false-positive warnings before upgrading any case to fail."
     },
     {
       "id": "visual-markdown-bullets-only",

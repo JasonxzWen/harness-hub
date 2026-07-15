@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: Load when a workflow-router-selected owner workflow needs hard bugs and performance regressions, failing commands, hard-to-reproduce behavior, or unknown root causes diagnosed; use agent-introspection-debugging instead for agent/tool harness failures.
+description: Load when a task needs hard bugs and performance regressions, failing commands, hard-to-reproduce behavior, or unknown root causes diagnosed; use agent-introspection-debugging instead for agent/tool harness failures.
 license: MIT
 metadata:
   source: "mattpocock/skills skills/engineering/diagnosing-bugs"

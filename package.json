@@ -1,7 +1,7 @@
 {
   "name": "harness-hub-repository",
   "private": true,
-  "description": "Repository-first full migration and executable agent workflow source.",
+  "description": "Repository-first deterministic migration and atomic agent skill source.",
   "type": "module",
   "repository": {
     "type": "git",

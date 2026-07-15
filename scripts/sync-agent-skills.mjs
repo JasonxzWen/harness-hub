@@ -19,16 +19,43 @@ function isSkillDir(entry, skillsRoot) {
   return entry.isDirectory() && fs.existsSync(path.join(skillsRoot, entry.name, 'SKILL.md'));
 }
 
-function readSkillNames(skillsRoot) {
+function readSkillDistribution(root, skillsRoot) {
   if (!fs.existsSync(skillsRoot)) {
     throw new Error(`Missing source skill root: ${skillsRoot}`);
   }
 
-  return fs
+  const canonicalNames = fs
     .readdirSync(skillsRoot, { withFileTypes: true })
     .filter((entry) => isSkillDir(entry, skillsRoot))
     .map((entry) => entry.name)
     .sort();
+  let components;
+  try {
+    components = JSON.parse(fs.readFileSync(path.join(root, 'capabilities', 'index.json'), 'utf8')).components;
+  } catch {
+    throw new Error('Capability skill index must be valid JSON.');
+  }
+  if (!components || typeof components !== 'object' || Array.isArray(components)) {
+    throw new Error('Capability skill index must contain a components object.');
+  }
+
+  const indexedSkills = Object.entries(components)
+    .filter(([, component]) => component?.kind === 'skill')
+    .map(([id, component]) => {
+      const name = id.startsWith('skill:') ? id.slice('skill:'.length) : '';
+      if (!name || component.path !== `skills/${name}`) {
+        throw new Error(`Skill '${id}' must use its canonical source path.`);
+      }
+      if (component.host !== undefined && !['claude', 'codex'].includes(component.host)) {
+        throw new Error(`Skill '${component.path}' has unsupported Host scope '${component.host}'.`);
+      }
+      return { name, ...(component.host ? { host: component.host } : {}) };
+    })
+    .sort((left, right) => left.name.localeCompare(right.name));
+  if (JSON.stringify(indexedSkills.map((skill) => skill.name)) !== JSON.stringify(canonicalNames)) {
+    throw new Error('Capability skill index must exactly match canonical skill directories.');
+  }
+  return indexedSkills;
 }
 
 function removeManagedEntries(dir) {
@@ -97,8 +124,11 @@ function normalizeHosts(hostIds) {
   });
 }
 
-function planHostSkillSync(root, host, sourceSkillNames) {
+function planHostSkillSync(root, host, sourceSkills) {
   const hostSkillsRoot = path.join(root, host.skillsRoot);
+  const sourceSkillNames = sourceSkills
+    .filter((skill) => skill.host === undefined || skill.host === host.id)
+    .map((skill) => skill.name);
   const sourceSkillSet = new Set(sourceSkillNames);
   const existingTargetEntries = fs.existsSync(hostSkillsRoot)
     ? fs.readdirSync(hostSkillsRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory())
@@ -113,6 +143,7 @@ function planHostSkillSync(root, host, sourceSkillNames) {
     id: host.id,
     skillsRoot: hostSkillsRoot,
     relativeSkillsRoot: host.skillsRoot,
+    sourceSkillNames,
     staleManaged,
   };
 }
@@ -120,13 +151,12 @@ function planHostSkillSync(root, host, sourceSkillNames) {
 export function planAgentSkillSync(options = {}) {
   const root = path.resolve(options.root ?? REPO_ROOT);
   const skillsRoot = path.join(root, 'skills');
-  const sourceSkillNames = readSkillNames(skillsRoot);
-  const hosts = normalizeHosts(options.hosts).map((host) => planHostSkillSync(root, host, sourceSkillNames));
+  const sourceSkills = readSkillDistribution(root, skillsRoot);
+  const hosts = normalizeHosts(options.hosts).map((host) => planHostSkillSync(root, host, sourceSkills));
 
   return {
     root,
     skillsRoot,
-    sourceSkillNames,
     hosts,
     blocked: [],
   };
@@ -149,7 +179,7 @@ export function syncAgentSkills(options = {}) {
       }
     }
 
-    for (const skillName of plan.sourceSkillNames) {
+    for (const skillName of host.sourceSkillNames) {
       const sourceDir = path.join(plan.skillsRoot, skillName);
       const targetDir = path.join(host.skillsRoot, skillName);
       if (!dryRun) {
@@ -163,7 +193,6 @@ export function syncAgentSkills(options = {}) {
   return {
     ...plan,
     dryRun,
-    copied: plan.sourceSkillNames.length,
     staleRemoved: plan.hosts.reduce((count, host) => count + host.staleManaged.length, 0),
   };
 }
@@ -204,7 +233,7 @@ function parseArgs(argv) {
 function printSummary(result) {
   const action = result.dryRun ? 'Would sync' : 'Synced';
   for (const host of result.hosts) {
-    console.log(`${action} ${result.copied} skills into ${toPortable(path.relative(result.root, host.skillsRoot))}/`);
+    console.log(`${action} ${host.sourceSkillNames.length} skills into ${toPortable(path.relative(result.root, host.skillsRoot))}/`);
     if (host.staleManaged.length > 0) {
       console.log(`${result.dryRun ? 'Would remove' : 'Removed'} ${host.staleManaged.length} stale skill directories from ${host.id}.`);
     }

@@ -1,6 +1,6 @@
 ---
 name: product-capability
-description: Load when a workflow-router-selected owner workflow needs an implementation-ready capability plan with product constraints, invariants, interfaces, unresolved decisions, and acceptance boundaries before coding.
+description: Load when a task needs an implementation-ready capability plan with product constraints, invariants, interfaces, unresolved decisions, and acceptance boundaries before coding.
 ---
 
 # Product Capability

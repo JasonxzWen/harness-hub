@@ -1,6 +1,6 @@
 ---
 name: quick-learn
-description: Load when a workflow-router-selected owner workflow needs an explicit source-backed learning project, study plan, syllabus, book/technical topic coaching, teach-back, quizzes, or staged review; do not load for routine implementation, one-off facts, or article writing.
+description: Load when a task needs an explicit source-backed learning project, study plan, syllabus, book/technical topic coaching, teach-back, quizzes, or staged review; do not load for routine implementation, one-off facts, or article writing.
 license: MIT
 metadata:
   source: local-original

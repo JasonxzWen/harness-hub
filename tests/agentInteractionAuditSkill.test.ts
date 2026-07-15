@@ -9,11 +9,12 @@ const skill = fs.readFileSync(`${skillDir}/SKILL.md`, 'utf8');
 const dataSources = fs.readFileSync(`${skillDir}/references/data-sources.md`, 'utf8');
 const analysisRubric = fs.readFileSync(`${skillDir}/references/analysis-rubric.md`, 'utf8');
 const reportShape = fs.readFileSync(`${skillDir}/references/report-shape.md`, 'utf8');
+const reportSource = fs.readFileSync(`${skillDir}/scripts/build-agent-interaction-report.mjs`, 'utf8');
+const skillQuality = fs.readFileSync('docs/skill-quality-guide.md', 'utf8');
 const collectScript = `${skillDir}/scripts/collect-agent-interaction-events.mjs`;
 const reportScript = `${skillDir}/scripts/build-agent-interaction-report.mjs`;
 const createInteractionScript = 'skills/effective-interact/scripts/create-interaction.mjs';
 const validateInteractionScript = 'skills/effective-interact/scripts/validate-interaction.mjs';
-const activationScript = 'skills/workflow-router/scripts/skill-activation-check.mjs';
 
 function writeFile(filePath: string, content: string) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -148,6 +149,146 @@ test('agent-interaction-audit capability metadata registers standard install sur
   expect(component.distribution).toBe('target-distributed');
 });
 
+test('agent-interaction-audit aggregates explicit Codex and Claude resource evidence without estimating gaps', () => {
+  const fixture = makeFixture();
+  writeFile(path.join(fixture.codexRoot, 'resource-session.jsonl'), [
+    JSON.stringify({
+      timestamp: '2026-07-14T10:00:00.000Z',
+      type: 'session_meta',
+      payload: { cwd: fixture.repo },
+    }),
+    JSON.stringify({
+      timestamp: '2026-07-14T10:01:00.000Z',
+      type: 'event_msg',
+      payload: { type: 'task_started', turn_id: 'codex-turn-1' },
+    }),
+    JSON.stringify({
+      timestamp: '2026-07-14T10:02:00.000Z',
+      type: 'event_msg',
+      payload: { type: 'task_complete', turn_id: 'codex-turn-1', duration_ms: 1200, last_agent_message: 'done' },
+    }),
+    JSON.stringify({
+      timestamp: '2026-07-14T10:02:01.000Z',
+      type: 'event_msg',
+      payload: {
+        type: 'token_count',
+        info: {
+          total_token_usage: {
+            input_tokens: 100,
+            cached_input_tokens: 40,
+            output_tokens: 20,
+            reasoning_output_tokens: 5,
+            total_tokens: 120,
+          },
+        },
+      },
+    }),
+  ].join('\n'));
+  writeFile(path.join(fixture.claudeRoot, 'resource-session.jsonl'), [
+    JSON.stringify({ type: 'system', subtype: 'init', cwd: fixture.repo, timestamp: '2026-07-14T11:00:00.000Z' }),
+    JSON.stringify({
+      type: 'assistant',
+      timestamp: '2026-07-14T11:01:00.000Z',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'done' }],
+        usage: {
+          input_tokens: 5,
+          cache_creation_input_tokens: 10,
+          cache_read_input_tokens: 20,
+          output_tokens: 7,
+        },
+      },
+    }),
+    JSON.stringify({
+      type: 'result',
+      subtype: 'success',
+      timestamp: '2026-07-14T11:02:00.000Z',
+      duration_ms: 300,
+      total_cost_usd: 0.42,
+      usage: {
+        input_tokens: 8,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 2,
+        output_tokens: 9,
+      },
+    }),
+  ].join('\n'));
+
+  function collectAndReport(hosts: string, name: string) {
+    const out = path.join(fixture.root, name);
+    const collect = spawnSync(process.execPath, [
+      collectScript,
+      '--repo',
+      fixture.repo,
+      '--since',
+      '30d',
+      '--hosts',
+      hosts,
+      '--codex-root',
+      fixture.codexRoot,
+      '--claude-root',
+      fixture.claudeRoot,
+      '--out',
+      out,
+      '--json',
+    ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+    expect(collect.status, collect.stderr || collect.stdout).toBe(0);
+    const collected = JSON.parse(collect.stdout) as { ledgerPath: string; manifestPath: string };
+    const report = spawnSync(process.execPath, [
+      reportScript,
+      '--ledger',
+      collected.ledgerPath,
+      '--manifest',
+      collected.manifestPath,
+      '--out',
+      path.join(out, 'report.md'),
+      '--json',
+    ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
+    expect(report.status, report.stderr || report.stdout).toBe(0);
+    return {
+      events: fs.readFileSync(collected.ledgerPath, 'utf8').trim().split(/\r?\n/).map((line) => JSON.parse(line)),
+      payload: JSON.parse(report.stdout) as {
+        resources: Record<string, number | string>;
+        reportPath: string;
+      },
+    };
+  }
+
+  const combined = collectAndReport('codex,claude-code', 'combined-resource-report');
+  expect(combined.events).toEqual(expect.arrayContaining([
+    expect.objectContaining({ host: 'codex', resourceUsage: expect.objectContaining({ mode: 'cumulative', inputTokens: 100, outputTokens: 20 }) }),
+    expect.objectContaining({ host: 'claude-code', resourceUsage: expect.objectContaining({ mode: 'cumulative', durationMs: 300, inputTokens: 10, outputTokens: 9, costUsd: 0.42 }) }),
+  ]));
+  expect(combined.payload.resources).toEqual({
+    toolCalls: 1,
+    agentOrCliCalls: 3,
+    durationMs: 1500,
+    inputTokens: 110,
+    outputTokens: 29,
+    costUsd: 'unknown',
+  });
+
+  const claudeOnly = collectAndReport('claude-code', 'claude-resource-report');
+  expect(claudeOnly.payload.resources).toEqual({
+    toolCalls: 0,
+    agentOrCliCalls: 2,
+    durationMs: 300,
+    inputTokens: 10,
+    outputTokens: 9,
+    costUsd: 0.42,
+  });
+}, 30_000);
+
+test('agent-interaction-audit routes Retro changes only to existing atomic destinations', () => {
+  expect(skill).not.toContain('add a routing case');
+  expect(skill).not.toContain('workflow change');
+  expect(reportSource).not.toContain('routing, skill activation, workflow');
+  expect(reportSource).not.toContain('workflow changes');
+  expect(skillQuality).not.toContain('skill/Loop/Workflow/OKF');
+  expect(skillQuality).toContain('existing Skill, project rule, Eval, SOP, or OKF');
+});
+
 test('agent-interaction-audit collection and report scripts produce a private audit from fixture traces', () => {
   const fixture = makeFixture();
 
@@ -268,6 +409,13 @@ test('agent-interaction-audit collection and report scripts produce a private au
   expect(markdown).toContain('## Automation Trace Review');
   expect(markdown).toContain('## Core Positioning');
   expect(markdown).toContain('## Unknowns');
+  expect(markdown).toContain('## Resource Evidence');
+  expect(markdown).toContain('- Agent/CLI calls: unknown.');
+  expect(markdown).toContain('- Elapsed milliseconds: unknown.');
+  expect(markdown).toContain('- Input tokens: unknown.');
+  expect(markdown).toContain('- Output tokens: unknown.');
+  expect(markdown).toContain('- Cost USD: unknown.');
+  expect(markdown).toContain('Missing or incomplete evidence remains unknown; the audit never estimates usage or cost.');
   expect(markdown).toContain('Strong confirmed interaction events');
   expect(markdown).toContain('evt-');
   expect(fs.existsSync(effectiveInteractInputPath)).toBe(true);
@@ -315,7 +463,6 @@ test('agent-interaction-audit collection and report scripts produce a private au
   expect(categories).toContain('sop-candidate');
   expect(categories).toContain('knowledge-cache-candidate');
   expect(categories).toContain('eval-case-candidate');
-  expect(categories).toContain('workflow-change-candidate');
   expect(queueText).not.toContain('excerpt');
   expect(queueText).not.toContain('The previous wording was ambiguous');
   const patchDraftItems = improvementQueue.items.filter((item) => item.patchDraftPath);
@@ -963,78 +1110,4 @@ test('agent-interaction-audit collector samples large JSONL tails without losing
   expect(ledgerText).not.toContain('OLD prefix should not be sampled');
   expect(ledgerText).not.toContain('\uFFFD');
   expect(manifest.warnings.some((warning) => warning.includes('Sampled tail of large JSONL file'))).toBe(true);
-});
-
-test('agent-interaction-audit activation selects private audits without stealing adjacent source post or agent-debug prompts', () => {
-  const positive = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    'Run an agent-interaction-audit from recent Codex and Claude Code work traces, include agent task profile and tool-call decision audit.',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-  const effectiveInteractComplaint = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    '\u5e0c\u671b\u628a ponytail \u5438\u6536\u5230 effective-interact\uff0c\u5206\u6790\u5386\u53f2\u4f1a\u8bdd\u7684\u89e6\u53d1\u9891\u7387\uff0c\u73b0\u5728\u611f\u89c9\u4e0d\u89e6\u53d1\uff0ctrigger \u4e0d\u591f\u786c',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-  const blog = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    'Turn this external OpenAI article into a Chinese source-backed public post with media references and repo iteration review.',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-  const sourcePostInsight = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    'Create an insight report for this source-backed public post from the external article and preserve figures and links.',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-  const ordinaryArticleInsight = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    'Analyze this article and write insight recommendations for readers.',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-  const singleAgentRunInsight = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    'Review an agent run and provide insight recommendations.',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-  const agentProductImprovementInsight = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    'Run insight recommendations for an agent product improvement plan.',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-  const legacySessionInsight = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    'Run legacy insight recommendations across recent agent sessions and tool-call traces.',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-  const singleRunInsightFailure = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    'A single agent run hit a tool loop failure; recover and provide insight recommendations.',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-  const singleRun = spawnSync(process.execPath, [
-    activationScript,
-    '--prompt',
-    'The agent is stuck in a repeated tool loop and burning context without progress; capture state and recover.',
-    '--json',
-  ], { cwd: process.cwd(), encoding: 'utf8', shell: false });
-
-  expect(JSON.parse(positive.stdout).selectedSkill).toBe('agent-interaction-audit');
-  expect(JSON.parse(effectiveInteractComplaint.stdout).selectedSkill).toBe('effective-interact');
-  expect(JSON.parse(blog.stdout).selectedSkill).toBe('source-post');
-  expect(JSON.parse(sourcePostInsight.stdout).selectedSkill).toBe('source-post');
-  expect(JSON.parse(ordinaryArticleInsight.stdout).selectedSkill).not.toBe('agent-interaction-audit');
-  expect(JSON.parse(singleAgentRunInsight.stdout).selectedSkill).not.toBe('agent-interaction-audit');
-  expect(JSON.parse(agentProductImprovementInsight.stdout).selectedSkill).not.toBe('agent-interaction-audit');
-  expect(JSON.parse(legacySessionInsight.stdout).selectedSkill).toBe('agent-interaction-audit');
-  expect(JSON.parse(singleRunInsightFailure.stdout).selectedSkill).toBe('agent-introspection-debugging');
-  expect(JSON.parse(singleRun.stdout).selectedSkill).toBe('agent-introspection-debugging');
 });

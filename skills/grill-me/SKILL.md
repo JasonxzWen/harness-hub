@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Load when a workflow-router-selected owner workflow needs cases where the user says grill me or explicitly asks to be challenged or pressure-tested before implementation; run a dependency-layered batch interview with recommended answers so assumptions are surfaced; do not use for routine implementation or durable documentation work.
+description: Load when a task needs cases where the user says grill me or explicitly asks to be challenged or pressure-tested before implementation; run a dependency-layered batch interview with recommended answers so assumptions are surfaced; do not use for routine implementation or durable documentation work.
 license: MIT
 metadata:
   source: "mattpocock/skills skills/productivity/grill-me"
