@@ -72,8 +72,9 @@ test('the repository exposes one full-migration CLI and no lifecycle subcommands
 
   expect(result.status).toBe(0);
   expect(result.stderr).toBe('');
-  expect(result.stdout).toContain('node bin/harness-hub.mjs migrate <target> --host claude|codex|both --yes');
+  expect(result.stdout).toContain('node bin/harness-hub.mjs migrate <target> --yes [--host claude|codex|both]');
   expect(result.stdout).toContain('--primary claude|codex');
+  expect(result.stdout).toContain('valid schemaVersion 1 manifest');
   for (const obsolete of [' install ', ' update ', ' remove ', ' init-harness ', ' activate-agents ', ' migrate-lock ']) {
     expect(result.stdout, obsolete).not.toContain(obsolete);
   }
@@ -86,6 +87,22 @@ test('the repository exposes one full-migration CLI and no lifecycle subcommands
   expect(bootstrap).toContain('only when the user already trusts the target');
   expect(bootstrap).not.toContain('.codex/skills');
   expect(bootstrap).not.toMatch(/\bnpx\b|npm (?:install|publish|pack)(?:\s|$)/);
+
+  const updateDocs = [
+    'BOOTSTRAP-TARGET.md',
+    'README.md',
+    'README.zh-CN.md',
+    'AGENTS.md',
+    'harness/target/AGENTS.md',
+  ];
+  for (const documentPath of updateDocs) {
+    const document = fs.readFileSync(documentPath, 'utf8');
+    expect(document, documentPath).toContain('https://github.com/JasonxzWen/harness-hub');
+    expect(document, documentPath).toContain('node bin/harness-hub.mjs migrate <current-repository> --yes');
+    expect(document, documentPath).toContain('.harness-hub/manifest.json');
+    expect(document, documentPath).toMatch(/default branch/i);
+    expect(document, documentPath).toMatch(/source commit/i);
+  }
 
   for (const command of [
     'install',

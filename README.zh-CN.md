@@ -6,7 +6,24 @@ Harness Hub 通过仓库 URL 为 Claude Code / Codex 项目提供确定性的全
 
 Claude Code 和 Codex 是唯一主 Agent 执行层，负责需求对齐、Subagent 派发、并行执行、结果汇总和用户汇报。Harness Hub 只分发项目契约、Host 资源、原子 Skills 和 OKF，不重复实现 Host 已有的编排能力。
 
-## 一键全量迁移
+## 一句话更新已安装仓库
+
+用户只需给出更新请求和仓库 URL：
+
+```text
+更新 Harness Hub 到本仓库：
+https://github.com/JasonxzWen/harness-hub
+```
+
+Claude Code 或 Codex 应把该 URL 克隆到当前仓库之外的临时独立 checkout，使用源仓库 default branch 的当前 HEAD，以当前仓库作为 target，读取已有 `.harness-hub/manifest.json`，并从临时 checkout 执行：
+
+```powershell
+node bin/harness-hub.mjs migrate <current-repository> --yes
+```
+
+存在有效 schemaVersion 1 manifest 时，省略的 `--host` 和 `--primary` 分别继承 `hosts` 与 `primaryHost`，无需再次询问 Host 模式；显式参数仍优先。新 manifest 记录本次实际使用的 `source commit`。迁移器不会 commit、push、publish、merge 或以其他方式修改 remote state。
+
+## 首次迁移或显式切换 Host
 
 在目标仓库外克隆本仓库，然后运行唯一公开命令：
 
@@ -16,7 +33,7 @@ cd C:\temp\harness-hub
 node bin/harness-hub.mjs migrate C:\path\to\target --host codex --yes
 ```
 
-支持三种模式：
+没有 manifest 的首次迁移必须显式提供 `--host`。支持三种模式：
 
 ```text
 --host claude
@@ -25,7 +42,7 @@ node bin/harness-hub.mjs migrate C:\path\to\target --host codex --yes
 --host both --primary codex
 ```
 
-`both` 的 primary 只决定首次 OKF 初始化使用哪个 CLI；通用资源和两个 Host surface 都由 Node 迁移器确定性复制。
+首次选择 `both` 还必须显式提供 `--primary`。`both` 的 primary 只决定首次 OKF 初始化使用哪个 CLI；通用资源和两个 Host surface 都由 Node 迁移器确定性复制。
 
 `--force` 也只能替换 Harness Hub manifest 已管理的通用资源。每次迁移都会清理旧 manifest 仍拥有、但已不属于当前分发的 stale resource；目标项目自有 Skills、`knowledge/**`、Evals、产品文件、凭据、浏览器状态和其他信息始终受保护。
 

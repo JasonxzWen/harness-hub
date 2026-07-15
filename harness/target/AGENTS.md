@@ -45,6 +45,16 @@ For complex delivery summaries,方案比较, or important handoffs, load `effect
 
 Use `agent-interaction-audit` for failed, long-running, high-cost, tool-abnormal, or explicitly requested retrospectives. It may recommend changes to an existing Skill, project rule, Eval, SOP, or OKF page, but it must not create a new entity by default. Missing trace, duration, token, or cost evidence is `unknown`, never estimated.
 
+## Harness Hub updates
+
+When an update request includes `https://github.com/JasonxzWen/harness-hub`, clone it into a temporary standalone checkout outside this repository, use the source default branch current HEAD, keep this repository as the target, and read its existing `.harness-hub/manifest.json`. From the temporary Harness Hub checkout run:
+
+```text
+node bin/harness-hub.mjs migrate <current-repository> --yes
+```
+
+With a valid schemaVersion 1 manifest, omitted Host mode and primary inherit `hosts` and `primaryHost`; do not ask the user to repeat them. Explicit `--host` and `--primary` take priority. Without a manifest, first migration still requires `--host`, and first migration in `both` mode also requires `--primary`. Use the source default branch current HEAD and preserve the actual source commit recorded by the new manifest. Migration must not commit, push, publish, merge, or otherwise modify remote state.
+
 ## Durable task state
 
 For non-trivial mutation work, maintain ignored project-local state under `.harness-hub/state/` when it materially improves restartability:

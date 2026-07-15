@@ -1,6 +1,26 @@
 # Bootstrap a target repository
 
-Harness Hub has one target capability: complete repository migration. The Git checkout and commit are the only distribution/version source; no npm package, partial installer, update command, compatibility path, or generic Agent runtime exists.
+Harness Hub has one target capability: complete repository migration. The Git checkout and commit are the only distribution/version source; no npm package, partial installer, update command, compatibility path, or generic Agent runtime exists. Installation and updates both use `migrate`.
+
+## Update an installed repository from one request
+
+When Claude Code or Codex receives a Harness Hub update request together with this repository URL:
+
+```text
+https://github.com/JasonxzWen/harness-hub
+```
+
+the Agent must clone the URL into a temporary standalone checkout outside the current repository, use the source repository's default branch current HEAD, treat the current repository as the target, and read its existing `.harness-hub/manifest.json`. From the temporary Harness Hub checkout, run:
+
+```powershell
+node bin/harness-hub.mjs migrate <current-repository> --yes
+```
+
+With a valid schemaVersion 1 manifest, omitted `--host` and `--primary` inherit `hosts` and `primaryHost`; do not ask the user to repeat the Host mode. Explicit parameters still win and may intentionally switch Host surfaces under the existing ownership, stale-cleanup, and protection rules. The new manifest records the actual source commit used for the update.
+
+The migration command never commits, pushes, publishes, merges, or otherwise modifies remote state. Delete the temporary source checkout only after the local result and validation evidence have been reported.
+
+## First migration
 
 Clone Harness Hub outside the target repository, then run its single CLI entry:
 
@@ -10,7 +30,7 @@ cd C:\temp\harness-hub
 node bin/harness-hub.mjs migrate C:\path\to\target --host codex --yes
 ```
 
-Select exactly one mode:
+With no manifest, select exactly one mode explicitly:
 
 ```text
 --host claude
@@ -19,7 +39,7 @@ Select exactly one mode:
 --host both --primary codex
 ```
 
-In `both` mode, primary only selects the CLI used for first-time OKF initialization. Node directly and deterministically copies shared and Host-specific files.
+On a first migration, `both` requires `--primary`. In `both` mode, primary only selects the CLI used for first-time OKF initialization. Node directly and deterministically copies shared and Host-specific files.
 
 `--force` may replace only Harness Hub-managed generic resources. Normal and force migrations remove stale resources owned by the previous manifest while preserving target-owned Skills, commands, `knowledge/**`, product files, project Evals, credentials, browser state, and remote state.
 

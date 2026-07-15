@@ -63,7 +63,7 @@ export function parseMigrationArgs(argv) {
   let confirmed = false;
   const invalidInput = () => migrationError(
     'E_INPUT',
-    'Use migrate <target> --host claude|codex|both --yes [--primary claude|codex] [--force].',
+    'Use migrate <target> --yes [--host claude|codex|both] [--primary claude|codex] [--force].',
     'input',
     2,
   );
@@ -94,37 +94,39 @@ export function parseMigrationArgs(argv) {
     if (argument === '--primary') selectedPrimary = value;
   }
 
-  if (!['claude', 'codex', 'both'].includes(host) || !confirmed) {
+  if ((host !== undefined && !['claude', 'codex', 'both'].includes(host)) || !confirmed) {
     throw invalidInput();
   }
-  if (host === 'both' && !['claude', 'codex'].includes(selectedPrimary)) {
+  if (selectedPrimary !== undefined && !['claude', 'codex'].includes(selectedPrimary)) {
     throw invalidInput();
   }
-  if (host !== 'both' && selectedPrimary) {
+  if (host && host !== 'both' && selectedPrimary) {
     throw invalidInput();
   }
   return {
     target,
     force,
     host,
-    primaryHost: host === 'both' ? selectedPrimary : host,
+    selectedPrimary,
   };
 }
 
 export function runMigration(argv) {
-  const request = parseMigrationArgs(argv);
-  const hosts = request.host === 'both'
-    ? ['claude', 'codex']
-    : [request.host];
-  const targetRoot = fs.realpathSync.native(runGit(path.resolve(request.target), ['rev-parse', '--show-toplevel'], 'E_TARGET_GIT'));
+  const parsedRequest = parseMigrationArgs(argv);
+  const targetRoot = fs.realpathSync.native(runGit(path.resolve(parsedRequest.target), ['rev-parse', '--show-toplevel'], 'E_TARGET_GIT'));
   const sourceRoot = fs.realpathSync.native(runGit(SOURCE_ROOT, ['rev-parse', '--show-toplevel'], 'E_SOURCE_GIT'));
   if (pathsOverlap(sourceRoot, targetRoot)) {
     throw migrationError('E_INPUT', 'Harness Hub source and target repositories must not overlap.', 'input', 2);
   }
+  assertPathHasNoLinks(targetRoot, '.harness-hub/manifest.json');
+  const previousManifest = readMigrationManifest(targetRoot);
+  const request = resolveMigrationSelection(parsedRequest, previousManifest);
+  const hosts = request.host === 'both'
+    ? ['claude', 'codex']
+    : [request.host];
   const target = preflightTarget(targetRoot, hosts, targetRoot);
   const source = preflightSource(sourceRoot, sourceRoot);
   const skillDistribution = readSkillDistribution(source.root);
-  const previousManifest = readMigrationManifest(target.root);
   if (previousManifest && target.knowledgeSnapshot === null) {
     throw migrationError(
       'E_KNOWLEDGE_MISSING',
@@ -234,6 +236,33 @@ export function runMigration(argv) {
     targetHead: target.head,
     knowledgeInitialized,
   };
+}
+
+function resolveMigrationSelection(request, manifest) {
+  const host = request.host ?? (manifest?.hosts.length === 2 ? 'both' : manifest?.hosts[0]);
+  if (!host) {
+    throw migrationError(
+      'E_INPUT',
+      'First migration requires --host claude|codex|both; only an existing valid manifest can supply it for updates.',
+      'preflight',
+      2,
+    );
+  }
+  if (host !== 'both' && request.selectedPrimary) {
+    throw migrationError('E_INPUT', '--primary is valid only when the selected Host mode is both.', 'preflight', 2);
+  }
+  const primaryHost = host === 'both'
+    ? request.selectedPrimary ?? manifest?.primaryHost
+    : host;
+  if (!['claude', 'codex'].includes(primaryHost)) {
+    throw migrationError(
+      'E_INPUT',
+      'Host mode both requires --primary claude|codex unless a valid manifest supplies primaryHost.',
+      'preflight',
+      2,
+    );
+  }
+  return { ...request, host, primaryHost };
 }
 
 function pathsOverlap(left, right) {
@@ -530,10 +559,26 @@ function readMigrationManifest(targetRoot) {
   if (!fs.existsSync(manifestPath)) return null;
   try {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.files)) throw new Error('invalid schema');
+    const validHosts = Array.isArray(manifest.hosts)
+      && JSON.stringify(manifest.hosts) === JSON.stringify([...new Set(manifest.hosts)].sort())
+      && manifest.hosts.length >= 1
+      && manifest.hosts.length <= 2
+      && manifest.hosts.every((host) => ['claude', 'codex'].includes(host));
+    if (manifest.schemaVersion !== 1
+      || !Array.isArray(manifest.files)
+      || !validHosts
+      || !manifest.hosts.includes(manifest.primaryHost)
+      || typeof manifest.source?.url !== 'string'
+      || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(manifest.source?.commit || '')) throw new Error('invalid schema');
+    safeManifestSourceUrl(manifest.source.url);
     const seen = new Set();
     for (const file of manifest.files) {
       const relativePath = typeof file?.path === 'string' ? file.path : '';
+      const fileHost = relativePath.startsWith('.claude/')
+        ? 'claude'
+        : relativePath.startsWith('.agents/') || relativePath === '.codex/hooks.json'
+          ? 'codex'
+          : null;
       if (!relativePath
         || relativePath.includes('\\')
         || path.posix.isAbsolute(relativePath)
@@ -541,11 +586,19 @@ function readMigrationManifest(targetRoot) {
         || relativePath.split('/').some((segment) => !segment || segment === '.' || segment === '..')
         || !/^[a-f0-9]{64}$/.test(file?.sha256 || '')
         || !manifestManagedRootForFile(relativePath)
+        || (fileHost && !manifest.hosts.includes(fileHost))
         || seen.has(relativePath)) {
         throw new Error('invalid managed file');
       }
       seen.add(relativePath);
     }
+    const requiredFiles = [
+      ...SHARED_MANAGED_FILES,
+      'AGENTS.md',
+      'CLAUDE.md',
+      ...manifest.hosts.map((host) => (host === 'claude' ? '.claude/settings.json' : '.codex/hooks.json')),
+    ];
+    if (!requiredFiles.every((relativePath) => seen.has(relativePath))) throw new Error('missing managed file');
     return manifest;
   } catch {
     throw migrationError('E_COLLISION', 'Existing migration manifest is invalid.', 'preflight');
