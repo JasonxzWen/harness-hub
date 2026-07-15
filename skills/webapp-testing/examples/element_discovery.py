@@ -1,3 +1,4 @@
+# Modified by Harness Hub: use semantic locators and user-visible readiness.
 from playwright.sync_api import sync_playwright
 
 # Example: Discovering buttons and other elements on a page
@@ -6,9 +7,9 @@ with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     page = browser.new_page()
 
-    # Navigate to page and wait for it to fully load
+    # Replace this landmark with the user-visible state that proves your page is ready.
     page.goto('http://localhost:5173')
-    page.wait_for_load_state('networkidle')
+    page.get_by_role('main').wait_for()
 
     # Discover all buttons on the page
     buttons = page.locator('button').all()

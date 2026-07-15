@@ -7,7 +7,9 @@ license: Complete terms in LICENSE.txt
 
 # Web Application Testing
 
-To test local web applications, write native Python Playwright scripts.
+> Harness Hub adaptation: prefer the project's existing browser runner and user-visible readiness over fixed network or time waits.
+
+Reuse the project's existing browser runner and conventions. When none exists and the bundled helper fits, write a small native Python Playwright script.
 
 **Helper Scripts Available**:
 - `scripts/with_server.py` - Manages server lifecycle (supports multiple servers)
@@ -25,10 +27,10 @@ User task ->Is it static HTML?
         +-- No -> Run: python scripts/with_server.py --help
         |   Then use the helper + write simplified Playwright script
         +-- Yes -> Reconnaissance-then-action:
-            1. Navigate and wait for networkidle
-            2. Take screenshot or inspect DOM
-            3. Identify selectors from rendered state
-            4. Execute actions with discovered selectors
+            1. Navigate and wait for the task's user-visible state
+            2. Capture the screenshot, DOM, and relevant console output
+            3. Identify selectors by role or label; use test IDs only as a fallback
+            4. Execute actions and assert the resulting visible state
 ```
 
 ## Example: Using with_server.py
@@ -53,10 +55,10 @@ To create an automation script, include only Playwright logic (servers are manag
 from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True) # Always launch chromium in headless mode
+    browser = p.chromium.launch(headless=True)
     page = browser.new_page()
-    page.goto('http://localhost:5173') # Server already running and ready
-    page.wait_for_load_state('networkidle') # CRITICAL: Wait for JS to execute
+    page.goto('http://localhost:5173')
+    page.get_by_role('heading', name='Dashboard').wait_for()
     # ... your automation logic
     browser.close()
 ```
@@ -76,16 +78,16 @@ with sync_playwright() as p:
 
 ## Common Pitfall
 
-- Don't inspect the DOM before waiting for `networkidle` on dynamic apps.
-- Do wait for `page.wait_for_load_state('networkidle')` before inspection.
+Network inactivity is not proof that a dynamic app is ready: polling, sockets, and background requests may never settle. Wait for the exact heading, control, URL, status, or other user-visible state required by the task.
 
 ## Best Practices
 
 - **Use bundled scripts as black boxes** - To accomplish a task, consider whether one of the scripts available in `scripts/` can help. These scripts handle common, complex workflows reliably without cluttering the context window. Use `--help` to see usage, then invoke directly. 
-- Use `sync_playwright()` for synchronous scripts
+- Use the existing browser runner before introducing a second one
+- Use `sync_playwright()` when a standalone Python script is the smallest fit
 - Always close the browser when done
-- Use descriptive selectors: `text=`, `role=`, CSS selectors, or IDs
-- Add appropriate waits: `page.wait_for_selector()` or `page.wait_for_timeout()`
+- Prefer role, label, and visible text selectors; use CSS or test IDs only when user-facing semantics are unavailable
+- Rely on Playwright locator actionability and web-first assertions; avoid fixed sleeps
 
 ## Reference Files
 
