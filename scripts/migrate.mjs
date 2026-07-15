@@ -9,6 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { validateOkf } from './okf-validate.mjs';
 
 const SOURCE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const GIT_INSPECTION_MAX_BUFFER = 64 * 1024 * 1024;
+const OFFICIAL_SOURCE_URL = 'https://github.com/JasonxzWen/harness-hub';
 const SHARED_MANAGED_FILES = [
   '.harness-hub/.gitignore',
   '.harness-hub/okf-validate.mjs',
@@ -736,7 +738,7 @@ function assertStandaloneGitCheckout(root, label) {
   if (!fs.lstatSync(path.join(root, '.git'), { throwIfNoEntry: false })?.isDirectory()) {
     throw migrationError(
       'E_LINKED_WORKTREE',
-      `Repository migration requires a standalone ${label} checkout; linked worktrees and submodule worktrees are not supported.`,
+      `Repository migration requires a standalone ${label} checkout; linked worktrees and submodule worktrees are not supported. Run the migration against a clean standalone clone. Do not copy or transplant Git metadata.`,
       'preflight',
     );
   }
@@ -1018,8 +1020,14 @@ function snapshotIgnoredPaths(root, exclusions = []) {
   const result = spawnSync(
     'git',
     ['ls-files', '--others', '--ignored', '--exclude-standard', '-z'],
-    { cwd: root, encoding: 'buffer' },
+    { cwd: root, encoding: 'buffer', maxBuffer: GIT_INSPECTION_MAX_BUFFER },
   );
+  if (result.error?.code === 'ENOBUFS') {
+    throw migrationError(
+      'E_TARGET_GIT',
+      'Ignored repository path listing exceeds the 64 MiB safety limit; rerun from a clean checkout with fewer ignored paths.',
+    );
+  }
   if (result.status !== 0) {
     throw migrationError('E_TARGET_GIT', 'Could not inspect ignored repository paths.');
   }
@@ -1425,7 +1433,7 @@ function rollbackTarget(target, managedSnapshot, trackedFileSnapshot) {
 function assertSourceUnchanged(source) {
   if (runGit(source.root, ['rev-parse', 'HEAD'], 'E_ROLLBACK') !== source.head
     || runGit(source.root, ['status', '--porcelain=v1', '--untracked-files=all'], 'E_ROLLBACK') !== ''
-    || runGit(source.root, ['config', '--get', 'remote.origin.url'], 'E_ROLLBACK') !== source.url
+    || runGit(source.root, ['config', '--get', 'remote.origin.url'], 'E_ROLLBACK') !== source.remoteUrl
     || !gitControlPlaneMatches(source.gitControlSnapshot)
     || !ignoredPathsMatch(source.root, source.ignoredSnapshot)) {
     throw migrationError(
@@ -1440,9 +1448,8 @@ function preflightSource(sourceDir, knownRoot = null) {
   const root = knownRoot ?? runGit(sourceDir, ['rev-parse', '--show-toplevel'], 'E_SOURCE_GIT');
   assertStandaloneGitCheckout(root, 'Harness Hub source');
   const head = runGit(sourceDir, ['rev-parse', '--verify', 'HEAD'], 'E_SOURCE_HEAD');
-  const url = safeManifestSourceUrl(
-    runGit(sourceDir, ['config', '--get', 'remote.origin.url'], 'E_SOURCE_GIT'),
-  );
+  const remoteUrl = runGit(sourceDir, ['config', '--get', 'remote.origin.url'], 'E_SOURCE_GIT');
+  const url = safeManifestSourceUrl(remoteUrl);
   const status = runGit(sourceDir, ['status', '--porcelain=v1', '--untracked-files=all'], 'E_SOURCE_GIT');
   if (status !== '') {
     throw migrationError('E_SOURCE_DIRTY', 'Harness Hub source must be a clean Git worktree.');
@@ -1451,6 +1458,7 @@ function preflightSource(sourceDir, knownRoot = null) {
     gitControlSnapshot: snapshotGitControlPlane(root, 'E_SOURCE_GIT'),
     head,
     ignoredSnapshot: snapshotIgnoredPaths(root),
+    remoteUrl,
     root,
     url,
   };
@@ -1479,7 +1487,14 @@ function safeManifestSourceUrl(value) {
       'preflight',
     );
   }
-  return value;
+  const officialUrl = parsed
+    ? ['https:', 'ssh:'].includes(parsed.protocol)
+      && parsed.hostname.toLowerCase() === 'github.com'
+      && parsed.port === ''
+      && (parsed.protocol !== 'ssh:' || parsed.username === 'git')
+      && /^\/JasonxzWen\/harness-hub(?:\.git)?\/?$/i.test(parsed.pathname)
+    : /^git@github\.com:JasonxzWen\/harness-hub(?:\.git)?\/?$/i.test(value);
+  return officialUrl ? OFFICIAL_SOURCE_URL : value;
 }
 
 function writeManifest(source, targetRoot, hosts, primaryHost, distributedSkills) {

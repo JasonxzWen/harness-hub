@@ -102,6 +102,10 @@ test('the repository exposes one full-migration CLI and no lifecycle subcommands
     expect(document, documentPath).toContain('.harness-hub/manifest.json');
     expect(document, documentPath).toMatch(/default branch/i);
     expect(document, documentPath).toMatch(/source commit/i);
+    expect(document, documentPath).toContain('canonical source URL');
+    expect(document, documentPath).toContain('E_LINKED_WORKTREE');
+    expect(document, documentPath).toMatch(/standalone clone/i);
+    expect(document, documentPath).toMatch(/Git (?:metadata|元数据)/);
   }
 
   for (const command of [

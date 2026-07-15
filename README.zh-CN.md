@@ -23,6 +23,8 @@ node bin/harness-hub.mjs migrate <current-repository> --yes
 
 存在有效 schemaVersion 1 manifest 时，省略的 `--host` 和 `--primary` 分别继承 `hosts` 与 `primaryHost`，无需再次询问 Host 模式；显式参数仍优先。新 manifest 记录本次实际使用的 `source commit`。迁移器不会 commit、push、publish、merge 或以其他方式修改 remote state。
 
+官方 remote 的 HTTPS 与 SSH 等价写法在 manifest 中统一记录 canonical source URL `https://github.com/JasonxzWen/harness-hub`；该身份规范化不会调用或修改 remote。
+
 ## 首次迁移或显式切换 Host
 
 在目标仓库外克隆本仓库，然后运行唯一公开命令：
@@ -46,7 +48,7 @@ node bin/harness-hub.mjs migrate C:\path\to\target --host codex --yes
 
 `--force` 也只能替换 Harness Hub manifest 已管理的通用资源。每次迁移都会清理旧 manifest 仍拥有、但已不属于当前分发的 stale resource；目标项目自有 Skills、`knowledge/**`、Evals、产品文件、凭据、浏览器状态和其他信息始终受保护。
 
-源仓库和目标仓库都必须是具有 `HEAD` 的干净、独立 Git worktree，所有分发源文件必须与 source `HEAD` tree 逐字节一致。迁移拒绝 collision、路径逃逸、符号链接、junction、不安全 Git 状态和不完整输出；不会提交、推送、发布、合并、修改凭据、修改 Host trust 或修改用户/全局配置。
+源仓库和目标仓库都必须是具有 `HEAD` 的干净、独立 Git worktree；仅当当前仓库的 `.git` 是真实目录时才能把它作为 target。如果 `.git` 因 linked worktree 或 submodule worktree 而是文件，必须以 `E_LINKED_WORKTREE` 停止，并改用干净的 standalone clone 重试。不得迁移替代 target 后把结果或 Git 元数据复制回来。所有分发源文件必须与 source `HEAD` tree 逐字节一致。迁移拒绝 collision、路径逃逸、符号链接、junction、不安全 Git 状态和不完整输出；不会提交、推送、发布、合并、修改凭据、修改 Host trust 或修改用户/全局配置。
 
 ## 迁移结果
 

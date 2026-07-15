@@ -25,6 +25,8 @@ node bin/harness-hub.mjs migrate <current-repository> --yes
 
 A valid schemaVersion 1 manifest supplies omitted `hosts` and `primaryHost`, so the Agent does not ask for Host mode again. Explicit `--host` or `--primary` still wins. The resulting manifest records the actual source commit. Migration does not commit, push, publish, merge, or otherwise modify remote state.
 
+Recognized HTTPS and SSH spellings of the official remote record the canonical source URL `https://github.com/JasonxzWen/harness-hub` in the manifest. This identity normalization performs no remote call or remote mutation.
+
 ## First migration or explicit Host selection
 
 Clone this repository outside the target, then invoke the only public command:
@@ -48,7 +50,7 @@ On a first migration, `both` also requires `--primary`. In `both` mode, primary 
 
 Use `--force` only to replace Harness Hub-managed generic resources. Every run also removes resources still owned by the previous manifest that no longer belong to the selected Host surface. Target-owned Skills, project knowledge, Evals, product files, credentials, browser state, and unrelated local information remain outside that ownership set.
 
-Both source and target must be clean standalone Git worktrees with an existing `HEAD`. Every distributed source byte must match the source `HEAD` tree. Migration rejects collisions, path escape, symlinks, junctions, unsafe Git state, and incomplete output. It never commits, pushes, publishes, merges, changes credentials, changes Host trust, or modifies user/global configuration.
+Both source and target must be clean standalone Git worktrees with an existing `HEAD`; use the current repository as the target only when its `.git` is a real directory. If `.git` is a file because the repository is a linked worktree or submodule worktree, stop with `E_LINKED_WORKTREE` and rerun from a clean standalone clone. Do not migrate a replacement target and copy its result or Git metadata back. Every distributed source byte must match the source `HEAD` tree. Migration rejects collisions, path escape, symlinks, junctions, unsafe Git state, and incomplete output. It never commits, pushes, publishes, merges, changes credentials, changes Host trust, or modifies user/global configuration.
 
 ## What migration installs
 

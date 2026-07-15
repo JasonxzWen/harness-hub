@@ -18,6 +18,8 @@ node bin/harness-hub.mjs migrate <current-repository> --yes
 
 With a valid schemaVersion 1 manifest, omitted `--host` and `--primary` inherit `hosts` and `primaryHost`; do not ask the user to repeat the Host mode. Explicit parameters still win and may intentionally switch Host surfaces under the existing ownership, stale-cleanup, and protection rules. The new manifest records the actual source commit used for the update.
 
+Recognized HTTPS and SSH spellings of the official remote record the canonical source URL `https://github.com/JasonxzWen/harness-hub` in the manifest. This identity normalization performs no remote call or remote mutation.
+
 The migration command never commits, pushes, publishes, merges, or otherwise modifies remote state. Delete the temporary source checkout only after the local result and validation evidence have been reported.
 
 ## First migration
@@ -43,7 +45,7 @@ On a first migration, `both` requires `--primary`. In `both` mode, primary only 
 
 `--force` may replace only Harness Hub-managed generic resources. Normal and force migrations remove stale resources owned by the previous manifest while preserving target-owned Skills, commands, `knowledge/**`, product files, project Evals, credentials, browser state, and remote state.
 
-The target and Harness Hub source must both be clean standalone Git worktrees with an existing `HEAD`. Every distributed source file must match its source-`HEAD` blob byte-for-byte. Migration validates ownership, links, path boundaries, Git control state, rollback, and final output. If exact restoration is impossible, it preserves unowned changes and reports `rolledBack: false`. It never commits, pushes, publishes, merges, changes credentials, changes Host trust, or modifies user/global configuration.
+The target and Harness Hub source must both be clean standalone Git worktrees with an existing `HEAD`; use the current repository as the target only when its `.git` is a real directory. If `.git` is a file because the repository is a linked worktree or submodule worktree, stop with `E_LINKED_WORKTREE` and rerun from a clean standalone clone. Do not migrate a replacement target and copy its result or Git metadata back. Every distributed source file must match its source-`HEAD` blob byte-for-byte. Migration validates ownership, links, path boundaries, Git control state, rollback, and final output. If exact restoration is impossible, it preserves unowned changes and reports `rolledBack: false`. It never commits, pushes, publishes, merges, changes credentials, changes Host trust, or modifies user/global configuration.
 
 For Codex, repository Skills are installed under `.agents/skills/`, while hooks remain in `.codex/hooks.json`. Codex project hooks run only when the user already trusts the target; migration records no trust changes.
 
