@@ -9,14 +9,14 @@ function frontmatterValue(name: string): string {
   return match?.[1] || '';
 }
 
-test('grill-me has a narrow pressure-testing trigger', () => {
+test('grill-me runs once for every repository mutation task', () => {
   const description = frontmatterValue('description');
 
   expect(description).toContain('dependency-layered batch interview');
-  expect(description).toContain('grill me');
-  expect(description).toContain('explicitly asks to be challenged or pressure-tested');
-  expect(description).toContain('assumptions are surfaced');
-  expect(description).toContain('do not use for routine implementation');
+  expect(description).toContain('every repository mutation task');
+  expect(description).toContain('zero-question');
+  expect(description).toContain('grill-with-docs');
+  expect(description).not.toContain('do not use for routine implementation');
   expect(description).not.toContain('one-question-at-a-time interview');
 });
 
@@ -25,6 +25,9 @@ test('grill-me batches the current dependency frontier after exploring first', (
   expect(skill).toContain('Ask every unresolved decision whose complete row');
   expect(skill).toContain('recommendation, rationale, tradeoff, and downstream impact');
   expect(skill).toContain('Defer a decision when any part of that row depends on an unresolved answer.');
+  expect(skill).toContain('Run once per mutation task, not once per file, edit, or tool call.');
+  expect(skill).toContain('If no unresolved decision can change the next action, ask zero questions');
+  expect(skill).toContain('behavior, ownership, safety, material cost, remote state, or acceptance criteria');
   expect(skill).not.toContain('Ask exactly one question.');
   expect(skill).not.toContain("Wait for the user's answer before asking the next question.");
 });

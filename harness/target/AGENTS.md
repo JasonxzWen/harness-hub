@@ -17,19 +17,26 @@ Claude Code or Codex is the only main-Agent runtime. The main Agent owns require
 
 Harness Hub supplies atomic Skills and project rules. It does not supply a Router, Workflow/Loop runtime, Producer/Verifier/Arbiter scheduler, retry or pause state machine, lease system, Agent dispatcher, or internal metrics backend.
 
+Skill selection and composition are native main-Agent decisions. No Hook selects or sequences Skills; the repository safety Hook remains a deterministic local guard only.
+
+Do not create a Harness Hub Agent fallback.
+
 - Select the narrowest atomic Skill that adds domain value; explicit user invocation remains supported.
-- Delegate only bounded independent work. The main Agent keeps final decisions, safety boundaries, integration, and user communication.
+- Skills may request bounded, independent, read-only native Subagents. The main Agent performs mutations and keeps final decisions, safety boundaries, integration, and user communication.
 - Prefer independent read-only review for material changes. Deterministic failures outrank every review verdict.
+- Compose `tdd`, `codebase-design`, `to-tickets`, `code-review`, and `verification` only when their narrow trigger fits. They are optional prompt capabilities, not a fixed lifecycle.
 - Low-risk implementation details remain autonomous. Use `decision-ui` on Codex only for genuinely blocking, high-impact, or external-authorization choices; if native structured input is unavailable, fall back honestly to concise text.
 - Do not modify Host trust. Codex project hooks run only when the user already trusts the project.
 
 ## Development and delivery
 
+Run one `grill-me` alignment pass for every repository mutation task. A fully aligned task exits with zero user questions. For durable contracts, specifications, ADRs, architecture, or OKF changes, use `grill-with-docs`, which reuses the same decision graph and replaces a separate interview.
+
 For non-trivial mutation work:
 
 1. Inspect Git freshness, the nearest implementation, tests, project rules, and `knowledge/`.
 2. Record the goal, accepted behavior, non-goals, scope, acceptance criteria, validation, and unresolved decisions before broad edits.
-3. Use the native Host main Agent to plan, implement, test, review, and close out. Use `grill-me` only when assumptions need pressure testing; use `ponytail` to check YAGNI, minimum change, and entity count.
+3. Use the native Host main Agent to plan, implement, test, review, and close out. Use `ponytail` to check YAGNI, minimum change, and entity count. Use `to-tickets` only when accepted work needs multiple independently verifiable tracer-bullet tickets; follow the project's existing task, issue, or plan convention rather than creating a Harness task registry.
 4. Test public behavior and failure boundaries. Prove failures are caused by the missing behavior before changing production code when practical.
 5. Before handoff, review the final diff, rerun proportionate deterministic validation, and re-read task-critical files to avoid stale conclusions.
 6. Never claim cleanup, rollback, CI, PR, or delivery success without direct evidence.

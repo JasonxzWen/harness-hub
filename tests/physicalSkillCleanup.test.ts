@@ -67,15 +67,18 @@ test('removed helper skills are not used as active maintenance routes', () => {
   expect(capabilityIndex).not.toContain('"skill:harness-quality-check"');
 });
 
-test('active skill bodies do not recommend physically removed helper skills', () => {
+test('active skill bodies do not recommend removed or unavailable helper skills', () => {
   const removedHelperNames = [
     'agent-sort',
     'api-design',
     'backend-patterns',
+    'continuous-learning-v2',
+    'council',
     'deep-research',
     'exa-search',
     'find-skills',
     'skill-evaluator',
+    'strategic-compact',
     'update-harness-hub',
     'vercel-composition-patterns',
     'vercel-react-best-practices',
@@ -85,6 +88,10 @@ test('active skill bodies do not recommend physically removed helper skills', ()
   for (const skillName of localSkillDirs()) {
     const skillPath = path.join('skills', skillName, 'SKILL.md');
     const skill = read(skillPath);
+
+    expect(skill, `${skillPath} should not classify itself as a workflow Skill`).not.toContain(
+      'This is a workflow skill',
+    );
 
     for (const removedName of removedHelperNames) {
       expect(skill, `${skillPath} should not reference removed helper ${removedName}`).not.toContain(

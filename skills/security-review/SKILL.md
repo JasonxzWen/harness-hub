@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: Load when a task needs security-sensitive code, auth, user input, secrets, API endpoints, payments, injection risk, or unsafe IO reviewed; use compound-code-review for broader review.
+description: Load when a task needs security-sensitive code, auth, user input, secrets, API endpoints, payments, injection risk, or unsafe IO reviewed; use code-review for broader review.
 license: MIT
 ---
 

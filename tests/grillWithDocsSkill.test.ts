@@ -7,10 +7,17 @@ const reference = fs.readFileSync('skills/grill-with-docs/references/domain-mode
 test('grill-with-docs is an OKF-aware atomic requirements skill', () => {
   expect(skill).toContain('atomic requirements skill called directly by the native Host main Agent');
   expect(skill).toContain('`knowledge/index.md`');
-  expect(skill).toContain('Ask only one blocking question at a time');
+  expect(skill).toContain('Load and apply `grill-me`');
+  expect(skill).toContain('one shared unresolved-decision graph');
+  expect(skill).toContain('current dependency frontier in one batch');
+  expect(skill).toContain('temporary `.harness-hub/state/` maintenance alone does not trigger this skill');
+  expect(skill).toContain('After alignment, let the main Agent update durable documents once');
   expect(skill).toContain('Continue autonomously');
   expect(skill).toContain('Return constraints, accepted details, contradictions, open questions, and source anchors to the main Agent');
   expect(skill).toContain('the project contract owns the write and deterministic OKF validation');
+  expect(skill).toContain('mattpocock/skills skills/engineering/grill-with-docs');
+  expect(skill).toContain('e9fcdf95b402d360f90f1db8d776d5dd450f9234');
+  expect(skill).not.toContain('Ask only one blocking question at a time');
   expect(skill).not.toContain('requirements-loop');
   expect(skill).not.toContain('knowledge-maintain-loop');
   expect(skill).not.toContain('.harness-hub/context/wiki');

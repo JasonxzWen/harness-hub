@@ -4,6 +4,12 @@ title: Harness Hub knowledge update log
 ---
 # Harness Hub knowledge update log
 
+## 2026-07-15
+
+- Recorded native Skill composition for mutation alignment, durable-document grilling, tracer-bullet ticketing, TDD, codebase design, review, and verification without a Router, Runtime, orchestration Hook, or fixed lifecycle.
+- Renamed four development atoms to direct capability names and added `to-tickets` as the only net-new Skill in this cutover.
+- Limited native Subagents to bounded independent read-only work and updated the active `mattpocock/skills` source revision.
+
 ## 2026-07-14
 
 - Removed the duplicate generic Agent Runtime and made Claude Code/Codex native orchestration the sole execution model.

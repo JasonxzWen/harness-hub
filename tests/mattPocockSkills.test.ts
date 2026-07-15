@@ -17,8 +17,13 @@ test('diagnose is routed to runtime failures, not agent failures', () => {
   expect(description).toContain('hard bugs and performance regressions');
   expect(description).toContain('agent-introspection-debugging instead');
   expect(skill).toContain('Build The Feedback Loop');
+  expect(skill).toContain('one command that has already been run');
+  expect(skill).toContain('Minimize The Reproduction');
+  expect(skill).toContain('raise the reproduction rate');
   expect(skill).toContain('Rank Hypotheses');
-  expect(skill).toContain('Use `verification-loop` after code changes');
+  expect(skill).toContain('Re-run the original feedback loop');
+  expect(skill).toContain('Use `verification` after code changes');
+  expect(skill).toContain('e9fcdf95b402d360f90f1db8d776d5dd450f9234');
 });
 
 test('prototype is routed to throwaway design learning', () => {
