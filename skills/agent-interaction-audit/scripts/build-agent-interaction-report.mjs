@@ -549,7 +549,7 @@ function recommendations(events, bottlenecks, manifest) {
   if (validation === 0 && strong.length > 0) {
     recs.push({
       title: 'Record validation gates in session handoffs before claiming progress',
-      owner: 'verification-loop or native Host main Agent',
+      owner: 'verification or native Host main Agent',
       evidence: strong.slice(0, 3).map((event) => event.id),
     });
   }

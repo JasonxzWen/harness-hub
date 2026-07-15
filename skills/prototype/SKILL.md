@@ -4,7 +4,7 @@ description: Load when a task needs a throwaway prototype, state-model sanity ch
 license: MIT
 metadata:
   source: "mattpocock/skills skills/engineering/prototype"
-  upstream_commit: "d574778f94cf620fcc8ce741584093bc650a61d3"
+  upstream_commit: "e9fcdf95b402d360f90f1db8d776d5dd450f9234"
 ---
 
 # Prototype
@@ -32,10 +32,10 @@ Read `references/logic-prototype.md` or `references/ui-prototype.md` after choos
 2. Keep it near the relevant module or page so context is obvious.
 3. Use the project's existing runtime and task runner.
 4. Add one command or URL that starts the prototype.
-5. Avoid persistence unless persistence is the exact question.
+5. Avoid persistence unless persistence is the exact question. When it is, use a disposable local file or scratch database whose name makes cleanup obvious.
 6. Skip production polish, broad error handling, and abstractions.
 7. Surface the state, variant, or decision being tested.
-8. Capture the answer in notes, an issue, an ADR, or the final summary.
+8. Capture the answer in an existing project artifact or the final summary; preserve the prototype itself as durable evidence only when the user explicitly asks.
 9. Delete the prototype or fold the winning decision into production code.
 
 ## Logic Prototype
@@ -73,3 +73,5 @@ When handing off, include:
 - cleanup expectation
 
 Do not promote prototype code directly to production. Rewrite or harden the chosen path under the normal implementation and verification workflow.
+
+Do not create a branch, commit, push, or publish the prototype unless the user explicitly authorizes that separate delivery action.

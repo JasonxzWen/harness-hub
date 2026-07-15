@@ -4,7 +4,7 @@ description: Load when a task needs hard bugs and performance regressions, faili
 license: MIT
 metadata:
   source: "mattpocock/skills skills/engineering/diagnosing-bugs"
-  upstream_commit: "d574778f94cf620fcc8ce741584093bc650a61d3"
+  upstream_commit: "e9fcdf95b402d360f90f1db8d776d5dd450f9234"
 ---
 
 # Diagnose
@@ -32,13 +32,13 @@ Prefer, in order:
 7. A bisection or differential loop when the bug appeared between known commits, versions, datasets, or configs.
 8. A human-in-the-loop script only when manual steps cannot be automated; adapt `scripts/hitl-loop.template.ps1`.
 
-Before moving on, name the exact command or manual-loop script that has already been run and can catch this bug. It should be red-capable, deterministic or high-reproduction for flaky bugs, fast enough to iterate, and runnable by an agent without hidden human judgment.
+Before moving on, name one command that has already been run and can catch this exact bug. A manual-loop script is acceptable only when automation is impossible. The loop must be red-capable, deterministic or high-reproduction for flaky bugs, fast enough to iterate, and runnable without hidden human judgment.
 
 If no credible loop can be built, stop and report what was tried. Ask for the missing artifact, environment access, or permission for temporary instrumentation.
 
-### 2. Reproduce
+### 2. Minimize The Reproduction
 
-Run the loop until it shows the user's failure, not a nearby failure.
+Run the loop until it shows the user's failure, not a nearby failure. Remove unrelated inputs, steps, services, and timing while preserving the symptom. For flaky bugs, loop, stress, or control the suspected timing until you raise the reproduction rate enough to compare probes honestly.
 
 Confirm:
 
@@ -91,4 +91,4 @@ Before declaring done:
 - throwaway harnesses are deleted or clearly marked as debug artifacts
 - the final summary states which hypothesis was correct
 
-Use `verification-loop` after code changes to run the broader build, type, lint, and test gates.
+Use `verification` after code changes to run the broader build, type, lint, and test gates.

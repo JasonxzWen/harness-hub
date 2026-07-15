@@ -1,10 +1,11 @@
 ---
 name: handoff
 description: Load when a task needs to hand off current work, compact a conversation for another agent/session, or create restart notes; do not load for visual HTML repo reports.
+argument-hint: "What will the next session be used for?"
 license: MIT
 metadata:
   source: "mattpocock/skills skills/productivity/handoff"
-  upstream_commit: "d574778f94cf620fcc8ce741584093bc650a61d3"
+  upstream_commit: "e9fcdf95b402d360f90f1db8d776d5dd450f9234"
 ---
 
 # Handoff
@@ -48,5 +49,6 @@ Reference existing PRDs, plans, ADRs, issues, commits, diffs, reports, or HTML a
 - Do not include hidden reasoning or private chain-of-thought.
 - Label assumptions as assumptions.
 - Do not write to the repo unless the user explicitly asks for a durable repository handoff.
+- Do not commit, push, publish, or mutate remote state while creating the handoff.
 
-Use `effective-interact` instead when the user asks for a visual final report, material repo-change handoff, review artifact, or HTML artifact. Use `strategic-compact` when the question is whether to compact context, not when the user needs restart notes.
+Use `effective-interact` instead when the user asks for a visual final report, material repo-change handoff, review artifact, or HTML artifact. Context compaction remains a native Host/main-Agent decision; this Skill only writes restart notes.

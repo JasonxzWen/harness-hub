@@ -9,6 +9,11 @@ test('routing docs delegate orchestration to the native Host and expose atomic s
   expect(routing).toContain('Select the narrowest atomic Skill that adds domain value');
   expect(routing).toContain('no Router or owner Workflow runs first');
   expect(routing).toContain('| YAGNI, minimum change, entity-count, subtraction review | `ponytail` |');
+  expect(routing).toContain('| Every repository mutation task; zero-question exit when already aligned | `grill-me` |');
+  expect(routing).toContain('| Durable contract, OKF, specification, ADR, architecture, API, or design changes | `grill-with-docs` |');
+  expect(routing).toContain('| Tracer-bullet task slicing with blocking edges | `to-tickets` |');
+  expect(routing).toContain('| Deep-module, interface, and seam design | `codebase-design` |');
+  expect(routing).toContain('| Independent Standards and Spec review | `code-review` |');
   expect(routing).toContain('| Complex communication and important handoff | `effective-interact` |');
   expect(routing).toContain('| Failed, long, high-cost, tool-abnormal, or explicit retrospective | `agent-interaction-audit` |');
   expect(routing).toContain('| Read-only internet retrieval through an existing Agent Reach install | `agent-reach` |');
@@ -20,6 +25,10 @@ test('routing docs delegate orchestration to the native Host and expose atomic s
   expect(routing).not.toContain('workflow-router');
   expect(routing).not.toContain('hub-maintenance-workflow');
   expect(routing).not.toContain('harness-quality-check');
+  expect(routing).not.toContain('`tdd-workflow`');
+  expect(routing).not.toContain('`verification-loop`');
+  expect(routing).not.toContain('`compound-code-review`');
+  expect(routing).not.toContain('`coding-standards`');
 });
 
 test('capability map documents a versionless full-distribution surface', () => {

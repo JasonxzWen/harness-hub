@@ -16,6 +16,11 @@
       "path": "skills/product-capability",
       "distribution": "target-distributed"
     },
+    "skill:to-tickets": {
+      "kind": "skill",
+      "path": "skills/to-tickets",
+      "distribution": "target-distributed"
+    },
     "skill:grill-me": {
       "kind": "skill",
       "path": "skills/grill-me",
@@ -46,9 +51,9 @@
       "path": "skills/handoff",
       "distribution": "target-distributed"
     },
-    "skill:compound-code-review": {
+    "skill:code-review": {
       "kind": "skill",
-      "path": "skills/compound-code-review",
+      "path": "skills/code-review",
       "distribution": "target-distributed"
     },
     "skill:quick-learn": {
@@ -56,9 +61,9 @@
       "path": "skills/quick-learn",
       "distribution": "target-distributed"
     },
-    "skill:coding-standards": {
+    "skill:codebase-design": {
       "kind": "skill",
-      "path": "skills/coding-standards",
+      "path": "skills/codebase-design",
       "distribution": "target-distributed"
     },
     "skill:karpathy-guidelines": {
@@ -71,14 +76,14 @@
       "path": "skills/ponytail",
       "distribution": "target-distributed"
     },
-    "skill:tdd-workflow": {
+    "skill:tdd": {
       "kind": "skill",
-      "path": "skills/tdd-workflow",
+      "path": "skills/tdd",
       "distribution": "target-distributed"
     },
-    "skill:verification-loop": {
+    "skill:verification": {
       "kind": "skill",
-      "path": "skills/verification-loop",
+      "path": "skills/verification",
       "distribution": "target-distributed"
     },
     "skill:security-review": {

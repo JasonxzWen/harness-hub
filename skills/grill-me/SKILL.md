@@ -1,68 +1,62 @@
 ---
 name: grill-me
-description: Load when a task needs cases where the user says grill me or explicitly asks to be challenged or pressure-tested before implementation; run a dependency-layered batch interview with recommended answers so assumptions are surfaced; do not use for routine implementation or durable documentation work.
+description: Load when beginning every repository mutation task to run one dependency-layered batch interview; a fully aligned task takes the zero-question path, while durable documentation work uses grill-with-docs to reuse the same decision graph.
 license: MIT
 metadata:
-  source: "mattpocock/skills skills/productivity/grill-me"
-  upstream_commit: "d574778f94cf620fcc8ce741584093bc650a61d3"
+  source: "mattpocock/skills skills/productivity/grill-me and skills/productivity/grilling"
+  upstream_commit: "e9fcdf95b402d360f90f1db8d776d5dd450f9234"
 ---
 
 # Grill Me
 
 ## Purpose
 
-Use this skill to turn a vague plan, design, product idea, or implementation approach into a sharper decision set before any code or artifact work starts.
+Run one compact alignment pass before changing a repository. Surface only unresolved decisions that can change the work, arrange them by dependency, and minimize user interruption.
 
-The goal is shared understanding with as few interaction rounds as possible. Ask all high-leverage questions that can currently be answered independently in one batch, and move dependency-bound questions to later batches.
+This is an atomic prompt capability for the native Host main Agent. It is not a workflow owner, implementation phase, state machine, or permission grant.
 
-## When To Use
+## Activation
 
-Use this skill when the user:
+Run once per mutation task, not once per file, edit, or tool call.
 
-- says "grill me" or asks to be grilled
-- asks you to challenge, pressure-test, sanity-check, or poke holes in a plan
-- has a design with unclear tradeoffs, dependencies, scope, or success criteria
-- wants assumptions surfaced before committing to implementation
+If the task creates or materially changes durable project contracts, OKF knowledge, specifications, ADRs, architecture/API/design documents, load `grill-with-docs`; it loads and applies this protocol through one shared graph, so do not conduct a second interview. Temporary `.harness-hub/state/` maintenance alone does not qualify.
 
-Do not use this skill when:
+Explicit `grill me` requests still use this skill. Read-only explanation or status work does not require it unless it turns into a mutation task.
 
-- the user already gave clear implementation instructions and wants execution
-- a normal brainstorming session is enough
-- the user wants the interview to update glossary, context wiki, domain model, or ADR-style decisions; use `grill-with-docs`
-- the next step is producing an implementation-ready capability plan; use `product-capability`
-- the user asks for a code review; use the normal review posture or `verification-loop`
+## Alignment Protocol
 
-## Workflow
+1. Restate the intended outcome, allowed scope, non-goals, and acceptance evidence.
+2. If a fact can be learned locally, inspect the repository first instead of asking the user.
+3. Separate facts, accepted decisions, reasonable reversible assumptions, and unresolved decisions.
+4. Ask only about decisions that can change behavior, ownership, safety, material cost, remote state, or acceptance criteria.
+5. Build a lightweight dependency graph for those unresolved decisions.
+6. Ask every unresolved decision whose complete row—question, options, recommendation, rationale, tradeoff, and downstream impact—can be stated without another open answer.
+7. Defer a decision when any part of that row depends on an unresolved answer.
+8. Apply the user's answers, prune invalid branches, recompute the current frontier, and repeat only while a consequential decision remains.
 
-1. Restate the current plan in two or three sentences.
-2. List the assumptions you are about to test.
-3. If a question can be answered by inspecting the repository, inspect the repository first instead of asking the user.
-4. Build a lightweight dependency graph of the unresolved decisions.
-5. Ask every unresolved decision whose complete row—question, options, recommendation, rationale, tradeoff, and downstream impact—can be stated without another open answer in one batch.
-6. Defer a decision when any part of that row depends on an unresolved answer.
-7. After the user answers the batch, update the decisions and dependencies, then repeat with the next dependency layer.
+If no unresolved decision can change the next action, ask zero questions, state that alignment is complete, and continue with the user's authorized work.
+
+Never infer that silence means acceptance. Facts are for the Agent to investigate; decisions with meaningful user-visible consequences remain with the user.
 
 ## Batch Format
 
-Present each dependency layer as one Markdown table:
+Present the current dependency frontier in one table:
 
 | ID | Decision question | Options | Recommended | Why / tradeoff | Downstream impact | Answer |
 |---|---|---|---|---|---|---|
-| D1 | A decision the user can make now | A / B / C | A | Why A is the best default | Which later decisions become answerable and which constraints change | Pending |
+| D1 | A decision that is answerable now | A / B / C | A | Why A is the best default and its cost | What this unlocks, constrains, or prunes | Pending |
 
-Every row must include a recommended default, a short rationale, the main tradeoff, and the likely downstream consequence. Keep options mutually distinct and include `Other` only when it is useful.
+Every row must include a recommended default, short rationale, main tradeoff, and likely downstream consequence. Keep options mutually exclusive. Do not impose an arbitrary batch-size cap. Group a large frontier by theme or priority without serializing independent questions across turns.
 
-Do not impose an arbitrary batch-size cap. If the current dependency layer is large, group rows by theme or priority in the same response instead of serializing independent questions across turns.
-
-When later questions are dependency-bound, show only a compact waiting list:
+Show dependency-bound topics only as a waiting list:
 
 | Deferred topic | Prerequisite | Why it waits |
 |---|---|---|
-| Cache and offline behavior | D1 authority choice | The valid options depend on which source is authoritative |
+| Cache authority | D1 source choice | Valid options depend on the authoritative source |
 
 Do not finalize the wording or options for a deferred question until its prerequisite is resolved.
 
-Invite one compact reply with one line per decision, for example:
+Invite one compact reply, for example:
 
 ```text
 D1: choose A
@@ -70,41 +64,23 @@ D2: accept recommendation
 D3: pause until <condition>
 ```
 
-The user may reply `accept this batch` to approve every current recommendation or answer in prose when the options are wrong. Also recognize `default`, `defaults`, and `defer` as concise aliases. Do not silently apply a recommendation to an unanswered row.
+The user may say `accept this batch`, answer in prose, or use `default`, `defaults`, and `defer`. Do not silently apply a recommendation to an unanswered row.
 
-Treat `pause until ...` as an explicit deferred state. Record its reason and re-entry condition, and keep it out of later batches until that condition becomes true or the user explicitly reopens it. The same lifecycle applies to the `defer` alias.
+Treat `pause until ...` as an explicit deferral. Record its reason and re-entry condition, and omit it from later batches until that condition becomes true or the user explicitly reopens it. The same lifecycle applies to the `defer` alias.
 
-After a batch reply, show the smallest useful result table before asking the next dependency layer:
+After each reply, show only the useful resolution summary:
 
 | ID | Decision | Consequence | Status |
 |---|---|---|---|
-| D1 | The accepted option | What it resolved, unlocked, or pruned | Resolved |
+| D1 | Accepted choice | What it resolved, unlocked, or pruned | Resolved |
 
-Batching is the default. If the user explicitly asks for one question at a time, honor that request without changing the rest of the workflow.
+Batching is the default. If the user explicitly asks for one question at a time, honor that request without changing the dependency or evidence rules.
 
-## Question Style
+## Boundaries And Handoff
 
-Prefer questions that force a decision:
+- Do not ask vague preference questions when repository evidence or a reversible default is enough.
+- Do not create a run ledger, retry counter, workflow, hook, or hidden state.
+- Do not expand authorization. Remote writes, destructive work, security boundaries, and data ownership still require their normal authority.
+- Do not start implementation unless the user explicitly asks you to continue into execution.
 
-- "Should this optimize for first-use clarity or repeat-use speed?"
-- "Is this state authoritative, derived, or cached?"
-- "What is the smallest version that would prove the design works?"
-- "Which failure mode is acceptable, and which one is not?"
-
-Avoid vague prompts:
-
-- "Can you tell me more?"
-- "What are your thoughts?"
-- "Any preferences?"
-
-## Stopping Rule
-
-Stop grilling when the remaining uncertainty no longer changes the next action. Then summarize:
-
-- decisions made
-- assumptions still open
-- deferred questions and their prerequisites
-- recommended next step
-- verification criteria for the next step
-
-Do not start implementation unless the user explicitly asks you to continue into execution.
+When stopping, return decisions made, assumptions used, deferred questions and their prerequisites, the next authorized action, and verification criteria for the next step.

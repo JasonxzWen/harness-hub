@@ -8,7 +8,7 @@ license: MIT
 
 Use this skill when an agent run is failing repeatedly, consuming tokens without progress, looping on the same tools, or drifting away from the intended task.
 
-This is a workflow skill, not a hidden runtime. It teaches the agent to debug itself systematically before escalating to a human.
+This is an atomic diagnostic prompt capability, not a hidden runtime or workflow owner. It teaches the native main Agent to debug itself systematically before escalating to a human.
 
 ## When to Activate
 
@@ -27,8 +27,8 @@ Activate this skill for:
 - producing a structured human-readable debug report
 
 Do not use this skill as the primary source for:
-- feature verification after code changes; use `verification-loop`
-- framework-specific debugging when a narrower ECC skill already exists
+- feature verification after code changes; use `verification`
+- framework-specific debugging when a narrower domain Skill already exists
 - runtime promises the current harness cannot enforce automatically
 
 ## Four-Phase Loop
@@ -135,12 +135,12 @@ Good pattern:
 - run one direct check
 - change the plan only if the check supports it
 
-## Integration with ECC
+## Integration With Current Skills
 
-- Use `verification-loop` after recovery if code was changed.
-- Use `continuous-learning-v2` when the failure pattern is worth turning into an instinct or later skill.
-- Use `council` when the issue is not technical failure but decision ambiguity.
-- Use `workspace-surface-audit` if the failure came from conflicting local state or repo drift.
+- Use `verification` after recovery if code was changed.
+- Use `agent-interaction-audit` when a repeated failure pattern may justify improving an existing Skill, rule, Eval, SOP, or OKF page.
+- Return decision ambiguity to the native main Agent; on Codex, use `decision-ui` only when the choice is blocking, high-impact, or requires external authorization.
+- Inspect Git/workspace state directly if the failure came from conflicting local state or repo drift.
 
 ## Output Standard
 

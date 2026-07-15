@@ -46,7 +46,7 @@ Claude Code or Codex is the only main-Agent runtime. The main Agent owns alignme
 
 Harness Hub does not implement or distribute a workflow Router, generic Workflow/Loop runtime, fixed lifecycle sequence, Producer/Verifier/Arbiter scheduler, retry/pause/handoff state machine, path-lease system, Agent dispatcher, internal trace store, or metrics backend.
 
-Use Subagents for bounded independent read-only exploration, review, verification, or clearly disjoint writes when the Host supports it. Subagents do not own user alignment, final decisions, integration, remote writes, publishing, or merge. Deterministic checks outrank all Agent verdicts.
+Use native Subagents only for bounded independent read-only exploration, review, or verification when the Host supports it. The main Agent owns every mutation, plus user alignment, final decisions, integration, remote writes, publishing, and merge. Deterministic checks outrank all Agent verdicts.
 
 ## Durable task state and freshness
 
@@ -68,13 +68,16 @@ Before final handoff, recheck status and reread or diff task-critical files that
 Select the narrowest atomic Skill that adds domain value. There is no top-level owner workflow.
 
 - `ponytail`: YAGNI, minimum change, entity-count, and subtraction review.
-- `grill-me`: explicit pressure testing or unresolved high-impact assumptions.
+- `grill-me`: one alignment pass for every repository mutation; an already aligned task exits with zero questions.
+- `grill-with-docs`: source-backed alignment for durable contracts, specifications, ADRs, architecture, or OKF changes; it reuses the same `grill-me` decision graph rather than starting a second interview.
 - `product-capability`: implementation-ready capability and acceptance boundaries.
+- `to-tickets`: split accepted multi-part work into independently verifiable tracer-bullet tickets with explicit blocking edges.
 - `diagnose`: runtime bugs or performance regressions with unknown root cause.
 - `agent-introspection-debugging`: Agent/tool harness failures.
-- `tdd-workflow`: red-green-refactor guidance for confirmed behavior changes.
-- `verification-loop`: final command and artifact validation guidance; it cannot waive failures.
-- `compound-code-review`: deep multi-lens code review.
+- `tdd`: red-green-refactor guidance for confirmed behavior changes.
+- `verification`: final command and artifact validation guidance; it cannot waive failures.
+- `code-review`: deep multi-lens code review.
+- `codebase-design`: deep-module, information-hiding, seam, and deletion-test guidance.
 - `security-review`: focused security review.
 - `effective-interact`: complex delivery, comparisons, and important handoffs.
 - `agent-interaction-audit`: failed, long, high-cost, tool-abnormal, or explicitly requested retrospectives.
@@ -84,20 +87,21 @@ Select the narrowest atomic Skill that adds domain value. There is no top-level 
 - `documentation-lookup`: current official library/API/CLI documentation.
 - `prototype` and `frontend-design`: throwaway exploration and production UI respectively.
 
-Explicit user invocation remains supported. A Skill is an optional prompt capability, not a workflow owner or execution runtime.
+Explicit user invocation remains supported. A Skill is a prompt capability selected by the native main Agent, not a workflow owner or execution runtime. No Router or orchestration Hook imposes a Skill sequence.
 
 ## Development and closeout
 
 For feature, bug-fix, refactor, policy, documentation, test, or distribution work:
 
 1. Inspect current facts and record accepted behavior, non-goals, scope, and P0/P1/P2 validation.
-2. Use the native Host main Agent to plan and execute. Keep low-risk implementation details autonomous.
-3. Prefer public-behavior tests and deterministic validators over tests of private implementation shape.
-4. Use `ponytail` before and after material architecture changes to challenge extra branches, entities, and files.
-5. Obtain independent implementation/test/security review proportional to risk. The main Agent integrates findings.
-6. For complex delivery or important handoff, use `effective-interact`; simple outcomes return as plain text.
-7. Run `agent-interaction-audit` for failed, long, high-cost, tool-abnormal, or explicitly requested retrospectives. It may recommend changes to an existing Skill, rule, Eval, SOP, or OKF page; it adds no entity by default. Missing trace, duration, token, or cost evidence is `unknown`.
-8. Update the four task-state files and report exact validation evidence. Do not claim completion from plans or intent.
+2. Run one `grill-me` alignment pass for the mutation task. Ask zero questions and continue when no unresolved decision can change behavior, ownership, safety, material cost, remote state, or acceptance criteria. For durable documentation or knowledge changes, use `grill-with-docs`; it applies the same graph and replaces a separate `grill-me` interview.
+3. Use the native Host main Agent to plan and execute. Keep low-risk implementation details autonomous; use `to-tickets` only when accepted work genuinely needs multiple independently verifiable slices.
+4. Prefer public-behavior tests and deterministic validators over tests of private implementation shape.
+5. Use `ponytail` before and after material architecture changes to challenge extra branches, entities, and files.
+6. Obtain independent read-only implementation/test/security review proportional to risk. The main Agent integrates findings and performs any resulting mutation.
+7. For complex delivery or important handoff, use `effective-interact`; simple outcomes return as plain text.
+8. Run `agent-interaction-audit` for failed, long, high-cost, tool-abnormal, or explicitly requested retrospectives. It may recommend changes to an existing Skill, rule, Eval, SOP, or OKF page; it adds no entity by default. Missing trace, duration, token, or cost evidence is `unknown`.
+9. Update the four task-state files and report exact validation evidence. Do not claim completion from plans or intent.
 
 ## Local dogfooding
 

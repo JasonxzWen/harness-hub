@@ -131,7 +131,7 @@ test('agent rules use AGENTS.md as the Codex and Claude Code source', () => {
   expect(agents).toContain('## Core rules');
   expect(agents).toContain('## Native Agent operating model');
   expect(agents).toContain('Claude Code or Codex is the only main-Agent runtime');
-  expect(agents).toContain('Use Subagents for bounded independent read-only exploration');
+  expect(agents).toContain('Use native Subagents only for bounded independent read-only exploration');
   expect(agents).not.toContain('## Subagent Auto-Arbiter');
   expect(agents).toContain('Do not create `.harness-hub/state/runs/`, leases, integration records, or a second execution control plane');
   expect(agents).not.toContain('workflow-router');

@@ -19,10 +19,14 @@ const removedLegacyPaths = [
   'skills/answer-workflow',
   'skills/delivery-workflow',
   'skills/diagnosis-workflow',
+  'skills/coding-standards',
+  'skills/compound-code-review',
   'skills/harness-quality-check',
   'skills/hub-maintenance-workflow',
   'skills/review-workflow',
   'skills/sdd-workflow',
+  'skills/tdd-workflow',
+  'skills/verification-loop',
   'skills/workflow-router',
 ] as const;
 
