@@ -29,7 +29,6 @@ test('the single migrate command supports claude, codex, and both while only pri
     ['install', '.'],
     ['update', '.'],
     ['status', '.'],
-    ['migrate', '.', '--host', 'both', '--yes'],
     ['migrate', '.', '--host', 'codex', '--primary', 'codex', '--yes'],
   ];
   for (const args of invalid) {
@@ -116,6 +115,30 @@ test('the single migrate command supports claude, codex, and both while only pri
   }
 }, 60_000);
 
+test('first both migration without --primary fails in preflight and leaves the target unchanged', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-first-both-primary-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir, { knowledge: true });
+    const before = snapshotFiles(targetDir);
+
+    const result = runMigration(sourceDir, targetDir, 'both');
+
+    expect(result.status).toBe(2);
+    expect(JSON.parse(result.stderr)).toMatchObject({
+      code: 'E_INPUT',
+      phase: 'preflight',
+      message: expect.stringContaining('--primary'),
+    });
+    expect(snapshotFiles(targetDir)).toEqual(before);
+    expect(gitStatus(targetDir)).toBe('');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('a repository URL clone can run the one public migrate command from its independent checkout', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-repository-url-'));
   const originDir = path.join(root, 'origin');
@@ -139,7 +162,192 @@ test('a repository URL clone can run the one public migrate command from its ind
   }
 }, 30_000);
 
-test('full both migration dynamically distributes every capability and excludes Hub-only source material', () => {
+test('installed claude, codex, and both targets inherit manifest Hosts and primary when update omits them', () => {
+  for (const entry of [
+    { host: 'claude', hosts: ['claude'], primary: 'claude' },
+    { host: 'codex', hosts: ['codex'], primary: 'codex' },
+    { host: 'both', hosts: ['claude', 'codex'], primary: 'codex' },
+  ] as const) {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), `harness-update-inherit-${entry.host}-`));
+    const sourceDir = path.join(root, 'source');
+    const targetDir = path.join(root, 'target');
+    const binDir = path.join(root, 'bin');
+    const logs = {
+      claude: path.join(root, 'claude-calls.jsonl'),
+      codex: path.join(root, 'codex-calls.jsonl'),
+    };
+    try {
+      initMinimalSource(sourceDir);
+      initTarget(targetDir, { knowledge: true });
+      expect(runMigration(sourceDir, targetDir, entry.host, {
+        ...(entry.host === 'both' ? { primary: entry.primary } : {}),
+      }).status).toBe(0);
+      commitAll(targetDir, `accept ${entry.host} migration`);
+      fs.appendFileSync(path.join(sourceDir, 'skills', 'alpha', 'SKILL.md'), 'updated\n');
+      commitAll(sourceDir, 'update distribution');
+      writeFakeCli(binDir, 'claude', logs.claude);
+      writeFakeCli(binDir, 'codex', logs.codex);
+
+      const result = runMigration(sourceDir, targetDir, undefined, { binDir });
+
+      expect(result.status, result.stderr).toBe(0);
+      const payload = JSON.parse(result.stdout);
+      const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: sourceDir, encoding: 'utf8' }).trim();
+      expect(payload).toMatchObject({ host: entry.host, primaryHost: entry.primary, sourceCommit });
+      const skillRoot = entry.host === 'claude' ? '.claude/skills' : '.agents/skills';
+      expect(fs.readFileSync(path.join(targetDir, skillRoot, 'alpha', 'SKILL.md'), 'utf8')).toContain('updated');
+      const manifest = JSON.parse(fs.readFileSync(path.join(targetDir, '.harness-hub', 'manifest.json'), 'utf8'));
+      expect(manifest).toMatchObject({
+        hosts: entry.hosts,
+        primaryHost: entry.primary,
+        source: { commit: sourceCommit },
+      });
+      expect(readCalls(logs.claude)).toEqual([]);
+      expect(readCalls(logs.codex)).toEqual([]);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+}, 60_000);
+
+test('explicit Host parameters override inherited manifest selection', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-update-explicit-host-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  const customClaudeSkill = path.join(targetDir, '.claude', 'skills', 'custom', 'SKILL.md');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir, { knowledge: true, customHostSkills: true });
+    expect(runMigration(sourceDir, targetDir, 'both', { primary: 'claude' }).status).toBe(0);
+    commitAll(targetDir, 'accept both migration');
+
+    const primaryOverride = runMigration(sourceDir, targetDir, undefined, { primary: 'codex' });
+    expect(primaryOverride.status, primaryOverride.stderr).toBe(0);
+    expect(JSON.parse(primaryOverride.stdout)).toMatchObject({ host: 'both', primaryHost: 'codex' });
+    commitAll(targetDir, 'accept primary override');
+
+    const hostOverride = runMigration(sourceDir, targetDir, 'codex');
+    expect(hostOverride.status, hostOverride.stderr).toBe(0);
+    expect(JSON.parse(hostOverride.stdout)).toMatchObject({ host: 'codex', primaryHost: 'codex' });
+    expect(fs.existsSync(path.join(targetDir, '.claude', 'skills', 'alpha'))).toBe(false);
+    expect(fs.existsSync(path.join(targetDir, '.claude', 'settings.json'))).toBe(false);
+    expect(fs.readFileSync(customClaudeSkill, 'utf8')).toBe('target Claude Host skill\n');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}, 30_000);
+
+test('omitting --host without a manifest fails in preflight and leaves the target unchanged', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-update-missing-manifest-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir, { knowledge: true });
+    const before = snapshotFiles(targetDir);
+
+    const result = runMigration(sourceDir, targetDir);
+
+    expect(result.status).toBe(2);
+    expect(JSON.parse(result.stderr)).toMatchObject({
+      code: 'E_INPUT',
+      phase: 'preflight',
+      message: expect.stringContaining('--host'),
+    });
+    expect(snapshotFiles(targetDir)).toEqual(before);
+    expect(gitStatus(targetDir)).toBe('');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('an invalid manifest fails closed before inherited Host selection', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-update-invalid-manifest-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir, { knowledge: true });
+    writeFile(path.join(targetDir, '.harness-hub', 'manifest.json'), `${JSON.stringify({
+      schemaVersion: 1,
+      hosts: ['codex'],
+      primaryHost: 'claude',
+      files: [],
+    }, null, 2)}\n`);
+    commitAll(targetDir, 'add invalid manifest');
+    const before = snapshotFiles(targetDir);
+
+    const result = runMigration(sourceDir, targetDir);
+
+    expect(result.status).toBe(3);
+    expect(JSON.parse(result.stderr)).toMatchObject({ code: 'E_COLLISION', phase: 'preflight' });
+    expect(snapshotFiles(targetDir)).toEqual(before);
+    expect(gitStatus(targetDir)).toBe('');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('an incomplete schemaVersion 1 manifest cannot authorize an update', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-update-incomplete-manifest-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir, { knowledge: true });
+    writeFile(path.join(targetDir, '.harness-hub', 'manifest.json'), `${JSON.stringify({
+      schemaVersion: 1,
+      hosts: ['codex'],
+      primaryHost: 'codex',
+      files: [],
+    }, null, 2)}\n`);
+    commitAll(targetDir, 'add incomplete manifest');
+    const before = snapshotFiles(targetDir);
+
+    const result = runMigration(sourceDir, targetDir);
+
+    expect(result.status).toBe(3);
+    expect(JSON.parse(result.stderr)).toMatchObject({ code: 'E_COLLISION', phase: 'preflight' });
+    expect(snapshotFiles(targetDir)).toEqual(before);
+    expect(gitStatus(targetDir)).toBe('');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('manifest source and Host ownership must match the emitted schemaVersion 1 shape', () => {
+  for (const scenario of ['missing-source', 'undeclared-host-file'] as const) {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), `harness-update-manifest-${scenario}-`));
+    const sourceDir = path.join(root, 'source');
+    const targetDir = path.join(root, 'target');
+    try {
+      initMinimalSource(sourceDir);
+      initTarget(targetDir, { knowledge: true });
+      expect(runMigration(sourceDir, targetDir, 'codex').status).toBe(0);
+      const manifestPath = path.join(targetDir, '.harness-hub', 'manifest.json');
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      if (scenario === 'missing-source') {
+        delete manifest.source;
+      } else {
+        manifest.files.push({ path: '.claude/settings.json', sha256: '0'.repeat(64) });
+      }
+      fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+      commitAll(targetDir, `inject ${scenario}`);
+      const before = snapshotFiles(targetDir);
+
+      const result = runMigration(sourceDir, targetDir);
+
+      expect(result.status).toBe(3);
+      expect(JSON.parse(result.stderr)).toMatchObject({ code: 'E_COLLISION', phase: 'preflight' });
+      expect(snapshotFiles(targetDir)).toEqual(before);
+      expect(gitStatus(targetDir)).toBe('');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+}, 30_000);
+
+test('full both update dynamically distributes every capability and excludes Hub-only source material', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-full-capabilities-'));
   const sourceDir = path.join(root, 'source');
   const targetDir = path.join(root, 'target');
@@ -150,6 +358,11 @@ test('full both migration dynamically distributes every capability and excludes 
     const result = runMigration(sourceDir, targetDir, 'both', { primary: 'codex' });
     expect(result.status, result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({ knowledgeInitialized: false, primaryHost: 'codex' });
+    commitAll(targetDir, 'accept full migration');
+
+    const update = runMigration(sourceDir, targetDir);
+    expect(update.status, update.stderr).toBe(0);
+    expect(JSON.parse(update.stdout)).toMatchObject({ host: 'both', primaryHost: 'codex' });
 
     const index = JSON.parse(fs.readFileSync(path.join(sourceDir, 'capabilities', 'index.json'), 'utf8')) as {
       components: Record<string, { distribution: string; host?: Host; kind: string; path: string }>;
@@ -216,9 +429,9 @@ test('later normal and force migrations call no CLI and preserve tracked OKF byt
     const knowledge = snapshotFiles(path.join(targetDir, 'knowledge'));
     fs.writeFileSync(callLog, '');
 
-    const normal = runMigration(sourceDir, targetDir, 'codex', { binDir });
+    const normal = runMigration(sourceDir, targetDir, undefined, { binDir });
     expect(normal.status, normal.stderr).toBe(0);
-    const forced = runMigration(sourceDir, targetDir, 'codex', { binDir, force: true });
+    const forced = runMigration(sourceDir, targetDir, undefined, { binDir, force: true });
     expect(forced.status, forced.stderr).toBe(0);
     expect(readCalls(callLog)).toEqual([]);
     expect(snapshotFiles(path.join(targetDir, 'knowledge'))).toEqual(knowledge);
@@ -338,7 +551,7 @@ test('a later migration removes only stale manifest-owned skills', () => {
     writeCapabilityIndex(sourceDir, index);
     commitAll(sourceDir, 'replace alpha with beta');
 
-    const result = runMigration(sourceDir, targetDir, 'codex');
+    const result = runMigration(sourceDir, targetDir);
     expect(result.status, result.stderr).toBe(0);
     expect(fs.existsSync(path.join(targetDir, '.agents', 'skills', 'alpha'))).toBe(false);
     expect(fs.existsSync(path.join(targetDir, '.agents', 'skills', 'beta', 'SKILL.md'))).toBe(true);
@@ -776,13 +989,14 @@ fs.writeFileSync(path.join(process.cwd(), 'knowledge', 'index.md'), '# invalid k
   }
 }
 
-function runMigration(sourceDir: string, targetDir: string, host: 'claude' | 'codex' | 'both', options: {
+function runMigration(sourceDir: string, targetDir: string, host?: 'claude' | 'codex' | 'both', options: {
   binDir?: string;
   env?: Record<string, string>;
   force?: boolean;
   primary?: Host;
 } = {}): SpawnSyncReturns<string> {
-  const args = [path.join(sourceDir, 'bin', 'harness-hub.mjs'), 'migrate', targetDir, '--host', host, '--yes'];
+  const args = [path.join(sourceDir, 'bin', 'harness-hub.mjs'), 'migrate', targetDir, '--yes'];
+  if (host) args.push('--host', host);
   if (options.primary) args.push('--primary', options.primary);
   if (options.force) args.push('--force');
   return spawnSync(process.execPath, args, {

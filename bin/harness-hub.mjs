@@ -3,10 +3,11 @@
 import { runMigration } from '../scripts/migrate.mjs';
 
 const HELP = `Usage:
-  node bin/harness-hub.mjs migrate <target> --host claude|codex|both --yes [--primary claude|codex] [--force]
+  node bin/harness-hub.mjs migrate <target> --yes [--host claude|codex|both] [--primary claude|codex] [--force]
 
-Runs the repository's only target initialization capability: one complete migration.
-In both mode, --primary selects only the CLI used for first-time OKF initialization.`;
+Runs the repository's only target capability: one complete migration.
+Later migration with a valid schemaVersion 1 manifest inherits omitted Host and primary values.
+First migration requires --host; first migration in both mode also requires --primary.`;
 
 const args = process.argv.slice(2);
 if (args.length === 0 || args.includes('--help') || args.includes('-h')) {

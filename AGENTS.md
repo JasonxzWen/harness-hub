@@ -120,11 +120,13 @@ When visibility looks stale, check the actual workspace root, canonical source, 
 There is exactly one target capability and one public command:
 
 ```text
-node bin/harness-hub.mjs migrate <target> --host claude|codex|both --yes [--primary claude|codex] [--force]
+node bin/harness-hub.mjs migrate <target> --yes [--host claude|codex|both] [--primary claude|codex] [--force]
 ```
 
 - Node performs deterministic copy, Host-surface selection, manifest/ownership, stale cleanup, source-HEAD byte verification, collision checks, rollback, and final validation.
-- `both` requires `--primary`. Primary only selects the CLI used for first-time OKF initialization; it does not own shared copying.
+- When an update request includes `https://github.com/JasonxzWen/harness-hub`, clone it into a temporary standalone checkout outside the current repository, use the default branch current HEAD, treat the current repository as the target, read `.harness-hub/manifest.json`, and run `node bin/harness-hub.mjs migrate <current-repository> --yes` from the temporary checkout.
+- A valid schemaVersion 1 manifest supplies omitted `hosts` and `primaryHost`; do not ask the user to repeat Host mode. Explicit `--host` and `--primary` take priority. The resulting manifest records the actual source commit.
+- Without a manifest, first migration requires `--host`; first migration in `both` mode also requires `--primary`. Primary only selects the CLI used for first-time OKF initialization; it does not own shared copying.
 - The target and source must be clean standalone Git worktrees with an existing `HEAD`. Managed paths reject symlinks, junctions, and path escape.
 - Every migration removes stale resources still owned by the prior manifest.
 - Normal and force may replace only managed generic resources. They never overwrite target-owned Skills, `knowledge/**`, Evals, product files, credentials, browser state, or user/global configuration.
@@ -132,7 +134,7 @@ node bin/harness-hub.mjs migrate <target> --host claude|codex|both --yes [--prim
 - That first CLI call uses an isolated temporary user/config directory and only the selected Host API key (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`) plus network/TLS environment. It never consumes normal Host profiles, keychains, browser state, unrelated credentials, or user configuration.
 - Later normal/force migrations validate and preserve the complete target wiki byte-for-byte and do not call a Host CLI to rewrite knowledge. An existing manifest with missing knowledge fails closed.
 - The selected Host configs use one deterministic local PreTool safety hook. It has no Router, state machine, Agent dispatch, remote action, or credential mutation.
-- Migration never commits, pushes, publishes, merges, changes credentials, changes Host trust, or modifies user/global configuration.
+- Migration never commits, pushes, publishes, merges, modifies remote state, changes credentials, changes Host trust, or modifies user/global configuration.
 - A failed migration restores Git control state and managed/protected paths. If unrelated ignored content prevents exact restoration, return `rolledBack: false` rather than claim success.
 
 When another repository receives only this repository URL, follow `BOOTSTRAP-TARGET.md`. Never manually copy source-only knowledge, docs, tests, source records, or fixtures.

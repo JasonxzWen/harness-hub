@@ -8,7 +8,24 @@ Harness Hub has one target capability: full migration. The Git repository and se
 
 Claude Code and Codex remain the only main-Agent runtimes. Harness Hub distributes project rules, Host resources, atomic Skills, and an OKF contract; it does not duplicate native orchestration, Subagent dispatch, retries, pause/resume, or result aggregation.
 
-## Migrate a repository
+## Update an installed repository
+
+The natural-language update entry is a request plus the repository URL:
+
+```text
+Update Harness Hub in this repository:
+https://github.com/JasonxzWen/harness-hub
+```
+
+Claude Code or Codex clones that URL into a temporary standalone checkout outside the current repository, uses the default branch current HEAD, treats the current repository as the target, reads the existing `.harness-hub/manifest.json`, and runs from the temporary checkout:
+
+```powershell
+node bin/harness-hub.mjs migrate <current-repository> --yes
+```
+
+A valid schemaVersion 1 manifest supplies omitted `hosts` and `primaryHost`, so the Agent does not ask for Host mode again. Explicit `--host` or `--primary` still wins. The resulting manifest records the actual source commit. Migration does not commit, push, publish, merge, or otherwise modify remote state.
+
+## First migration or explicit Host selection
 
 Clone this repository outside the target, then invoke the only public command:
 
@@ -18,7 +35,7 @@ cd C:\temp\harness-hub
 node bin/harness-hub.mjs migrate C:\path\to\target --host codex --yes
 ```
 
-Modes:
+With no manifest, `--host` is required. Modes:
 
 ```text
 --host claude
@@ -27,7 +44,7 @@ Modes:
 --host both --primary codex
 ```
 
-In `both` mode, primary selects only the CLI used for first-time OKF initialization. Node performs all shared and Host-specific copying deterministically.
+On a first migration, `both` also requires `--primary`. In `both` mode, primary selects only the CLI used for first-time OKF initialization. Node performs all shared and Host-specific copying deterministically.
 
 Use `--force` only to replace Harness Hub-managed generic resources. Every run also removes resources still owned by the previous manifest that no longer belong to the selected Host surface. Target-owned Skills, project knowledge, Evals, product files, credentials, browser state, and unrelated local information remain outside that ownership set.
 
