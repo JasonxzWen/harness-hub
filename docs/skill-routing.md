@@ -20,6 +20,7 @@ Claude Code or Codex is the only main-Agent runtime. Select the narrowest atomic
 | Final deterministic commands and artifacts | `verification` |
 | Independent Standards and Spec review | `code-review` |
 | Focused security review | `security-review` |
+| Existing Web product experience diagnosis | `product-ui-review` |
 | Complex communication and important handoff | `effective-interact` |
 | Failed, long, high-cost, tool-abnormal, or explicit retrospective | `agent-interaction-audit` |
 | Source-backed learning | `quick-learn` |
@@ -33,6 +34,7 @@ Important boundaries:
 - `grill-with-docs` is the durable-document branch of the same alignment protocol. It reuses the `grill-me` decision graph and does not start a second interview.
 - `to-tickets` follows the target project's existing task, issue, or plan convention. It records tracer-bullet scope and blocking edges, creates no `.harness-hub/tasks` registry, and requires normal explicit authority before any remote publication.
 - `code-review` may ask the Host for bounded independent read-only Subagents. The main Agent owns integration and every mutation; there is no Harness dispatcher.
+- `product-ui-review` reports evidence-backed findings for existing Web products. It does not score, mutate, or implement the interface; authorized fixes route to production frontend capabilities.
 - `effective-interact` owns structured Report presentation. The native main Agent triggers it for complex delivery, comparisons, and important handoffs; simple results stay plain text.
 - `agent-interaction-audit` owns Retro analysis. It changes nothing automatically, recommends existing destinations first, and reports missing duration/token/cost evidence as `unknown`.
 - `decision-ui` is Codex-only. Use it only for genuinely blocking, high-impact, or external-authorization choices; low-risk details remain autonomous and unavailable native input falls back honestly to text.
@@ -44,7 +46,7 @@ Important boundaries:
 
 | Capability | Host surface | Runtime dependency | Migration result |
 | --- | --- | --- | --- |
-| `ponytail`, `grill-me`, `grill-with-docs`, `to-tickets`, `tdd`, `codebase-design`, `code-review`, `verification`, and other prompt-only atoms | Claude and Codex | Host conversation and native read-only Subagents when selected | Fully available without a Harness runtime or dispatcher. |
+| `ponytail`, `grill-me`, `grill-with-docs`, `to-tickets`, `tdd`, `codebase-design`, `code-review`, `product-ui-review`, `verification`, and other prompt-only atoms | Claude and Codex | Host conversation and native read-only Subagents when selected | Fully available without a Harness runtime or dispatcher. |
 | `effective-interact` | Claude and Codex | Node; browser only for rendered-browser verification | Generation and deterministic validation are available; missing browser evidence is reported. |
 | `decision-ui` | Codex only | Native structured input when available | Installed only under `.agents/skills/`; no feature or global-config mutation. |
 | `agent-interaction-audit` | Claude and Codex | Node, Git, readable Host traces | Available with honest Host/usage evidence gaps. |

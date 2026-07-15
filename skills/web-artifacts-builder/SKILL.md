@@ -7,12 +7,14 @@ license: Complete terms in LICENSE.txt
 
 # Web Artifacts Builder
 
+> Harness Hub adaptation: final bundles are verified before handoff.
+
 To build powerful frontend local browser artifacts, follow these steps:
 1. Initialize the frontend repo using `scripts/init-artifact.sh`
 2. Develop your artifact by editing the generated code
 3. Bundle all code into a single HTML file using `scripts/bundle-artifact.sh`
-4. Display artifact to user
-5. (Optional) Test the artifact
+4. Verify the final bundle
+5. Share the artifact with the user
 
 **Stack**: React 18 + TypeScript + Vite + Parcel (bundling) + Tailwind CSS + shadcn/ui
 
@@ -60,15 +62,13 @@ This creates `bundle.html` - a self-contained artifact with all JavaScript, CSS,
 - Builds with Parcel (no source maps)
 - Inlines all assets into single HTML using html-inline
 
-### Step 4: Share Artifact with User
+### Step 4: Verify the Artifact
 
-Finally, share the bundled HTML file in conversation with the user so they can view it as an artifact.
+Before sharing the artifact, open the final bundle, exercise its critical interaction, and check for console errors. Add screenshots, accessibility checks, or broader browser coverage when risk-based verification requires them.
 
-### Step 5: Testing/Visualizing the Artifact (Optional)
+### Step 5: Share Artifact with User
 
-Note: This is a completely optional step. Only perform if necessary or requested.
-
-To test/visualize the artifact, use available tools (including other Skills or built-in tools like Playwright or Puppeteer). In general, avoid testing the artifact upfront as it adds latency between the request and when the finished artifact can be seen. Test later, after presenting the artifact, if requested or if issues arise.
+Share the verified `bundle.html` file in conversation with the user so they can view it as an artifact.
 
 ## Reference
 

@@ -13,7 +13,7 @@ metadata:
 
 Use this skill as a frontend taste layer, not as the whole frontend implementation lane. It helps set a deliberate visual direction for landing pages, portfolios, marketing pages, and redesigns so the result does not look templated.
 
-Do not use it for dashboards, dense data tables, multi-step product UI, routine React/Next logic, HTML reports, decks, or code explanation. Those route to `frontend-design`, `frontend-patterns`, `web-artifacts-builder`, `effective-interact`, or `frontend-slides`.
+Do not use it for dashboards, dense data tables, multi-step product UI, routine React/Next logic, HTML reports, decks, or code explanation. Existing product experience review routes to `product-ui-review`; authorized implementation routes to `frontend-design`. Other work routes to `frontend-patterns`, `web-artifacts-builder`, `effective-interact`, or `frontend-slides`.
 
 ## Core Workflow
 

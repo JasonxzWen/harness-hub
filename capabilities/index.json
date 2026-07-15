@@ -116,6 +116,11 @@
       "path": "skills/design-taste-frontend",
       "distribution": "target-distributed"
     },
+    "skill:product-ui-review": {
+      "kind": "skill",
+      "path": "skills/product-ui-review",
+      "distribution": "target-distributed"
+    },
     "skill:clone-website": {
       "kind": "skill",
       "path": "skills/clone-website",

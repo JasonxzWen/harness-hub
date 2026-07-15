@@ -1,3 +1,4 @@
+# Modified by Harness Hub: use semantic locators and user-visible readiness.
 from playwright.sync_api import sync_playwright
 
 # Example: Capturing console logs during browser automation
@@ -17,13 +18,10 @@ with sync_playwright() as p:
 
     page.on("console", handle_console_message)
 
-    # Navigate to page
+    # Navigate, then wait for the visible result of the interaction.
     page.goto(url)
-    page.wait_for_load_state('networkidle')
-
-    # Interact with the page (triggers console logs)
-    page.click('text=Dashboard')
-    page.wait_for_timeout(1000)
+    page.get_by_role('link', name='Dashboard').click()
+    page.get_by_role('heading', name='Dashboard').wait_for()
 
     browser.close()
 
