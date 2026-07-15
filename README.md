@@ -84,6 +84,8 @@ The Host main Agent selects atomic Skills directly. Native development atoms inc
 - `to-tickets` is used only when accepted work needs multiple independently verifiable tracer-bullet tickets, follows the target project's existing task/issue/plan convention, and never creates a Harness task registry.
 - Native Subagents are limited to bounded independent read-only exploration, review, or verification. Skills add no Router, Runtime, orchestration Hook, dispatcher, or fixed lifecycle.
 - Existing Web product experience diagnosis uses `product-ui-review` for evidence-backed, report-only findings; implementation remains a separately authorized production frontend action.
+- Frontend motion is split into narrow atoms: `animation-vocabulary` names effects, `apple-design` guides physical or Apple-platform interaction, and `review-animations` reports evidence-backed findings without editing code.
+- Existing frontend owners may consult pinned or live sources such as NameThatUI, Kill AI Slop, and a pinned design-system extraction reference. They mirror no corpus, install nothing without separate authorization, and use Host-native image generation without adding a provider runtime.
 - Complex delivery, approach comparisons, and important handoffs use `effective-interact`; simple results remain plain text.
 - Failed, long-running, high-cost, tool-abnormal, or explicitly requested retrospectives use `agent-interaction-audit`. Missing duration, token, or cost evidence is `unknown`, never estimated.
 - `decision-ui` is installed only for Codex and falls back honestly to text when native structured input is unavailable.

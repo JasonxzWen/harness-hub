@@ -9,6 +9,15 @@ Prefer an existing page:
 
 Use a new prototype route only when the idea has no natural host page.
 
+Image-assisted prototypes:
+
+- Use Host-native image generation when a visual reference answers the design question faster than code alone.
+- Prompt only from public or generated material, or assets the user supplied or explicitly approved for this generation. Reduce private context to de-identified visual descriptors; never send source code, secrets, internal routes, customer or account data, private screenshots, or private copy.
+- Compare the result against accepted design direction and constraints rather than treating it as the specification.
+- Do not add an SDK, API key, provider adapter, or pinned model name to the target project.
+- When native generation or safe context is unavailable, return a visual brief instead of building another image runtime.
+- Delete unselected images with the losing variants unless the user explicitly asks to preserve them.
+
 Variant rules:
 
 - default to 3 variants
