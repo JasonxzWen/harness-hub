@@ -36,6 +36,6 @@ Skipped checks or residual risk:
 
 ## Reviewer decision
 
-- [ ] Behavior matches the executable Loop and migration contracts.
+- [ ] Behavior matches the native Host and migration contracts.
 - [ ] Deterministic failures cannot be overruled by Agent judgment.
 - [ ] No unauthorized commit, push, PR, merge, credential, or publishing action is introduced.

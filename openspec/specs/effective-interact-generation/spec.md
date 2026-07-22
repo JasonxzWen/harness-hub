@@ -1,7 +1,7 @@
 # effective-interact-generation Specification
 
 ## Purpose
-TBD - created by archiving change harden-effective-interact-generation. Update Purpose after archive.
+Define the reliable, safe, and auditable HTML generation contract for `effective-interact` artifacts used in complex communication, while keeping primary content readable without runtime dependencies and preserving the boundary from production UI.
 ## Requirements
 ### Requirement: Interaction generator produces reliable HTML by default
 The system SHALL provide a reusable generation path that converts structured JSON interaction input into a single `.html` artifact whose primary content is reliable in local browsers and common constrained environments.

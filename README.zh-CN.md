@@ -4,6 +4,8 @@ Harness Hub 通过仓库 URL 为 Claude Code / Codex 项目提供确定性的全
 
 它只有一个面向目标项目的能力：`migrate`。Git 仓库及其 commit 是唯一分发和版本来源；不发布 npm 包，不提供分步安装、独立更新/删除、兼容入口、通用 Agent Runtime 或第二套 registry。
 
+现有 Git 标签和 GitHub Release 仅作为仓库历史记录保留，不是包或组件版本，也不是受支持的迁移输入。
+
 Claude Code 和 Codex 是唯一主 Agent 执行层，负责需求对齐、Subagent 派发、并行执行、结果汇总和用户汇报。Harness Hub 只分发项目契约、Host 资源、原子 Skills 和 OKF，不重复实现 Host 已有的编排能力。
 
 ## 一句话更新已安装仓库
