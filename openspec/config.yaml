@@ -2,14 +2,15 @@ schema: spec-driven
 
 context: |
   Project: harness-hub
-  Purpose: Distribute a personal agent workflow toolkit with source records, routing overlay, and lock-backed lifecycle tooling.
+  Purpose: Deterministically migrate repository-local Claude Code and Codex harness resources from a selected Git commit.
   Primary language: Chinese documentation, with source URLs and technical names preserved in English.
-  Initial focus: high-signal personal workflow reuse across multiple projects.
+  Public surface: One complete `node bin/harness-hub.mjs migrate <target> --yes` command; no partial installer or package lifecycle.
   Constraints:
-    - Prefer source attribution over unattributed prompt copying.
-    - Preserve upstream skill bodies by default; keep local routing and safety decisions in the overlay.
-    - Keep skills focused, composable, and testable.
-    - Review licenses and security posture before importing third-party content.
+    - Treat the Git checkout and commit as the only distribution and version source.
+    - Keep canonical Skills under skills/<name>/ and classify them once in capabilities/index.json.
+    - Keep source knowledge, docs, tests, task state, and governance out of target distribution.
+    - Leave orchestration to the native Host main Agent; do not add a Router or generic Agent runtime.
+    - Preserve upstream Skill bodies by default and review provenance, licenses, and security before importing third-party content.
 
 rules:
   proposal:

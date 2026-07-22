@@ -6,6 +6,8 @@ Repository-first deterministic distribution for Claude Code and Codex project ha
 
 Harness Hub has one target capability: full migration. The Git repository and selected commit are the only distribution/version source. There is no npm package, component version, partial installer, update/remove lifecycle, compatibility layer, generic Agent runtime, or second registry.
 
+Existing Git tags and GitHub Releases are retained only as historical repository records. They are not package/component versions or supported migration inputs.
+
 Claude Code and Codex remain the only main-Agent runtimes. Harness Hub distributes project rules, Host resources, atomic Skills, and an OKF contract; it does not duplicate native orchestration, Subagent dispatch, retries, pause/resume, or result aggregation.
 
 ## Update an installed repository
