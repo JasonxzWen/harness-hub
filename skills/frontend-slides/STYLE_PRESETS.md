@@ -1,330 +1,347 @@
 # Style Presets Reference
 
-Curated visual styles for `frontend-slides`.
+Curated visual starting points for Frontend Slides. Authoritative brand systems and user-supplied media take priority. For generated decoration, prefer abstract shapes over generic stock-style illustration.
 
-Use this file for:
-- the mandatory viewport-fitting CSS base
-- preset selection and mood mapping
-- CSS gotchas and validation rules
+**Viewport CSS:** For mandatory base styles, see [viewport-base.css](viewport-base.css). Include in every presentation.
 
-Abstract shapes only. Avoid illustrations unless the user explicitly asks for them.
+---
 
-## Viewport Fit Is Non-Negotiable
-
-Every slide must fully fit in one viewport.
-
-### Golden Rule
-
-```text
-Each slide = exactly one viewport height.
-Too much content = split into more slides.
-Never scroll inside a slide.
-```
-
-### Density Limits
-
-| Slide Type | Maximum Content |
-|------------|-----------------|
-| Title slide | 1 heading + 1 subtitle + optional tagline |
-| Content slide | 1 heading + 4-6 bullets or 2 paragraphs |
-| Feature grid | 6 cards maximum |
-| Code slide | 8-10 lines maximum |
-| Quote slide | 1 quote + attribution |
-| Image slide | 1 image, ideally under 60vh |
-
-## Mandatory Base CSS
-
-Copy this block into every generated presentation and then theme on top of it.
-
-```css
-/* ===========================================
-   VIEWPORT FITTING: MANDATORY BASE STYLES
-   =========================================== */
-
-html, body {
-    height: 100%;
-    overflow-x: hidden;
-}
-
-html {
-    scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
-}
-
-.slide {
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
-    scroll-snap-align: start;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-.slide-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    max-height: 100%;
-    overflow: hidden;
-    padding: var(--slide-padding);
-}
-
-:root {
-    --title-size: clamp(1.5rem, 5vw, 4rem);
-    --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
-    --h3-size: clamp(1rem, 2.5vw, 1.75rem);
-    --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
-    --small-size: clamp(0.65rem, 1vw, 0.875rem);
-
-    --slide-padding: clamp(1rem, 4vw, 4rem);
-    --content-gap: clamp(0.5rem, 2vw, 2rem);
-    --element-gap: clamp(0.25rem, 1vw, 1rem);
-}
-
-.card, .container, .content-box {
-    max-width: min(90vw, 1000px);
-    max-height: min(80vh, 700px);
-}
-
-.feature-list, .bullet-list {
-    gap: clamp(0.4rem, 1vh, 1rem);
-}
-
-.feature-list li, .bullet-list li {
-    font-size: var(--body-size);
-    line-height: 1.4;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
-    gap: clamp(0.5rem, 1.5vw, 1rem);
-}
-
-img, .image-container {
-    max-width: 100%;
-    max-height: min(50vh, 400px);
-    object-fit: contain;
-}
-
-@media (max-height: 700px) {
-    :root {
-        --slide-padding: clamp(0.75rem, 3vw, 2rem);
-        --content-gap: clamp(0.4rem, 1.5vw, 1rem);
-        --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
-        --h2-size: clamp(1rem, 3vw, 1.75rem);
-    }
-}
-
-@media (max-height: 600px) {
-    :root {
-        --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
-        --content-gap: clamp(0.3rem, 1vw, 0.75rem);
-        --title-size: clamp(1.1rem, 4vw, 2rem);
-        --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
-    }
-
-    .nav-dots, .keyboard-hint, .decorative {
-        display: none;
-    }
-}
-
-@media (max-height: 500px) {
-    :root {
-        --slide-padding: clamp(0.4rem, 2vw, 1rem);
-        --title-size: clamp(1rem, 3.5vw, 1.5rem);
-        --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
-        --body-size: clamp(0.65rem, 1vw, 0.85rem);
-    }
-}
-
-@media (max-width: 600px) {
-    :root {
-        --title-size: clamp(1.25rem, 7vw, 2.5rem);
-    }
-
-    .grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.2s !important;
-    }
-
-    html {
-        scroll-behavior: auto;
-    }
-}
-```
-
-## Viewport Checklist
-
-- every `.slide` has `height: 100vh`, `height: 100dvh`, and `overflow: hidden`
-- all typography uses `clamp()`
-- all spacing uses `clamp()` or viewport units
-- images have `max-height` constraints
-- grids adapt with `auto-fit` + `minmax()`
-- short-height breakpoints exist at `700px`, `600px`, and `500px`
-- if anything feels cramped, split the slide
-
-## Mood to Preset Mapping
-
-| Mood | Good Presets |
-|------|--------------|
-| Impressed / Confident | Bold Signal, Electric Studio, Dark Botanical |
-| Excited / Energized | Creative Voltage, Neon Cyber, Split Pastel |
-| Calm / Focused | Notebook Tabs, Paper & Ink, Swiss Modern |
-| Inspired / Moved | Dark Botanical, Vintage Editorial, Pastel Geometry |
-
-## Preset Catalog
+## Dark Themes
 
 ### 1. Bold Signal
 
-- Vibe: confident, high-impact, keynote-ready
-- Best for: pitch decks, launches, statements
-- Fonts: Archivo Black + Space Grotesk
-- Palette: charcoal base, hot orange focal card, crisp white text
-- Signature: oversized section numbers, high-contrast card on dark field
+**Vibe:** Confident, bold, modern, high-impact
+
+**Layout:** Colored card on dark gradient. Number top-left, navigation top-right, title bottom-left.
+
+**Typography:**
+- Display: `Archivo Black` (900)
+- Body: `Space Grotesk` (400/500)
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #1a1a1a;
+    --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+    --card-bg: #FF5722;
+    --text-primary: #ffffff;
+    --text-on-card: #1a1a1a;
+}
+```
+
+**Signature Elements:**
+- Bold colored card as focal point (orange, coral, or vibrant accent)
+- Large section numbers (01, 02, etc.)
+- Navigation breadcrumbs with active/inactive opacity states
+- Grid-based layout for precise alignment
+
+---
 
 ### 2. Electric Studio
 
-- Vibe: clean, bold, agency-polished
-- Best for: client presentations, strategic reviews
-- Fonts: Manrope only
-- Palette: black, white, saturated cobalt accent
-- Signature: two-panel split and sharp editorial alignment
+**Vibe:** Bold, clean, professional, high contrast
+
+**Layout:** Split panel—white top, blue bottom. Brand marks in corners.
+
+**Typography:**
+- Display: `Manrope` (800)
+- Body: `Manrope` (400/500)
+
+**Colors:**
+```css
+:root {
+    --bg-dark: #0a0a0a;
+    --bg-white: #ffffff;
+    --accent-blue: #4361ee;
+    --text-dark: #0a0a0a;
+    --text-light: #ffffff;
+}
+```
+
+**Signature Elements:**
+- Two-panel vertical split
+- Accent bar on panel edge
+- Quote typography as hero element
+- Minimal, confident spacing
+
+---
 
 ### 3. Creative Voltage
 
-- Vibe: energetic, retro-modern, playful confidence
-- Best for: creative studios, brand work, product storytelling
-- Fonts: Syne + Space Mono
-- Palette: electric blue, neon yellow, deep navy
-- Signature: halftone textures, badges, punchy contrast
+**Vibe:** Bold, creative, energetic, retro-modern
+
+**Layout:** Split panels—electric blue left, dark right. Script accents.
+
+**Typography:**
+- Display: `Syne` (700/800)
+- Mono: `Space Mono` (400/700)
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #0066ff;
+    --bg-dark: #1a1a2e;
+    --accent-neon: #d4ff00;
+    --text-light: #ffffff;
+}
+```
+
+**Signature Elements:**
+- Electric blue + neon yellow contrast
+- Halftone texture patterns
+- Neon badges/callouts
+- Script typography for creative flair
+
+---
 
 ### 4. Dark Botanical
 
-- Vibe: elegant, premium, atmospheric
-- Best for: luxury brands, thoughtful narratives, premium product decks
-- Fonts: Cormorant + IBM Plex Sans
-- Palette: near-black, warm ivory, blush, gold, terracotta
-- Signature: blurred abstract circles, fine rules, restrained motion
+**Vibe:** Elegant, sophisticated, artistic, premium
+
+**Layout:** Centered content on dark. Abstract soft shapes in corner.
+
+**Typography:**
+- Display: `Cormorant` (400/600) — elegant serif
+- Body: `IBM Plex Sans` (300/400)
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #0f0f0f;
+    --text-primary: #e8e4df;
+    --text-secondary: #9a9590;
+    --accent-warm: #d4a574;
+    --accent-pink: #e8b4b8;
+    --accent-gold: #c9b896;
+}
+```
+
+**Signature Elements:**
+- Abstract soft gradient circles (blurred, overlapping)
+- Warm color accents (pink, gold, terracotta)
+- Thin vertical accent lines
+- Italic signature typography
+- **No illustrations—only abstract CSS shapes**
+
+---
+
+## Light Themes
 
 ### 5. Notebook Tabs
 
-- Vibe: editorial, organized, tactile
-- Best for: reports, reviews, structured storytelling
-- Fonts: Bodoni Moda + DM Sans
-- Palette: cream paper on charcoal with pastel tabs
-- Signature: paper sheet, colored side tabs, binder details
+**Vibe:** Editorial, organized, elegant, tactile
+
+**Layout:** Cream paper card on dark background. Colorful tabs on right edge.
+
+**Typography:**
+- Display: `Bodoni Moda` (400/700) — classic editorial
+- Body: `DM Sans` (400/500)
+
+**Colors:**
+```css
+:root {
+    --bg-outer: #2d2d2d;
+    --bg-page: #f8f6f1;
+    --text-primary: #1a1a1a;
+    --tab-1: #98d4bb; /* Mint */
+    --tab-2: #c7b8ea; /* Lavender */
+    --tab-3: #f4b8c5; /* Pink */
+    --tab-4: #a8d8ea; /* Sky */
+    --tab-5: #ffe6a7; /* Cream */
+}
+```
+
+**Signature Elements:**
+- Paper container with subtle shadow
+- Colorful section tabs on right edge (vertical text)
+- Binder hole decorations on left
+- Tab text must scale with viewport: `font-size: clamp(0.5rem, 1vh, 0.7rem)`
+
+---
 
 ### 6. Pastel Geometry
 
-- Vibe: approachable, modern, friendly
-- Best for: product overviews, onboarding, lighter brand decks
-- Fonts: Plus Jakarta Sans only
-- Palette: pale blue field, cream card, soft pink/mint/lavender accents
-- Signature: vertical pills, rounded cards, soft shadows
+**Vibe:** Friendly, organized, modern, approachable
+
+**Layout:** White card on pastel background. Vertical pills on right edge.
+
+**Typography:**
+- Display: `Plus Jakarta Sans` (700/800)
+- Body: `Plus Jakarta Sans` (400/500)
+
+**Colors:**
+```css
+:root {
+    --bg-primary: #c8d9e6;
+    --card-bg: #faf9f7;
+    --pill-pink: #f0b4d4;
+    --pill-mint: #a8d4c4;
+    --pill-sage: #5a7c6a;
+    --pill-lavender: #9b8dc4;
+    --pill-violet: #7c6aad;
+}
+```
+
+**Signature Elements:**
+- Rounded card with soft shadow
+- **Vertical pills on right edge** with varying heights (like tabs)
+- Consistent pill width, heights: short → medium → tall → medium → short
+- Download/action icon in corner
+
+---
 
 ### 7. Split Pastel
 
-- Vibe: playful, modern, creative
-- Best for: agency intros, workshops, portfolios
-- Fonts: Outfit only
-- Palette: peach + lavender split with mint badges
-- Signature: split backdrop, rounded tags, light grid overlays
+**Vibe:** Playful, modern, friendly, creative
+
+**Layout:** Two-color vertical split (peach left, lavender right).
+
+**Typography:**
+- Display: `Outfit` (700/800)
+- Body: `Outfit` (400/500)
+
+**Colors:**
+```css
+:root {
+    --bg-peach: #f5e6dc;
+    --bg-lavender: #e4dff0;
+    --text-dark: #1a1a1a;
+    --badge-mint: #c8f0d8;
+    --badge-yellow: #f0f0c8;
+    --badge-pink: #f0d4e0;
+}
+```
+
+**Signature Elements:**
+- Split background colors
+- Playful badge pills with icons
+- Grid pattern overlay on right panel
+- Rounded CTA buttons
+
+---
 
 ### 8. Vintage Editorial
 
-- Vibe: witty, personality-driven, magazine-inspired
-- Best for: personal brands, opinionated talks, storytelling
-- Fonts: Fraunces + Work Sans
-- Palette: cream, charcoal, dusty warm accents
-- Signature: geometric accents, bordered callouts, punchy serif headlines
+**Vibe:** Witty, confident, editorial, personality-driven
+
+**Layout:** Centered content on cream. Abstract geometric shapes as accent.
+
+**Typography:**
+- Display: `Fraunces` (700/900) — distinctive serif
+- Body: `Work Sans` (400/500)
+
+**Colors:**
+```css
+:root {
+    --bg-cream: #f5f3ee;
+    --text-primary: #1a1a1a;
+    --text-secondary: #555;
+    --accent-warm: #e8d4c0;
+}
+```
+
+**Signature Elements:**
+- Abstract geometric shapes (circle outline + line + dot)
+- Bold bordered CTA boxes
+- Witty, conversational copy style
+- **No illustrations—only geometric CSS shapes**
+
+---
+
+## Specialty Themes
 
 ### 9. Neon Cyber
 
-- Vibe: futuristic, techy, kinetic
-- Best for: AI, infra, dev tools, future-of-X talks
-- Fonts: Clash Display + Satoshi
-- Palette: midnight navy, cyan, magenta
-- Signature: glow, particles, grids, data-radar energy
+**Vibe:** Futuristic, techy, confident
+
+**Typography:** `Clash Display` + `Satoshi` (Fontshare)
+
+**Colors:** Deep navy (#0a0f1c), cyan accent (#00ffcc), magenta (#ff00aa)
+
+**Signature:** Particle backgrounds, neon glow, grid patterns
+
+---
 
 ### 10. Terminal Green
 
-- Vibe: developer-focused, hacker-clean
-- Best for: APIs, CLI tools, engineering demos
-- Fonts: JetBrains Mono only
-- Palette: GitHub dark + terminal green
-- Signature: scan lines, command-line framing, precise monospace rhythm
+**Vibe:** Developer-focused, hacker aesthetic
+
+**Typography:** `JetBrains Mono` (monospace only)
+
+**Colors:** GitHub dark (#0d1117), terminal green (#39d353)
+
+**Signature:** Scan lines, blinking cursor, code syntax styling
+
+---
 
 ### 11. Swiss Modern
 
-- Vibe: minimal, precise, data-forward
-- Best for: corporate, product strategy, analytics
-- Fonts: Archivo + Nunito
-- Palette: white, black, signal red
-- Signature: visible grids, asymmetry, geometric discipline
+**Vibe:** Clean, precise, Bauhaus-inspired
+
+**Typography:** `Archivo` (800) + `Nunito` (400)
+
+**Colors:** Pure white, pure black, red accent (#ff3300)
+
+**Signature:** Visible grid, asymmetric layouts, geometric shapes
+
+---
 
 ### 12. Paper & Ink
 
-- Vibe: literary, thoughtful, story-driven
-- Best for: essays, keynote narratives, manifesto decks
-- Fonts: Cormorant Garamond + Source Serif 4
-- Palette: warm cream, charcoal, crimson accent
-- Signature: pull quotes, drop caps, elegant rules
+**Vibe:** Editorial, literary, thoughtful
 
-## Direct Selection Prompts
+**Typography:** `Cormorant Garamond` + `Source Serif 4`
 
-If the user already knows the style they want, let them pick directly from the preset names above instead of forcing preview generation.
+**Colors:** Warm cream (#faf9f7), charcoal (#1a1a1a), crimson accent (#c41e3a)
 
-## Animation Feel Mapping
+**Signature:** Drop caps, pull quotes, elegant horizontal rules
 
-| Feeling | Motion Direction |
-|---------|------------------|
-| Dramatic / Cinematic | slow fades, parallax, large scale-ins |
-| Techy / Futuristic | glow, particles, grid motion, scramble text |
-| Playful / Friendly | springy easing, rounded shapes, floating motion |
-| Professional / Corporate | subtle 200-300ms transitions, clean slides |
-| Calm / Minimal | very restrained movement, whitespace-first |
-| Editorial / Magazine | strong hierarchy, staggered text and image interplay |
+---
 
-## CSS Gotcha: Negating Functions
+## Font Pairing Quick Reference
 
-Never write these:
+| Preset | Display Font | Body Font | Source |
+|--------|--------------|-----------|--------|
+| Bold Signal | Archivo Black | Space Grotesk | Google |
+| Electric Studio | Manrope | Manrope | Google |
+| Creative Voltage | Syne | Space Mono | Google |
+| Dark Botanical | Cormorant | IBM Plex Sans | Google |
+| Notebook Tabs | Bodoni Moda | DM Sans | Google |
+| Pastel Geometry | Plus Jakarta Sans | Plus Jakarta Sans | Google |
+| Split Pastel | Outfit | Outfit | Google |
+| Vintage Editorial | Fraunces | Work Sans | Google |
+| Neon Cyber | Clash Display | Satoshi | Fontshare |
+| Terminal Green | JetBrains Mono | JetBrains Mono | JetBrains |
 
+---
+
+## Common Defaults To Challenge
+
+These are prompts to verify intent, not universal bans. Keep a familiar choice when the content, brand, language coverage, or platform proves that it fits.
+
+- **Typography:** Inter, Roboto, Arial, or a system font used without a deliberate reason
+- **Color:** generic indigo or purple gradients on white with no connection to the subject
+- **Layout:** every element centered, generic hero sections, or repeated identical card grids
+- **Decoration:** gratuitous glass surfaces, stock-style illustration, or shadows with no hierarchy purpose
+
+The failure is an unexplained default, not the individual font, color, or component.
+
+---
+
+## CSS Gotchas
+
+### Negating CSS Functions
+
+**WRONG — silently ignored by browsers (no console error):**
 ```css
-right: -clamp(28px, 3.5vw, 44px);
-margin-left: -min(10vw, 100px);
+right: -clamp(28px, 3.5vw, 44px);   /* Browser ignores this */
+margin-left: -min(10vw, 100px);      /* Browser ignores this */
 ```
 
-Browsers ignore them silently.
-
-Always write this instead:
-
+**CORRECT — wrap in `calc()`:**
 ```css
-right: calc(-1 * clamp(28px, 3.5vw, 44px));
-margin-left: calc(-1 * min(10vw, 100px));
+right: calc(-1 * clamp(28px, 3.5vw, 44px));  /* Works */
+margin-left: calc(-1 * min(10vw, 100px));     /* Works */
 ```
 
-## Validation Sizes
-
-Test at minimum:
-- Desktop: `1920x1080`, `1440x900`, `1280x720`
-- Tablet: `1024x768`, `768x1024`
-- Mobile: `375x667`, `414x896`
-- Landscape phone: `667x375`, `896x414`
-
-## Anti-Patterns
-
-Do not use:
-- purple-on-white startup templates
-- Inter / Roboto / Arial as the visual voice unless the user explicitly wants utilitarian neutrality
-- bullet walls, tiny type, or code blocks that require scrolling
-- decorative illustrations when abstract geometry would do the job better
+CSS does not allow a leading `-` before function names. The browser silently discards the entire declaration — no error, the element just appears in the wrong position. **Always use `calc(-1 * ...)` to negate CSS function values.**

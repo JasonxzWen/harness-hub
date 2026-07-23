@@ -82,13 +82,14 @@ Harness Hub's root `knowledge/`, source records, docs, tests, task state, and re
 
 ## Atomic Skills and native orchestration
 
-The Host main Agent selects atomic Skills directly. Native development atoms include `grill-me`, `grill-with-docs`, `product-capability`, `to-tickets`, `tdd`, `codebase-design`, `code-review`, `product-ui-review`, and `verification`; other examples include Ponytail, effective-interact, quick-learn, source-post, Agent Reach, Decision UI, security review, and Agent interaction audit.
+The Host main Agent selects atomic Skills directly. Native development atoms include `grill-me`, `grill-with-docs`, `product-capability`, `to-tickets`, `tdd`, `codebase-design`, `code-review`, `product-ui-review`, and `verification`; artifact atoms include `frontend-slides`, `codebase-to-course`, and `beautiful-feishu-whiteboard`; other examples include Ponytail, effective-interact, quick-learn, source-post, Agent Reach, Decision UI, security review, and Agent interaction audit.
 
 - Every repository mutation gets one `grill-me` alignment pass. An already aligned task asks zero questions and continues; durable contracts, specifications, ADRs, architecture, or OKF changes use `grill-with-docs` to reuse the same decision graph instead of running a second interview.
 - `to-tickets` is used only when accepted work needs multiple independently verifiable tracer-bullet tickets, follows the target project's existing task/issue/plan convention, and never creates a Harness task registry.
 - Native Subagents are limited to bounded independent read-only exploration, review, or verification. Skills add no Router, Runtime, orchestration Hook, dispatcher, or fixed lifecycle.
 - Existing Web product experience diagnosis uses `product-ui-review` for evidence-backed, report-only findings; implementation remains a separately authorized production frontend action.
 - Frontend motion is split into narrow atoms: `animation-vocabulary` names effects, `apple-design` guides physical or Apple-platform interaction, and `review-animations` reports evidence-backed findings without editing code.
+- HTML decks route to `frontend-slides`, source-backed codebase courses to `codebase-to-course`, and editable Feishu/Lark visual explainers to `beautiful-feishu-whiteboard`. These atoms install or authenticate nothing; export, deployment, publishing, and live whiteboard writes retain their normal authorization boundaries.
 - Existing frontend owners may consult pinned or live sources such as NameThatUI, Kill AI Slop, and a pinned design-system extraction reference. They mirror no corpus, install nothing without separate authorization, and use Host-native image generation without adding a provider runtime.
 - Complex delivery, approach comparisons, and important handoffs use `effective-interact`; simple results remain plain text.
 - Failed, long-running, high-cost, tool-abnormal, or explicitly requested retrospectives use `agent-interaction-audit`. Missing duration, token, or cost evidence is `unknown`, never estimated.
