@@ -11,6 +11,12 @@ import { validateOkf } from './okf-validate.mjs';
 const SOURCE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const GIT_INSPECTION_MAX_BUFFER = 64 * 1024 * 1024;
 const OFFICIAL_SOURCE_URL = 'https://github.com/JasonxzWen/harness-hub';
+const GUIDED_GUIDE_PATHS = [
+  'BOOTSTRAP-TARGET.md',
+  'capabilities/index.json',
+  'docs/skill-routing.md',
+  'docs/capability-map.md',
+];
 const SHARED_MANAGED_FILES = [
   '.harness-hub/.gitignore',
   '.harness-hub/okf-validate.mjs',
@@ -110,6 +116,64 @@ export function parseMigrationArgs(argv) {
     force,
     host,
     selectedPrimary,
+  };
+}
+
+export function parseGuidedMigrationArgs(argv) {
+  const target = argv[0];
+  if (argv.length !== 2 || !target || target.startsWith('--') || argv[1] !== '--guided') {
+    throw guidedMigrationError(
+      'E_INPUT',
+      'Use migrate <target> --guided without --yes, --host, --primary, or --force.',
+      'input',
+      2,
+    );
+  }
+  return { target };
+}
+
+export function runGuidedMigration(argv) {
+  const request = parseGuidedMigrationArgs(argv);
+  const sourceRoot = fs.realpathSync.native(runGuidedGit(
+    SOURCE_ROOT,
+    ['rev-parse', '--show-toplevel'],
+    'E_SOURCE_GIT',
+    'Harness Hub source must be a Git repository.',
+  ));
+  const sourceCommit = runGuidedGit(
+    sourceRoot,
+    ['rev-parse', '--verify', 'HEAD'],
+    'E_SOURCE_HEAD',
+    'Harness Hub source must have an existing HEAD.',
+  );
+  const sourceStatus = runGuidedGit(
+    sourceRoot,
+    ['status', '--porcelain=v1', '--untracked-files=all'],
+    'E_SOURCE_GIT',
+    'Harness Hub source Git state could not be inspected.',
+  );
+  if (sourceStatus !== '') {
+    throw guidedMigrationError(
+      'E_SOURCE_DIRTY',
+      'Harness Hub source must be clean so sourceCommit identifies the guide bytes.',
+    );
+  }
+  assertGuidedGuidePaths(sourceRoot, sourceCommit);
+
+  const targetRoot = fs.realpathSync.native(runGuidedGit(
+    path.resolve(request.target),
+    ['rev-parse', '--show-toplevel'],
+    'E_TARGET_GIT',
+    'Target must exist inside a Git repository.',
+  ));
+  return {
+    ok: true,
+    strategy: 'guided',
+    mutated: false,
+    sourceRoot,
+    sourceCommit,
+    targetRoot,
+    guidePaths: [...GUIDED_GUIDE_PATHS],
   };
 }
 
@@ -1523,6 +1587,61 @@ function writeManifest(source, targetRoot, hosts, primaryHost, distributedSkills
   fs.writeFileSync(path.join(manifestDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
+function assertGuidedGuidePaths(sourceRoot, sourceCommit) {
+  const objectFormat = runGuidedGit(
+    sourceRoot,
+    ['rev-parse', '--show-object-format'],
+    'E_VALIDATE',
+    'Could not determine the source Git object format.',
+    'validation',
+  );
+  if (!['sha1', 'sha256'].includes(objectFormat)) {
+    throw guidedMigrationError(
+      'E_VALIDATE',
+      `Unsupported Git object format '${objectFormat}'.`,
+      'validation',
+    );
+  }
+  for (const relativePath of GUIDED_GUIDE_PATHS) {
+    const absolutePath = path.join(sourceRoot, relativePath);
+    const stat = fs.lstatSync(absolutePath, { throwIfNoEntry: false });
+    if (!stat?.isFile() || stat.isSymbolicLink()) {
+      throw guidedMigrationError(
+        'E_VALIDATE',
+        `Canonical Guided migration resource must be a regular file: ${relativePath}`,
+        'validation',
+      );
+    }
+    const commitBlobId = runGuidedGit(
+      sourceRoot,
+      ['rev-parse', '--verify', `${sourceCommit}:${relativePath}`],
+      'E_VALIDATE',
+      `Canonical Guided migration resource must exist in the source commit: ${relativePath}`,
+      'validation',
+    );
+    const bytes = fs.readFileSync(absolutePath);
+    const workingBlobId = crypto.createHash(objectFormat)
+      .update(`blob ${bytes.length}\0`)
+      .update(bytes)
+      .digest('hex');
+    if (workingBlobId !== commitBlobId) {
+      throw guidedMigrationError(
+        'E_VALIDATE',
+        `Canonical Guided migration resource must match source HEAD byte-for-byte: ${relativePath}`,
+        'validation',
+      );
+    }
+  }
+}
+
+function runGuidedGit(cwd, args, code, message, phase = 'preflight') {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  if (result.status !== 0) {
+    throw guidedMigrationError(code, message, phase);
+  }
+  return result.stdout.trimEnd();
+}
+
 function runGit(cwd, args, code) {
   const result = spawnSync('git', args, { cwd, encoding: 'utf8' });
   if (result.status !== 0) {
@@ -1533,4 +1652,11 @@ function runGit(cwd, args, code) {
 
 function migrationError(code, message, phase = 'preflight', exitCode = 3) {
   return Object.assign(new Error(message), { code, phase, exitCode });
+}
+
+function guidedMigrationError(code, message, phase = 'preflight', exitCode = 3) {
+  return Object.assign(migrationError(code, message, phase, exitCode), {
+    strategy: 'guided',
+    mutated: false,
+  });
 }

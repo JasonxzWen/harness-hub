@@ -1,8 +1,58 @@
 # Bootstrap a target repository
 
-Harness Hub has one target capability: complete repository migration. The Git checkout and commit are the only distribution/version source; no npm package, partial installer, update command, compatibility path, or generic Agent runtime exists. Installation and updates both use `migrate`.
+Harness Hub has one public target command, `migrate`, with two explicit strategies. Managed is the existing deterministic full migration. Guided is a read-only handoff that lets the native Agent inspect the project, propose selective adoption, and edit only after the required user approval. Neither strategy adds an npm package, compatibility path, generic Agent runtime, or second registry.
 
-## Update an installed repository from one request
+The Git checkout and commit are the only distribution/version source. Guided never activates automatically because a target already has configuration or a Managed collision; the user must select it explicitly.
+
+## Guided selective adoption
+
+From a clean Harness Hub checkout with an existing `HEAD`, run:
+
+```text
+node bin/harness-hub.mjs migrate <target> --guided
+```
+
+`--guided` is mutually exclusive with `--yes`, `--host`, `--primary`, and `--force`. The target need only resolve to a Git working tree; it may be dirty, diverged, detached, linked, or have no `HEAD`.
+
+The Guided CLI resolves the repository root, verifies that its canonical guide bytes match the reported source commit, and returns `mutated: false` with these source paths:
+
+- `BOOTSTRAP-TARGET.md`
+- `capabilities/index.json`
+- `docs/skill-routing.md`
+- `docs/capability-map.md`
+
+It does not inspect target status, configuration, manifest, knowledge, diff, or file tree. It does not call a Host CLI, copy or merge files, create ownership, write a manifest, clean stale resources, apply a patch, or enter rollback. `mutated: false` covers only this CLI call; later Agent edits are ordinary project mutations.
+
+After the handoff, the native main Agent:
+
+1. reads the returned map and the target's own rules;
+2. inspects the target's real needs, Git state, Host configuration, existing instructions, Skills, and current owners;
+3. preserves existing configuration and prepares a transient proposal rather than overwriting whole files;
+4. presents one row per suggestion and waits for the user's selection.
+
+Use this proposal shape:
+
+| Capability / source | Target evidence / current owner | Action | Affected paths | Visibility | Risk | User choice |
+|---|---|---|---|---|---|---|
+| `<id or path>` | `<observed evidence>` | reuse / adapt / add / skip | `<exact paths>` | local / shared | `<risk>` | pending |
+
+Authorization has three independent boundaries:
+
+1. **Proposal selection:** no write occurs before selection. Selecting a local row authorizes only its listed local edits; selecting a shared row does not yet authorize a tracked patch.
+2. **Shared patch approval:** any tracked-file change, deletion, or new content intended for version control requires the Agent to show the exact patch and obtain separate confirmation.
+3. **Delivery approval:** staging, committing, pushing, opening a PR, publishing, or merging always needs separate authorization. Proposal or patch approval implies none of them.
+
+A Guided change is **local** only when every new path remains untracked and ignored in the repository-private exclude file resolved by:
+
+```text
+git rev-parse --git-path info/exclude
+```
+
+Append only exact rules, preserve existing exclude content, and do not modify the project's `.gitignore` automatically. A path matched by `git ls-files --error-unmatch -- <path>` is tracked: tracked files cannot become local through ignore rules. Do not use `assume-unchanged` or `skip-worktree` to disguise tracked edits. If the Host has no suitable untracked local surface, set Visibility to `shared` and stop for shared patch approval.
+
+Harness Hub creates no Guided manifest, selection file, pack, ownership record, or update lifecycle. The Agent must selectively patch existing files for either visibility; it must never replace an existing project configuration wholesale.
+
+## Managed update of an installed repository from one request
 
 When Claude Code or Codex receives a Harness Hub update request together with this repository URL:
 
@@ -22,7 +72,7 @@ Recognized HTTPS and SSH spellings of the official remote record the canonical s
 
 The migration command never commits, pushes, publishes, merges, or otherwise modifies remote state. Delete the temporary source checkout only after the local result and validation evidence have been reported.
 
-## First migration
+## First Managed migration
 
 Clone Harness Hub outside the target repository, then run its single CLI entry:
 

@@ -4,6 +4,11 @@ title: Harness Hub knowledge update log
 ---
 # Harness Hub knowledge update log
 
+## 2026-07-23
+
+- Added the explicit read-only Guided strategy while preserving the existing Managed full-migration transaction.
+- Recorded independent proposal, shared-patch, and delivery authorization plus the repository-private `info/exclude` boundary for local Guided changes.
+
 ## 2026-07-15
 
 - Recorded native Skill composition for mutation alignment, durable-document grilling, tracer-bullet ticketing, TDD, codebase design, review, and verification without a Router, Runtime, orchestration Hook, or fixed lifecycle.

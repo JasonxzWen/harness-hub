@@ -47,7 +47,19 @@ Use `agent-interaction-audit` for failed, long-running, high-cost, tool-abnormal
 
 ## Harness Hub updates
 
-When an update request includes `https://github.com/JasonxzWen/harness-hub`, clone it into a temporary standalone checkout outside this repository, use the source default branch current HEAD, keep this repository as the target, and read its existing `.harness-hub/manifest.json`. From the temporary Harness Hub checkout run:
+The URL-only update flow below uses the Managed strategy by default. Existing project configuration does not trigger an automatic switch.
+
+Only when the user explicitly requests Guided, selective adoption, or no-overwrite planning, clone a clean Harness Hub source with an existing `HEAD` and run:
+
+```text
+node bin/harness-hub.mjs migrate <current-repository> --guided
+```
+
+Guided is read-only and may target a dirty, diverged, detached, linked, or unborn Git working tree. After it returns, inspect this project's actual rules, Host configuration, Skills, owners, and needs; then present a transient `reuse`/`adapt`/`add`/`skip` proposal with evidence, exact paths, local/shared visibility, and risk.
+
+Do not edit before proposal selection. A local selection may create only untracked content covered by precise repository-private `info/exclude` rules; ignore never makes a tracked path local. Any tracked/shared change requires a separately confirmed exact patch. Stage, commit, push, PR, publish, and merge remain separately authorized. Selectively patch existing configuration rather than replacing it wholesale. Guided edits are normal project mutations and create no Harness manifest or ownership.
+
+For a Managed update request that includes `https://github.com/JasonxzWen/harness-hub`, clone it into a temporary standalone checkout outside this repository, use the source default branch current HEAD, keep this repository as the target, and read its existing `.harness-hub/manifest.json`. From the temporary Harness Hub checkout run:
 
 ```text
 node bin/harness-hub.mjs migrate <current-repository> --yes

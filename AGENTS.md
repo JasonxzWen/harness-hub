@@ -117,26 +117,36 @@ When visibility looks stale, check the actual workspace root, canonical source, 
 
 ## Repository migration CLI
 
-There is exactly one target capability and one public command:
+There is exactly one public command with two explicit strategies:
 
 ```text
+# Managed
 node bin/harness-hub.mjs migrate <target> --yes [--host claude|codex|both] [--primary claude|codex] [--force]
+
+# Guided
+node bin/harness-hub.mjs migrate <target> --guided
 ```
 
-- Node performs deterministic copy, Host-surface selection, manifest/ownership, stale cleanup, source-HEAD byte verification, collision checks, rollback, and final validation.
-- When an update request includes `https://github.com/JasonxzWen/harness-hub`, clone it into a temporary standalone checkout outside the current repository, use the default branch current HEAD, treat the current repository as the target, read `.harness-hub/manifest.json`, and run `node bin/harness-hub.mjs migrate <current-repository> --yes` from the temporary checkout.
-- A valid schemaVersion 1 manifest supplies omitted `hosts` and `primaryHost`; do not ask the user to repeat Host mode. Explicit `--host` and `--primary` take priority. The resulting manifest records the actual source commit.
-- Recognized HTTPS and SSH spellings of the official remote record the canonical source URL `https://github.com/JasonxzWen/harness-hub`; normalization performs no remote call or mutation.
-- Without a manifest, first migration requires `--host`; first migration in `both` mode also requires `--primary`. Primary only selects the CLI used for first-time OKF initialization; it does not own shared copying.
-- The target and source must be clean standalone Git worktrees with an existing `HEAD`; use the current repository as target only when `.git` is a real directory. A linked or submodule worktree must stop with `E_LINKED_WORKTREE` and rerun from a clean standalone clone. Do not migrate a replacement target and copy its result or Git metadata back. Managed paths reject symlinks, junctions, and path escape.
-- Every migration removes stale resources still owned by the prior manifest.
-- Normal and force may replace only managed generic resources. They never overwrite target-owned Skills, `knowledge/**`, Evals, product files, credentials, browser state, or user/global configuration.
-- First migration, only when no manifest and no `knowledge/` exist, calls the primary CLI once to inspect the target and create a source-traceable Google OKF v0.1 wiki.
+- Guided is explicit and never selected automatically because the target already has configuration or a Managed collision. It is mutually exclusive with `--yes`, `--host`, `--primary`, and `--force`.
+- Guided requires a clean Harness Hub source with an existing `HEAD`, verifies every referenced guide file byte against that commit, and returns `strategy: "guided"`, `mutated: false`, the source commit, target root, and existing guide/index paths.
+- A Guided target need only resolve to a Git working tree. It may be dirty, diverged, detached, linked, or have no `HEAD`. The CLI does not read target status, manifest, configuration, knowledge, diff, or file tree; call a Host CLI; copy, merge, or apply files; create ownership; clean stale resources; or enter rollback.
+- After Guided returns, the native main Agent reads `BOOTSTRAP-TARGET.md`, `capabilities/index.json`, `docs/skill-routing.md`, and `docs/capability-map.md`, inspects the project, and prepares a transient proposal with capability/source, target evidence/current owner, `reuse`/`adapt`/`add`/`skip`, affected paths, local/shared visibility, risk, and user choice.
+- Proposal selection, tracked/shared exact-patch approval, and delivery authorization are independent. Local additions must remain untracked and use the repository-private exclude resolved by `git rev-parse --git-path info/exclude`; never change root `.gitignore` automatically or treat tracked files as local through ignore, `assume-unchanged`, or `skip-worktree`.
+- Guided creates no manifest, selection schema, pack, ownership record, or lifecycle. Later Agent edits are ordinary project mutations, must selectively patch rather than overwrite existing configuration, and never imply stage, commit, push, PR, publish, or merge authorization.
+- Managed Node migration performs deterministic copy, Host-surface selection, manifest/ownership, stale cleanup, source-HEAD byte verification, collision checks, rollback, and final validation.
+- For a Managed update request that includes `https://github.com/JasonxzWen/harness-hub`, clone it into a temporary standalone checkout outside the current repository, use the default branch current HEAD, treat the current repository as the target, read `.harness-hub/manifest.json`, and run `node bin/harness-hub.mjs migrate <current-repository> --yes` from the temporary checkout.
+- A valid schemaVersion 1 Managed manifest supplies omitted `hosts` and `primaryHost`; do not ask the user to repeat Host mode. Explicit `--host` and `--primary` take priority. The resulting manifest records the actual source commit.
+- Recognized HTTPS and SSH spellings of the official remote record the canonical source URL `https://github.com/JasonxzWen/harness-hub` in a Managed manifest; normalization performs no remote call or mutation.
+- Without a manifest, first Managed migration requires `--host`; first Managed migration in `both` mode also requires `--primary`. Primary only selects the CLI used for first-time OKF initialization; it does not own shared copying.
+- A Managed target and source must be clean standalone Git worktrees with an existing `HEAD`; use the current repository as target only when `.git` is a real directory. A linked or submodule worktree must stop with `E_LINKED_WORKTREE` and rerun from a clean standalone clone. Do not migrate a replacement target and copy its result or Git metadata back. Managed paths reject symlinks, junctions, and path escape.
+- Every Managed migration removes stale resources still owned by the prior manifest.
+- Managed normal and force may replace only managed generic resources. They never overwrite target-owned Skills, `knowledge/**`, Evals, product files, credentials, browser state, or user/global configuration.
+- First Managed migration, only when no manifest and no `knowledge/` exist, calls the primary CLI once to inspect the target and create a source-traceable Google OKF v0.1 wiki.
 - That first CLI call uses an isolated temporary user/config directory and only the selected Host API key (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`) plus network/TLS environment. It never consumes normal Host profiles, keychains, browser state, unrelated credentials, or user configuration.
-- Later normal/force migrations validate and preserve the complete target wiki byte-for-byte and do not call a Host CLI to rewrite knowledge. An existing manifest with missing knowledge fails closed.
+- Later Managed normal/force migrations validate and preserve the complete target wiki byte-for-byte and do not call a Host CLI to rewrite knowledge. An existing manifest with missing knowledge fails closed.
 - The selected Host configs use one deterministic local PreTool safety hook. It has no Router, state machine, Agent dispatch, remote action, or credential mutation.
 - Migration never commits, pushes, publishes, merges, modifies remote state, changes credentials, changes Host trust, or modifies user/global configuration.
-- A failed migration restores Git control state and managed/protected paths. If unrelated ignored content prevents exact restoration, return `rolledBack: false` rather than claim success.
+- A failed Managed migration restores Git control state and managed/protected paths. If unrelated ignored content prevents exact restoration, return `rolledBack: false` rather than claim success.
 
 When another repository receives only this repository URL, follow `BOOTSTRAP-TARGET.md`. Never manually copy source-only knowledge, docs, tests, source records, or fixtures.
 

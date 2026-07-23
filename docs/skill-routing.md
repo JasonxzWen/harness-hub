@@ -57,7 +57,9 @@ Important boundaries:
 
 ## Distribution and dependencies
 
-| Capability | Host surface | Runtime dependency | Migration result |
+The final column describes Managed distribution. Guided reads the same rows as proposal evidence but copies nothing and does not make any capability available by itself.
+
+| Capability | Host surface | Runtime dependency | Managed result |
 | --- | --- | --- | --- |
 | `ponytail`, `grill-me`, `grill-with-docs`, `to-tickets`, `tdd`, `codebase-design`, `code-review`, `product-ui-review`, `verification`, and other prompt-only atoms | Claude and Codex | Host conversation and native read-only Subagents when selected | Fully available without a Harness runtime or dispatcher. |
 | `effective-interact` | Claude and Codex | Node; browser only for rendered-browser verification | Generation and deterministic validation are available; missing browser evidence is reported. |

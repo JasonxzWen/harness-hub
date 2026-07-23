@@ -64,7 +64,7 @@ test('repository Git state is the only distribution and version source', () => {
   }
 });
 
-test('the repository exposes one full-migration CLI and no lifecycle subcommands', () => {
+test('the repository exposes one migrate CLI with explicit Managed and Guided strategies', () => {
   const result = spawnSync(process.execPath, ['bin/harness-hub.mjs', '--help'], {
     cwd: process.cwd(),
     encoding: 'utf8',
@@ -73,8 +73,10 @@ test('the repository exposes one full-migration CLI and no lifecycle subcommands
   expect(result.status).toBe(0);
   expect(result.stderr).toBe('');
   expect(result.stdout).toContain('node bin/harness-hub.mjs migrate <target> --yes [--host claude|codex|both]');
+  expect(result.stdout).toContain('node bin/harness-hub.mjs migrate <target> --guided');
   expect(result.stdout).toContain('--primary claude|codex');
   expect(result.stdout).toContain('valid schemaVersion 1 manifest');
+  expect(result.stdout).toContain('read-only');
   for (const obsolete of [' install ', ' update ', ' remove ', ' init-harness ', ' activate-agents ', ' migrate-lock ']) {
     expect(result.stdout, obsolete).not.toContain(obsolete);
   }
@@ -82,6 +84,10 @@ test('the repository exposes one full-migration CLI and no lifecycle subcommands
   const bootstrap = fs.readFileSync('BOOTSTRAP-TARGET.md', 'utf8');
   expect(bootstrap).toContain('git clone');
   expect(bootstrap).toContain('node bin/harness-hub.mjs migrate');
+  expect(bootstrap).toContain('migrate <target> --guided');
+  expect(bootstrap).toContain('reuse / adapt / add / skip');
+  expect(bootstrap).toContain('git rev-parse --git-path info/exclude');
+  expect(bootstrap).toContain('tracked files cannot become local through ignore rules');
   expect(bootstrap).toContain('repository Skills are installed under `.agents/skills/`');
   expect(bootstrap).toContain('hooks remain in `.codex/hooks.json`');
   expect(bootstrap).toContain('only when the user already trusts the target');
