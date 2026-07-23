@@ -12,7 +12,16 @@ const SAFETY_HOOK = path.resolve('harness/agent-hooks/safety-hook.mjs');
 const TARGET_AGENTS = path.resolve('harness/target/AGENTS.md');
 const CLAUDE_HOOKS = path.resolve('harness/agent-hooks/claude/settings.json');
 const CODEX_HOOKS = path.resolve('harness/agent-hooks/codex/hooks.json');
+const BOOTSTRAP_TARGET = path.resolve('BOOTSTRAP-TARGET.md');
+const SKILL_ROUTING = path.resolve('docs/skill-routing.md');
+const CAPABILITY_MAP = path.resolve('docs/capability-map.md');
 const HUB_ONLY_SENTINEL = 'HARNESS HUB PRIVATE KNOWLEDGE MUST NOT REACH A TARGET';
+const GUIDED_PATHS = [
+  'BOOTSTRAP-TARGET.md',
+  'capabilities/index.json',
+  'docs/skill-routing.md',
+  'docs/capability-map.md',
+] as const;
 
 type Host = 'claude' | 'codex';
 type MigrationResult = {
@@ -23,6 +32,325 @@ type MigrationResult = {
   sourceCommit: string;
   targetHead: string;
 };
+
+test('guided migration returns the adoption map without changing a dirty target or calling a Host CLI', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-guided-read-only-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  const binDir = path.join(root, 'bin');
+  const claudeCalls = path.join(root, 'claude-calls.jsonl');
+  const codexCalls = path.join(root, 'codex-calls.jsonl');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir, { customHostSkills: true, productData: true });
+    fs.appendFileSync(path.join(targetDir, 'tracked.txt'), 'local work in progress\n');
+    writeFile(path.join(targetDir, 'AGENTS.md'), '# Existing project contract\n');
+    writeFile(path.join(targetDir, 'CLAUDE.md'), '# Existing Claude instructions\n');
+    writeFile(path.join(targetDir, '.claude', 'settings.local.json'), '{"existing":true}\n');
+    writeFile(path.join(targetDir, '.codex', 'config.toml'), 'existing = true\n');
+    writeFile(path.join(targetDir, '.harness-hub', 'manifest.json'), '{not valid json\n');
+    writeFile(path.join(targetDir, 'knowledge', 'index.md'), '# not valid OKF\n');
+    writeFile(path.join(targetDir, 'notes', 'untracked.md'), '# Preserve me\n');
+    writeFakeCli(binDir, 'claude', claudeCalls);
+    writeFakeCli(binDir, 'codex', codexCalls);
+
+    const filesBefore = snapshotFiles(targetDir);
+    const statusBefore = gitStatus(targetDir);
+    const excludePath = path.join(targetDir, '.git', 'info', 'exclude');
+    const excludeBefore = fs.readFileSync(excludePath, 'base64');
+    const gitControlBefore = snapshotGitControl(targetDir);
+    const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: sourceDir,
+      encoding: 'utf8',
+    }).trim();
+
+    const result = runGuidedMigration(sourceDir, targetDir, { binDir });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({
+      ok: true,
+      strategy: 'guided',
+      mutated: false,
+      sourceRoot: fs.realpathSync.native(sourceDir),
+      sourceCommit,
+      targetRoot: fs.realpathSync.native(targetDir),
+      guidePaths: GUIDED_PATHS,
+    });
+    expect(snapshotFiles(targetDir)).toEqual(filesBefore);
+    expect(snapshotGitControl(targetDir)).toEqual(gitControlBefore);
+    expect(fs.readFileSync(excludePath, 'base64')).toBe(excludeBefore);
+    expect(gitStatus(targetDir)).toBe(statusBefore);
+    expect(readCalls(claudeCalls)).toEqual([]);
+    expect(readCalls(codexCalls)).toEqual([]);
+    expect(fs.readFileSync(path.join(targetDir, '.harness-hub', 'manifest.json'), 'utf8'))
+      .toBe('{not valid json\n');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('guided migration rejects managed flags without implying approval or rollback', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-guided-input-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir);
+    const targetBefore = snapshotFiles(targetDir);
+    const statusBefore = gitStatus(targetDir);
+
+    for (const extraArgs of [
+      ['--yes'],
+      ['--force'],
+      ['--host', 'codex'],
+      ['--primary', 'claude'],
+      ['--guided'],
+      ['--unknown'],
+    ]) {
+      const result = runGuidedMigration(sourceDir, targetDir, { extraArgs });
+      expect(result.status, extraArgs.join(' ')).toBe(2);
+      expect(result.stdout).toBe('');
+      expect(JSON.parse(result.stderr)).toEqual({
+        ok: false,
+        phase: 'input',
+        code: 'E_INPUT',
+        message: 'Use migrate <target> --guided without --yes, --host, --primary, or --force.',
+        strategy: 'guided',
+        mutated: false,
+      });
+    }
+
+    expect(snapshotFiles(targetDir)).toEqual(targetBefore);
+    expect(gitStatus(targetDir)).toBe(statusBefore);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('guided migration accepts an unborn dirty target repository without reading its HEAD', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-guided-unborn-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  try {
+    initMinimalSource(sourceDir);
+    fs.mkdirSync(targetDir, { recursive: true });
+    execFileSync('git', ['init'], { cwd: targetDir, stdio: 'ignore' });
+    writeFile(path.join(targetDir, 'AGENTS.md'), '# Uncommitted project contract\n');
+    const filesBefore = snapshotFiles(targetDir);
+    const statusBefore = gitStatus(targetDir);
+    const excludePath = path.join(targetDir, '.git', 'info', 'exclude');
+    const excludeBefore = fs.readFileSync(excludePath, 'base64');
+    const gitControlBefore = snapshotGitControl(targetDir);
+    const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: sourceDir,
+      encoding: 'utf8',
+    }).trim();
+
+    const result = runGuidedMigration(sourceDir, targetDir);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({
+      ok: true,
+      strategy: 'guided',
+      mutated: false,
+      sourceRoot: fs.realpathSync.native(sourceDir),
+      sourceCommit,
+      targetRoot: fs.realpathSync.native(targetDir),
+      guidePaths: GUIDED_PATHS,
+    });
+    expect(snapshotFiles(targetDir)).toEqual(filesBefore);
+    expect(snapshotGitControl(targetDir)).toEqual(gitControlBefore);
+    expect(fs.readFileSync(excludePath, 'base64')).toBe(excludeBefore);
+    expect(gitStatus(targetDir)).toBe(statusBefore);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('guided migration accepts a dirty linked worktree without changing its Git control plane', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-guided-linked-'));
+  const sourceDir = path.join(root, 'source');
+  const primaryTargetDir = path.join(root, 'primary-target');
+  const targetDir = path.join(root, 'linked-target');
+  const binDir = path.join(root, 'bin');
+  const claudeCalls = path.join(root, 'claude-calls.jsonl');
+  const codexCalls = path.join(root, 'codex-calls.jsonl');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(primaryTargetDir);
+    execFileSync('git', ['worktree', 'add', '--detach', targetDir], {
+      cwd: primaryTargetDir,
+      stdio: 'ignore',
+    });
+    fs.appendFileSync(path.join(targetDir, 'tracked.txt'), 'linked local work\n');
+    writeFile(path.join(targetDir, 'AGENTS.md'), '# Linked project contract\n');
+    writeFile(path.join(targetDir, '.harness-hub', 'manifest.json'), '{invalid\n');
+    writeFakeCli(binDir, 'claude', claudeCalls);
+    writeFakeCli(binDir, 'codex', codexCalls);
+    const filesBefore = snapshotFiles(targetDir);
+    const statusBefore = gitStatus(targetDir);
+    const gitControlBefore = snapshotGitControl(targetDir);
+    const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: sourceDir,
+      encoding: 'utf8',
+    }).trim();
+
+    const result = runGuidedMigration(sourceDir, targetDir, { binDir });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({
+      ok: true,
+      strategy: 'guided',
+      mutated: false,
+      sourceRoot: fs.realpathSync.native(sourceDir),
+      sourceCommit,
+      targetRoot: fs.realpathSync.native(targetDir),
+      guidePaths: GUIDED_PATHS,
+    });
+    expect(snapshotFiles(targetDir)).toEqual(filesBefore);
+    expect(snapshotGitControl(targetDir)).toEqual(gitControlBefore);
+    expect(gitStatus(targetDir)).toBe(statusBefore);
+    expect(readCalls(claudeCalls)).toEqual([]);
+    expect(readCalls(codexCalls)).toEqual([]);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('guided migration fails closed when source evidence is dirty or a canonical guide is missing', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-guided-source-evidence-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir);
+    const targetBefore = snapshotFiles(targetDir);
+    const statusBefore = gitStatus(targetDir);
+
+    fs.appendFileSync(path.join(sourceDir, 'BOOTSTRAP-TARGET.md'), '\nlocal source edit\n');
+    const dirtyResult = runGuidedMigration(sourceDir, targetDir);
+    expect(dirtyResult.status).toBe(3);
+    expect(JSON.parse(dirtyResult.stderr)).toMatchObject({
+      code: 'E_SOURCE_DIRTY',
+      phase: 'preflight',
+      strategy: 'guided',
+      mutated: false,
+    });
+
+    execFileSync('git', ['restore', 'BOOTSTRAP-TARGET.md'], { cwd: sourceDir });
+    fs.rmSync(path.join(sourceDir, 'docs', 'capability-map.md'));
+    commitAll(sourceDir, 'remove canonical guide');
+    const missingResult = runGuidedMigration(sourceDir, targetDir);
+    expect(missingResult.status).toBe(3);
+    expect(JSON.parse(missingResult.stderr)).toMatchObject({
+      code: 'E_VALIDATE',
+      phase: 'validation',
+      strategy: 'guided',
+      mutated: false,
+    });
+
+    expect(snapshotFiles(targetDir)).toEqual(targetBefore);
+    expect(gitStatus(targetDir)).toBe(statusBefore);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('guided migration binds every guide byte to sourceCommit even when Git status hides a change', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-guided-source-head-bytes-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  const guidePath = path.join(sourceDir, 'docs', 'capability-map.md');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir);
+    const targetBefore = snapshotFiles(targetDir);
+    const targetStatusBefore = gitStatus(targetDir);
+    execFileSync(
+      'git',
+      ['update-index', '--assume-unchanged', '--', 'docs/capability-map.md'],
+      { cwd: sourceDir },
+    );
+    fs.appendFileSync(guidePath, '\nhidden guide mutation\n');
+    expect(gitStatus(sourceDir)).toBe('');
+
+    const result = runGuidedMigration(sourceDir, targetDir);
+
+    expect(result.status).toBe(3);
+    expect(JSON.parse(result.stderr)).toEqual({
+      ok: false,
+      phase: 'validation',
+      code: 'E_VALIDATE',
+      message: 'Canonical Guided migration resource must match source HEAD byte-for-byte: docs/capability-map.md',
+      strategy: 'guided',
+      mutated: false,
+    });
+    expect(snapshotFiles(targetDir)).toEqual(targetBefore);
+    expect(gitStatus(targetDir)).toBe(targetStatusBefore);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('guided migration rejects an unborn source before inspecting the target', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-guided-unborn-source-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'target');
+  try {
+    initMinimalSource(sourceDir);
+    initTarget(targetDir);
+    fs.rmSync(path.join(sourceDir, '.git'), { recursive: true, force: true });
+    execFileSync('git', ['init'], { cwd: sourceDir, stdio: 'ignore' });
+    const targetBefore = snapshotFiles(targetDir);
+    const targetStatusBefore = gitStatus(targetDir);
+    const targetGitControlBefore = snapshotGitControl(targetDir);
+
+    const result = runGuidedMigration(sourceDir, targetDir);
+
+    expect(result.status).toBe(3);
+    expect(result.stdout).toBe('');
+    expect(JSON.parse(result.stderr)).toEqual({
+      ok: false,
+      phase: 'preflight',
+      code: 'E_SOURCE_HEAD',
+      message: 'Harness Hub source must have an existing HEAD.',
+      strategy: 'guided',
+      mutated: false,
+    });
+    expect(snapshotFiles(targetDir)).toEqual(targetBefore);
+    expect(snapshotGitControl(targetDir)).toEqual(targetGitControlBefore);
+    expect(gitStatus(targetDir)).toBe(targetStatusBefore);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('guided migration reports a non-repository target without rollback semantics', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-guided-target-git-'));
+  const sourceDir = path.join(root, 'source');
+  const targetDir = path.join(root, 'not-a-repository');
+  try {
+    initMinimalSource(sourceDir);
+    fs.mkdirSync(targetDir, { recursive: true });
+    writeFile(path.join(targetDir, 'sentinel.txt'), 'preserve\n');
+    const before = snapshotFiles(targetDir);
+
+    const result = runGuidedMigration(sourceDir, targetDir);
+
+    expect(result.status).toBe(3);
+    const payload = JSON.parse(result.stderr);
+    expect(payload).toMatchObject({
+      code: 'E_TARGET_GIT',
+      phase: 'preflight',
+      strategy: 'guided',
+      mutated: false,
+    });
+    expect(payload).not.toHaveProperty('rolledBack');
+    expect(snapshotFiles(targetDir)).toEqual(before);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
 
 test('the single migrate command supports claude, codex, and both while only primary initializes OKF', () => {
   const invalid = [
@@ -913,6 +1241,9 @@ function initMinimalSource(sourceDir: string): void {
   copyFile(CLAUDE_HOOKS, path.join(sourceDir, 'harness', 'agent-hooks', 'claude', 'settings.json'));
   copyFile(CODEX_HOOKS, path.join(sourceDir, 'harness', 'agent-hooks', 'codex', 'hooks.json'));
   copyFile(TARGET_AGENTS, path.join(sourceDir, 'harness', 'target', 'AGENTS.md'));
+  copyFile(BOOTSTRAP_TARGET, path.join(sourceDir, 'BOOTSTRAP-TARGET.md'));
+  copyFile(SKILL_ROUTING, path.join(sourceDir, 'docs', 'skill-routing.md'));
+  copyFile(CAPABILITY_MAP, path.join(sourceDir, 'docs', 'capability-map.md'));
   writeFile(path.join(sourceDir, 'skills', 'alpha', 'SKILL.md'), '---\nname: alpha\ndescription: Shared test skill.\n---\n');
   writeFile(path.join(sourceDir, 'skills', 'alpha', 'scripts', 'check.mjs'), 'export const alpha = true;\n');
   writeFile(path.join(sourceDir, 'skills', 'decision-ui', 'SKILL.md'), '---\nname: decision-ui\ndescription: Codex-only decisions.\n---\n');
@@ -1113,6 +1444,28 @@ function runMigration(sourceDir: string, targetDir: string, host?: 'claude' | 'c
   });
 }
 
+function runGuidedMigration(sourceDir: string, targetDir: string, options: {
+  binDir?: string;
+  extraArgs?: string[];
+} = {}): SpawnSyncReturns<string> {
+  return spawnSync(process.execPath, [
+    path.join(sourceDir, 'bin', 'harness-hub.mjs'),
+    'migrate',
+    targetDir,
+    '--guided',
+    ...(options.extraArgs ?? []),
+  ], {
+    cwd: sourceDir,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      PATH: options.binDir
+        ? `${options.binDir}${path.delimiter}${process.env.PATH ?? ''}`
+        : process.env.PATH,
+    },
+  });
+}
+
 function readCalls(callLog: string): Array<{
   args: string[];
   home: string;
@@ -1204,4 +1557,29 @@ function snapshotFiles(root: string): Array<{ path: string; text: string }> {
       path: relativePath,
       text: fs.readFileSync(path.join(root, relativePath)).toString('base64'),
     }));
+}
+
+function snapshotGitControl(root: string): {
+  commonDir: Array<{ path: string; text: string }> | null;
+  dotGit: string;
+  gitDir: Array<{ path: string; text: string }>;
+} {
+  const dotGit = path.join(root, '.git');
+  const dotGitStat = fs.lstatSync(dotGit);
+  const gitDir = execFileSync('git', ['rev-parse', '--absolute-git-dir'], {
+    cwd: root,
+    encoding: 'utf8',
+  }).trim();
+  const commonDirOutput = execFileSync('git', ['rev-parse', '--git-common-dir'], {
+    cwd: root,
+    encoding: 'utf8',
+  }).trim();
+  const commonDir = path.isAbsolute(commonDirOutput)
+    ? commonDirOutput
+    : path.resolve(root, commonDirOutput);
+  return {
+    dotGit: dotGitStat.isFile() ? fs.readFileSync(dotGit, 'base64') : '<directory>',
+    gitDir: snapshotFiles(gitDir),
+    commonDir: path.resolve(commonDir) === path.resolve(gitDir) ? null : snapshotFiles(commonDir),
+  };
 }

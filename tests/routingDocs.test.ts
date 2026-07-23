@@ -20,6 +20,9 @@ test('routing docs delegate orchestration to the native Host and expose atomic s
   expect(routing).toContain('| Blocking/high-impact structured decision on Codex | `decision-ui` |');
   expect(routing).toContain('The native main Agent triggers it for complex delivery, comparisons, and important handoffs');
   expect(routing).toContain('reports missing duration/token/cost evidence as `unknown`');
+  expect(routing).toContain('The final column describes Managed distribution');
+  expect(routing).toContain('Guided reads the same rows as proposal evidence but copies nothing');
+  expect(routing).toContain('| Capability | Host surface | Runtime dependency | Managed result |');
   expect(routing).not.toContain('report-loop');
   expect(routing).not.toContain('requirements-loop');
   expect(routing).not.toContain('workflow-router');
@@ -31,10 +34,14 @@ test('routing docs delegate orchestration to the native Host and expose atomic s
   expect(routing).not.toContain('`coding-standards`');
 });
 
-test('capability map documents a versionless full-distribution surface', () => {
+test('capability map separates Managed distribution from Guided read-only adoption', () => {
   expect(capabilityMap).toContain('versionless classification');
   expect(capabilityMap).toContain('Every current canonical skill is `target-distributed`');
   expect(capabilityMap).toContain('.claude/skills/<name>/');
   expect(capabilityMap).toContain('.agents/skills/<name>/');
   expect(capabilityMap).toContain('no named packs, optional levels, partial install sets, component versions');
+  expect(capabilityMap).toContain('Managed migration');
+  expect(capabilityMap).toContain('Guided');
+  expect(capabilityMap).toContain('copies nothing');
+  expect(capabilityMap).toContain('selection registry');
 });

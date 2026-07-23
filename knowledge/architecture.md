@@ -12,6 +12,8 @@ Every repository mutation receives one native `grill-me` alignment pass. An alre
 
 Native Subagents are limited to bounded independent read-only exploration, review, and verification. The main Agent performs mutations and integration. No Router, orchestration Hook, dispatcher, or generic runtime selects or sequences these Skills.
 
+Only Managed migration enters the deterministic copy, ownership, stale-cleanup, validation, and rollback transaction. Guided verifies a source-commit-bound capability map and returns a read-only handoff. The native main Agent then owns target inspection, a transient adoption proposal, user alignment, and any later approved project edits; Harness Hub creates no Guided selection schema, manifest, or lifecycle.
+
 ## Sources
 
 - [Repository migration](../scripts/migrate.mjs)

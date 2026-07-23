@@ -4,13 +4,13 @@ Repository-first deterministic distribution for Claude Code and Codex project ha
 
 [中文说明](README.zh-CN.md)
 
-Harness Hub has one target capability: full migration. The Git repository and selected commit are the only distribution/version source. There is no npm package, component version, partial installer, update/remove lifecycle, compatibility layer, generic Agent runtime, or second registry.
+Harness Hub exposes one public target command, `migrate`, with two explicit strategies. Managed retains the existing deterministic full migration; Guided is a read-only handoff to the native Agent for selective, user-approved adoption. The Git repository and selected commit are the only distribution/version source. There is no npm package, component version, update/remove lifecycle, compatibility layer, generic Agent runtime, or second registry.
 
 Existing Git tags and GitHub Releases are retained only as historical repository records. They are not package/component versions or supported migration inputs.
 
 Claude Code and Codex remain the only main-Agent runtimes. Harness Hub distributes project rules, Host resources, atomic Skills, and an OKF contract; it does not duplicate native orchestration, Subagent dispatch, retries, pause/resume, or result aggregation.
 
-## Update an installed repository
+## Managed update of an installed repository
 
 The natural-language update entry is a request plus the repository URL:
 
@@ -29,7 +29,19 @@ A valid schemaVersion 1 manifest supplies omitted `hosts` and `primaryHost`, so 
 
 Recognized HTTPS and SSH spellings of the official remote record the canonical source URL `https://github.com/JasonxzWen/harness-hub` in the manifest. This identity normalization performs no remote call or remote mutation.
 
-## First migration or explicit Host selection
+## Guided selective adoption
+
+Run Guided explicitly from a clean Harness Hub checkout with an existing `HEAD`:
+
+```text
+node bin/harness-hub.mjs migrate <target> --guided
+```
+
+Guided never activates automatically because the target has existing configuration or a collision. It is mutually exclusive with `--yes`, `--host`, `--primary`, and `--force`. The CLI verifies its source commit and returns paths to the existing capability map and adoption guide without scanning or writing the target, calling a Host CLI, creating a manifest, or entering rollback.
+
+The native Agent then inspects the project and presents `reuse`, `adapt`, `add`, or `skip` suggestions with evidence, affected paths, local/shared visibility, and risk. Existing configurations are selectively patched, never replaced wholesale. Local additions remain untracked and use the repository-private Git exclude file; tracked/shared patches require exact-patch approval, while staging, commit, push, PR, publish, and merge remain separately authorized. See [BOOTSTRAP-TARGET.md](BOOTSTRAP-TARGET.md) for the complete proposal and authorization contract.
+
+## First Managed migration or explicit Host selection
 
 Clone this repository outside the target, then invoke the only public command:
 
@@ -54,7 +66,7 @@ Use `--force` only to replace Harness Hub-managed generic resources. Every run a
 
 Both source and target must be clean standalone Git worktrees with an existing `HEAD`; use the current repository as the target only when its `.git` is a real directory. If `.git` is a file because the repository is a linked worktree or submodule worktree, stop with `E_LINKED_WORKTREE` and rerun from a clean standalone clone. Do not migrate a replacement target and copy its result or Git metadata back. Every distributed source byte must match the source `HEAD` tree. Migration rejects collisions, path escape, symlinks, junctions, unsafe Git state, and incomplete output. It never commits, pushes, publishes, merges, changes credentials, changes Host trust, or modifies user/global configuration.
 
-## What migration installs
+## What Managed migration installs
 
 Shared:
 
@@ -76,7 +88,7 @@ Codex:
 - Codex-only atomic Skills such as `decision-ui`;
 - `.codex/hooks.json`.
 
-Codex project hooks run only when the user already trusts the target repository. Migration never changes trust.
+Codex project hooks run only when the user already trusts the target repository. Managed migration never changes trust.
 
 Harness Hub's root `knowledge/`, source records, docs, tests, task state, and repository history are source-only and never copied.
 
@@ -96,13 +108,13 @@ The Host main Agent selects atomic Skills directly. Native development atoms inc
 - `decision-ui` is installed only for Codex and falls back honestly to text when native structured input is unavailable.
 - Agent Reach is distributed as a safe prompt capability only. It first checks an already installed user-level CLI and never installs dependencies, configures accounts, writes `~/.agent-reach`, or copies cookies and credentials.
 
-## Project knowledge
+## Managed project knowledge
 
-On a first migration with no prior manifest and no `knowledge/`, the primary CLI is invoked once to inspect the target and create the smallest source-traceable Google OKF v0.1 wiki.
+On a first Managed migration with no prior manifest and no `knowledge/`, the primary CLI is invoked once to inspect the target and create the smallest source-traceable Google OKF v0.1 wiki.
 
 That one CLI process receives an isolated temporary user/config directory and only the selected Host's API-key environment (`OPENAI_API_KEY` for Codex or `ANTHROPIC_API_KEY` for Claude Code), plus network/TLS process settings. It does not reuse normal Host profiles, keychains, browser state, unrelated credentials, or user configuration; the temporary directory is removed when the process exits.
 
-Later normal and force migrations:
+Later Managed normal and force migrations:
 
 - invoke no Host CLI for knowledge maintenance;
 - run the standalone validator;
@@ -113,7 +125,7 @@ Daily knowledge maintenance belongs to the native Host main Agent under the targ
 
 ## Failure and evaluation boundaries
 
-Migration keeps deterministic ownership, stale-resource cleanup, Git-control snapshots, protected-path checks, and rollback. If exact restoration is impossible because unrelated ignored content or the source checkout changed, it preserves the unowned change and reports `rolledBack: false` instead of claiming success.
+Managed migration keeps deterministic ownership, stale-resource cleanup, Git-control snapshots, protected-path checks, and rollback. If exact restoration is impossible because unrelated ignored content or the source checkout changed, it preserves the unowned change and reports `rolledBack: false` instead of claiming success.
 
 Each target repository keeps its own task cards, sessions, audits, knowledge, and real-task Eval results. Harness Hub stores no project-specific cases.
 
