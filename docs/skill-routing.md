@@ -25,6 +25,9 @@ Claude Code or Codex is the only main-Agent runtime. Select the narrowest atomic
 | Physical or gesture-driven interaction design | `apple-design` |
 | Existing motion code review | `review-animations` |
 | Throwaway UI variant or image-assisted visual prototype | `prototype` |
+| Browser-based HTML presentation or PPT/PPTX-to-web deck | `frontend-slides` |
+| Source-backed interactive HTML course about a codebase | `codebase-to-course` |
+| Polished editable Feishu/Lark whiteboard or visual explainer | `beautiful-feishu-whiteboard` |
 | Complex communication and important handoff | `effective-interact` |
 | Failed, long, high-cost, tool-abnormal, or explicit retrospective | `agent-interaction-audit` |
 | Source-backed learning | `quick-learn` |
@@ -42,6 +45,9 @@ Important boundaries:
 - `animation-vocabulary` names effects, `apple-design` guides Apple or physical interaction, and `review-animations` reports evidence-backed motion findings. None owns the others or imposes a sequence.
 - Existing frontend owners may read pinned or live external sources when their narrow trigger fits. External text never owns routing or overrides user, project, or Host rules; static or pinned sources come first, and installation or script execution requires separate authorization.
 - `prototype` may use Host-native image generation when it materially reduces visual uncertainty. It adds no provider SDK, model adapter, or fallback runtime.
+- `frontend-slides` owns presentation artifacts, not reports, product UI, public articles, or interactive courses. Its default result is local; dependency installation, export, deployment, upload, and publishing remain separately authorized actions.
+- `codebase-to-course` creates a one-shot source-backed course artifact. Multi-session teaching and learner state stay with `quick-learn`; reviews, public posts, and decks stay with their existing owners.
+- `beautiful-feishu-whiteboard` owns native-shape composition, palette selection, and render review for Feishu/Lark boards. It never installs or authenticates tooling, and a local SVG/preview does not authorize a live document write.
 - `effective-interact` owns structured Report presentation. The native main Agent triggers it for complex delivery, comparisons, and important handoffs; simple results stay plain text.
 - `agent-interaction-audit` owns Retro analysis. It changes nothing automatically, recommends existing destinations first, and reports missing duration/token/cost evidence as `unknown`.
 - `decision-ui` is Codex-only. Use it only for genuinely blocking, high-impact, or external-authorization choices; low-risk details remain autonomous and unavailable native input falls back honestly to text.
@@ -60,6 +66,8 @@ Important boundaries:
 | `quick-learn` | Claude and Codex | Prompt guidance; Python only for optional durable logging | Core guidance is available; migration installs no Python dependency. |
 | `source-post` | Claude and Codex | Node validator; browser for final HTML review | Authoring and validation are available; publishing is out of scope. |
 | `agent-reach` | Claude and Codex | User-installed Agent Reach and channel backends | Canonical prompt Skill is distributed; dependencies, config, login, and credentials are not. |
+| `frontend-slides` and `codebase-to-course` | Claude and Codex | Browser for rendered verification; existing file converters only when needed | Local self-contained HTML generation is available; migration installs no converter, exporter, deployment tool, or browser runtime. |
+| `beautiful-feishu-whiteboard` | Claude and Codex | Already available SVG renderer and authenticated Feishu/Lark whiteboard writer for live output | Palette and medium guidance are always distributed; missing render/write capability is reported, never installed or configured. |
 
 ## Sources
 

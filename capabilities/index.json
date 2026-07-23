@@ -146,9 +146,19 @@
       "path": "skills/web-artifacts-builder",
       "distribution": "target-distributed"
     },
+    "skill:codebase-to-course": {
+      "kind": "skill",
+      "path": "skills/codebase-to-course",
+      "distribution": "target-distributed"
+    },
     "skill:frontend-slides": {
       "kind": "skill",
       "path": "skills/frontend-slides",
+      "distribution": "target-distributed"
+    },
+    "skill:beautiful-feishu-whiteboard": {
+      "kind": "skill",
+      "path": "skills/beautiful-feishu-whiteboard",
       "distribution": "target-distributed"
     },
     "skill:frontend-patterns": {
